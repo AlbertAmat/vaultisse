@@ -308,7 +308,20 @@ VALUES ('en', 'ADD_BOOK', 'Add book'),
        ('en', 'EMPTY_AUTHORS_DESC', 'Add authors to link them to the books in your library.'),
        ('en', 'EMPTY_LAST_BOOKS_TITLE', 'No books yet'),
        ('en', 'EMPTY_LAST_BOOKS_DESC', 'Books you add will show up here.'),
-       ('en', 'PUBLIC_INSTITUTION_SENSITIVE_DATA_WARNING', 'This account is registered as a public institution. Avoid entering sensitive personal information here — use student codes or IDs that only you can identify instead of full names.');
+       ('en', 'PUBLIC_INSTITUTION_SENSITIVE_DATA_WARNING', 'This account is registered as a public institution. Avoid entering sensitive personal information here — use student codes or IDs that only you can identify instead of full names.'),
+       ('en', 'IMPORT', 'Import'),
+       ('en', 'IMPORT_LIBRARY_DESC', 'Bulk-add books to your library from a CSV file. Choose where the file is coming from, then upload it — each row becomes a new book, and any book you already have (matched by ISBN, or by title when there''s no ISBN) is skipped automatically.'),
+       ('en', 'IMPORT_SELECT_ORIGIN', 'Import from'),
+       ('en', 'IMPORT_ORIGIN_VAULTISSE', 'Vaultisse'),
+       ('en', 'IMPORT_ORIGIN_VAULTISSE_DESC', 'A CSV following Vaultisse''s own template'),
+       ('en', 'IMPORT_ORIGIN_GOODREADS', 'Goodreads'),
+       ('en', 'IMPORT_ORIGIN_GOODREADS_DESC', 'Your library exported from Goodreads'),
+       ('en', 'IMPORT_DROPZONE_TITLE', 'Click or drag and drop a CSV file'),
+       ('en', 'IMPORT_MAX_SIZE', 'Maximum file size: {maxSizeMb} MB'),
+       ('en', 'IMPORT_FILE_TOO_LARGE', 'This file is too large — the maximum allowed size is {maxSizeMb} MB'),
+       ('en', 'IMPORT_ONLY_CSV_ALLOWED', 'Only CSV files are allowed'),
+       ('en', 'IMPORT_DOWNLOAD_TEMPLATE', 'Download template'),
+       ('en', 'SNACKBAR_IMPORT_SUCCESS', 'Total imported books: {count}');
 
 -- catalan labels
 INSERT INTO app_labels (language, code, text)
@@ -599,7 +612,20 @@ VALUES ('ca', 'ADD_BOOK', 'Afegir llibre'),
        ('ca', 'EMPTY_AUTHORS_DESC', 'Afegeix autors per vincular-los als llibres de la teva biblioteca.'),
        ('ca', 'EMPTY_LAST_BOOKS_TITLE', 'Encara no hi ha llibres'),
        ('ca', 'EMPTY_LAST_BOOKS_DESC', 'Els llibres que afegeixis apareixeran aquí.'),
-       ('ca', 'PUBLIC_INSTITUTION_SENSITIVE_DATA_WARNING', 'Aquest compte està registrat com a institució pública. Evita introduir informació personal sensible aquí: utilitza codis o identificadors de l''alumnat que només tu puguis reconèixer, en lloc de noms complets.');
+       ('ca', 'PUBLIC_INSTITUTION_SENSITIVE_DATA_WARNING', 'Aquest compte està registrat com a institució pública. Evita introduir informació personal sensible aquí: utilitza codis o identificadors de l''alumnat que només tu puguis reconèixer, en lloc de noms complets.'),
+       ('ca', 'IMPORT', 'Importa'),
+       ('ca', 'IMPORT_LIBRARY_DESC', 'Afegeix llibres a la teva biblioteca en bloc des d''un fitxer CSV. Tria d''on prové el fitxer i puja''l: cada fila es converteix en un llibre nou, i qualsevol llibre que ja tinguis (per ISBN, o pel títol si no n''hi ha) s''omet automàticament.'),
+       ('ca', 'IMPORT_SELECT_ORIGIN', 'Importa des de'),
+       ('ca', 'IMPORT_ORIGIN_VAULTISSE', 'Vaultisse'),
+       ('ca', 'IMPORT_ORIGIN_VAULTISSE_DESC', 'Un CSV amb la plantilla pròpia de Vaultisse'),
+       ('ca', 'IMPORT_ORIGIN_GOODREADS', 'Goodreads'),
+       ('ca', 'IMPORT_ORIGIN_GOODREADS_DESC', 'La teva biblioteca exportada des de Goodreads'),
+       ('ca', 'IMPORT_DROPZONE_TITLE', 'Fes clic o arrossega i deixa anar un fitxer CSV'),
+       ('ca', 'IMPORT_MAX_SIZE', 'Mida màxima del fitxer: {maxSizeMb} MB'),
+       ('ca', 'IMPORT_FILE_TOO_LARGE', 'Aquest fitxer és massa gran — la mida màxima permesa és {maxSizeMb} MB'),
+       ('ca', 'IMPORT_ONLY_CSV_ALLOWED', 'Només es permeten fitxers CSV'),
+       ('ca', 'IMPORT_DOWNLOAD_TEMPLATE', 'Descarrega la plantilla'),
+       ('ca', 'SNACKBAR_IMPORT_SUCCESS', 'Total de llibres importats: {count}');
 
 -- spanish labels
 INSERT INTO app_labels (language, code, text)
@@ -890,7 +916,20 @@ VALUES ('es', 'ADD_BOOK', 'Agregar libro'),
        ('es', 'EMPTY_AUTHORS_DESC', 'Agrega autores para vincularlos a los libros de tu biblioteca.'),
        ('es', 'EMPTY_LAST_BOOKS_TITLE', 'Aún no hay libros'),
        ('es', 'EMPTY_LAST_BOOKS_DESC', 'Los libros que agregues aparecerán aquí.'),
-       ('es', 'PUBLIC_INSTITUTION_SENSITIVE_DATA_WARNING', 'Esta cuenta está registrada como institución pública. Evita introducir información personal sensible aquí: usa códigos o identificadores de alumnos que solo tú puedas reconocer, en lugar de nombres completos.');
+       ('es', 'PUBLIC_INSTITUTION_SENSITIVE_DATA_WARNING', 'Esta cuenta está registrada como institución pública. Evita introducir información personal sensible aquí: usa códigos o identificadores de alumnos que solo tú puedas reconocer, en lugar de nombres completos.'),
+       ('es', 'IMPORT', 'Importar'),
+       ('es', 'IMPORT_LIBRARY_DESC', 'Agrega libros a tu biblioteca en bloque desde un archivo CSV. Elige de dónde proviene el archivo y súbelo: cada fila se convierte en un libro nuevo, y cualquier libro que ya tengas (por ISBN, o por título si no hay ISBN) se omite automáticamente.'),
+       ('es', 'IMPORT_SELECT_ORIGIN', 'Importar desde'),
+       ('es', 'IMPORT_ORIGIN_VAULTISSE', 'Vaultisse'),
+       ('es', 'IMPORT_ORIGIN_VAULTISSE_DESC', 'Un CSV con la plantilla propia de Vaultisse'),
+       ('es', 'IMPORT_ORIGIN_GOODREADS', 'Goodreads'),
+       ('es', 'IMPORT_ORIGIN_GOODREADS_DESC', 'Tu biblioteca exportada desde Goodreads'),
+       ('es', 'IMPORT_DROPZONE_TITLE', 'Haz clic o arrastra y suelta un archivo CSV'),
+       ('es', 'IMPORT_MAX_SIZE', 'Tamaño máximo del archivo: {maxSizeMb} MB'),
+       ('es', 'IMPORT_FILE_TOO_LARGE', 'Este archivo es demasiado grande — el tamaño máximo permitido es {maxSizeMb} MB'),
+       ('es', 'IMPORT_ONLY_CSV_ALLOWED', 'Solo se permiten archivos CSV'),
+       ('es', 'IMPORT_DOWNLOAD_TEMPLATE', 'Descargar plantilla'),
+       ('es', 'SNACKBAR_IMPORT_SUCCESS', 'Total de libros importados: {count}');
 
     INSERT INTO app_labels (language, code, text)
 VALUES ('it', 'ADD_BOOK', 'Aggiungi libro'),
@@ -1179,7 +1218,20 @@ VALUES ('it', 'ADD_BOOK', 'Aggiungi libro'),
        ('it', 'EMPTY_AUTHORS_DESC', 'Aggiungi autori per collegarli ai libri della tua biblioteca.'),
        ('it', 'EMPTY_LAST_BOOKS_TITLE', 'Nessun libro ancora'),
        ('it', 'EMPTY_LAST_BOOKS_DESC', 'I libri che aggiungi appariranno qui.'),
-       ('it', 'PUBLIC_INSTITUTION_SENSITIVE_DATA_WARNING', 'Questo account è registrato come istituzione pubblica. Evita di inserire qui informazioni personali sensibili: usa codici o identificativi degli studenti che solo tu possa riconoscere, invece dei nomi completi.');
+       ('it', 'PUBLIC_INSTITUTION_SENSITIVE_DATA_WARNING', 'Questo account è registrato come istituzione pubblica. Evita di inserire qui informazioni personali sensibili: usa codici o identificativi degli studenti che solo tu possa riconoscere, invece dei nomi completi.'),
+       ('it', 'IMPORT', 'Importa'),
+       ('it', 'IMPORT_LIBRARY_DESC', 'Aggiungi libri alla tua biblioteca in blocco da un file CSV. Scegli da dove proviene il file e caricalo: ogni riga diventa un nuovo libro, e qualsiasi libro che hai già (per ISBN, o per titolo se manca l''ISBN) viene saltato automaticamente.'),
+       ('it', 'IMPORT_SELECT_ORIGIN', 'Importa da'),
+       ('it', 'IMPORT_ORIGIN_VAULTISSE', 'Vaultisse'),
+       ('it', 'IMPORT_ORIGIN_VAULTISSE_DESC', 'Un CSV con il modello proprio di Vaultisse'),
+       ('it', 'IMPORT_ORIGIN_GOODREADS', 'Goodreads'),
+       ('it', 'IMPORT_ORIGIN_GOODREADS_DESC', 'La tua biblioteca esportata da Goodreads'),
+       ('it', 'IMPORT_DROPZONE_TITLE', 'Fai clic o trascina e rilascia un file CSV'),
+       ('it', 'IMPORT_MAX_SIZE', 'Dimensione massima del file: {maxSizeMb} MB'),
+       ('it', 'IMPORT_FILE_TOO_LARGE', 'Questo file è troppo grande — la dimensione massima consentita è {maxSizeMb} MB'),
+       ('it', 'IMPORT_ONLY_CSV_ALLOWED', 'Sono ammessi solo file CSV'),
+       ('it', 'IMPORT_DOWNLOAD_TEMPLATE', 'Scarica il modello'),
+       ('it', 'SNACKBAR_IMPORT_SUCCESS', 'Totale libri importati: {count}');
 
 
 -- Users table

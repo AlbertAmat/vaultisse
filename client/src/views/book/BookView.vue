@@ -6,7 +6,6 @@
 					<v-btn
 						v-bind="readingStatusMenuProps"
 						variant="outlined"
-						rounded="pill"
 						density="comfortable"
 						class="text-none mr-2"
 						:prepend-icon="readingStatusIcon"
@@ -41,7 +40,6 @@
 
 			<v-btn
 				variant="outlined"
-				rounded="circle"
 				density="comfortable"
 				icon
 				class="text-none mr-2"
@@ -58,7 +56,6 @@
 				<v-btn
 					class="text-none mr-2"
 					variant="text"
-					rounded="pill"
 					@click="cancelEditing()"
 					:disabled="loadingUpdate"
 					small
@@ -68,7 +65,6 @@
 				<v-btn
 					class="text-none"
 					color="primary"
-					rounded="pill"
 					:disabled="!hasChanges"
 					@click="updateBook()"
 					:loading="loadingUpdate"
@@ -84,7 +80,6 @@
 				class="text-none"
 				color="primary"
 				variant="elevated"
-				rounded="pill"
 				small
 				prepend-icon="mdi-pencil-outline"
 				@click="startEditing()"

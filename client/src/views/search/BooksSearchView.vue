@@ -41,11 +41,22 @@
 				@update:model-value="model.setSort($event)"
 			/>
 
+			<v-btn
+				color="primary"
+				variant="tonal"
+				class="text-none mr-2"
+				small
+				prepend-icon="mdi-file-import-outline"
+				@click="importDialog = true"
+			>
+				{{t(AppLabels.IMPORT)}}
+			</v-btn>
+
 			<v-menu>
 				<template v-slot:activator="{ props }">
 					<v-btn
 						color="primary"
-						variant="tonal"
+						variant="elevated"
 						class="text-none pr-1"
 						small
 						@click.stop.prevent="createBookIsbnDialog = true"
@@ -80,6 +91,12 @@
 			<create-book-manually-dialog
 				v-if="createBookManuallyDialog"
 				v-model="createBookManuallyDialog"
+			/>
+
+			<import-dialog
+				v-if="importDialog"
+				v-model="importDialog"
+				@imported="model.fetchBooks(true)"
 			/>
 
 		</template>
@@ -172,6 +189,7 @@ import BookItemSkeleton from "@/views/search/components/BookItemSkeleton.vue";
 import CreateBookIsbnDialog from "@/views/search/components/CreateBookIsbnDialog.vue";
 import router from "@/router/Router";
 import CreateBookManuallyDialog from "@/views/search/components/CreateBookManuallyDialog.vue";
+import ImportDialog from "@/views/search/components/ImportDialog.vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import SearchFilters from "@/views/search/components/SearchFilters.vue";
@@ -221,6 +239,7 @@ const groupedBooks = computed(() => {
 
 const createBookIsbnDialog: Ref<boolean> = ref(false);
 const createBookManuallyDialog: Ref<boolean> = ref(false);
+const importDialog: Ref<boolean> = ref(false);
 
 /**
  *
