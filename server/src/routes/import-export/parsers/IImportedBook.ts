@@ -32,4 +32,12 @@ export interface IImportedBook {
     imageUrl?: string | null;
     /** The user's personal reading progress for this book (Goodreads' "Exclusive Shelf"), or null/omitted if untracked. */
     readingStatus?: ReadingStatusEnum | null;
+    /**
+     * Names of physical locations the book should get one "available" stock
+     * at each - find-or-created per user, same as `categoryName`. One entry
+     * per copy the origin implies the user owns (Goodreads' custom shelves,
+     * e.g. "office", once its one `readingStatus` shelf is excluded).
+     * Omitted/empty for an origin with no notion of physical placement.
+     */
+    locations?: string[];
 }

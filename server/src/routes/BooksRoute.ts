@@ -1807,9 +1807,11 @@ function formatPublishedDate(date: string | undefined): string | null {
 /**
  * Generate a random 10-character alphanumeric code for a new book stock
  * (used as the human-scannable/typeable identifier), retrying until it
- * doesn't collide with an existing `book_stocks.code`.
+ * doesn't collide with an existing `book_stocks.code`. Exported for
+ * `ImportRoute.ts`, which creates stocks too (one per Goodreads custom
+ * shelf) using the exact same scheme as every other stock in the app.
  */
-async function generateBookStockCode(): Promise<string> {
+export async function generateBookStockCode(): Promise<string> {
     let code: string = "";
     let isUnique = false;
 

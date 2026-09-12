@@ -24,7 +24,7 @@ import {requireAuth} from "../../middlewares/AuthMiddleware";
 import {handleUploadError} from "../../middlewares/UploadErrorMiddleware";
 import {IImportedBook} from "./parsers/IImportedBook";
 import {parseGoodreadsCsv} from "./parsers/GoodreadsCsvParser";
-import {isAllowedImageUrl} from "../BooksRoute";
+import {isAllowedImageUrl, generateBookStockCode} from "../BooksRoute";
 import {parseVaultisseCsv, VAULTISSE_CSV_TEMPLATE} from "./parsers/VaultisseCsvParser";
 
 const router = Router();
@@ -140,7 +140,11 @@ router.get('/template/:origin', requireAuth, (req: Request, res: Response) => {
  * likely duplicate, so re-uploading the same export twice is harmless. If the
  * parser reports a `readingStatus` (Goodreads' "Exclusive Shelf", or the
  * Vaultisse template's "Reading Status" column), it's stored as `books.reading_status`
- * so the imported book lands directly on the matching Library nav filter.
+ * so the imported book lands directly on the matching Library nav filter. If
+ * the parser reports `locations` (Goodreads' custom shelves - any shelf that
+ * isn't the one "Exclusive Shelf" - e.g. a book on "office" - see
+ * `GoodreadsCsvParser.ts`), one "available" stock is created per name at a
+ * location found-or-created by that name, same as `categoryName`.
  *
  * Example request (curl):
  *   curl -X POST /api/rest/import/library -F "origin=goodreads" -F "file=@goodreads_library_export.csv"
@@ -239,6 +243,10 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
                 const bookId = insertBook.rows[0].id;
 
                 await __ensureAuthors(client, bookId, book.authors, userId);
+
+                for (const locationName of book.locations ?? []) {
+                    await __addStockAtLocation(client, bookId, locationName, userId);
+                }
 
                 await client.query("COMMIT");
                 imported++;
@@ -341,6 +349,34 @@ async function __ensureCategory(client: any, name: string | null, userId: number
         [truncated, userId]
     );
     return insert.rows[0].id;
+}
+
+/** Find-or-create a location by name for this user - same pattern as `__ensureCategory`, just never `null` since a location name only ever reaches here from `book.locations` (already filtered to real names). */
+async function __ensureLocation(client: any, name: string, userId: number): Promise<number> {
+    const truncated = truncate(name, 100) as string;
+
+    const existing = await client.query(
+        "SELECT id FROM locations WHERE name = $1 AND user_id = $2",
+        [truncated, userId]
+    );
+    if (existing.rowCount > 0) return existing.rows[0].id;
+
+    const insert = await client.query(
+        "INSERT INTO locations (name, user_id) VALUES ($1, $2) RETURNING id",
+        [truncated, userId]
+    );
+    return insert.rows[0].id;
+}
+
+/** Create one "available" (status 0) stock for `bookId` at a location found-or-created by `locationName` - one call per entry in `IImportedBook.locations`. */
+async function __addStockAtLocation(client: any, bookId: number, locationName: string, userId: number): Promise<void> {
+    const locationId = await __ensureLocation(client, locationName, userId);
+    const code = await generateBookStockCode();
+
+    await client.query(
+        "INSERT INTO book_stocks (book_id, code, status, location_id, user_id) VALUES ($1, $2, $3, $4, $5)",
+        [bookId, code, 0, locationId, userId]
+    );
 }
 
 /** Insert a `languages` row for `code` if one doesn't exist yet (name defaults to the code itself, e.g. "en"). No-op if `code` is null. */

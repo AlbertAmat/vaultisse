@@ -67,6 +67,35 @@ function toReadingStatus(shelf: string | undefined): ReadingStatusEnum | null {
 }
 
 /**
+ * "Bookshelves" lists every shelf a book is on, including its one
+ * "Exclusive Shelf" redundantly - a book on "office" also lists it as
+ * "office" here (or "office, to-read" if it's on both). Any shelf that
+ * isn't one of the three built-in reading-status ones is a custom shelf,
+ * which - short of anything else in a Goodreads export to go on - is
+ * treated as where the user keeps that physical copy, one Vaultisse stock
+ * per custom shelf (see `locations` on `IImportedBook`).
+ */
+function toLocationNames(bookshelves: string | undefined): string[] {
+    if (!bookshelves) return [];
+
+    const seen = new Set<string>();
+    const names: string[] = [];
+
+    for (const raw of bookshelves.split(",")) {
+        const name = raw.trim();
+        if (!name || name.toLowerCase() in EXCLUSIVE_SHELF_TO_READING_STATUS) continue;
+
+        const key = name.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            names.push(name);
+        }
+    }
+
+    return names;
+}
+
+/**
  * Goodreads wraps ISBN/ISBN13 in an Excel "treat as text" formula
  * (`="1451648537"`, or `=""` when absent) so spreadsheet apps don't mangle
  * leading zeros / drop them as numbers - strip that wrapper before use.
@@ -140,5 +169,6 @@ export function parseGoodreadsCsv(csvText: string): IImportedBook[] {
         pages: toPages(row["Number of Pages"]),
         formatName: normalizeFormatName(row.Binding),
         readingStatus: toReadingStatus(row["Exclusive Shelf"]),
+        locations: toLocationNames(row.Bookshelves),
     }));
 }
