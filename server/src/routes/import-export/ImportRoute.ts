@@ -18,13 +18,13 @@
  */
 import {Router, Request, Response, NextFunction, ErrorRequestHandler, RequestHandler} from 'express';
 import multer from "multer";
-import axios from "axios";
 import {appService} from "../../AppService";
 import {requireAuth} from "../../middlewares/AuthMiddleware";
 import {handleUploadError} from "../../middlewares/UploadErrorMiddleware";
 import {IImportedBook} from "./parsers/IImportedBook";
 import {parseGoodreadsCsv} from "./parsers/GoodreadsCsvParser";
 import {isAllowedImageUrl, generateBookStockCode} from "../BooksRoute";
+import {resolveBookCover} from "../../utils/BookMetadata";
 import {parseVaultisseCsv, VAULTISSE_CSV_TEMPLATE} from "./parsers/VaultisseCsvParser";
 
 const router = Router();
@@ -215,11 +215,14 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
 
                 // A CSV-supplied cover (Vaultisse origin only, checked against the
                 // same allowlist as every other write to books.image_url) wins;
-                // otherwise, if there's an ISBN, best-effort fetch one from Open
-                // Library's free covers API, the same source `BooksRoute.ts`'s ISBN
-                // auto-create flow falls back to (see `fetchOpenLibraryCover` there).
+                // otherwise look one up by ISBN, then title+author (other OL
+                // editions / Wikipedia), the same helper ISBN auto-create uses.
                 const explicitImageUrl = book.imageUrl && isAllowedImageUrl(book.imageUrl) ? book.imageUrl : null;
-                const imageUrl = explicitImageUrl ?? (book.isbn ? await __fetchOpenLibraryCover(book.isbn) : null);
+                const imageUrl = explicitImageUrl ?? await resolveBookCover({
+                    isbn: book.isbn,
+                    title: book.name,
+                    authors: book.authors,
+                });
 
                 const insertBook = await client.query(
                     `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, reading_status, user_id)
@@ -295,30 +298,6 @@ async function __existsByName(client: any, name: string, userId: number): Promis
         [name, userId]
     );
     return result.rowCount > 0;
-}
-
-/**
- * Best-effort cover lookup by ISBN via Open Library's free covers API - no
- * API key needed, unlike Google Books. Mirrors `fetchOpenLibraryCover` in
- * `BooksRoute.ts`; kept as its own small copy here rather than importing
- * from that file, same reasoning as `__ensureAuthors` etc. below. `null` on
- * any failure (no cover, timeout, non-image response) rather than throwing -
- * a missing cover shouldn't fail the whole row.
- */
-async function __fetchOpenLibraryCover(isbn: string): Promise<string | null> {
-    try {
-        const url = `https://covers.openlibrary.org/b/isbn/${encodeURIComponent(isbn)}-M.jpg`;
-
-        const res = await axios.get(url, {
-            responseType: "arraybuffer",
-            timeout: 3000,
-        });
-
-        const contentType = String(res.headers["content-type"] ?? "");
-        return res.status === 200 && contentType.startsWith("image/") ? url : null;
-    } catch {
-        return null;
-    }
 }
 
 /** `formats` is a small, fixed, global (not user-scoped) table - matched, never created, from an import. */

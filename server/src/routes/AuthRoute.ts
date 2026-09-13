@@ -31,10 +31,16 @@ import {
     beginOidcAuthorization,
     completeOidcAuthorization,
     OIDC_PENDING_COOKIE,
-    oidcPendingClearCookieOptions,
-    oidcPendingCookieOptions,
 } from "../utils/Oidc";
 import {findOrCreateOidcUser} from "../utils/OidcUsers";
+import {
+    clearOidcPendingCookie,
+    clearPending2faCookie,
+    clearSessionCookie,
+    setOidcPendingCookie,
+    setPending2faCookie,
+    setSessionCookie,
+} from "../utils/SessionCookie";
 
 const router = express.Router();
 
@@ -159,9 +165,9 @@ router.get("/login", (req: Request, res: Response) => {
     // If user goes to login page, clear the current token.
     // we can improve it, by checking if the token is valid, etc ad redirect to app
     // at the moment, we will clear the token
-    res.clearCookie("token");
-    res.clearCookie("pending_2fa_token");
-    res.clearCookie(OIDC_PENDING_COOKIE, oidcPendingClearCookieOptions());
+    clearSessionCookie(res);
+    clearPending2faCookie(res);
+    clearOidcPendingCookie(res);
     res.sendFile(path.join(__dirname, "..", "assets", "login.html"));
 });
 
@@ -221,12 +227,7 @@ router.post("/login", authLimiter,  async (req: Request, res: Response) => {
             appService.getLogger().debug("Password OK, awaiting 2FA code for user:" + username);
 
             const pendingToken = appService.createPending2faToken(user.id);
-            res.cookie("pending_2fa_token", pendingToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
-                maxAge: 5 * 60 * 1000
-            });
+            setPending2faCookie(res, pendingToken);
 
             return res.json({success: true, twoFactorRequired: true, message: "Enter your verification code"});
         }
@@ -246,14 +247,7 @@ router.post("/login", authLimiter,  async (req: Request, res: Response) => {
         await recordActivity(pool, user.id, ActivityAction.LOGIN, {metadata: {ip: req.ip}});
 
         const userToken = appService.createSessionToken(user.id, user.token_version, sessionKey);
-
-        // Send JWT in cookie
-        res.cookie("token", userToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: appService.getSessionTime()
-        });
+        setSessionCookie(res, userToken);
 
         appService.getLogger().debug("Redirecting to /app for user:" + username);
 
@@ -295,7 +289,7 @@ router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
 
     const userId = appService.verifyPending2faToken(pendingToken);
     if (userId === null) {
-        res.clearCookie("pending_2fa_token");
+        clearPending2faCookie(res);
         return res.status(401).json({message: "Your login has expired. Please log in again."});
     }
 
@@ -307,7 +301,7 @@ router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
         );
 
         if (userResult.rows.length === 0) {
-            res.clearCookie("pending_2fa_token");
+            clearPending2faCookie(res);
             return res.status(401).json({message: "Your login has expired. Please log in again."});
         }
 
@@ -324,7 +318,7 @@ router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
             return res.status(401).json({message: "Invalid verification code."});
         }
 
-        res.clearCookie("pending_2fa_token");
+        clearPending2faCookie(res);
 
         await pool.query(`UPDATE users SET last_login_date = CURRENT_TIMESTAMP WHERE id = $1`, [user.id]);
 
@@ -332,12 +326,7 @@ router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
         await recordActivity(pool, user.id, ActivityAction.LOGIN, {metadata: {ip: req.ip}});
 
         const userToken = appService.createSessionToken(user.id, user.token_version, sessionKey);
-        res.cookie("token", userToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: appService.getSessionTime()
-        });
+        setSessionCookie(res, userToken);
 
         res.json({success: true, message: "Login successful", redirectUrl: "/app"});
     } catch (error) {
@@ -367,7 +356,8 @@ router.get("/auth/oidc/status", (req: Request, res: Response) => {
  * GET /auth/oidc/start
  * ---------------------
  * Begin the authorization-code + PKCE flow: set a short-lived SameSite=lax
- * `oidc_pending` cookie and redirect to the IdP. Rate limited like login.
+ * `oidc_pending` cookie and redirect to the IdP with `prompt=login` so an
+ * existing Authentik session is not reused silently. Rate limited like login.
  * 404 when SSO is not enabled.
  */
 router.get("/auth/oidc/start", authLimiter, async (req: Request, res: Response) => {
@@ -377,11 +367,12 @@ router.get("/auth/oidc/start", authLimiter, async (req: Request, res: Response) 
 
     try {
         const {url, pendingToken} = await beginOidcAuthorization();
-        res.cookie(OIDC_PENDING_COOKIE, pendingToken, oidcPendingCookieOptions());
+        clearSessionCookie(res);
+        setOidcPendingCookie(res, pendingToken);
         return res.redirect(url);
     } catch (error) {
         appService.getLogger().error("OIDC start failed: " + error);
-        res.clearCookie(OIDC_PENDING_COOKIE, oidcPendingClearCookieOptions());
+        clearOidcPendingCookie(res);
         return res.redirect("/login?error=sso");
     }
 });
@@ -395,7 +386,7 @@ router.get("/auth/oidc/start", authLimiter, async (req: Request, res: Response) 
  */
 router.get("/auth/oidc/callback", authLimiter, async (req: Request, res: Response) => {
     const fail = () => {
-        res.clearCookie(OIDC_PENDING_COOKIE, oidcPendingClearCookieOptions());
+        clearOidcPendingCookie(res);
         return res.redirect("/login?error=sso");
     };
 
@@ -426,13 +417,8 @@ router.get("/auth/oidc/callback", authLimiter, async (req: Request, res: Respons
         await recordActivity(pool, user.id, ActivityAction.LOGIN, {metadata: {method: "oidc", ip: req.ip}});
 
         const userToken = appService.createSessionToken(user.id, user.token_version, sessionKey);
-        res.clearCookie(OIDC_PENDING_COOKIE, oidcPendingClearCookieOptions());
-        res.cookie("token", userToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: appService.getSessionTime()
-        });
+        clearOidcPendingCookie(res);
+        setSessionCookie(res, userToken);
 
         return res.redirect("/app");
     } catch (error) {
@@ -585,7 +571,7 @@ router.get("/logout", async (req: Request, res: Response) => {
         }
     }
 
-    res.clearCookie("token");
+    clearSessionCookie(res);
     return res.redirect("/login"); // Redirect to login;
 });
 

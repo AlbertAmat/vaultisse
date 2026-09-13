@@ -68,6 +68,10 @@ function displayName(claims: OidcClaims): string {
  */
 export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcClaims): Promise<OidcResolvedUser> {
     const email = claims.email.trim();
+    const sub = (claims.sub || "").trim();
+    if (!sub) {
+        throw new OidcUserError("OIDC account has no subject");
+    }
     if (!email) {
         throw new OidcUserError("OIDC account has no email");
     }
@@ -76,7 +80,7 @@ export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcCl
         `SELECT id, token_version, disabled, oidc_issuer, oidc_sub
            FROM users
           WHERE oidc_issuer = $1 AND oidc_sub = $2`,
-        [claims.issuer, claims.sub]
+        [claims.issuer, sub]
     );
     if (bySub.rowCount === 1) {
         return requireActive(bySub.rows[0]);
@@ -94,7 +98,7 @@ export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcCl
         if (row.disabled) {
             throw new OidcUserError("Account is disabled");
         }
-        if (row.oidc_sub && (row.oidc_issuer !== claims.issuer || row.oidc_sub !== claims.sub)) {
+        if (row.oidc_sub && (row.oidc_issuer !== claims.issuer || row.oidc_sub !== sub)) {
             throw new OidcUserError("Email is already linked to a different SSO account");
         }
         if (!claims.emailVerified) {
@@ -103,7 +107,7 @@ export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcCl
 
         await db.query(
             `UPDATE users SET oidc_issuer = $1, oidc_sub = $2 WHERE id = $3`,
-            [claims.issuer, claims.sub, row.id]
+            [claims.issuer, sub, row.id]
         );
         return {id: row.id, token_version: row.token_version};
     }
@@ -116,7 +120,7 @@ export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcCl
             `INSERT INTO users (name, code, email, password, disabled, oidc_issuer, oidc_sub)
              VALUES ($1, $2, $3, $4, FALSE, $5, $6)
              RETURNING id, token_version`,
-            [displayName(claims), code, email.slice(0, 100), passwordHash, claims.issuer, claims.sub]
+            [displayName(claims), code, email.slice(0, 100), passwordHash, claims.issuer, sub]
         );
         return {id: inserted.rows[0].id, token_version: inserted.rows[0].token_version};
     } catch (err: any) {
@@ -125,7 +129,7 @@ export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcCl
                 `SELECT id, token_version, disabled, oidc_issuer, oidc_sub
                    FROM users
                   WHERE oidc_issuer = $1 AND oidc_sub = $2`,
-                [claims.issuer, claims.sub]
+                [claims.issuer, sub]
             );
             if (raced.rowCount === 1) {
                 return requireActive(raced.rows[0]);

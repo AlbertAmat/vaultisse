@@ -30,7 +30,9 @@ describe("POST /register", () => {
 
         expect(loginRes.status).toBe(200);
         expect(loginRes.body).toMatchObject({success: true, redirectUrl: "/app"});
-        expect(loginRes.headers["set-cookie"]?.[0]).toMatch(/^token=/);
+        const setCookie = loginRes.headers["set-cookie"]?.join(";") ?? "";
+        expect(setCookie).toMatch(/token=/);
+        expect(setCookie).toMatch(/SameSite=Lax/i);
     });
 
     it("trims surrounding whitespace from username and email", async () => {

@@ -14,6 +14,7 @@ import helmet from "helmet"; // Middleware to set secure HTTP headers
 import rateLimit from "express-rate-limit";
 import path from "path"; // Middleware to limit repeated requests
 import {blockWritesInDemo} from "./middlewares/DemoModeMiddleware"; // Rejects writes when DEMO_MODE=true
+import {normalizeGoogleApiKey} from "./utils/BookMetadata";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 
 interface DatabaseConf {
@@ -224,7 +225,7 @@ export class AppService {
         this.m_sessionTime  = Number(process.env.SESSION_TIME);
         this.m_allowDevAuth = process.env.ALLOW_DEV_AUTH == "true";
 
-        this.m_googleApiKey = String(process.env.GOOGLE_BOOKS_API_KEY)
+        this.m_googleApiKey = normalizeGoogleApiKey(process.env.GOOGLE_BOOKS_API_KEY);
 
         const parsedMaxImportFileSizeMb = Number(process.env.MAX_IMPORT_FILE_SIZE_MB);
         this.m_maxImportFileSizeMb = Number.isFinite(parsedMaxImportFileSizeMb) && parsedMaxImportFileSizeMb > 0
@@ -281,7 +282,7 @@ export class AppService {
         return this.m_jwtSecret;
     }
 
-    /** Get the configured Google Books API key (undefined falls back to Open Library, see BooksRoute.ts). */
+    /** Optional Google Books API key. Empty / unset means ISBN lookup skips Google. */
     public getGoogleApiKey(): string | undefined {
         return this.m_googleApiKey;
     }

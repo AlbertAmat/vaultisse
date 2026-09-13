@@ -7,12 +7,12 @@
  */
 import {Issuer, generators, Client} from "openid-client";
 import jwt from "jsonwebtoken";
-import {CookieOptions} from "express";
 import {appService} from "../AppService";
+import {OIDC_PENDING_MAX_AGE_MS} from "./SessionCookie";
 
-export const OIDC_PENDING_COOKIE = "oidc_pending";
+export {OIDC_PENDING_COOKIE} from "./SessionCookie";
+
 const OIDC_PENDING_AUDIENCE = "vaultisse-oidc-pending";
-const OIDC_PENDING_MAX_AGE_MS = 10 * 60 * 1000;
 
 export interface OidcClaims {
     issuer: string;
@@ -36,26 +36,6 @@ let cachedIssuer: string | null = null;
 export function resetOidcClientCache(): void {
     cachedClient = null;
     cachedIssuer = null;
-}
-
-export function oidcPendingCookieOptions(): CookieOptions {
-    return {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: OIDC_PENDING_MAX_AGE_MS,
-        path: "/",
-    };
-}
-
-/** Same flags as {@link oidcPendingCookieOptions} minus maxAge, for clearCookie. */
-export function oidcPendingClearCookieOptions(): CookieOptions {
-    return {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-    };
 }
 
 async function getClient(): Promise<Client> {
@@ -119,6 +99,9 @@ export async function beginOidcAuthorization(): Promise<{url: string; pendingTok
     const codeVerifier = generators.codeVerifier();
     const codeChallenge = generators.codeChallenge(codeVerifier);
 
+    // prompt=login: Authentik's implicit-consent flow otherwise reuses the
+    // existing IdP session, so every "Sign in with SSO" lands on the same
+    // Vaultisse user until someone logs out of Authentik itself.
     const url = client.authorizationUrl({
         scope: config.scopes,
         redirect_uri: config.redirectUri,
@@ -126,6 +109,7 @@ export async function beginOidcAuthorization(): Promise<{url: string; pendingTok
         code_challenge_method: "S256",
         state,
         nonce,
+        prompt: "login",
     });
 
     return {url, pendingToken: signPending({state, nonce, codeVerifier})};
@@ -139,6 +123,11 @@ function claimsFromIdTokenAndUserinfo(
     idToken: {sub: string; iss: string; email?: string; email_verified?: boolean | string; name?: string; preferred_username?: string},
     userinfo: {email?: string; email_verified?: boolean; name?: string; preferred_username?: string} | null
 ): OidcClaims {
+    const sub = (idToken.sub || "").trim();
+    if (!sub) {
+        throw new Error("OIDC token has no subject");
+    }
+
     const email = (idToken.email || userinfo?.email || "").trim();
     if (!email) {
         throw new Error("OIDC account has no email");
@@ -146,7 +135,7 @@ function claimsFromIdTokenAndUserinfo(
 
     return {
         issuer: idToken.iss,
-        sub: idToken.sub,
+        sub,
         email,
         emailVerified: isEmailVerified(idToken.email_verified) || isEmailVerified(userinfo?.email_verified),
         name: (idToken.name || userinfo?.name || "").trim() || undefined,

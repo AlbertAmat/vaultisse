@@ -22,6 +22,7 @@ import {
 } from "../utils/TwoFactorAuth";
 import {recordActivity, ActivityAction} from "../utils/ActivityLog";
 import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
+import {clearSessionCookie, setSessionCookie} from "../utils/SessionCookie";
 
 const router = Router();
 
@@ -419,12 +420,7 @@ router.post("/password", requireAuth, passwordChangeLimiter, async (req: Request
         // user_sessions row - deliberately left un-revoked above - still
         // matches the reissued token's `sid` claim.
         const newToken = appService.createSessionToken(userId, updateResult.rows[0].token_version, req.sessionKey ?? DEV_SESSION_KEY);
-        res.cookie("token", newToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: appService.getSessionTime()
-        });
+        setSessionCookie(res, newToken);
 
         return res.json({
             success: true,
@@ -526,7 +522,7 @@ router.delete("/sessions/:id", requireAuth, async (req: Request, res: Response) 
         await recordActivity(pool, userId, ActivityAction.LOGOUT, {metadata: {ip: req.ip, sessionId}});
 
         if (sessionId === req.sessionId) {
-            res.clearCookie("token");
+            clearSessionCookie(res);
         }
 
         res.status(200).json({message: "Session revoked successfully"});

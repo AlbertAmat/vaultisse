@@ -405,8 +405,11 @@ real `JWT_SECRET` — every other production hardening step above still applies.
   - Issuer: Authentik shows this on the provider as
     `https://auth.example.com/application/o/<slug>/` — copy it into `OIDC_ISSUER`
 
-  Who can open the Authentik application is who can sign in (and, on first
-  visit, get a new isolated Vaultisse catalog). Restrict that in Authentik
+  Vaultisse sends `prompt=login` on every SSO start so Authentik cannot
+  silently reuse an existing IdP session (implicit-consent flows otherwise
+  always return the same user). Who can open the Authentik application is
+  who can sign in (and, on first visit, get a new isolated Vaultisse
+  catalog). Restrict that in Authentik
   rather than relying on `REGISTRATION_REQUIRES_APPROVAL` (SSO JIT ignores
   it). Bind the app to `127.0.0.1` and set `TRUST_PROXY=true` when a reverse
   proxy sits in front — same as scenarios B/C. Local-dev redirect is

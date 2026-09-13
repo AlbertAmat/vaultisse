@@ -32,12 +32,9 @@ process.env.LOGGER_PATH = path.join(__dirname, "..", ".tmp", "logs");
 process.env.JWT_SECRET = process.env.JWT_SECRET || "test-only-secret-do-not-use-in-production";
 process.env.SESSION_TIME = process.env.SESSION_TIME || String(60 * 60 * 1000);
 process.env.FRONT_END_URL = process.env.FRONT_END_URL || "http://localhost:5173";
-// Unconditional (not `||`-defaulted): a placeholder value some developers
-// leave in their own server/.env (e.g. "npm") would otherwise leak in here
-// and silently flip which branch (Google Books vs. the Open Library
-// fallback) BooksRoute.ts's ISBN lookup takes between machines/CI - tests
-// mock both branches explicitly (see BooksRoute.test.ts) and must not
-// depend on which one actually runs.
+// Unconditional (not `||`-defaulted): a leftover key in a developer
+// server/.env would otherwise call Google Books. Tests mock Open Library
+// and must not depend on which machine happens to have a key.
 process.env.GOOGLE_BOOKS_API_KEY = "";
 process.env.MAX_IMPORT_FILE_SIZE_MB = process.env.MAX_IMPORT_FILE_SIZE_MB || "10";
 process.env.MAX_EBOOK_FILE_SIZE_MB = process.env.MAX_EBOOK_FILE_SIZE_MB || "10";

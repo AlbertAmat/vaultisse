@@ -86,15 +86,14 @@ and so tripping, that limiter's bucket.
 
 ## Mocking external APIs
 
-Anything that would otherwise call a real third-party service (Google
-Books/Open Library ISBN metadata, Open Library cover images) mocks `axios`
-with `jest.mock("axios")`. `GOOGLE_BOOKS_API_KEY` is forced to an empty
-string in `test/setup/testEnv.js` - **unconditionally**, not just when unset
-- because a leftover placeholder value in a developer's own `server/.env`
-would otherwise silently flip which code path (Google Books vs. the Open
-Library fallback) `BooksRoute.ts`'s ISBN lookup takes, and tests must not
-depend on which machine happens to run them. With the key always empty, the
-Open Library fallback path is what tests mock.
+Anything that would otherwise call a real third-party service (Open Library
+ISBN metadata, optional Google Books, Wikipedia, ISBN store pages, Open
+Library cover images) mocks `axios` with `jest.mock("axios")`.
+`GOOGLE_BOOKS_API_KEY` is forced to an empty string in
+`test/setup/testEnv.js` - **unconditionally**, not just when unset - because
+a leftover key in a developer's own `server/.env` would otherwise call
+Google Books. With the key always empty, Google is skipped and tests mock
+the Open Library path (plus empty JSON for the other URLs).
 
 ## Adding a new test file
 

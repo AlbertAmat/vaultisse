@@ -14,7 +14,16 @@ beforeEach(async () => {
     mockedAxios.get.mockReset();
     // Default: every cover lookup "succeeds" with a plausible image response,
     // unless a specific test overrides this to simulate a miss.
-    mockedAxios.get.mockResolvedValue({status: 200, headers: {"content-type": "image/jpeg"}});
+    mockedAxios.get.mockImplementation((url: string) => {
+        if (String(url).includes("covers.openlibrary.org")) {
+            return Promise.resolve({
+                status: 200,
+                headers: {"content-type": "image/jpeg"},
+                data: Buffer.alloc(1000, 1),
+            });
+        }
+        return Promise.resolve({status: 200, data: {}});
+    });
 });
 
 const GOODREADS_CSV = [

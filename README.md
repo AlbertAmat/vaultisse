@@ -199,8 +199,8 @@ vaultisse/
   other recent LTS versions likely work but aren't tested)
 - [PostgreSQL](https://www.postgresql.org/) 13+ (any recent version should do)
 - A [Google Books API key](https://developers.google.com/books) (optional — the
-  server falls back to the free [Open Library API](https://openlibrary.org/developers/api)
-  if `GOOGLE_BOOKS_API_KEY` isn't set)
+  server looks up ISBNs on [Open Library](https://openlibrary.org/developers/api)
+  first; a key only adds Google Books on top)
 
 ### 1. Clone the repository
 

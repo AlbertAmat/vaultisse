@@ -80,7 +80,7 @@ sequenceDiagram
 4. **Create the session**: a new `user_sessions` row (device's `User-Agent`,
    IP, timestamps - see [below](#user_sessions-revoke-one-device)), an
    `activity_log` row (`action: login`), and a signed JWT containing that
-   session's key. Set it as the `token` cookie: `httpOnly`, `sameSite: strict`,
+   session's key. Set it as the `token` cookie: `httpOnly`, `sameSite: lax`,
    `secure` in production, `maxAge` = `SESSION_TIME`.
 
 A failed attempt at step 1 (or a failed TOTP/backup code at the 2FA step)
@@ -125,9 +125,12 @@ sequenceDiagram
     Vaultisse-->>Browser: Set-Cookie token and redirect /app
 ```
 
-The `oidc_pending` cookie is `SameSite=lax` on purpose: the session `token`
-cookie stays `strict`, but a `strict` pending cookie would be dropped on
-the top-level return from the IdP.
+Both `oidc_pending` and the session `token` cookie are `SameSite=lax`. A
+`strict` session cookie set on the IdP callback is not sent on the following
+redirect to `/app`, so a leftover session from the previous user would keep
+winning. Authorize requests also send `prompt=login` so Authentik (and other
+IdPs with an implicit-consent flow) cannot silently reuse an existing IdP
+session.
 
 **User mapping** ([`OidcUsers.ts`](../server/src/utils/OidcUsers.ts)), in
 order:
@@ -346,8 +349,9 @@ to run.
   allowlisted book-cover image hosts.
 - **CORS** is locked to `FRONT_END_URL` with credentials enabled - not `*`.
 - **Cookies**: `httpOnly` (unreadable from JS, so an XSS can't just read the
-  token), `sameSite: strict` (not sent cross-site, mitigating CSRF), `secure`
-  in production (HTTPS only).
+  token), `sameSite: lax` (sent on the top-level OIDC return, withheld from
+  cross-site POSTs), `secure` in production (HTTPS only). `/login` and
+  `/logout` clear the cookie with the same flags used when it was set.
 - **`DEMO_MODE=true`** rejects every non-safe request except the login flow,
   so a public read-only demo can't be used to modify shared data.
 

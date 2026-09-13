@@ -1,4 +1,7 @@
 .env
+docker-compose.in-hos.yml
+authentik/
+goodreads_library_export.csv
 node_modules
 /server/test/.tmp/
 /server/coverage/

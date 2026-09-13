@@ -98,6 +98,11 @@ describe("findOrCreateOidcUser", () => {
             .rejects.toBeInstanceOf(OidcUserError);
     });
 
+    it("rejects a missing subject", async () => {
+        await expect(findOrCreateOidcUser(pool(), freshClaims({sub: "  "})))
+            .rejects.toBeInstanceOf(OidcUserError);
+    });
+
     it("rejects a disabled account (matched by subject)", async () => {
         const claims = freshClaims();
         const created = await findOrCreateOidcUser(pool(), claims);

@@ -71,18 +71,23 @@ without any typing:
 sequenceDiagram
     participant Client
     participant Server
-    participant Google as Google Books API
     participant OL as Open Library
+    participant Google as Google Books API
+    participant Wiki as Wikipedia
+    participant Store as ISBN store
 
     Client->>Server: POST /book/isbn/9780261102217
     Server->>Server: normalizeAndValidateIsbn() - reject malformed input
-    Server->>Google: GET /volumes?q=isbn:...&key=GOOGLE_BOOKS_API_KEY
-    alt Google succeeds
-        Google-->>Server: title, authors, description, category, publisher...
-    else Google fails, rate-limited, or no API key configured
-        Server->>OL: GET /search.json?isbn=...
-        OL-->>Server: title, authors, subjects, publisher... (metadata only)
-        Server->>OL: GET /b/isbn/....-M.jpg (cover, only if Google had none)
+    Server->>OL: edition /api/books + /isbn/{isbn}.json + work + search.json
+    alt GOOGLE_BOOKS_API_KEY is set
+        Server->>Google: GET /volumes?q=isbn:...&key=...
+    end
+    alt synopsis still short and a title is known
+        Server->>Wiki: search + extract (ca, es, en)
+    end
+    alt no catalog title
+        Server->>Store: schema.org Book product page
+        Server->>OL: search.json?title=... (cover / work)
     end
     Server->>Server: ensureLanguage / __ensureCategory / __getOrCreateBook / __ensureAuthors (one transaction)
     Server-->>Client: book id
@@ -90,25 +95,36 @@ sequenceDiagram
 
 Details worth knowing:
 
-- **Google Books needs `GOOGLE_BOOKS_API_KEY`** (see the root README's
-  Prerequisites). Without it, or on any Google failure, the server falls
-  back to Open Library's free search API automatically - no client-visible
-  difference except which fields make it through (Open Library's `search.json`
-  doesn't return a description, for instance).
-- **429 from Google is retried** up to 3 times with linear backoff
-  (`fetchBookData`'s `retries` param) before falling back.
+- **Open Library is the default source**, in
+  [`BookMetadata.ts`](../server/src/utils/BookMetadata.ts). Edition + work
+  endpoints carry the synopsis, publisher, page count and cover that
+  `search.json` alone often omits. `search.json` is still used to fill gaps
+  (year, language).
+- **Google Books is optional.** `GOOGLE_BOOKS_API_KEY` (see the root README)
+  is only sent when a real key is configured. An empty key used to throw
+  `Missing GOOGLE_BOOKS_API_KEY` on every add and then fall through to a
+  thin `search.json` response - that path is gone. 429s are not retried.
+- **Wikipedia** (ca → es → en) supplies an intro extract when the synopsis
+  is still under 180 characters. Hits are scored against the book title so
+  an author page is not stored as the description.
+- **Brand-new regional ISBNs** (a 979- Spanish/Catalan pocket reprint that
+  Open Library and Google have not ingested yet) can still resolve from a
+  public ISBN product page, then pick up a cover from an Open Library title
+  search of the same work.
 - **Find-or-create everywhere**: category (`__ensureCategory`), author(s)
   (`__ensureAuthors`), and the book itself (`__getOrCreateBook`, matched by
-  ISBN) are all find-or-create rather than blind inserts - re-scanning the
-  same ISBN twice reuses the existing rows instead of creating duplicates.
+  ISBN) are all find-or-create rather than blind inserts. Re-scanning the
+  same ISBN reuses the row and **fills empty fields** (description, cover,
+  publisher, date, language, pages, category) so a thin first lookup can be
+  repaired without deleting the book.
 - **Field truncation** (`truncate()`) protects against `VARCHAR` overflow -
   external metadata is free text with no length guarantee, so title/publisher/
   category/author names are all silently clipped to fit their columns rather
   than failing the whole insert.
 - **`language_code` is normalized** to a bare 2-letter code
-  (`normalizeLanguageCode`) - anything else (missing, "unknown", a 3-letter
-  ISO 639-2 code) is dropped rather than stored, since `languages.code` is
-  `CHAR(2)`.
+  (`normalizeLanguageCode`) - Open Library's 3-letter codes (`eng`,
+  `/languages/spa`) are mapped; anything else is dropped, since
+  `languages.code` is `CHAR(2)`.
 - The whole DB side (language/category/book/authors/location) runs in **one
   transaction** - a partial book (e.g. authors linked but the book row
   missing) can't happen.
@@ -158,10 +174,16 @@ there's no soft-delete or history entry for a stock that's discarded outright
 `books.image_url` holds either:
 
 - a **`data:image/png;base64,...` / `data:image/jpeg;base64,...` URI** - our
-  own uploads, via `POST /book/:id/image` (multer, 4MB cap, PNG/JPEG only) or
-  the manual-create form; stored inline, no external file storage/CDN, or
-- an **external URL** from the ISBN lookup (`books.google.com` or
+  own uploads, via `POST /book/:id/image` (multer, 4MB cap, PNG/JPEG only),
+  the manual-create form, or a Wikipedia page image pulled during ISBN/CSV
+  lookup (stored inline so we don't have to allow `wikimedia.org` in CSP), or
+- an **external URL** from the lookup (`books.google.com` or
   `covers.openlibrary.org`).
+
+ISBN auto-create and CSV import share `resolveBookCover()`: Open Library by
+ISBN (`?default=false`, reject the 1×1 placeholder), then another edition of
+the same work (title + author search), then Wikipedia. A Vaultisse CSV
+`Cover` column still wins when it passes `isAllowedImageUrl()`.
 
 `isAllowedImageUrl()` enforces that allowlist on every write to
 `image_url` - accepting an arbitrary URL here would turn the book cover
@@ -263,6 +285,7 @@ label sheet is generated client-side from data already on the page.
 | Concern | File |
 |---|---|
 | All book/stock endpoints, ISBN lookup, image/file upload | `server/src/routes/BooksRoute.ts` |
+| ISBN metadata providers (OL / Google / Wikipedia / store) | `server/src/utils/BookMetadata.ts` |
 | ISBN checksum validation | `server/src/utils/IsbnVerification.ts` |
 | Epub/PDF content sniffing | `server/src/utils/FileSignature.ts` |
 | `loan_history` bookkeeping | `server/src/utils/LoanHistory.ts` |

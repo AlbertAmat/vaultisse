@@ -218,16 +218,16 @@ describe("GET /book/counters", () => {
 describe("POST /book/isbn/:isbn (external metadata lookup)", () => {
     /**
      * GOOGLE_BOOKS_API_KEY is forced empty in tests (see test/setup/testEnv.js),
-     * so `fetchBookData` always takes the Open Library fallback branch, never
-     * the Google Books one - this mocks that branch's two calls (metadata
-     * search, then the covers API) by URL, rather than assuming either
-     * provider specifically. If a real key is ever configured, this
-     * intentionally isn't what would run in production.
+     * so Google Books is skipped entirely. The mock covers Open Library
+     * `search.json` plus the covers API; other OL/Wikipedia/store URLs fall
+     * through to an empty JSON body. If a real key is ever configured in a
+     * developer `.env`, testEnv still wins so this path stays deterministic.
      */
     function mockOpenLibraryMetadata(overrides: {title?: string; authorName?: string[]; pages?: number} = {}) {
         mockedAxios.get.mockImplementation((url: string) => {
             if (url.includes("openlibrary.org/search.json")) {
                 return Promise.resolve({
+                    status: 200,
                     data: {
                         docs: [{
                             title: overrides.title ?? "Mocked Book Title",
@@ -242,9 +242,13 @@ describe("POST /book/isbn/:isbn (external metadata lookup)", () => {
                 });
             }
             if (url.includes("covers.openlibrary.org")) {
-                return Promise.resolve({status: 200, headers: {"content-type": "image/jpeg"}});
+                return Promise.resolve({
+                    status: 200,
+                    headers: {"content-type": "image/jpeg"},
+                    data: Buffer.alloc(1000, 1),
+                });
             }
-            return Promise.resolve({data: {}});
+            return Promise.resolve({status: 200, data: {}});
         });
     }
 
@@ -256,7 +260,33 @@ describe("POST /book/isbn/:isbn (external metadata lookup)", () => {
         const id = res.body;
 
         const getRes = await user.agent.get(`/api/rest/book/${id}`);
-        expect(getRes.body).toMatchObject({name: "Mocked Book Title", publisher: "Mock Publisher", pages: 123});
+        expect(getRes.body).toMatchObject({
+            name: "Mocked Book Title",
+            publisher: "Mock Publisher",
+            pages: 123,
+            language_code: "en",
+        });
+        expect(getRes.body.authors).toEqual([{id: expect.any(Number), name: "Mock Author"}]);
+    });
+
+    it("fills empty metadata when the ISBN is already on a thin manual row", async () => {
+        const created = await user.agent.post("/api/rest/book")
+            .field("name", "Thin Manual Book")
+            .field("isbn", "9780261102217");
+        expect(created.status).toBe(200);
+
+        mockOpenLibraryMetadata({title: "Looked Up Title"});
+        const rescan = await user.agent.post("/api/rest/book/isbn/9780261102217");
+        expect(rescan.status).toBe(200);
+        expect(rescan.body).toBe(created.body);
+
+        const getRes = await user.agent.get(`/api/rest/book/${created.body}`);
+        expect(getRes.body).toMatchObject({
+            name: "Thin Manual Book",
+            publisher: "Mock Publisher",
+            pages: 123,
+            language_code: "en",
+        });
         expect(getRes.body.authors).toEqual([{id: expect.any(Number), name: "Mock Author"}]);
     });
 
@@ -274,7 +304,7 @@ describe("POST /book/isbn/:isbn (external metadata lookup)", () => {
     });
 
     it("404s when no metadata is found anywhere", async () => {
-        mockedAxios.get.mockResolvedValue({data: {}}); // No `docs` in the Open Library response.
+        mockedAxios.get.mockResolvedValue({status: 200, data: {}});
         const res = await user.agent.post("/api/rest/book/isbn/9780261102217");
         expect(res.status).toBe(404);
     });
