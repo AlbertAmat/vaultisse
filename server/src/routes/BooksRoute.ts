@@ -18,14 +18,13 @@
  */
 import {Router, Request, Response} from 'express';
 import {appService} from "../AppService";
-import axios, {AxiosError} from "axios";
+import axios from "axios";
 import {v4 as uuidv4} from 'uuid';
 import {requireAuth} from "../middlewares/AuthMiddleware";
 import multer from "multer";
 import {IBookAddMd} from "../types/book/IBookAddMd";
 import {IBookFile} from "../types/book/IBookFile";
 import {Pool, PoolClient} from "pg";
-import {AppErrors} from "../types/AppErrors";
 import {SearchFilter} from "../types/search/SearchFilter";
 import {SortType} from "../types/search/SortType";
 import {normalizeAndValidateIsbn} from "../utils/IsbnVerification";
@@ -984,7 +983,7 @@ router.post(
             /**
              * IMAGE (Google → OpenLibrary Covers fallback)
              */
-            let imageUrl: string | null = null;
+            let imageUrl: string | null;
 
             if (imageLinks?.thumbnail) {
                 imageUrl = imageLinks.thumbnail;
@@ -1126,7 +1125,15 @@ async function fetchBookData(isbn: string, retries = 3): Promise<any> {
             },
         );
 
-        return data?.items?.[0]?.volumeInfo ?? null;
+        const volumeInfo = data?.items?.[0]?.volumeInfo;
+
+        // Google's isbn: search doesn't index every edition (e.g. no-preview
+        // volumes); a clean empty result still needs the fallback, not just errors.
+        if (!volumeInfo) {
+            return __fetchOpenLibraryMetadata(isbn);
+        }
+
+        return volumeInfo;
     } catch (error: unknown) {
         if (
             axios.isAxiosError(error) &&
