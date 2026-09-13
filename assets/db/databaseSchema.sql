@@ -8,6 +8,27 @@ CREATE TABLE schema_migrations
     applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Every upgrade file that exists as of this schema snapshot is already
+-- reflected above - a fresh install must not have the migration runner try
+-- (and fail) to re-apply any of them. Whenever you add a new
+-- assets/db/upgrade/X.Y.Z.sql file per that directory's README, add its
+-- filename here too, in the same commit - no LEGACY_CHECKS entry in
+-- migrate/index.ts is needed for it (that's only for files that shipped
+-- before this table existed at all, applied to real installs from back then).
+INSERT INTO schema_migrations (filename)
+VALUES ('1.0.0/1.sql'),
+       ('1.0.0/2.sql'),
+       ('1.0.0/3.sql'),
+       ('1.0.2.sql'),
+       ('1.1.0/1.sql'),
+       ('1.1.0/2.sql'),
+       ('1.1.0/3.sql'),
+       ('1.1.2.sql'),
+       ('1.1.5.sql'),
+       ('1.1.6.sql'),
+       ('1.1.7.sql'),
+       ('1.1.8.sql');
+
 CREATE TABLE app_languages
 (
     code CHAR(2) PRIMARY KEY,

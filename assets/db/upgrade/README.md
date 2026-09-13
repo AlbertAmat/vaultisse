@@ -65,7 +65,15 @@ When your change needs a schema change (see
 3. Otherwise create `assets/db/upgrade/X.Y.Z.sql` for that version.
 4. Add the same change to `assets/db/databaseSchema.sql` too — the two must
    stay in sync, since a fresh install only ever runs `databaseSchema.sql`.
-5. Mention the new/updated file in your PR description.
+5. Add the new file's name to the `INSERT INTO schema_migrations` list near
+   the top of `databaseSchema.sql`, right next to that same change. Without
+   this, a fresh install would already have the change but not the row
+   recording it, so the migration runner would try (and fail) to re-apply it
+   on first start - see the comment above `LEGACY_CHECKS` in
+   `server/src/migrate/index.ts` for why. You do **not** need to add a
+   `LEGACY_CHECKS` entry for a new file - that's only for files that shipped
+   before the `schema_migrations` table existed at all.
+6. Mention the new/updated file in your PR description.
 
 These files are only safe to squash or rewrite **before** they've been
 released (i.e. before anyone could plausibly have already run them against

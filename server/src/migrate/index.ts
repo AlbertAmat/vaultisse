@@ -16,8 +16,17 @@
  * first time a given install sees a given legacy file, so the very first
  * automated run correctly fast-forwards an install stuck at any old version
  * (1.0.0, 1.1.4, whatever) without re-running changes it already has.
- * Anything shipped after this runner exists is never legacy - it has no
- * entry here and is simply applied the first time it's seen, like normal.
+ *
+ * A fresh install is a different problem: `assets/db/databaseSchema.sql`
+ * already contains every migration's change, but `schema_migrations` starts
+ * empty, so this runner would otherwise try (and fail) to re-apply every
+ * file from `1.0.0` on. That file solves it directly - it seeds
+ * `schema_migrations` with every upgrade filename that exists as of that
+ * schema snapshot, right after creating the table - so a migration shipped
+ * after this runner exists (and folded into databaseSchema.sql, as it
+ * should be) needs no entry here: `schema_migrations` already has its row on
+ * a fresh install, and a real upgrading install genuinely missing it just
+ * applies it normally, like any other not-yet-seen file.
  */
 import * as fs from "fs";
 import * as path from "path";
@@ -54,12 +63,6 @@ const LEGACY_CHECKS: Record<string, (pool: Pool) => Promise<boolean>> = {
     "1.1.5.sql": (pool) => columnExists(pool, "books", "reading_status"),
     "1.1.6.sql": (pool) => labelExists(pool, "en", "IMPORT"),
     "1.1.7.sql": (pool) => columnExists(pool, "locations", "default"),
-    // Merged concurrently with this runner (SSO PR, branched before it existed)
-    // and, like 1.1.7.sql above, already baked into databaseSchema.sql - so a
-    // fresh install (which only ever runs that file, per its README) needs the
-    // same already-applied short-circuit, not just installs upgrading from
-    // an older version.
-    "1.1.8.sql": (pool) => columnExists(pool, "users", "oidc_issuer"),
 };
 
 async function columnExists(pool: Pool, table: string, column: string): Promise<boolean> {
