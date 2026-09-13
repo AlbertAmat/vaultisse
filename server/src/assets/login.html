@@ -257,6 +257,57 @@
             background: var(--pb-primary-dark);
         }
 
+        .btn-sso {
+            display: none;
+            width: 100%;
+            padding: 12px;
+            background: var(--pb-surface);
+            color: var(--pb-text);
+            border: 1px solid var(--pb-border);
+            border-radius: var(--pb-radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: var(--pb-font-body);
+            text-align: center;
+            text-decoration: none;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+            transition: background-color .15s ease, border-color .15s ease;
+        }
+
+        .btn-sso.is-visible {
+            display: block;
+        }
+
+        .btn-sso:hover {
+            background: var(--pb-accent-soft);
+            border-color: var(--pb-primary);
+        }
+
+        .auth-divider {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            margin: 18px 0;
+            color: var(--pb-text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .auth-divider.is-visible {
+            display: flex;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--pb-border);
+        }
+
         .error-message {
             display: none;
             align-items: flex-start;
@@ -334,6 +385,13 @@
             <p class="auth-eyebrow">Welcome back</p>
             <h2>Sign in to your account</h2>
 
+            <div class="error-message" id="sso-error-message">
+                Sign-in with SSO failed. Please try again, or use your password.
+            </div>
+
+            <a class="btn-sso" id="ssoButton" href="/auth/oidc/start">Sign in with SSO</a>
+            <div class="auth-divider" id="ssoDivider">or</div>
+
             <form id="loginForm" action="/login" method="POST">
                 <div class="field">
                     <label for="username">Username</label>
@@ -394,6 +452,26 @@
             btn.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
         }
     }
+
+    if (new URLSearchParams(window.location.search).get('error') === 'sso') {
+        document.getElementById('sso-error-message').style.display = 'flex';
+    }
+
+    fetch('/auth/oidc/status')
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (data) {
+            if (!data || !data.enabled) {
+                return;
+            }
+            var button = document.getElementById('ssoButton');
+            var divider = document.getElementById('ssoDivider');
+            if (data.label) {
+                button.textContent = data.label;
+            }
+            button.classList.add('is-visible');
+            divider.classList.add('is-visible');
+        })
+        .catch(function () { /* password login still works */ });
 
     document.getElementById('loginForm').addEventListener('submit', async function (event) {
         event.preventDefault(); // Prevent default form submission

@@ -30,7 +30,9 @@ describe("POST /register", () => {
 
         expect(loginRes.status).toBe(200);
         expect(loginRes.body).toMatchObject({success: true, redirectUrl: "/app"});
-        expect(loginRes.headers["set-cookie"]?.[0]).toMatch(/^token=/);
+        const setCookie = loginRes.headers["set-cookie"]?.join(";") ?? "";
+        expect(setCookie).toMatch(/token=/);
+        expect(setCookie).toMatch(/SameSite=Lax/i);
     });
 
     it("trims surrounding whitespace from username and email", async () => {
@@ -159,5 +161,30 @@ describe("GET /logout", () => {
         const res = await request(app).get("/logout");
         expect(res.status).toBe(302);
         expect(res.headers.location).toBe("/login");
+    });
+});
+
+describe("GET /auth/oidc/* (disabled by default)", () => {
+    it("reports SSO disabled when OIDC env vars are unset", async () => {
+        const res = await request(app).get("/auth/oidc/status");
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({enabled: false, label: "Sign in with SSO"});
+    });
+
+    it("returns 404 from /auth/oidc/start when SSO is not configured", async () => {
+        const res = await request(app)
+            .get("/auth/oidc/start")
+            .set("X-Forwarded-For", nextFakeIp());
+        expect(res.status).toBe(404);
+        expect(res.body.message).toMatch(/not configured/i);
+    });
+
+    it("redirects a callback with no pending login to /login?error=sso", async () => {
+        const res = await request(app)
+            .get("/auth/oidc/callback")
+            .set("X-Forwarded-For", nextFakeIp())
+            .redirects(0);
+        expect(res.status).toBe(302);
+        expect(res.headers.location).toBe("/login?error=sso");
     });
 });

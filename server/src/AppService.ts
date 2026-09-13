@@ -4,7 +4,7 @@ import http, {Server} from "http"; // Node HTTP module to create server
 import pg from 'pg'; // PostgreSQL client
 import {routes} from "./routes/Routes"; // Import all application routes
 import {Logger} from "./utils/Logger"; // Custom logger utility
-import AuthRoute from "./routes/AuthRoute"; // Auth-related routes
+import AuthRoute from "./routes/auth/AuthRoute"; // Auth-related routes
 import cors from "cors"; // Cross-Origin Resource Sharing middleware
 import cookieParser from "cookie-parser"; // Middleware to parse cookies
 import jwt from "jsonwebtoken"; // JSON Web Token library for authentication
@@ -14,6 +14,7 @@ import helmet from "helmet"; // Middleware to set secure HTTP headers
 import rateLimit from "express-rate-limit";
 import path from "path"; // Middleware to limit repeated requests
 import {blockWritesInDemo} from "./middlewares/DemoModeMiddleware"; // Rejects writes when DEMO_MODE=true
+import {normalizeGoogleApiKey} from "./utils/BookMetadata";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 import {runMigrations} from "./migrate";
 
@@ -23,6 +24,16 @@ interface DatabaseConf {
     name: string;
     user: string;
     password: string;
+}
+
+/** Present only when every required OIDC env var is set. See isOidcEnabled(). */
+export interface OidcConfig {
+    issuer: string;
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    scopes: string;
+    buttonLabel: string;
 }
 
 export class AppService {
@@ -108,6 +119,13 @@ export class AppService {
      * @private
      */
     private readonly m_maxImportFileSizeMb: number;
+
+    /**
+     * OIDC client config, or null when the required env vars are unset.
+     * Presence alone does not mean SSO is offered - see isOidcEnabled().
+     * @private
+     */
+    private readonly m_oidcConfig: OidcConfig | null;
 
     /**
      * Application constructor
@@ -202,7 +220,7 @@ export class AppService {
         this.m_sessionTime  = Number(process.env.SESSION_TIME);
         this.m_allowDevAuth = process.env.ALLOW_DEV_AUTH == "true";
 
-        this.m_googleApiKey = String(process.env.GOOGLE_BOOKS_API_KEY)
+        this.m_googleApiKey = normalizeGoogleApiKey(process.env.GOOGLE_BOOKS_API_KEY);
 
         this.m_libraryThingApiKey = process.env.LIBRARYTHING_API_KEY || undefined;
 
@@ -210,6 +228,8 @@ export class AppService {
         this.m_maxImportFileSizeMb = Number.isFinite(parsedMaxImportFileSizeMb) && parsedMaxImportFileSizeMb > 0
             ? parsedMaxImportFileSizeMb
             : 10;
+
+        this.m_oidcConfig = AppService.__readOidcConfig();
 
         this.m_server       = null;
 
@@ -271,7 +291,7 @@ export class AppService {
         return this.m_jwtSecret;
     }
 
-    /** Get the configured Google Books API key (undefined falls back to Open Library, see BooksRoute.ts). */
+    /** Optional Google Books API key. Empty / unset means ISBN lookup skips Google. */
     public getGoogleApiKey(): string | undefined {
         return this.m_googleApiKey;
     }
@@ -294,6 +314,26 @@ export class AppService {
     /** Get database connection pool */
     public getDatabasePool(): pg.Pool {
         return this.m_databasePool;
+    }
+
+    /**
+     * Read OIDC client config from env vars. Returns null when any of the
+     * required vars is unset - see OidcConfig / isOidcEnabled().
+     * @private
+     */
+    private static __readOidcConfig(): OidcConfig | null {
+        const issuer = (process.env.OIDC_ISSUER ?? "").trim();
+        const clientId = (process.env.OIDC_CLIENT_ID ?? "").trim();
+        const clientSecret = (process.env.OIDC_CLIENT_SECRET ?? "").trim();
+        const redirectUri = (process.env.OIDC_REDIRECT_URI ?? "").trim();
+        if (!issuer || !clientId || !clientSecret || !redirectUri) {
+            return null;
+        }
+
+        const scopes = (process.env.OIDC_SCOPES ?? "").trim() || "openid profile email";
+        const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
+
+        return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel};
     }
 
     /**
@@ -346,6 +386,19 @@ export class AppService {
     /** Check if development authentication is allowed */
     public allowDevAuth(): boolean {
         return this.m_allowDevAuth;
+    }
+
+    /**
+     * SSO is offered only when OIDC is fully configured and this is not a
+     * public demo (JIT on a shared demo catalog would create real accounts).
+     */
+    public isOidcEnabled(): boolean {
+        return this.m_oidcConfig !== null && process.env.DEMO_MODE !== "true";
+    }
+
+    /** Configured OIDC client, or null when the required env vars are unset. */
+    public getOidcConfig(): OidcConfig | null {
+        return this.m_oidcConfig;
     }
 
     /**

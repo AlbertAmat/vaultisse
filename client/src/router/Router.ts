@@ -1,6 +1,6 @@
 /**
  * Vue Router instance for the SPA, mounted under the `/app` base path
- * (matches the server-side catch-all in server/src/routes/AuthRoute.ts that
+ * (matches the server-side catch-all in server/src/routes/auth/AuthRoute.ts that
  * serves index.html for any `/app/*` request, enabling deep-linking/refresh).
  * Each entry delegates to a `router/routes/*Route.ts` singleton's `getRoute()`.
  */

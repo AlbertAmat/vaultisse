@@ -54,6 +54,12 @@ const LEGACY_CHECKS: Record<string, (pool: Pool) => Promise<boolean>> = {
     "1.1.5.sql": (pool) => columnExists(pool, "books", "reading_status"),
     "1.1.6.sql": (pool) => labelExists(pool, "en", "IMPORT"),
     "1.1.7.sql": (pool) => columnExists(pool, "locations", "default"),
+    // Merged concurrently with this runner (SSO PR, branched before it existed)
+    // and, like 1.1.7.sql above, already baked into databaseSchema.sql - so a
+    // fresh install (which only ever runs that file, per its README) needs the
+    // same already-applied short-circuit, not just installs upgrading from
+    // an older version.
+    "1.1.8.sql": (pool) => columnExists(pool, "users", "oidc_issuer"),
 };
 
 async function columnExists(pool: Pool, table: string, column: string): Promise<boolean> {

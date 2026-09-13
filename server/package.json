@@ -25,6 +25,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.3.0",
+    "openid-client": "^5.7.1",
     "otplib": "^13.5.0",
     "pg": "^8.13.1",
     "qrcode": "^1.5.4",

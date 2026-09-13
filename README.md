@@ -63,8 +63,8 @@ language, format, cover image), and it can look books up automatically by ISBN.
 - A dashboard with collection statistics and charts
 - Multi-language UI (English, Spanish, Catalan, Italian)
 - Built-in `/docs` help pages, rendered from Markdown, in the same languages
-- Cookie/session-based authentication with JWT, password hashing, rate limiting, and
-  secure HTTP headers out of the box
+- Cookie/session-based authentication with JWT, password hashing, optional OIDC/SSO
+  (Authentik and other IdPs), rate limiting, and secure HTTP headers out of the box
 
 ## Architecture
 
@@ -202,8 +202,8 @@ vaultisse/
   other recent LTS versions likely work but aren't tested)
 - [PostgreSQL](https://www.postgresql.org/) 13+ (any recent version should do)
 - A [Google Books API key](https://developers.google.com/books) (optional — the
-  server falls back to the free [Open Library API](https://openlibrary.org/developers/api)
-  if `GOOGLE_BOOKS_API_KEY` isn't set)
+  server looks up ISBNs on [Open Library](https://openlibrary.org/developers/api)
+  first; a key only adds Google Books on top)
 - A [LibraryThing developer key](https://www.librarything.com/services/keys.php) (optional,
   free with any LibraryThing account — used as a third cover-lookup fallback when neither
   Google Books nor Open Library has one; skipped entirely if `LIBRARYTHING_API_KEY` isn't set)

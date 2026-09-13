@@ -1,6 +1,12 @@
 import axios from "axios";
 import {setupTestApp} from "../helpers/testApp";
 import {createAuthenticatedUser, ITestUser} from "../helpers/auth";
+import {scheduleImportedBookEnrichment} from "../../src/utils/ImportEnrichment";
+
+jest.mock("../../src/utils/ImportEnrichment", () => ({
+    scheduleImportedBookEnrichment: jest.fn(),
+}));
+const mockedSchedule = scheduleImportedBookEnrichment as jest.MockedFunction<typeof scheduleImportedBookEnrichment>;
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -11,10 +17,20 @@ let user: ITestUser;
 
 beforeEach(async () => {
     user = await createAuthenticatedUser(app);
+    mockedSchedule.mockClear();
     mockedAxios.get.mockReset();
     // Default: every cover lookup "succeeds" with a plausible image response,
     // unless a specific test overrides this to simulate a miss.
-    mockedAxios.get.mockResolvedValue({status: 200, headers: {"content-type": "image/jpeg"}});
+    mockedAxios.get.mockImplementation((url: string) => {
+        if (String(url).includes("covers.openlibrary.org")) {
+            return Promise.resolve({
+                status: 200,
+                headers: {"content-type": "image/jpeg"},
+                data: Buffer.alloc(1000, 1),
+            });
+        }
+        return Promise.resolve({status: 200, data: {}});
+    });
 });
 
 const GOODREADS_CSV = [
@@ -76,7 +92,7 @@ describe("POST /import/library - validation", () => {
 });
 
 describe("POST /import/library - goodreads origin", () => {
-    it("imports rows, unwraps the Excel-escaped ISBN, and skips a cover lookup with no ISBN", async () => {
+    it("imports rows and unwraps the Excel-escaped ISBN without a network cover lookup", async () => {
         const res = await user.agent
             .post("/api/rest/import/library")
             .field("origin", "goodreads")
@@ -89,12 +105,32 @@ describe("POST /import/library - goodreads origin", () => {
         const book = searchRes.body.books.find((b: any) => b.name === "Steve Jobs");
         expect(book).toBeDefined();
         expect(book.isbn).toBe("9781451648539");
-        expect(book.image_url).toBeTruthy(); // ISBN present -> cover lookup attempted (mocked as a hit).
+        expect(book.image_url).toBeFalsy();
+        expect(mockedSchedule).toHaveBeenCalled();
+        expect(mockedAxios.get).not.toHaveBeenCalled();
 
         const noIsbnRes = await user.agent.get("/api/rest/book/search").query({query: "No ISBN Book"});
         const noIsbnBook = noIsbnRes.body.books.find((b: any) => b.name === "No ISBN Book");
         expect(noIsbnBook.isbn).toBeNull();
-        expect(noIsbnBook.image_url).toBeFalsy(); // no ISBN -> no cover lookup possible.
+        expect(noIsbnBook.image_url).toBeFalsy();
+    });
+
+    it("stores My Review as the description", async () => {
+        const csv = [
+            "Title,Author,ISBN,ISBN13,Publisher,Binding,Number of Pages,Year Published,Original Publication Year,Exclusive Shelf,My Review",
+            'Reviewed Book,Someone,"=""""","=""""",Pub,Paperback,100,2000,2000,read,"Loved this one."',
+        ].join("\n");
+
+        const res = await user.agent
+            .post("/api/rest/import/library")
+            .field("origin", "goodreads")
+            .attach("file", Buffer.from(csv), "lib.csv");
+        expect(res.body.imported).toBe(1);
+
+        const bookRes = await user.agent.get("/api/rest/book/search").query({query: "Reviewed Book"});
+        const bookId = bookRes.body.books[0].id;
+        const detailRes = await user.agent.get(`/api/rest/book/${bookId}`);
+        expect(detailRes.body.description).toBe("Loved this one.");
     });
 
     it("skips re-importing the same file as duplicates", async () => {
@@ -189,7 +225,7 @@ describe("POST /import/library - vaultisse origin", () => {
         expect(mockedAxios.get).not.toHaveBeenCalled();
     });
 
-    it("rejects a disallowed cover host and falls back to an ISBN lookup instead", async () => {
+    it("rejects a disallowed cover host and does not look one up over the network", async () => {
         const csv = [
             VAULTISSE_CSV_HEADER,
             "Disallowed Cover Book,Someone,9780261102217,,,,,,,,https://evil.example.com/tracker.png",
@@ -202,15 +238,11 @@ describe("POST /import/library - vaultisse origin", () => {
         expect(res.body.imported).toBe(1);
 
         const bookRes = await user.agent.get("/api/rest/book/search").query({query: "Disallowed Cover Book"});
-        expect(bookRes.body.books[0].image_url).toContain("covers.openlibrary.org");
-        expect(mockedAxios.get).toHaveBeenCalledWith(
-            expect.stringContaining("covers.openlibrary.org"),
-            expect.anything()
-        );
+        expect(bookRes.body.books[0].image_url).toBeFalsy();
+        expect(mockedAxios.get).not.toHaveBeenCalled();
     });
 
-    it("leaves the cover empty when the ISBN fallback lookup finds nothing", async () => {
-        mockedAxios.get.mockResolvedValue({status: 404, headers: {}});
+    it("leaves the cover empty when the CSV has no allowed Cover value", async () => {
         const csv = [VAULTISSE_CSV_HEADER, "No Cover Book,Someone,9780261102217,,,,,,,,"].join("\n");
 
         const res = await user.agent
@@ -221,6 +253,7 @@ describe("POST /import/library - vaultisse origin", () => {
 
         const bookRes = await user.agent.get("/api/rest/book/search").query({query: "No Cover Book"});
         expect(bookRes.body.books[0].image_url).toBeFalsy();
+        expect(mockedAxios.get).not.toHaveBeenCalled();
     });
 
     it("maps the Reading Status column onto reading_status", async () => {

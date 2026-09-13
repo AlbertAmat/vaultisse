@@ -30,7 +30,7 @@ who wish to be credited.
 Given the app's architecture, reports about the following areas are especially
 appreciated:
 
-- Authentication and session handling (`server/src/routes/AuthRoute.ts`,
+- Authentication and session handling (`server/src/routes/auth/AuthRoute.ts`,
   `server/src/middlewares/AuthMiddleware.ts`) — JWT issuance/verification,
   cookie flags, password hashing, session revocation. See
   [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for how this is all meant to work,

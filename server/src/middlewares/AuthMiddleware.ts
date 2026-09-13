@@ -31,6 +31,7 @@
 import {Request, Response, NextFunction} from "express";
 import jwt from "jsonwebtoken";
 import {appService} from "../AppService";
+import {setSessionCookie} from "../utils/SessionCookie";
 
 /** Sentinel `sid` for the fake ALLOW_DEV_AUTH token - never matches a real `user_sessions` row. Exported so handlers reissuing a token (e.g. password change) can fall back to it when `req.sessionKey` is unset. */
 export const DEV_SESSION_KEY = "dev";
@@ -127,12 +128,7 @@ async function resolveSession(req: Request, res: Response): Promise<SessionResol
         // Issue new token with extended expiration
         const newToken = appService.createSessionToken(decoded.user_id, currentTokenVersion, decoded.sid);
 
-        res.cookie("token", newToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: appService.getSessionTime()
-        });
+        setSessionCookie(res, newToken);
     }
 
     return "ok";
