@@ -180,10 +180,13 @@ there's no soft-delete or history entry for a stock that's discarded outright
 - an **external URL** from the lookup (`books.google.com` or
   `covers.openlibrary.org`).
 
-ISBN auto-create and CSV import share `resolveBookCover()`: Open Library by
-ISBN (`?default=false`, reject the 1×1 placeholder), then another edition of
-the same work (title + author search), then Wikipedia. A Vaultisse CSV
-`Cover` column still wins when it passes `isAllowedImageUrl()`.
+ISBN auto-create uses `resolveBookCover()`: Open Library by ISBN
+(`?default=false`, reject the 1×1 placeholder), then another edition of the
+same work (title + author search), then Wikipedia. CSV import writes the
+file first (Goodreads review/notes become the synopsis when present), then
+`ImportEnrichment` fills empty cover / description / publisher / language /
+pages / category in the background so nginx does not 504. A Vaultisse CSV
+`Cover` column is stored immediately when it passes `isAllowedImageUrl()`.
 
 `isAllowedImageUrl()` enforces that allowlist on every write to
 `image_url` - accepting an arbitrary URL here would turn the book cover

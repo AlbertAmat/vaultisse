@@ -24,8 +24,8 @@ import {handleUploadError} from "../../middlewares/UploadErrorMiddleware";
 import {IImportedBook} from "./parsers/IImportedBook";
 import {parseGoodreadsCsv} from "./parsers/GoodreadsCsvParser";
 import {isAllowedImageUrl, generateBookStockCode} from "../BooksRoute";
-import {resolveBookCover} from "../../utils/BookMetadata";
 import {parseVaultisseCsv, VAULTISSE_CSV_TEMPLATE} from "./parsers/VaultisseCsvParser";
+import {scheduleImportedBookEnrichment} from "../../utils/ImportEnrichment";
 
 const router = Router();
 
@@ -188,6 +188,7 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
     let imported = 0;
     let skipped = 0;
     const errors: IImportError[] = [];
+    const importedIds: number[] = [];
 
     try {
         for (const book of books) {
@@ -213,16 +214,12 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
                 const categoryId = await __ensureCategory(client, book.categoryName ?? null, userId);
                 await __ensureLanguage(client, book.languageCode ?? null);
 
-                // A CSV-supplied cover (Vaultisse origin only, checked against the
-                // same allowlist as every other write to books.image_url) wins;
-                // otherwise look one up by ISBN, then title+author (other OL
-                // editions / Wikipedia), the same helper ISBN auto-create uses.
-                const explicitImageUrl = book.imageUrl && isAllowedImageUrl(book.imageUrl) ? book.imageUrl : null;
-                const imageUrl = explicitImageUrl ?? await resolveBookCover({
-                    isbn: book.isbn,
-                    title: book.name,
-                    authors: book.authors,
-                });
+                // CSV Cover column only (Vaultisse origin). Do not call
+                // resolveBookCover() here: a Goodreads export is hundreds of
+                // rows and that helper does several HTTP hops per book, so
+                // nginx hits proxy_read_timeout (504) while the import is
+                // still running. ISBN add still fetches covers.
+                const imageUrl = book.imageUrl && isAllowedImageUrl(book.imageUrl) ? book.imageUrl : null;
 
                 const insertBook = await client.query(
                     `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, reading_status, user_id)
@@ -252,6 +249,7 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
                 }
 
                 await client.query("COMMIT");
+                importedIds.push(bookId);
                 imported++;
             } catch (err: any) {
                 await client.query("ROLLBACK");
@@ -265,6 +263,12 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
             failed: errors.length,
             errors: errors.slice(0, MAX_REPORTED_ERRORS)
         });
+        scheduleImportedBookEnrichment(
+            pool,
+            userId,
+            importedIds,
+            appService.getGoogleApiKey()
+        );
     } finally {
         client.release();
     }

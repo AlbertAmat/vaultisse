@@ -259,7 +259,7 @@ async function resolveOpenLibraryCover(input: {
 /**
  * Best-effort cover by ISBN via Open Library's covers API. `null` on any
  * failure (no cover, timeout, placeholder GIF) so a missing cover never
- * fails the whole insert. Used by ISBN auto-create and CSV import.
+ * fails the whole insert. Used by ISBN auto-create and post-import enrichment.
  */
 export async function fetchOpenLibraryCover(isbn: string): Promise<string | null> {
     const url = `${OL_COVER_ISBN}/${encodeURIComponent(isbn)}-M.jpg`;

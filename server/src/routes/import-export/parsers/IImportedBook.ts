@@ -27,8 +27,9 @@ export interface IImportedBook {
      * A `data:image/png|jpeg;base64,...` URI or a URL from an allowed host -
      * validated by `ImportRoute.ts` against the same `isAllowedImageUrl()`
      * used everywhere else `books.image_url` is written, not by the parser.
-     * `null`/omitted falls back to `resolveBookCover()` (Open Library ISBN,
-     * then title+author, then Wikipedia).
+     * `null`/omitted is stored empty; `ImportEnrichment` fills a cover (and
+     * other empty catalog fields) after the HTTP response so nginx does not
+     * time out on a large Goodreads file.
      */
     imageUrl?: string | null;
     /** The user's personal reading progress for this book (Goodreads' "Exclusive Shelf"), or null/omitted if untracked. */
