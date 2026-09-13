@@ -63,7 +63,7 @@ defineEmits<{
 }>();
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .entity-list {
 	overflow: hidden;
 }

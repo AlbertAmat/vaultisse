@@ -174,7 +174,7 @@ async function returnLoan(stockCode: string) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .loans-filters {
 	display: flex;
 	flex-wrap: wrap;

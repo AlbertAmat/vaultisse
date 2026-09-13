@@ -542,7 +542,7 @@ async function deleteGroupRow(id: number) {
 defineExpose({createGroup});
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .drop-target {
 	background-color: rgba(33, 150, 243, 0.12);
 }

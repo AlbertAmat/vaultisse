@@ -95,7 +95,7 @@ function formatDate(iso: string): string {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .activity-list {
 	display: flex;
 	flex-direction: column;

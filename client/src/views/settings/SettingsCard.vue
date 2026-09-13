@@ -20,7 +20,7 @@ interface Props {
 const props = defineProps<Props>();
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .settings-card {
 	border-radius: var(--pb-radius) !important;
 	border: 1px solid var(--pb-border);

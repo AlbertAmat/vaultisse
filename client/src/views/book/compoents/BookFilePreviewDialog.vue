@@ -62,7 +62,7 @@ const fileIcon = props.file.file_type === "epub" ? "mdi-book-open-page-variant-o
 		: "mdi-tablet";
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .pb-file-preview-dialog-content {
 	height: calc(100% - 64px);
 }

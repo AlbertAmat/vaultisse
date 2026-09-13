@@ -214,7 +214,7 @@ async function removeFile(file: IBookFile) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .pb-file-dropzone {
 	display: flex;
 	flex-direction: column;

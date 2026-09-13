@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .pb-panel-card {
 	border-radius: var(--pb-radius) !important;
 	border-color: var(--pb-border) !important;

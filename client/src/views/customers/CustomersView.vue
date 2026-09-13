@@ -253,7 +253,7 @@ function toggleExpand(customerId: number) {
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .entity-card-list {
 	display: flex;
 	flex-direction: column;

@@ -76,7 +76,7 @@ watch(dialog, async (val) => {
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 #barcode-reader {
 	border: 2px dashed var(--pb-border-strong);
 	border-radius: 8px;

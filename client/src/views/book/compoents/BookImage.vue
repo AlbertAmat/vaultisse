@@ -130,7 +130,7 @@ async function loadImage(file: File) {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .book-image-container {
 	max-width: 240px;
 	margin: 0 auto;
