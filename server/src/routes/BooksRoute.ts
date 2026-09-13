@@ -690,6 +690,64 @@ router.post('/:id/image', requireAuth, upload.single("image"), handleUploadError
     }
 });
 
+/**
+ * POST /book/:id/cover/find
+ * -------------------------
+ * Look up a cover for a book that already exists in the library, using its
+ * stored ISBN (Google Books, falling back to Open Library - same lookup
+ * order as `POST /book/isbn/:isbn`), and save it as the book's cover.
+ *
+ * Auth: required. Path param `id` {number} - book id.
+ *
+ * Response (200): the new cover image URL, e.g. `"https://covers.openlibrary.org/b/isbn/...-M.jpg"`.
+ * Response (400): "Book has no ISBN" - nothing to look the cover up by.
+ * Response (404): "Book not found" | "No cover found for this book".
+ * Response (502): "External book service failed" (Google/Open Library request failed).
+ */
+router.post('/:id/cover/find', requireAuth, async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    const pool = appService.getDatabasePool();
+    const userId = appService.getSessionUser(req);
+
+    try {
+        const book = await pool.query(
+            "SELECT isbn FROM books WHERE id = $1 AND user_id = $2",
+            [id, userId]
+        );
+
+        if (book.rowCount !== 1) {
+            return res.status(404).send("Book not found");
+        }
+
+        const isbnCode = normalizeAndValidateIsbn(book.rows[0].isbn ?? "");
+        if (!isbnCode) {
+            return res.status(400).send("Book has no ISBN");
+        }
+
+        const bookData = await fetchBookData(isbnCode);
+        const imageUrl = bookData?.imageLinks?.thumbnail ?? await fetchOpenLibraryCover(isbnCode);
+
+        if (!imageUrl) {
+            return res.status(404).send("No cover found for this book");
+        }
+
+        await pool.query(
+            "UPDATE books SET image_url = $1 WHERE id = $2 AND user_id = $3",
+            [imageUrl, id, userId]
+        );
+
+        res.status(200).json(imageUrl);
+    } catch (error: unknown) {
+        console.error("Error finding book cover:", error);
+
+        if (axios.isAxiosError(error)) {
+            return res.status(502).send("External book service failed");
+        }
+
+        res.status(500).send("Error finding book cover");
+    }
+});
+
 /** @param fileName Original uploaded file name. @returns The `book_files.file_type` its extension maps to. */
 function fileTypeFromName(fileName: string): "epub" | "pdf" | "mobi" {
     const name = fileName.toLowerCase();

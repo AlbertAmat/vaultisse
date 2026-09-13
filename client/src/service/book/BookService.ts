@@ -124,6 +124,23 @@ export class BookService {
     }
 
     /**
+     * Look up a cover online (Google Books, falling back to Open Library) for
+     * a book already in the library, using its stored ISBN, and save it as
+     * the book's new cover.
+     * Uses `suppressErrorDialog` since the caller shows its own "no cover
+     * found" feedback instead of the generic error dialog.
+     * @param id Book id.
+     * @returns The new cover image URL.
+     */
+    public async findCover(id: number): Promise<string> {
+        const {data} = await axiosInstance.post(`${PATH_PREFIX}/book/${id}/cover/find`, undefined, {
+            // @ts-ignore - custom flag read by the response interceptor
+            suppressErrorDialog: true
+        });
+        return data;
+    }
+
+    /**
      * Upload (or replace) one of a book's backed-up ebook files (epub/pdf/Kindle).
      * A book can have up to one file per type - the server infers the type from
      * the upload and replaces any existing file of that same type only.

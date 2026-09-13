@@ -25,3 +25,18 @@ VALUES ('en', 'SNACKBAR_LOCATION_SET_DEFAULT', 'Location set as default successf
        ('it', 'SNACKBAR_LOCATION_SET_DEFAULT', 'La posizione è stata impostata come predefinita'),
        ('it', 'DEFAULT', 'Predefinita'),
        ('it', 'SET_AS_DEFAULT_LOCATION', 'Imposta come posizione predefinita');
+
+-- "Find cover" button (issue #23): looks up a cover online for a book
+-- already in the library, using its stored ISBN.
+INSERT INTO app_labels (language, code, text)
+VALUES ('en', 'FIND_COVER', 'Find cover'),
+       ('en', 'SNACKBAR_BOOK_COVER_NOT_FOUND', 'No cover found for this book'),
+
+       ('ca', 'FIND_COVER', 'Cerca coberta'),
+       ('ca', 'SNACKBAR_BOOK_COVER_NOT_FOUND', 'No s’ha trobat cap coberta per a aquest llibre'),
+
+       ('es', 'FIND_COVER', 'Buscar portada'),
+       ('es', 'SNACKBAR_BOOK_COVER_NOT_FOUND', 'No se ha encontrado ninguna portada para este libro'),
+
+       ('it', 'FIND_COVER', 'Cerca copertina'),
+       ('it', 'SNACKBAR_BOOK_COVER_NOT_FOUND', 'Nessuna copertina trovata per questo libro');
