@@ -37,6 +37,8 @@ export class Logger {
         const timestamp = new Date().toISOString();
         const logEntry = `[${timestamp}] [${level.toUpperCase()}]: ${message}\n`;
 
+        (level === "error" ? process.stderr : process.stdout).write(logEntry);
+
         fs.appendFile(this.logFilePath, logEntry, (err) => {
             if (err) {
                 console.error("Failed to write log:", err);
