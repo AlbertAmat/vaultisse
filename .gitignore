@@ -2,6 +2,13 @@
 node_modules
 /server/test/.tmp/
 /server/coverage/
+# Compiled test output (test/setup/*.js are hand-written, not compiled - kept)
+/server/test/helpers/*.js
+/server/test/helpers/*.js.map
+/server/test/routes/*.js
+/server/test/routes/*.js.map
+/server/test/utils/*.js
+/server/test/utils/*.js.map
 .idea
 /dist/
 ecosystem-config.js

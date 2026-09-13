@@ -12,8 +12,8 @@ import {Express} from "express";
 import {appService} from "../../src/AppService";
 
 export function setupTestApp(): Express {
-    beforeAll(() => {
-        appService.init();
+    beforeAll(async () => {
+        await appService.init();
     });
 
     afterAll(async () => {

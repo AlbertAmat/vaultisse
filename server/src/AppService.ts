@@ -15,6 +15,7 @@ import rateLimit from "express-rate-limit";
 import path from "path"; // Middleware to limit repeated requests
 import {blockWritesInDemo} from "./middlewares/DemoModeMiddleware"; // Rejects writes when DEMO_MODE=true
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
+import {runMigrations} from "./migrate";
 
 interface DatabaseConf {
     host: string;
@@ -217,10 +218,22 @@ export class AppService {
     }
 
     /**
-     * Initialize the API server
+     * Initialize the API server: brings the database schema up to date (see
+     * server/src/migrate/index.ts and GitHub issue #26), then loads routes
+     * and starts listening. Exits the process if migrations fail, rather
+     * than serving requests against a schema the app doesn't expect.
      */
-    public init() {
+    public async init() {
         AppService.__printBanner();
+
+        try {
+            await runMigrations(this.m_databasePool, this.m_logger);
+        } catch (e) {
+            const message = e instanceof Error ? e.message : String(e);
+            console.error(`Database migration failed, exiting: ${message}`);
+            this.m_logger.error(`Database migration failed, exiting: ${message}`);
+            process.exit(1);
+        }
 
         const server = http.createServer(this.m_app);
 

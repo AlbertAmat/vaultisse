@@ -43,6 +43,11 @@ cp "$ROOT_DIR/server/package-lock.json" "$DIST_DIR/server/" || true
 echo "Copying assets..."
 cp -r "$ROOT_DIR/server/src/assets" "$DIST_DIR/server/dist/assets"
 
+# Upgrade SQL files applied automatically on startup (see
+# server/src/migrate/index.ts) - not part of either build above.
+mkdir -p "$DIST_DIR/assets"
+cp -r "$ROOT_DIR/assets/db" "$DIST_DIR/assets/db"
+
 # (Optional) copy .env if you need it
 # cp "$ROOT_DIR/server/.env" "$DIST_DIR/server/" || true
 

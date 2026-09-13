@@ -1,3 +1,13 @@
+-- Tracks which files under assets/db/upgrade/ have been applied, so the
+-- migration runner (server/src/migrate/index.ts) never re-applies one. Also
+-- created defensively by the runner itself on first start, so this is only
+-- needed here for a fresh install to already have it.
+CREATE TABLE schema_migrations
+(
+    filename   VARCHAR(255) PRIMARY KEY,
+    applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE app_languages
 (
     code CHAR(2) PRIMARY KEY,
