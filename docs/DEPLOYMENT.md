@@ -393,6 +393,27 @@ real `JWT_SECRET` — every other production hardening step above still applies.
 - **Backups**: everything that matters lives in the `db-data` volume. Either back up
   the volume directly or run `docker compose exec db pg_dump -U <DB_USER> <DB_NAME>`
   on a schedule.
+- **OIDC / Authentik**: optional SSO next to password login. Set all four of
+  `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and `OIDC_REDIRECT_URI`
+  in `.env`, then recreate the `app` container. Create a **confidential** OIDC
+  provider on the IdP (Authentik: Applications → Create with OpenID Provider):
+
+  - Redirect URI: `https://<public-host>/auth/oidc/callback` (must match
+    `OIDC_REDIRECT_URI` exactly — do not derive it from the `Host` header)
+  - Launch URL / origin: the same public origin as `FRONT_END_URL`
+  - Scopes: `openid profile email` (or whatever you put in `OIDC_SCOPES`)
+  - Issuer: Authentik shows this on the provider as
+    `https://auth.example.com/application/o/<slug>/` — copy it into `OIDC_ISSUER`
+
+  Who can open the Authentik application is who can sign in (and, on first
+  visit, get a new isolated Vaultisse catalog). Restrict that in Authentik
+  rather than relying on `REGISTRATION_REQUIRES_APPROVAL` (SSO JIT ignores
+  it). Bind the app to `127.0.0.1` and set `TRUST_PROXY=true` when a reverse
+  proxy sits in front — same as scenarios B/C. Local-dev redirect is
+  `http://localhost:3000/auth/oidc/callback` (the API origin that serves
+  `/login`, not the Vite port). Leave the four vars blank to keep
+  password-only login. See [AUTHENTICATION.md](AUTHENTICATION.md#oidc--sso).
+
 - **Approving a new registration**: with `REGISTRATION_REQUIRES_APPROVAL=true` (see
   `.env.example`), new accounts are created disabled and can't log in until you
   enable them - there's no admin UI for this, run:

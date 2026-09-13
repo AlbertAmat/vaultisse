@@ -1277,6 +1277,12 @@ CREATE TABLE users
     -- don't lend books out. Set from the Settings page (see PATCH
     -- /user/leasing in UserRoute.ts, AppMenu.vue and Router.ts client-side).
     leasing_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    -- Optional OIDC link (issuer URL + subject from the IdP). Password-only
+    -- accounts leave these NULL. UNIQUE allows several NULLs, so existing
+    -- local accounts are unaffected. See server/src/utils/OidcUsers.ts.
+    oidc_issuer     TEXT,
+    oidc_sub        TEXT,
+    UNIQUE (oidc_issuer, oidc_sub),
     FOREIGN KEY (language) REFERENCES app_languages (code) ON DELETE SET NULL
 );
 

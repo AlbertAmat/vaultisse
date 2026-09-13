@@ -4,8 +4,9 @@
  * =============================================================================
  * Mounted directly at `/` (not under `/api/rest`, see AppService.__loadRoutes).
  * Owns the whole unauthenticated surface: serving the login/register static
- * pages, the login/register/logout POST handlers, session-cookie issuance,
- * and (once logged in) serving the compiled SPA under `/app`.
+ * pages, the login/register/logout POST handlers, optional OIDC start/
+ * callback, session-cookie issuance, and (once logged in) serving the
+ * compiled SPA under `/app`.
  *
  * Session model: on successful login/register a signed JWT is stored in an
  * httpOnly `token` cookie (see `AppService.createSessionToken`); every
@@ -26,6 +27,14 @@ import {requireAuth, requireAuthPage} from "../middlewares/AuthMiddleware";
 import {verifyTotpCode, normalizeBackupCode} from "../utils/TwoFactorAuth";
 import {createUserSession} from "../utils/UserSessions";
 import {recordActivity, ActivityAction} from "../utils/ActivityLog";
+import {
+    beginOidcAuthorization,
+    completeOidcAuthorization,
+    OIDC_PENDING_COOKIE,
+    oidcPendingClearCookieOptions,
+    oidcPendingCookieOptions,
+} from "../utils/Oidc";
+import {findOrCreateOidcUser} from "../utils/OidcUsers";
 
 const router = express.Router();
 
@@ -152,6 +161,7 @@ router.get("/login", (req: Request, res: Response) => {
     // at the moment, we will clear the token
     res.clearCookie("token");
     res.clearCookie("pending_2fa_token");
+    res.clearCookie(OIDC_PENDING_COOKIE, oidcPendingClearCookieOptions());
     res.sendFile(path.join(__dirname, "..", "assets", "login.html"));
 });
 
@@ -333,6 +343,101 @@ router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
     } catch (error) {
         console.error("2FA verification error:", error);
         return res.status(500).json({message: "Internal server error"});
+    }
+});
+
+/**
+ * GET /auth/oidc/status
+ * ----------------------
+ * Whether SSO is offered on the login page. Unauthenticated.
+ * Demo mode always reports disabled (JIT would create accounts on the
+ * shared demo catalog).
+ *
+ * Example response (200): { "enabled": true, "label": "Sign in with SSO" }
+ */
+router.get("/auth/oidc/status", (req: Request, res: Response) => {
+    const config = appService.getOidcConfig();
+    res.json({
+        enabled: appService.isOidcEnabled(),
+        label: config?.buttonLabel ?? "Sign in with SSO",
+    });
+});
+
+/**
+ * GET /auth/oidc/start
+ * ---------------------
+ * Begin the authorization-code + PKCE flow: set a short-lived SameSite=lax
+ * `oidc_pending` cookie and redirect to the IdP. Rate limited like login.
+ * 404 when SSO is not enabled.
+ */
+router.get("/auth/oidc/start", authLimiter, async (req: Request, res: Response) => {
+    if (!appService.isOidcEnabled()) {
+        return res.status(404).json({message: "SSO is not configured"});
+    }
+
+    try {
+        const {url, pendingToken} = await beginOidcAuthorization();
+        res.cookie(OIDC_PENDING_COOKIE, pendingToken, oidcPendingCookieOptions());
+        return res.redirect(url);
+    } catch (error) {
+        appService.getLogger().error("OIDC start failed: " + error);
+        res.clearCookie(OIDC_PENDING_COOKIE, oidcPendingClearCookieOptions());
+        return res.redirect("/login?error=sso");
+    }
+});
+
+/**
+ * GET /auth/oidc/callback
+ * ------------------------
+ * IdP return: exchange the code, find/link/JIT the user, issue the same
+ * `token` session cookie as password login, redirect to /app. Failures
+ * bounce to /login?error=sso (generic - don't leak IdP details).
+ */
+router.get("/auth/oidc/callback", authLimiter, async (req: Request, res: Response) => {
+    const fail = () => {
+        res.clearCookie(OIDC_PENDING_COOKIE, oidcPendingClearCookieOptions());
+        return res.redirect("/login?error=sso");
+    };
+
+    if (!appService.isOidcEnabled()) {
+        return fail();
+    }
+
+    const queryVal = (name: string): string | undefined =>
+        typeof req.query[name] === "string" ? req.query[name] as string : undefined;
+
+    try {
+        const claims = await completeOidcAuthorization(
+            {
+                code: queryVal("code"),
+                state: queryVal("state"),
+                error: queryVal("error"),
+                error_description: queryVal("error_description"),
+            },
+            req.cookies[OIDC_PENDING_COOKIE]
+        );
+
+        const pool = appService.getDatabasePool();
+        const user = await findOrCreateOidcUser(pool, claims);
+
+        await pool.query(`UPDATE users SET last_login_date = CURRENT_TIMESTAMP WHERE id = $1`, [user.id]);
+
+        const {sessionKey} = await createUserSession(pool, user.id, req.get("user-agent"), req.ip);
+        await recordActivity(pool, user.id, ActivityAction.LOGIN, {metadata: {method: "oidc", ip: req.ip}});
+
+        const userToken = appService.createSessionToken(user.id, user.token_version, sessionKey);
+        res.clearCookie(OIDC_PENDING_COOKIE, oidcPendingClearCookieOptions());
+        res.cookie("token", userToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: appService.getSessionTime()
+        });
+
+        return res.redirect("/app");
+    } catch (error) {
+        appService.getLogger().error("OIDC callback failed: " + error);
+        return fail();
     }
 });
 

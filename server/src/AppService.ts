@@ -24,6 +24,31 @@ interface DatabaseConf {
     password: string;
 }
 
+/** Present only when every required OIDC env var is set. See isOidcEnabled(). */
+export interface OidcConfig {
+    issuer: string;
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    scopes: string;
+    buttonLabel: string;
+}
+
+function readOidcConfig(): OidcConfig | null {
+    const issuer = (process.env.OIDC_ISSUER ?? "").trim();
+    const clientId = (process.env.OIDC_CLIENT_ID ?? "").trim();
+    const clientSecret = (process.env.OIDC_CLIENT_SECRET ?? "").trim();
+    const redirectUri = (process.env.OIDC_REDIRECT_URI ?? "").trim();
+    if (!issuer || !clientId || !clientSecret || !redirectUri) {
+        return null;
+    }
+
+    const scopes = (process.env.OIDC_SCOPES ?? "").trim() || "openid profile email";
+    const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
+
+    return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel};
+}
+
 export class AppService {
     /**
      * Prefix for all API routes
@@ -98,6 +123,13 @@ export class AppService {
      * @private
      */
     private readonly m_maxImportFileSizeMb: number;
+
+    /**
+     * OIDC client config, or null when the required env vars are unset.
+     * Presence alone does not mean SSO is offered - see isOidcEnabled().
+     * @private
+     */
+    private readonly m_oidcConfig: OidcConfig | null;
 
     /**
      * Application constructor
@@ -198,6 +230,8 @@ export class AppService {
         this.m_maxImportFileSizeMb = Number.isFinite(parsedMaxImportFileSizeMb) && parsedMaxImportFileSizeMb > 0
             ? parsedMaxImportFileSizeMb
             : 10;
+
+        this.m_oidcConfig = readOidcConfig();
 
         this.m_server       = null;
 
@@ -317,6 +351,19 @@ export class AppService {
     /** Check if development authentication is allowed */
     public allowDevAuth(): boolean {
         return this.m_allowDevAuth;
+    }
+
+    /**
+     * SSO is offered only when OIDC is fully configured and this is not a
+     * public demo (JIT on a shared demo catalog would create real accounts).
+     */
+    public isOidcEnabled(): boolean {
+        return this.m_oidcConfig !== null && process.env.DEMO_MODE !== "true";
+    }
+
+    /** Configured OIDC client, or null when the required env vars are unset. */
+    public getOidcConfig(): OidcConfig | null {
+        return this.m_oidcConfig;
     }
 
     /**

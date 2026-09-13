@@ -60,8 +60,8 @@ language, format, cover image), and it can look books up automatically by ISBN.
 - A dashboard with collection statistics and charts
 - Multi-language UI (English, Spanish, Catalan, Italian)
 - Built-in `/docs` help pages, rendered from Markdown, in the same languages
-- Cookie/session-based authentication with JWT, password hashing, rate limiting, and
-  secure HTTP headers out of the box
+- Cookie/session-based authentication with JWT, password hashing, optional OIDC/SSO
+  (Authentik and other IdPs), rate limiting, and secure HTTP headers out of the box
 
 ## Architecture
 

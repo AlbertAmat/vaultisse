@@ -161,3 +161,28 @@ describe("GET /logout", () => {
         expect(res.headers.location).toBe("/login");
     });
 });
+
+describe("GET /auth/oidc/* (disabled by default)", () => {
+    it("reports SSO disabled when OIDC env vars are unset", async () => {
+        const res = await request(app).get("/auth/oidc/status");
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({enabled: false, label: "Sign in with SSO"});
+    });
+
+    it("returns 404 from /auth/oidc/start when SSO is not configured", async () => {
+        const res = await request(app)
+            .get("/auth/oidc/start")
+            .set("X-Forwarded-For", nextFakeIp());
+        expect(res.status).toBe(404);
+        expect(res.body.message).toMatch(/not configured/i);
+    });
+
+    it("redirects a callback with no pending login to /login?error=sso", async () => {
+        const res = await request(app)
+            .get("/auth/oidc/callback")
+            .set("X-Forwarded-For", nextFakeIp())
+            .redirects(0);
+        expect(res.status).toBe(302);
+        expect(res.headers.location).toBe("/login?error=sso");
+    });
+});

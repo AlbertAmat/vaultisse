@@ -11,6 +11,7 @@ instead - this document is architecture, not a reporting policy.
 
 - [Mental model](#mental-model)
 - [Logging in](#logging-in)
+- [OIDC / SSO](#oidc--sso)
 - [The JWT and its claims](#the-jwt-and-its-claims)
 - [Validating a request](#validating-a-request)
 - [`token_version`: revoke everywhere](#token_version-revoke-everywhere)
@@ -87,6 +88,71 @@ writes `activity_log` with `action: login_failed` - attributed to the account
 if the username matched one (wrong password), or with no `actor_id` at all
 if it didn't (metadata carries the attempted username instead, since there's
 no account to attribute it to).
+
+## OIDC / SSO
+
+Optional. When `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and
+`OIDC_REDIRECT_URI` are all set, the login page also shows a "Sign in with
+SSO" button (label overridable via `OIDC_BUTTON_LABEL`). Password login and
+`/register` stay as they are. Leave those four unset and the button never
+appears.
+
+This is a **server-side** authorization-code + PKCE confidential client
+([`Oidc.ts`](../server/src/utils/Oidc.ts)) — the client secret never reaches
+the browser, and the Vue SPA still authenticates with the same `token`
+cookie as a password login. Do not build `OIDC_REDIRECT_URI` from the
+request `Host` header; register the exact URL on the IdP
+(`https://<public-host>/auth/oidc/callback`).
+
+`DEMO_MODE=true` forces SSO off even if the env vars are set, so a public
+demo cannot JIT-create accounts.
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Vaultisse
+    participant IdP as OIDC_IdP
+    participant DB as Postgres
+
+    Browser->>Vaultisse: GET /auth/oidc/start
+    Vaultisse-->>Browser: Set-Cookie oidc_pending SameSite=Lax
+    Vaultisse-->>Browser: 302 to IdP authorize
+    Browser->>IdP: login
+    IdP-->>Browser: 302 /auth/oidc/callback?code&state
+    Browser->>Vaultisse: GET callback plus oidc_pending
+    Vaultisse->>IdP: token exchange plus PKCE
+    Vaultisse->>DB: find or JIT user by issuer plus sub
+    Vaultisse-->>Browser: Set-Cookie token and redirect /app
+```
+
+The `oidc_pending` cookie is `SameSite=lax` on purpose: the session `token`
+cookie stays `strict`, but a `strict` pending cookie would be dropped on
+the top-level return from the IdP.
+
+**User mapping** ([`OidcUsers.ts`](../server/src/utils/OidcUsers.ts)), in
+order:
+
+1. Match `users.oidc_issuer` + `users.oidc_sub`.
+2. Else, if the ID token/userinfo has `email` and `email_verified` is true,
+   link that existing row (write the OIDC columns). This is how someone who
+   already registered with a password keeps one catalog.
+3. Else insert a new user: `disabled = FALSE` (the IdP is the access gate;
+   `REGISTRATION_REQUIRES_APPROVAL` does not apply), a random bcrypt
+   password so the NOT NULL column is satisfied, and a unique `code` from
+   `preferred_username` or the email local-part.
+
+No email → fail, redirect to `/login?error=sso`. Unverified email is never
+used to link an existing account (an IdP that lets anyone claim an address
+must not take over a local user). Each OIDC subject gets its own isolated
+catalog, same as any other account.
+
+SSO login does **not** prompt for Vaultisse TOTP — the IdP already did MFA
+if the operator configured it. Password login is unchanged. Logout is still
+local (`GET /logout`); there is no IdP `end_session` redirect.
+
+Failed SSO attempts redirect to `/login?error=sso` with a generic message.
+Successful ones write `activity_log` with `action: login` and
+`metadata.method: oidc`.
 
 ## The JWT and its claims
 
@@ -305,7 +371,9 @@ to run.
 
 | Concern | File |
 |---|---|
-| Login, register, logout, 2FA login step | `server/src/routes/AuthRoute.ts` |
+| Login, register, logout, 2FA login step, OIDC start/callback | `server/src/routes/AuthRoute.ts` |
+| OIDC discovery / PKCE / token exchange | `server/src/utils/Oidc.ts` |
+| OIDC find / link / JIT user | `server/src/utils/OidcUsers.ts` |
 | Per-request validation (`requireAuth`/`requireAuthPage`) | `server/src/middlewares/AuthMiddleware.ts` |
 | JWT signing/verification, bcrypt helpers | `server/src/AppService.ts` |
 | Session list / revoke / recent-activity endpoints, password change, 2FA setup/enable/disable | `server/src/routes/UserRoute.ts` |

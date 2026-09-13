@@ -42,3 +42,9 @@ process.env.GOOGLE_BOOKS_API_KEY = "";
 process.env.MAX_IMPORT_FILE_SIZE_MB = process.env.MAX_IMPORT_FILE_SIZE_MB || "10";
 process.env.MAX_EBOOK_FILE_SIZE_MB = process.env.MAX_EBOOK_FILE_SIZE_MB || "10";
 process.env.DEBUG_LOGGING = "false";
+// SSO off unless a specific test file sets these itself (AppService reads
+// them once at construct time, so the default suite stays password-only).
+process.env.OIDC_ISSUER = "";
+process.env.OIDC_CLIENT_ID = "";
+process.env.OIDC_CLIENT_SECRET = "";
+process.env.OIDC_REDIRECT_URI = "";
