@@ -7,10 +7,10 @@
  */
 import {Issuer, generators, Client} from "openid-client";
 import jwt from "jsonwebtoken";
-import {appService} from "../AppService";
-import {OIDC_PENDING_MAX_AGE_MS} from "./SessionCookie";
+import {appService} from "../../../AppService";
+import {OIDC_PENDING_MAX_AGE_MS} from "../../../utils/SessionCookie";
 
-export {OIDC_PENDING_COOKIE} from "./SessionCookie";
+export {OIDC_PENDING_COOKIE} from "../../../utils/SessionCookie";
 
 const OIDC_PENDING_AUDIENCE = "vaultisse-oidc-pending";
 

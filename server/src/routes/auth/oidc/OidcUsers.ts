@@ -5,7 +5,7 @@
  */
 import crypto from "crypto";
 import {Pool, PoolClient} from "pg";
-import {appService} from "../AppService";
+import {appService} from "../../../AppService";
 import {OidcClaims} from "./Oidc";
 
 export class OidcUserError extends Error {

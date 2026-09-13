@@ -1,7 +1,7 @@
 import request from "supertest";
 import {appService} from "../../src/AppService";
-import {findOrCreateOidcUser, OidcUserError} from "../../src/utils/OidcUsers";
-import {OidcClaims} from "../../src/utils/Oidc";
+import {findOrCreateOidcUser, OidcUserError} from "../../src/routes/auth/oidc/OidcUsers";
+import {OidcClaims} from "../../src/routes/auth/oidc/Oidc";
 import {nextFakeIp, TEST_PASSWORD} from "../helpers/auth";
 import {setupTestApp} from "../helpers/testApp";
 

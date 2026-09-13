@@ -63,7 +63,7 @@ sequenceDiagram
 
 ## Logging in
 
-`POST /login` ([`AuthRoute.ts`](server/src/routes/AuthRoute.ts)):
+`POST /login` ([`AuthRoute.ts`](server/src/routes/auth/AuthRoute.ts)):
 
 1. Look up the account by code or email, compare the password with bcrypt.
    Wrong username *or* wrong password both get the same generic
@@ -98,7 +98,7 @@ SSO" button (label overridable via `OIDC_BUTTON_LABEL`). Password login and
 appears.
 
 This is a **server-side** authorization-code + PKCE confidential client
-([`Oidc.ts`](../server/src/utils/Oidc.ts)) — the client secret never reaches
+([`Oidc.ts`](../server/src/routes/auth/oidc/Oidc.ts)) — the client secret never reaches
 the browser, and the Vue SPA still authenticates with the same `token`
 cookie as a password login. Do not build `OIDC_REDIRECT_URI` from the
 request `Host` header; register the exact URL on the IdP
@@ -132,7 +132,7 @@ winning. Authorize requests also send `prompt=login` so Authentik (and other
 IdPs with an implicit-consent flow) cannot silently reuse an existing IdP
 session.
 
-**User mapping** ([`OidcUsers.ts`](../server/src/utils/OidcUsers.ts)), in
+**User mapping** ([`OidcUsers.ts`](../server/src/routes/auth/oidc/OidcUsers.ts)), in
 order:
 
 1. Match `users.oidc_issuer` + `users.oidc_sub`.
@@ -375,9 +375,9 @@ to run.
 
 | Concern | File |
 |---|---|
-| Login, register, logout, 2FA login step, OIDC start/callback | `server/src/routes/AuthRoute.ts` |
-| OIDC discovery / PKCE / token exchange | `server/src/utils/Oidc.ts` |
-| OIDC find / link / JIT user | `server/src/utils/OidcUsers.ts` |
+| Login, register, logout, 2FA login step, OIDC start/callback | `server/src/routes/auth/AuthRoute.ts` |
+| OIDC discovery / PKCE / token exchange | `server/src/routes/auth/oidc/Oidc.ts` |
+| OIDC find / link / JIT user | `server/src/routes/auth/oidc/OidcUsers.ts` |
 | Per-request validation (`requireAuth`/`requireAuthPage`) | `server/src/middlewares/AuthMiddleware.ts` |
 | JWT signing/verification, bcrypt helpers | `server/src/AppService.ts` |
 | Session list / revoke / recent-activity endpoints, password change, 2FA setup/enable/disable | `server/src/routes/UserRoute.ts` |

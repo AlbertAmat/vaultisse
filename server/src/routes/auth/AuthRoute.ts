@@ -19,20 +19,20 @@
  * instead, exchanged for the real session by POST /login/2fa.
  */
 import express, {Request, Response} from "express";
-import {appService} from "../AppService";
+import {appService} from "../../AppService";
 import path from "path";
 import rateLimit from "express-rate-limit";
 import jwt from "jsonwebtoken";
-import {requireAuth, requireAuthPage} from "../middlewares/AuthMiddleware";
-import {verifyTotpCode, normalizeBackupCode} from "../utils/TwoFactorAuth";
-import {createUserSession} from "../utils/UserSessions";
-import {recordActivity, ActivityAction} from "../utils/ActivityLog";
+import {requireAuth, requireAuthPage} from "../../middlewares/AuthMiddleware";
+import {verifyTotpCode, normalizeBackupCode} from "../../utils/TwoFactorAuth";
+import {createUserSession} from "../../utils/UserSessions";
+import {recordActivity, ActivityAction} from "../../utils/ActivityLog";
 import {
     beginOidcAuthorization,
     completeOidcAuthorization,
     OIDC_PENDING_COOKIE,
-} from "../utils/Oidc";
-import {findOrCreateOidcUser} from "../utils/OidcUsers";
+} from "./oidc/Oidc";
+import {findOrCreateOidcUser} from "./oidc/OidcUsers";
 import {
     clearOidcPendingCookie,
     clearPending2faCookie,
@@ -40,7 +40,7 @@ import {
     setOidcPendingCookie,
     setPending2faCookie,
     setSessionCookie,
-} from "../utils/SessionCookie";
+} from "../../utils/SessionCookie";
 
 const router = express.Router();
 
@@ -88,7 +88,7 @@ async function consumeBackupCode(userId: number, code: string): Promise<boolean>
 
 // Compiled Vue app: alongside the server in production (Docker image),
 // under client/dist during local development.
-const clientDistPath = process.env.NODE_ENV === "production" ?  path.join(__dirname, "../../../client") : path.join(__dirname, '../../../client/dist')
+const clientDistPath = process.env.NODE_ENV === "production" ?  path.join(__dirname, "../../../../client") : path.join(__dirname, '../../../../client/dist')
 
 /**
  * GET /app/assets/*  (static)
@@ -168,7 +168,7 @@ router.get("/login", (req: Request, res: Response) => {
     clearSessionCookie(res);
     clearPending2faCookie(res);
     clearOidcPendingCookie(res);
-    res.sendFile(path.join(__dirname, "..", "assets", "login.html"));
+    res.sendFile(path.join(__dirname, "../..", "assets", "login.html"));
 });
 
 /**
@@ -438,7 +438,7 @@ router.get("/register", (req: Request, res: Response) => {
     if (req.cookies.token) {
         return res.redirect("/app");
     }
-    res.sendFile(path.join(__dirname, "..", "assets", "register.html"));
+    res.sendFile(path.join(__dirname, "../..", "assets", "register.html"));
 });
 
 /**

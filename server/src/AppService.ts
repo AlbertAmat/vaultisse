@@ -4,7 +4,7 @@ import http, {Server} from "http"; // Node HTTP module to create server
 import pg from 'pg'; // PostgreSQL client
 import {routes} from "./routes/Routes"; // Import all application routes
 import {Logger} from "./utils/Logger"; // Custom logger utility
-import AuthRoute from "./routes/AuthRoute"; // Auth-related routes
+import AuthRoute from "./routes/auth/AuthRoute"; // Auth-related routes
 import cors from "cors"; // Cross-Origin Resource Sharing middleware
 import cookieParser from "cookie-parser"; // Middleware to parse cookies
 import jwt from "jsonwebtoken"; // JSON Web Token library for authentication
@@ -33,21 +33,6 @@ export interface OidcConfig {
     redirectUri: string;
     scopes: string;
     buttonLabel: string;
-}
-
-function readOidcConfig(): OidcConfig | null {
-    const issuer = (process.env.OIDC_ISSUER ?? "").trim();
-    const clientId = (process.env.OIDC_CLIENT_ID ?? "").trim();
-    const clientSecret = (process.env.OIDC_CLIENT_SECRET ?? "").trim();
-    const redirectUri = (process.env.OIDC_REDIRECT_URI ?? "").trim();
-    if (!issuer || !clientId || !clientSecret || !redirectUri) {
-        return null;
-    }
-
-    const scopes = (process.env.OIDC_SCOPES ?? "").trim() || "openid profile email";
-    const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
-
-    return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel};
 }
 
 export class AppService {
@@ -232,7 +217,7 @@ export class AppService {
             ? parsedMaxImportFileSizeMb
             : 10;
 
-        this.m_oidcConfig = readOidcConfig();
+        this.m_oidcConfig = AppService.__readOidcConfig();
 
         this.m_server       = null;
 
@@ -300,6 +285,26 @@ export class AppService {
     /** Get database connection pool */
     public getDatabasePool(): pg.Pool {
         return this.m_databasePool;
+    }
+
+    /**
+     * Read OIDC client config from env vars. Returns null when any of the
+     * required vars is unset - see OidcConfig / isOidcEnabled().
+     * @private
+     */
+    private static __readOidcConfig(): OidcConfig | null {
+        const issuer = (process.env.OIDC_ISSUER ?? "").trim();
+        const clientId = (process.env.OIDC_CLIENT_ID ?? "").trim();
+        const clientSecret = (process.env.OIDC_CLIENT_SECRET ?? "").trim();
+        const redirectUri = (process.env.OIDC_REDIRECT_URI ?? "").trim();
+        if (!issuer || !clientId || !clientSecret || !redirectUri) {
+            return null;
+        }
+
+        const scopes = (process.env.OIDC_SCOPES ?? "").trim() || "openid profile email";
+        const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
+
+        return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel};
     }
 
     /**
