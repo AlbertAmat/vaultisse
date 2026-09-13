@@ -90,7 +90,7 @@ sequenceDiagram
         end
     end
     alt synopsis still short and a title is known
-        Server->>Wiki: search + extract (ca, es, en)
+        Server->>Wiki: search + extract (ca, es, it, en)
     end
     alt no catalog title
         Server->>Store: schema.org Book product page
@@ -119,7 +119,7 @@ Details worth knowing:
   placeholder, meant for unconditional `<img src>` embedding), so
   `fetchLibraryThingCover()` filters it out by response size instead of
   status/content-type alone.
-- **Wikipedia** (ca → es → en) supplies an intro extract when the synopsis
+- **Wikipedia** (ca → es → it → en) supplies an intro extract when the synopsis
   is still under 180 characters, and a page image when no cover was found
   above. Hits are scored against the book title so an author page is not
   stored as the description.

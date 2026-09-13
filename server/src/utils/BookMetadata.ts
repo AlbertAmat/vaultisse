@@ -456,7 +456,7 @@ async function fetchOpenLibraryCoverByTitle(title: string, author?: string): Pro
 
 async function findWikipediaPageTitle(title: string, authors: string): Promise<[string, string] | null> {
     const query = `${title} ${authors}`.trim();
-    for (const lang of ["ca", "es", "en"] as const) {
+    for (const lang of ["ca", "es", "it", "en"] as const) {
         const found = await getJson(`https://${lang}.wikipedia.org/w/api.php`, {
             action: "query",
             list: "search",
