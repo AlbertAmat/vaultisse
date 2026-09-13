@@ -92,6 +92,15 @@ export class AppService {
     private readonly m_googleApiKey: string | undefined;
 
     /**
+     * LibraryThing devkey, used as a third cover-lookup fallback (after
+     * Google Books and Open Library) when both of those have no cover for
+     * an ISBN. Optional - covers.librarything.com requires one, unlike the
+     * other two providers, so this fallback is simply skipped when unset.
+     * @private
+     */
+    private readonly m_libraryThingApiKey: string | undefined;
+
+    /**
      * Max size (in MB) accepted for a library import CSV (see ImportRoute.ts),
      * configurable via MAX_IMPORT_FILE_SIZE_MB. Defaults to 10MB when unset
      * or not a valid positive number.
@@ -141,9 +150,9 @@ export class AppService {
                     styleSrc: ["'self'", "'unsafe-inline'"],
                     frameSrc: ["'self'", "data:", "blob:"],
                     // Book covers are either our own uploads (data: URIs) or fetched
-                    // from these two ISBN metadata providers - kept in sync with the
+                    // from these ISBN metadata providers - kept in sync with the
                     // isAllowedImageUrl() allowlist in BooksRoute.ts.
-                    imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org"],
+                    imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org", "https://covers.librarything.com"],
                     "script-src-attr": ["'unsafe-inline'"],
                     "script-src-elem": ["'unsafe-inline'", "'self'", frontEndUrl, "'unsafe-inline'"]
                 },
@@ -193,6 +202,8 @@ export class AppService {
         this.m_allowDevAuth = process.env.ALLOW_DEV_AUTH == "true";
 
         this.m_googleApiKey = String(process.env.GOOGLE_BOOKS_API_KEY)
+
+        this.m_libraryThingApiKey = process.env.LIBRARYTHING_API_KEY || undefined;
 
         const parsedMaxImportFileSizeMb = Number(process.env.MAX_IMPORT_FILE_SIZE_MB);
         this.m_maxImportFileSizeMb = Number.isFinite(parsedMaxImportFileSizeMb) && parsedMaxImportFileSizeMb > 0
@@ -250,6 +261,11 @@ export class AppService {
     /** Get the configured Google Books API key (undefined falls back to Open Library, see BooksRoute.ts). */
     public getGoogleApiKey(): string | undefined {
         return this.m_googleApiKey;
+    }
+
+    /** Get the configured LibraryThing devkey (undefined skips this third cover-lookup fallback, see BooksRoute.ts). */
+    public getLibraryThingApiKey(): string | undefined {
+        return this.m_libraryThingApiKey;
     }
 
     /** Max size (in MB) accepted for a library import CSV, see ImportRoute.ts and GET /app/policy. */

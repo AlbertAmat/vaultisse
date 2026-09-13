@@ -49,7 +49,10 @@ language, format, cover image), and it can look books up automatically by ISBN.
 ## Features
 
 - Add books manually or by scanning/typing an ISBN (auto-filled via the Google Books
-  API, falling back to Open Library when no API key is configured)
+  API, falling back to Open Library and then LibraryThing for the cover when no match
+  is found)
+- Look up a cover for a book already in the library that's missing one, using the same
+  Google Books → Open Library → LibraryThing fallback
 - Track individual physical copies ("stock") of a book independently — each copy has
   its own status: available, booked/on loan, damaged, or not available
 - Record who a book is currently lent to, using a customer/borrower directory
@@ -201,6 +204,9 @@ vaultisse/
 - A [Google Books API key](https://developers.google.com/books) (optional — the
   server falls back to the free [Open Library API](https://openlibrary.org/developers/api)
   if `GOOGLE_BOOKS_API_KEY` isn't set)
+- A [LibraryThing developer key](https://www.librarything.com/services/keys.php) (optional,
+  free with any LibraryThing account — used as a third cover-lookup fallback when neither
+  Google Books nor Open Library has one; skipped entirely if `LIBRARYTHING_API_KEY` isn't set)
 
 ### 1. Clone the repository
 
@@ -251,6 +257,7 @@ DB_NAME=vaultisse
 DB_USER=your_db_user
 DB_PASSWORD=your_db_password
 GOOGLE_BOOKS_API_KEY=            # optional, see Prerequisites
+LIBRARYTHING_API_KEY=            # optional, see Prerequisites
 LOGGER_PATH=./logs.log
 FRONT_END_URL=http://localhost:5173
 JWT_SECRET=replace_with_a_long_random_string

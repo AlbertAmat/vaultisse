@@ -694,8 +694,8 @@ router.post('/:id/image', requireAuth, upload.single("image"), handleUploadError
  * POST /book/:id/cover/find
  * -------------------------
  * Look up a cover for a book that already exists in the library, using its
- * stored ISBN (Google Books, falling back to Open Library - same lookup
- * order as `POST /book/isbn/:isbn`), and save it as the book's cover.
+ * stored ISBN (Google Books, falling back to Open Library then LibraryThing -
+ * same lookup order as `POST /book/isbn/:isbn`), and save it as the book's cover.
  *
  * Auth: required. Path param `id` {number} - book id.
  *
@@ -725,7 +725,7 @@ router.post('/:id/cover/find', requireAuth, async (req: Request, res: Response) 
         }
 
         const bookData = await fetchBookData(isbnCode);
-        const imageUrl = bookData?.imageLinks?.thumbnail ?? await fetchOpenLibraryCover(isbnCode);
+        const imageUrl = await resolveCoverImageUrl(isbnCode, bookData?.imageLinks?.thumbnail);
 
         if (!imageUrl) {
             return res.status(404).send("No cover found for this book");
@@ -1039,15 +1039,9 @@ router.post(
             const formattedPublishedDate = formatPublishedDate(publishedDate);
 
             /**
-             * IMAGE (Google → OpenLibrary Covers fallback)
+             * IMAGE (Google → Open Library → LibraryThing fallback)
              */
-            let imageUrl: string | null;
-
-            if (imageLinks?.thumbnail) {
-                imageUrl = imageLinks.thumbnail;
-            } else {
-                imageUrl = await fetchOpenLibraryCover(isbnCode);
-            }
+            const imageUrl = await resolveCoverImageUrl(isbnCode, imageLinks?.thumbnail);
 
             const categoryName = truncate(categories?.[0] ?? null, 100);
             const languageCode = normalizeLanguageCode(language);
@@ -1270,6 +1264,67 @@ async function fetchOpenLibraryCover(isbn: string): Promise<string | null> {
     } catch {
         return null;
     }
+}
+
+/**
+ * =========================================================
+ * LIBRARYTHING COVER (third fallback, needs a devkey)
+ * =========================================================
+ */
+/**
+ * Unlike Open Library, LibraryThing responds 200 with a real image
+ * Content-Type even when it has no cover for the ISBN - it serves a
+ * transparent 1x1 GIF placeholder instead of a 404 (its API is meant to be
+ * embedded directly in an <img src> without a pre-check). A real cover is
+ * always far larger, so the placeholder is filtered out by size instead.
+ */
+const LIBRARYTHING_PLACEHOLDER_MAX_BYTES = 1000;
+
+async function fetchLibraryThingCover(isbn: string, apiKey: string): Promise<string | null> {
+    try {
+        const url = `https://covers.librarything.com/devkey/${encodeURIComponent(apiKey)}/large/isbn/${encodeURIComponent(isbn)}`;
+
+        const res = await axios.get(url, {
+            responseType: 'arraybuffer',
+            timeout: 3000,
+        });
+
+        const contentType = String(res.headers['content-type'] ?? '');
+        const byteLength = res.data?.length ?? 0;
+
+        if (res.status === 200 && contentType.startsWith('image/') && byteLength > LIBRARYTHING_PLACEHOLDER_MAX_BYTES) {
+            return url;
+        }
+
+        return null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * =========================================================
+ * COVER LOOKUP (Google → Open Library → LibraryThing)
+ * =========================================================
+ * Shared by `POST /book/isbn/:isbn` (new book) and `POST /book/:id/cover/find`
+ * (existing book) so the fallback order only lives in one place.
+ */
+async function resolveCoverImageUrl(isbn: string, googleThumbnail: string | null | undefined): Promise<string | null> {
+    if (googleThumbnail) {
+        return googleThumbnail;
+    }
+
+    const openLibraryCover = await fetchOpenLibraryCover(isbn);
+    if (openLibraryCover) {
+        return openLibraryCover;
+    }
+
+    const libraryThingApiKey = appService.getLibraryThingApiKey();
+    if (libraryThingApiKey) {
+        return fetchLibraryThingCover(isbn, libraryThingApiKey);
+    }
+
+    return null;
 }
 
 /**
@@ -1825,11 +1880,12 @@ router.post('/return', requireAuth, upload.single("image"), handleUploadError(ma
 });
 
 // Helper function to format date to YYYY-MM-DD
-// Hosts our ISBN metadata lookups (Google Books, Open Library covers) are
-// allowed to point book cover images at.
+// Hosts our ISBN metadata lookups (Google Books, Open Library, LibraryThing
+// covers) are allowed to point book cover images at.
 const ALLOWED_IMAGE_HOSTS = new Set([
     'books.google.com',
     'covers.openlibrary.org',
+    'covers.librarything.com',
 ]);
 
 /**

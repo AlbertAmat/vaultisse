@@ -39,6 +39,11 @@ process.env.FRONT_END_URL = process.env.FRONT_END_URL || "http://localhost:5173"
 // mock both branches explicitly (see BooksRoute.test.ts) and must not
 // depend on which one actually runs.
 process.env.GOOGLE_BOOKS_API_KEY = "";
+// Same reasoning as GOOGLE_BOOKS_API_KEY above: a real devkey in a
+// developer's own server/.env must not make LibraryThing's cover fallback
+// silently active only on their machine. Tests that need it exercised mock
+// axios instead (see BooksRoute.test.ts).
+process.env.LIBRARYTHING_API_KEY = "";
 process.env.MAX_IMPORT_FILE_SIZE_MB = process.env.MAX_IMPORT_FILE_SIZE_MB || "10";
 process.env.MAX_EBOOK_FILE_SIZE_MB = process.env.MAX_EBOOK_FILE_SIZE_MB || "10";
 process.env.DEBUG_LOGGING = "false";

@@ -73,6 +73,7 @@ sequenceDiagram
     participant Server
     participant Google as Google Books API
     participant OL as Open Library
+    participant LT as LibraryThing
 
     Client->>Server: POST /book/isbn/9780261102217
     Server->>Server: normalizeAndValidateIsbn() - reject malformed input
@@ -82,7 +83,13 @@ sequenceDiagram
     else Google fails, rate-limited, or no API key configured
         Server->>OL: GET /search.json?isbn=...
         OL-->>Server: title, authors, subjects, publisher... (metadata only)
-        Server->>OL: GET /b/isbn/....-M.jpg (cover, only if Google had none)
+    end
+    Server->>Server: resolveCoverImageUrl() - Google thumbnail, else fall through
+    alt Google had no thumbnail
+        Server->>OL: GET /b/isbn/....-M.jpg (cover)
+        alt Open Library has no cover
+            Server->>LT: GET /devkey/.../large/isbn/... (only if LIBRARYTHING_API_KEY set)
+        end
     end
     Server->>Server: ensureLanguage / __ensureCategory / __getOrCreateBook / __ensureAuthors (one transaction)
     Server-->>Client: book id
@@ -95,6 +102,18 @@ Details worth knowing:
   back to Open Library's free search API automatically - no client-visible
   difference except which fields make it through (Open Library's `search.json`
   doesn't return a description, for instance).
+- **Cover lookup has a third fallback**, `resolveCoverImageUrl()`: Google's
+  own thumbnail, else Open Library's covers API, else LibraryThing's (only
+  if `LIBRARYTHING_API_KEY` is configured - unlike the other two, LibraryThing
+  requires a devkey). LibraryThing responds 200 with an image Content-Type
+  even when it has *no* cover (a 1x1 transparent GIF placeholder, meant for
+  unconditional `<img src>` embedding), so `fetchLibraryThingCover()` filters
+  it out by response size instead of status/content-type alone.
+- **Existing books can look up a cover the same way**: `POST
+  /book/:id/cover/find` runs the exact same `resolveCoverImageUrl()` chain
+  against the book's stored ISBN and saves the result - this is what the
+  "Find cover" button in the empty cover slot (`BookImage.vue`) calls, for a
+  book that was added without a match (or before one existed).
 - **429 from Google is retried** up to 3 times with linear backoff
   (`fetchBookData`'s `retries` param) before falling back.
 - **Find-or-create everywhere**: category (`__ensureCategory`), author(s)
@@ -160,8 +179,8 @@ there's no soft-delete or history entry for a stock that's discarded outright
 - a **`data:image/png;base64,...` / `data:image/jpeg;base64,...` URI** - our
   own uploads, via `POST /book/:id/image` (multer, 4MB cap, PNG/JPEG only) or
   the manual-create form; stored inline, no external file storage/CDN, or
-- an **external URL** from the ISBN lookup (`books.google.com` or
-  `covers.openlibrary.org`).
+- an **external URL** from the ISBN lookup (`books.google.com`,
+  `covers.openlibrary.org`, or `covers.librarything.com`).
 
 `isAllowedImageUrl()` enforces that allowlist on every write to
 `image_url` - accepting an arbitrary URL here would turn the book cover
