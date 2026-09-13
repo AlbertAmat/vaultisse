@@ -210,7 +210,7 @@ watch(() => dialog.value, () => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .pb-import-origins {
 	display: flex;
 	gap: 12px;

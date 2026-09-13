@@ -56,6 +56,20 @@ export default class LocationsController extends BaseController<ILocationExt[]> 
     }
 
     /**
+     * Mark a location as the user's default one and refresh the local list.
+     * @param locationId Location id to mark as default.
+     */
+    public async setDefaultLocation(locationId: number) {
+        try {
+            const locations = await locationsService.setDefaultLocation(locationId);
+            this.m_locations.value = locations.map(location => new LocationExt(location));
+            appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_LOCATION_SET_DEFAULT)})
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    /**
      * Delete a location and remove it from the local list.
      * @param locationId Location id to delete.
      */

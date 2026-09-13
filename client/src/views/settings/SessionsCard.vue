@@ -122,7 +122,7 @@ function revoke(session: IUserSession) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .sessions-list {
 	display: flex;
 	flex-direction: column;

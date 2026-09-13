@@ -117,7 +117,7 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .pb-file-preview {
 	border: 1px solid var(--pb-border);
 	border-radius: var(--pb-radius-sm);

@@ -73,6 +73,7 @@ sequenceDiagram
     participant Server
     participant OL as Open Library
     participant Google as Google Books API
+    participant LT as LibraryThing
     participant Wiki as Wikipedia
     participant Store as ISBN store
 
@@ -81,6 +82,12 @@ sequenceDiagram
     Server->>OL: edition /api/books + /isbn/{isbn}.json + work + search.json
     alt GOOGLE_BOOKS_API_KEY is set
         Server->>Google: GET /volumes?q=isbn:...&key=...
+    end
+    alt no cover yet
+        Server->>OL: GET /b/isbn/....-M.jpg (cover)
+        alt Open Library has no cover and LIBRARYTHING_API_KEY is set
+            Server->>LT: GET /devkey/.../large/isbn/...
+        end
     end
     alt synopsis still short and a title is known
         Server->>Wiki: search + extract (ca, es, en)
@@ -104,13 +111,28 @@ Details worth knowing:
   is only sent when a real key is configured. An empty key used to throw
   `Missing GOOGLE_BOOKS_API_KEY` on every add and then fall through to a
   thin `search.json` response - that path is gone. 429s are not retried.
+- **Cover lookup has a third fallback**, `resolveCatalogCover()`: Open
+  Library's covers API (by ISBN, then by title/author search), else
+  LibraryThing's (only if `LIBRARYTHING_API_KEY` is configured - unlike the
+  other two, LibraryThing requires a devkey). LibraryThing responds 200 with
+  an image Content-Type even when it has *no* cover (a 1x1 transparent GIF
+  placeholder, meant for unconditional `<img src>` embedding), so
+  `fetchLibraryThingCover()` filters it out by response size instead of
+  status/content-type alone.
 - **Wikipedia** (ca → es → en) supplies an intro extract when the synopsis
-  is still under 180 characters. Hits are scored against the book title so
-  an author page is not stored as the description.
+  is still under 180 characters, and a page image when no cover was found
+  above. Hits are scored against the book title so an author page is not
+  stored as the description.
 - **Brand-new regional ISBNs** (a 979- Spanish/Catalan pocket reprint that
   Open Library and Google have not ingested yet) can still resolve from a
   public ISBN product page, then pick up a cover from an Open Library title
   search of the same work.
+- **Existing books can look up a cover the same way**: `POST
+  /book/:id/cover/find` runs the same `resolveBookCover()` chain (Open
+  Library, then LibraryThing) against the book's stored ISBN and saves the
+  result - this is what the "Find cover" button in the empty cover slot
+  (`BookImage.vue`) calls, for a book that was added without a match (or
+  before one existed).
 - **Find-or-create everywhere**: category (`__ensureCategory`), author(s)
   (`__ensureAuthors`), and the book itself (`__getOrCreateBook`, matched by
   ISBN) are all find-or-create rather than blind inserts. Re-scanning the
@@ -177,12 +199,15 @@ there's no soft-delete or history entry for a stock that's discarded outright
   own uploads, via `POST /book/:id/image` (multer, 4MB cap, PNG/JPEG only),
   the manual-create form, or a Wikipedia page image pulled during ISBN/CSV
   lookup (stored inline so we don't have to allow `wikimedia.org` in CSP), or
-- an **external URL** from the lookup (`books.google.com` or
-  `covers.openlibrary.org`).
+- an **external URL** from the lookup (`books.google.com`,
+  `covers.openlibrary.org`, or `covers.librarything.com`).
 
 ISBN auto-create uses `resolveBookCover()`: Open Library by ISBN
 (`?default=false`, reject the 1×1 placeholder), then another edition of the
-same work (title + author search), then Wikipedia. CSV import writes the
+same work (title + author search), then LibraryThing (only when
+`LIBRARYTHING_API_KEY` is configured - it responds 200 with a 1×1 placeholder
+GIF rather than a 404 when it has no cover, so a real cover is told apart by
+size), then Wikipedia. CSV import writes the
 file first (Goodreads review/notes become the synopsis when present), then
 `ImportEnrichment` fills empty cover / description / publisher / language /
 pages / category in the background so nginx does not 504. A Vaultisse CSV

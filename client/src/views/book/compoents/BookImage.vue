@@ -43,7 +43,7 @@
 					:class="{ 'book-image-empty-hover': isHovering }"
 				>
 					<v-progress-circular
-						v-if="loading"
+						v-if="loading || findingCover"
 						color="primary"
 						size="40"
 						indeterminate
@@ -52,6 +52,17 @@
 					<template v-else>
 						<v-icon size="36" color="primary">mdi-book-outline</v-icon>
 						<span class="book-image-empty-label">{{t(AppLabels.IMAGE_DRAG_AND_DROP)}}</span>
+
+						<v-btn
+							v-if="book.hasIsbn()"
+							size="small"
+							variant="tonal"
+							color="primary"
+							prepend-icon="mdi-cloud-search-outline"
+							@click.stop="handleFindCover"
+						>
+							{{t(AppLabels.FIND_COVER)}}
+						</v-btn>
 					</template>
 				</div>
 
@@ -90,6 +101,9 @@ const props = defineProps<Props>();
 
 const loading: Ref<boolean> = ref(false);
 
+/** Set while a "find cover" lookup is in flight. */
+const findingCover: Ref<boolean> = ref(false);
+
 /** Set when the current cover URL fails to load; reset on every new upload attempt. */
 const imageLoadFailed: Ref<boolean> = ref(false);
 
@@ -118,6 +132,16 @@ const handleDrop = (event: DragEvent) => {
 	}
 };
 
+// Look up a cover online for this book (no local file involved)
+async function handleFindCover() {
+	try {
+		findingCover.value = true;
+		await props.book.findCover();
+	} finally {
+		findingCover.value = false;
+	}
+}
+
 // Read and display the selected image
 async function loadImage(file: File) {
 	try {
@@ -130,7 +154,7 @@ async function loadImage(file: File) {
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .book-image-container {
 	max-width: 240px;
 	margin: 0 auto;

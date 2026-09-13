@@ -476,7 +476,7 @@ function changeImage() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .settings-filed {
 	width: 50%;
 }

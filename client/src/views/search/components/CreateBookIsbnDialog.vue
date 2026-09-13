@@ -246,7 +246,7 @@ const disableButton = computed(() => {
 /**
  *
  */
-const selectedLocation: Ref<number | null> = ref(null);
+const selectedLocation: Ref<number | null> = ref(applicationService.getDefaultLocation()?.getId() ?? null);
 
 const locations = computed(() => {
 	return applicationService.getLocations().map((location) => {

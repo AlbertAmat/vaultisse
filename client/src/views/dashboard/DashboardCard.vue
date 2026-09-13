@@ -37,7 +37,7 @@ interface Props {
 const props = defineProps<Props>()
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .dashboard-card {
 	border: 1px solid var(--pb-border);
 	border-radius: var(--pb-radius);

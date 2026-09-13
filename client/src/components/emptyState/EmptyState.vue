@@ -95,7 +95,7 @@ const chips = computed(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .empty-state {
 	display: flex;
 	flex: 1 1 auto;

@@ -16,6 +16,7 @@ import path from "path"; // Middleware to limit repeated requests
 import {blockWritesInDemo} from "./middlewares/DemoModeMiddleware"; // Rejects writes when DEMO_MODE=true
 import {normalizeGoogleApiKey} from "./utils/BookMetadata";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
+import {runMigrations} from "./migrate";
 
 interface DatabaseConf {
     host: string;
@@ -103,6 +104,15 @@ export class AppService {
     private readonly m_googleApiKey: string | undefined;
 
     /**
+     * LibraryThing devkey, used as a third cover-lookup fallback (after
+     * Google Books and Open Library) when both of those have no cover for
+     * an ISBN. Optional - covers.librarything.com requires one, unlike the
+     * other two providers, so this fallback is simply skipped when unset.
+     * @private
+     */
+    private readonly m_libraryThingApiKey: string | undefined;
+
+    /**
      * Max size (in MB) accepted for a library import CSV (see ImportRoute.ts),
      * configurable via MAX_IMPORT_FILE_SIZE_MB. Defaults to 10MB when unset
      * or not a valid positive number.
@@ -159,9 +169,9 @@ export class AppService {
                     styleSrc: ["'self'", "'unsafe-inline'"],
                     frameSrc: ["'self'", "data:", "blob:"],
                     // Book covers are either our own uploads (data: URIs) or fetched
-                    // from these two ISBN metadata providers - kept in sync with the
+                    // from these ISBN metadata providers - kept in sync with the
                     // isAllowedImageUrl() allowlist in BooksRoute.ts.
-                    imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org"],
+                    imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org", "https://covers.librarything.com"],
                     "script-src-attr": ["'unsafe-inline'"],
                     "script-src-elem": ["'unsafe-inline'", "'self'", frontEndUrl, "'unsafe-inline'"]
                 },
@@ -212,6 +222,8 @@ export class AppService {
 
         this.m_googleApiKey = normalizeGoogleApiKey(process.env.GOOGLE_BOOKS_API_KEY);
 
+        this.m_libraryThingApiKey = process.env.LIBRARYTHING_API_KEY || undefined;
+
         const parsedMaxImportFileSizeMb = Number(process.env.MAX_IMPORT_FILE_SIZE_MB);
         this.m_maxImportFileSizeMb = Number.isFinite(parsedMaxImportFileSizeMb) && parsedMaxImportFileSizeMb > 0
             ? parsedMaxImportFileSizeMb
@@ -226,10 +238,22 @@ export class AppService {
     }
 
     /**
-     * Initialize the API server
+     * Initialize the API server: brings the database schema up to date (see
+     * server/src/migrate/index.ts and GitHub issue #26), then loads routes
+     * and starts listening. Exits the process if migrations fail, rather
+     * than serving requests against a schema the app doesn't expect.
      */
-    public init() {
+    public async init() {
         AppService.__printBanner();
+
+        try {
+            await runMigrations(this.m_databasePool, this.m_logger);
+        } catch (e) {
+            const message = e instanceof Error ? e.message : String(e);
+            console.error(`Database migration failed, exiting: ${message}`);
+            this.m_logger.error(`Database migration failed, exiting: ${message}`);
+            process.exit(1);
+        }
 
         const server = http.createServer(this.m_app);
 
@@ -270,6 +294,11 @@ export class AppService {
     /** Optional Google Books API key. Empty / unset means ISBN lookup skips Google. */
     public getGoogleApiKey(): string | undefined {
         return this.m_googleApiKey;
+    }
+
+    /** Get the configured LibraryThing devkey (undefined skips this third cover-lookup fallback, see BooksRoute.ts). */
+    public getLibraryThingApiKey(): string | undefined {
+        return this.m_libraryThingApiKey;
     }
 
     /** Max size (in MB) accepted for a library import CSV, see ImportRoute.ts and GET /app/policy. */

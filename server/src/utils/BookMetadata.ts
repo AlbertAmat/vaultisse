@@ -8,6 +8,10 @@
  * regional ISBNs that aren't in those catalogs yet can still resolve from a
  * public ISBN product page (schema.org Book), then get a cover from an
  * Open Library title search of the same work.
+ *
+ * Cover images specifically get one more fallback after Open Library:
+ * LibraryThing (only when `LIBRARYTHING_API_KEY` is configured), tried
+ * before falling through to a Wikipedia page image.
  */
 import axios from "axios";
 
@@ -161,7 +165,8 @@ export function normalizeLanguageCode(language: string | null | undefined): stri
  */
 export async function fetchBookMetadata(
     isbn: string,
-    googleApiKey?: string
+    googleApiKey?: string,
+    libraryThingApiKey?: string
 ): Promise<BookVolumeInfo | null> {
     const merged: BookVolumeInfo = {};
     let resolvedFromCatalog = false;
@@ -191,10 +196,11 @@ export async function fetchBookMetadata(
     }
 
     if (merged.title && !merged.imageLinks?.thumbnail) {
-        const cover = await resolveOpenLibraryCover({
+        const cover = await resolveCatalogCover({
             isbn,
             title: merged.title,
             authors: merged.authors,
+            libraryThingApiKey,
         });
         if (cover) {
             merged.imageLinks = {thumbnail: cover};
@@ -220,17 +226,19 @@ const MAX_INLINE_COVER_BYTES = 500_000;
 
 /**
  * Best-effort cover: Open Library by ISBN, then another edition of the same
- * work (title + author search), then a Wikipedia page image stored as a
+ * work (title + author search), then LibraryThing (only when
+ * `libraryThingApiKey` is given), then a Wikipedia page image stored as a
  * `data:` URI so we don't have to widen the CSP allowlist.
  */
 export async function resolveBookCover(input: {
     isbn?: string | null;
     title?: string | null;
     authors?: string[] | null;
+    libraryThingApiKey?: string;
 }): Promise<string | null> {
-    const fromOpenLibrary = await resolveOpenLibraryCover(input);
-    if (fromOpenLibrary) {
-        return fromOpenLibrary;
+    const fromCatalog = await resolveCatalogCover(input);
+    if (fromCatalog) {
+        return fromCatalog;
     }
     if (input.title) {
         const wiki = await fetchWikipediaExtras(input.title, input.authors?.[0] ?? "");
@@ -239,10 +247,11 @@ export async function resolveBookCover(input: {
     return null;
 }
 
-async function resolveOpenLibraryCover(input: {
+async function resolveCatalogCover(input: {
     isbn?: string | null;
     title?: string | null;
     authors?: string[] | null;
+    libraryThingApiKey?: string;
 }): Promise<string | null> {
     if (input.isbn) {
         const byIsbn = await fetchOpenLibraryCover(input.isbn);
@@ -251,9 +260,47 @@ async function resolveOpenLibraryCover(input: {
         }
     }
     if (input.title) {
-        return fetchOpenLibraryCoverByTitle(input.title, input.authors?.[0]);
+        const byTitle = await fetchOpenLibraryCoverByTitle(input.title, input.authors?.[0]);
+        if (byTitle) {
+            return byTitle;
+        }
+    }
+    if (input.isbn && input.libraryThingApiKey) {
+        return fetchLibraryThingCover(input.isbn, input.libraryThingApiKey);
     }
     return null;
+}
+
+/**
+ * Unlike Open Library, LibraryThing responds 200 with a real image
+ * Content-Type even when it has no cover for the ISBN - it serves a
+ * transparent 1x1 GIF placeholder instead of a 404 (its API is meant to be
+ * embedded directly in an <img src> without a pre-check). A real cover is
+ * always far larger, so the placeholder is filtered out by size instead.
+ */
+const LIBRARYTHING_PLACEHOLDER_MAX_BYTES = 1000;
+
+async function fetchLibraryThingCover(isbn: string, apiKey: string): Promise<string | null> {
+    try {
+        const url = `https://covers.librarything.com/devkey/${encodeURIComponent(apiKey)}/large/isbn/${encodeURIComponent(isbn)}`;
+
+        const res = await axios.get(url, {
+            responseType: "arraybuffer",
+            timeout: 3000,
+            headers: {"User-Agent": USER_AGENT},
+        });
+
+        const contentType = String(res.headers["content-type"] ?? "");
+        const byteLength = bodyBytes(res.data);
+
+        if (res.status === 200 && contentType.startsWith("image/") && byteLength > LIBRARYTHING_PLACEHOLDER_MAX_BYTES) {
+            return url;
+        }
+
+        return null;
+    } catch {
+        return null;
+    }
 }
 
 /**

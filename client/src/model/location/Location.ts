@@ -16,11 +16,15 @@ export default class Location {
     /** Location description, or null if unset. */
     private m_description: Ref<string | null>;
 
+    /** Whether this is the user's default location. */
+    private m_default: Ref<boolean>;
+
     /** @param location Raw location data from the server. */
     public constructor(location: ILocation) {
         this.m_id = location.id;
         this.m_name = ref(location.name);
         this.m_description = ref(location.description);
+        this.m_default = ref(location.default);
     }
 
     /** @returns The location id. */
@@ -36,6 +40,11 @@ export default class Location {
     /** @returns The location description, or null if unset. */
     public getDescription(): string | null {
         return this.m_description.value;
+    }
+
+    /** @returns Whether this is the user's default location. */
+    public isDefault(): boolean {
+        return this.m_default.value;
     }
 
     /**

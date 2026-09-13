@@ -21,6 +21,7 @@ import {ref, Ref, shallowRef, ShallowRef} from "vue";
 import router from "@/router/Router";
 import {searchRoute} from "@/router/routes/SearchRoute";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
+import axios from "axios";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {printDialogController} from "@/components/printDialog/PrintDialogController";
@@ -301,6 +302,25 @@ export default class Book extends BookItem {
             this.m_imageUrl.value = await fileToBase64(image);
         } catch (e) {
             console.error("Error while updating book.", e)
+        }
+    }
+
+    /**
+     * Look up a cover online (Google Books, falling back to Open Library)
+     * using this book's ISBN, and use it as the new cover if one is found.
+     */
+    public async findCover() {
+        try {
+            const imageUrl = await bookService.findCover(this.m_id);
+            this.m_imageUrl.value = imageUrl;
+            appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_IMAGE_UPDATED)})
+        } catch (e) {
+            const notFound = axios.isAxiosError(e) && e.response?.status === 404;
+            appSnackbarController.show({
+                message: i18n.global.t(notFound ? AppLabels.SNACKBAR_BOOK_COVER_NOT_FOUND : AppLabels.ERROR_OCCURRED),
+                type: SnackbarType.ERROR
+            })
+            console.error("Error while finding book cover.", e)
         }
     }
 

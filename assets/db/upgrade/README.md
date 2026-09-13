@@ -31,14 +31,25 @@ file).
 
 ## Applying
 
-Files are meant to be run **in version order** (and, within a version's
-folder, in numeric order), each one **only once**. Skip any file whose
-changes your database already has — check its header comment, or just look
-at whether the column/table/label it adds already exists.
+As of the migration runner (`server/src/migrate/index.ts`, see [issue
+#26](https://github.com/AlbertAmat/vaultisse/issues/26)), this happens
+**automatically** on every server start: it applies every file here the
+running database doesn't have yet, in version order (and, within a
+version's folder, in numeric order), and records each one in the
+`schema_migrations` table so it's never applied twice. Upgrading the app
+(pulling a new Docker image, `git pull` + rebuild, ...) is now enough on its
+own — there's nothing extra to run.
+
+Manually applying a file is only needed for recovery/debugging, and is still
+just:
 
 ```bash
 docker compose exec -T db psql -U <DB_USER> -d <DB_NAME> < assets/db/upgrade/1.0.0/1.sql
 ```
+
+If you do this by hand, also insert a matching row into `schema_migrations`
+(`filename` = the file's path relative to this directory, e.g.
+`'1.0.0/1.sql'`) so the runner doesn't try to re-apply it next start.
 
 ## Adding a new one
 

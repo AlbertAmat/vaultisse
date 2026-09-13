@@ -267,7 +267,8 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
             pool,
             userId,
             importedIds,
-            appService.getGoogleApiKey()
+            appService.getGoogleApiKey(),
+            appService.getLibraryThingApiKey()
         );
     } finally {
         client.release();

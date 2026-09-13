@@ -49,7 +49,10 @@ language, format, cover image), and it can look books up automatically by ISBN.
 ## Features
 
 - Add books manually or by scanning/typing an ISBN (auto-filled via the Google Books
-  API, falling back to Open Library when no API key is configured)
+  API, falling back to Open Library and then LibraryThing for the cover when no match
+  is found)
+- Look up a cover for a book already in the library that's missing one, using the same
+  Google Books → Open Library → LibraryThing fallback
 - Track individual physical copies ("stock") of a book independently — each copy has
   its own status: available, booked/on loan, damaged, or not available
 - Record who a book is currently lent to, using a customer/borrower directory
@@ -201,6 +204,9 @@ vaultisse/
 - A [Google Books API key](https://developers.google.com/books) (optional — the
   server looks up ISBNs on [Open Library](https://openlibrary.org/developers/api)
   first; a key only adds Google Books on top)
+- A [LibraryThing developer key](https://www.librarything.com/services/keys.php) (optional,
+  free with any LibraryThing account — used as a third cover-lookup fallback when neither
+  Google Books nor Open Library has one; skipped entirely if `LIBRARYTHING_API_KEY` isn't set)
 
 ### 1. Clone the repository
 
@@ -229,15 +235,12 @@ The version-named files in `assets/db/upgrade/` (`1.0.0/1.sql`, `1.0.0/2.sql`,
 ...) are **not** for new installs — they're incremental upgrades for a
 database that's already running an older version of the schema (see
 [`assets/db/upgrade/README.md`](assets/db/upgrade/README.md) for the full
-convention). Each one's header comment says what it does and confirms new
-installs should skip it. If you're upgrading an existing instance instead of
-setting one up fresh, apply every version's file(s) newer than whatever
-version you're currently on, up through the version you're installing, in
-order:
-
-```bash
-psql -d vaultisse -f assets/db/upgrade/1.0.0/1.sql   # example: apply the first v1.0.0 upgrade file
-```
+convention). If you're upgrading an existing instance instead of setting one
+up fresh, you don't need to touch these yourself: the server applies
+whatever it's missing automatically on startup (`npm run dev`/`npm start`),
+however far behind it is, and records what it's applied so it's never
+redone. Manually running one of these files is only for recovery/debugging —
+see that directory's README for how.
 
 ### 3. Configure the server
 
@@ -251,6 +254,7 @@ DB_NAME=vaultisse
 DB_USER=your_db_user
 DB_PASSWORD=your_db_password
 GOOGLE_BOOKS_API_KEY=            # optional, see Prerequisites
+LIBRARYTHING_API_KEY=            # optional, see Prerequisites
 LOGGER_PATH=./logs.log
 FRONT_END_URL=http://localhost:5173
 JWT_SECRET=replace_with_a_long_random_string
@@ -337,6 +341,10 @@ same access.
 
 A few things worth knowing before pointing this at a real server:
 
+- **Upgrading is just bumping `APP_TAG` and re-running `docker compose up -d`.**
+  The `app` container applies any pending schema changes itself on startup (see
+  [`assets/db/upgrade/README.md`](assets/db/upgrade/README.md)) — no manual `psql`
+  step, regardless of how far behind it is.
 - **`ALLOW_DEV_AUTH` must stay `false`.** It bypasses login with a fake session and
   exists only for local development.
 - **`DB_HOST`/`DB_PORT` in `.env` are ignored for the `app` container** — it always

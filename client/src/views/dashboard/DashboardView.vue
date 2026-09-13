@@ -300,7 +300,7 @@ const leasingEnabled = computed(() => applicationService.getUser().isLeasingEnab
 const categoryShelvesWithBooks = computed(() => controller.getCategoryShelves().filter(shelf => shelf.books.length > 1))
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .dashboard-hero {
 	display: flex;
 	flex-wrap: wrap;

@@ -47,6 +47,7 @@ jobs:
       SESSION_TIME: "3600000"
       FRONT_END_URL: http://localhost:5173
       GOOGLE_BOOKS_API_KEY: ""
+      LIBRARYTHING_API_KEY: ""
       MAX_IMPORT_FILE_SIZE_MB: "10"
       MAX_EBOOK_FILE_SIZE_MB: "10"
 

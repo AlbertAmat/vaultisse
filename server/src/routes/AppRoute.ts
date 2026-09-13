@@ -208,15 +208,17 @@ async function getFormats(): Promise<Record<string, any>[]> {
     return result.rows;
 }
 
-/** List `{id, name, description}` for every location of `userId` - used to populate the policy payload. */
+/** List `{id, name, description, default}` for every location of `userId` - used to populate the policy payload. */
 async function getLocations(userId: number): Promise<Record<string, any>[]> {
     const pool = appService.getDatabasePool();
     const query = `
         SELECT id,
                name,
-               description
+               description,
+               "default"
         FROM locations
         WHERE user_id = $1
+        ORDER BY id
     `
     // Use a prepared statement to fetch items by name
     appService.getLogger().debug(`executing query: ${query}`);

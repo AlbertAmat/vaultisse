@@ -2,7 +2,8 @@
  * Post-import metadata fill. CSV import must return before nginx's
  * proxy_read_timeout; this walks the new rows afterwards and fills empty
  * cover / description / publisher / date / language / pages / category
- * from Open Library (and Google / Wikipedia when those helpers would).
+ * from Open Library (and Google / LibraryThing / Wikipedia when those
+ * helpers would).
  */
 import {Pool} from "pg";
 import {
@@ -30,13 +31,14 @@ export function scheduleImportedBookEnrichment(
     pool: Pool,
     userId: number,
     bookIds: number[],
-    googleApiKey?: string
+    googleApiKey?: string,
+    libraryThingApiKey?: string
 ): void {
     if (bookIds.length === 0) {
         return;
     }
     setImmediate(() => {
-        enrichImportedBooks(pool, userId, bookIds, googleApiKey).catch((err) => {
+        enrichImportedBooks(pool, userId, bookIds, googleApiKey, libraryThingApiKey).catch((err) => {
             console.error("Import enrichment failed:", err);
         });
     });
@@ -46,11 +48,12 @@ export async function enrichImportedBooks(
     pool: Pool,
     userId: number,
     bookIds: number[],
-    googleApiKey?: string
+    googleApiKey?: string,
+    libraryThingApiKey?: string
 ): Promise<void> {
     for (let i = 0; i < bookIds.length; i += ENRICH_CONCURRENCY) {
         const batch = bookIds.slice(i, i + ENRICH_CONCURRENCY);
-        await Promise.all(batch.map((id) => enrichOneBook(pool, userId, id, googleApiKey)));
+        await Promise.all(batch.map((id) => enrichOneBook(pool, userId, id, googleApiKey, libraryThingApiKey)));
     }
 }
 
@@ -58,7 +61,8 @@ async function enrichOneBook(
     pool: Pool,
     userId: number,
     bookId: number,
-    googleApiKey?: string
+    googleApiKey?: string,
+    libraryThingApiKey?: string
 ): Promise<void> {
     const result = await pool.query(
         `SELECT id, name, isbn, description, image_url, publisher, published_date,
@@ -86,7 +90,7 @@ async function enrichOneBook(
     let categoryName: string | null = null;
 
     if (book.isbn) {
-        const meta = await fetchBookMetadata(book.isbn, googleApiKey);
+        const meta = await fetchBookMetadata(book.isbn, googleApiKey, libraryThingApiKey);
         if (meta) {
             description = meta.description ?? null;
             imageUrl = meta.imageLinks?.thumbnail ?? null;
@@ -103,6 +107,7 @@ async function enrichOneBook(
             isbn: book.isbn,
             title: book.name,
             authors,
+            libraryThingApiKey,
         });
     }
 

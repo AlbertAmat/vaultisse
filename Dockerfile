@@ -55,6 +55,11 @@ COPY --from=server-deps  /app/server/node_modules ./server/node_modules
 COPY --from=server-build /app/server/package.json  ./server/package.json
 COPY --from=server-build /app/server/dist          ./server/dist
 COPY --from=server-build /app/server/src/assets    ./server/dist/assets
+
+# The upgrade SQL files applied automatically on startup (see
+# server/src/migrate/index.ts and GitHub issue #26) - not built by either
+# prior stage, so copied straight from the build context.
+COPY assets/db ./assets/db
 COPY --from=client-build /app/client/dist          ./client
 
 RUN mkdir -p /app/logs \
