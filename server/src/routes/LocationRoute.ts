@@ -22,7 +22,7 @@ const router = Router();
  * Auth: required.
  *
  * Example response (200):
- *  [{ "id": 2, "name": "Main shelf", "description": "Front room", "total_books": 14 }]
+ *  [{ "id": 2, "name": "Main shelf", "description": "Front room", "default": true, "total_books": 14 }]
  */
 // @ts-ignore
 router.get('', requireAuth, async (req: Request, res: Response) => {
@@ -35,9 +35,11 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
             SELECT id,
                    name,
                    description,
+                   "default",
                    (SELECT COUNT(*) FROM book_stocks WHERE book_stocks.location_id = locations.id) total_books
             FROM locations
             WHERE user_id = $1
+            ORDER BY id
         `, [userId]);
         res.status(200).json(result.rows);
     } catch (err: any) {
@@ -137,7 +139,7 @@ router.post('/:id/add/books', requireAuth, async (req: Request, res: Response) =
  * Auth: required.
  * Body: { "name": "Main shelf", "description": "Front room" }
  *
- * Example response (200): { "id": 2, "name": "Main shelf", "description": "Front room", "total_books": 0 }
+ * Example response (200): { "id": 2, "name": "Main shelf", "description": "Front room", "default": false, "total_books": 0 }
  */
 // @ts-ignore
 router.post('', requireAuth, async (req: Request, res: Response) => {
@@ -160,6 +162,7 @@ router.post('', requireAuth, async (req: Request, res: Response) => {
             SELECT locations.id,
                    locations.name,
                    locations.description,
+                   locations."default",
                    (SELECT COUNT(*) FROM book_stocks WHERE book_stocks.location_id = locations.id) total_books
             FROM locations
             WHERE locations.id = ${insertLocation.rows[0].id}
@@ -218,6 +221,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
             `SELECT locations.id,
                     locations.name,
                     locations.description,
+                    locations."default",
                     (SELECT COUNT(*) FROM book_stocks WHERE book_stocks.location_id = locations.id) total_books
              FROM locations
              WHERE locations.id = $1
@@ -231,6 +235,64 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
         // Rollback on error
         console.error("Transaction error:", error);
         res.status(500).send("Error updating the location");
+    }
+});
+
+/**
+ * PUT /location/:id/default
+ * ---------------------------
+ * Mark a location as the user's default one (pre-filled when adding a new
+ * book stock), clearing the flag from whichever location previously had it.
+ *
+ * Auth: required. Path param `id` {number}.
+ *
+ * Example response (200): every location the user owns, same shape as
+ * `GET /location`, reflecting the new default.
+ *
+ * Response (404): "Location does not exist".
+ */
+// @ts-ignore
+router.put('/:id/default', requireAuth, async (req: Request, res: Response) => {
+    const locationId = Number(req.params.id);
+    if (!locationId) {
+        return res.status(400).send('No location ID provided');
+    }
+
+    const pool = appService.getDatabasePool();
+    const client = await pool.connect();
+    const userId = appService.getSessionUser(req);
+
+    try {
+        const exist = await existLocation(pool, locationId, userId);
+        if (!exist) {
+            return res.status(404).send('Location does not exist');
+        }
+
+        appService.getLogger().debug(`Setting location ${locationId} as default`);
+
+        await client.query('BEGIN');
+        await client.query('UPDATE locations SET "default" = FALSE WHERE user_id = $1', [userId]);
+        await client.query('UPDATE locations SET "default" = TRUE WHERE id = $1 AND user_id = $2', [locationId, userId]);
+        await client.query('COMMIT');
+
+        const result = await pool.query(`
+            SELECT id,
+                   name,
+                   description,
+                   "default",
+                   (SELECT COUNT(*) FROM book_stocks WHERE book_stocks.location_id = locations.id) total_books
+            FROM locations
+            WHERE user_id = $1
+            ORDER BY id
+        `, [userId]);
+
+        res.status(200).json(result.rows);
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error("Transaction error:", error);
+        res.status(500).send("Error setting the default location");
+    } finally {
+        client.release();
     }
 });
 

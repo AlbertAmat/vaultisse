@@ -163,7 +163,7 @@ const selectedStatus: Ref<BookStockStatusEnum> = ref(props.stock ? props.stock.g
 /**
  *
  */
-const selectedLocation: Ref<number | null> = ref(props.stock ? props.stock.getLocationId() : null);
+const selectedLocation: Ref<number | null> = ref(props.stock ? props.stock.getLocationId() : (applicationService.getDefaultLocation()?.getId() ?? null));
 
 /**
  *

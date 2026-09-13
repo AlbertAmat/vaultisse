@@ -55,6 +55,18 @@
 					></v-textarea>
 				</template>
 
+				<v-select
+					v-model="selectedLocation"
+					:items="locations"
+					:label="t(AppLabels.LOCATIONS)"
+					density="compact"
+					variant="outlined"
+					item-value="value"
+					item-title="text"
+					clearable
+					hide-details
+					class="mt-3"
+				></v-select>
 			</v-card-text>
 
 			<v-divider></v-divider>
@@ -98,6 +110,8 @@ import router from "@/router/Router";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
+import {applicationService} from "@/service/ApplicationService";
+import {BookStockStatusEnum} from "@/types/book/IBookStock";
 
 
 interface Props {
@@ -133,6 +147,21 @@ const name: Ref<string> = ref("");
 const description: Ref<string> = ref("");
 const isbn: Ref<string> = ref("");
 const image: Ref<File | undefined> = ref(undefined);
+
+/**
+ * Location to place the book's initial stock in, or null to create the
+ * book without one (a stock can still be added later from its page).
+ */
+const selectedLocation: Ref<number | null> = ref(applicationService.getDefaultLocation()?.getId() ?? null);
+
+const locations = computed(() => {
+	return applicationService.getLocations().map((location) => {
+		return {
+			value: location.getId(),
+			text: location.getName()
+		}
+	})
+})
 
 
 // ISBN validation function
@@ -199,6 +228,9 @@ async function addBook() {
 	try {
 		loading.value = true;
 		const id = await bookService.createBook(name.value, description.value, isbn.value, image.value || null);
+		if (selectedLocation.value != null) {
+			await bookService.addBookStock(id, selectedLocation.value, BookStockStatusEnum.AVAILABLE, null);
+		}
 		await router.push(bookRoute.getPath(id));
 		appSnackbarController.show({message: t(AppLabels.BOOK_HAS_BEEN_ADDED, {name: name.value}) })
 		dialog.value = false;

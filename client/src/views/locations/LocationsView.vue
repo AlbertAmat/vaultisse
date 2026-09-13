@@ -45,9 +45,20 @@
 							<span v-if="location.description" class="entity-card-desc">{{ location.description }}</span>
 						</div>
 
+						<v-chip v-if="location.default" density="compact" color="primary" variant="tonal" class="entity-card-default">{{t(AppLabels.DEFAULT)}}</v-chip>
+
 						<v-chip density="compact" class="entity-card-count">{{ location.totalBooks }}</v-chip>
 
 						<div class="entity-card-actions" @click.stop>
+							<v-icon
+								@click="setDefaultLocation(location.id)"
+								:color="location.default ? 'primary' : undefined"
+								size="small"
+								class="mx-1"
+								:title="t(AppLabels.SET_AS_DEFAULT_LOCATION)"
+							>
+								{{ location.default ? 'mdi-star' : 'mdi-star-outline' }}
+							</v-icon>
 							<v-icon
 								@click="editLocation(location.id)"
 								size="small"
@@ -146,10 +157,20 @@ const locations = computed(() => {
 			id: location.getId(),
 			name: location.getName(),
 			description: location.getDescription(),
+			default: location.isDefault(),
 			totalBooks: location.getTotalBooks()
 		}
 	})
 })
+
+/**
+ *
+ * @param locationId
+ */
+async function setDefaultLocation(locationId: number) {
+	await controller.setDefaultLocation(locationId);
+	applicationService.setLocations(controller.getLocations())
+}
 
 /**
  *
@@ -206,7 +227,7 @@ function toggleExpand(locationId: number) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .entity-card-list {
 	display: flex;
 	flex-direction: column;
@@ -247,6 +268,10 @@ function toggleExpand(locationId: number) {
 }
 
 .entity-card-count {
+	flex-shrink: 0;
+}
+
+.entity-card-default {
 	flex-shrink: 0;
 }
 

@@ -18,6 +18,7 @@ export default defineConfig(({command, mode}) => {
             minify: 'esbuild', // esbuild handles minification in Vite
         },
         server: {
+            host: true,
             proxy: isProd
                 ? undefined
                 : {

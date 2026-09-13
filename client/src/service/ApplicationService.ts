@@ -251,6 +251,13 @@ export class ApplicationService {
     }
 
     /**
+     * Retrieves the user's default location, if one is set.
+     */
+    public getDefaultLocation(): Location | undefined {
+        return this.m_locations.find((location) => location.isDefault());
+    }
+
+    /**
      * Max accepted size, in MB, for a `POST /import/library` upload - use
      * this instead of hardcoding a copy of the server's limit, which can
      * silently drift out of sync with it.

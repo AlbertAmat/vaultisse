@@ -66,6 +66,17 @@ class LocationsService {
     }
 
     /**
+     * Mark a location as the user's default one, clearing the flag from
+     * whichever location previously had it.
+     * @param locationId Location id to mark as default.
+     * @returns Every location the user owns, reflecting the new default.
+     */
+    public async setDefaultLocation(locationId: number): Promise<ILocationExt[]> {
+        const {data} = await axiosInstance.put(`${PATH_PREFIX}/location/${locationId}/default`)
+        return data;
+    }
+
+    /**
      * Move a batch of book stocks into this location.
      * @param locationId Destination location id.
      * @param books Array of book stock codes.
