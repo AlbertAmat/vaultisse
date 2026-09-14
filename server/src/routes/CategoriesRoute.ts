@@ -4,182 +4,62 @@
  * =============================================================================
  * Mounted at `/api/rest/category`. CRUD for the user's book `categories`
  * (genres/shelving sections). All routes require auth and are scoped to the
- * caller's `user_id`.
+ * caller's `user_id`. See CategoryController/CategoryService/CategoryRepository
+ * for the actual request handling, business rules, and SQL respectively.
  */
-import { Router, Request, Response } from 'express';
-import {requireAuth} from "../middlewares/AuthMiddleware";
+import {Router} from 'express';
 import {appService} from "../AppService";
+import {requireAuth} from "../middlewares/AuthMiddleware";
+import {CategoryController} from "../controllers/CategoryController";
+import {lazy} from "./lazySingleton";
 
 const router = Router();
+const getCategoryController = lazy(() => new CategoryController(appService.getDatabasePool()));
 
 /**
  * GET /category
  * --------------
- * List every category belonging to the user.
+ * Lists the caller's categories.
  *
  * Auth: required.
  *
- * Example response (200): [{ "id": 3, "name": "Fantasy" }]
+ * Example response (200): [{ "id": 1, "name": "Fiction" }, { "id": 2, "name": "Non-fiction" }]
  */
-// @ts-ignore
-router.get('', requireAuth, async (req: Request, res: Response) => {
-    const pool = appService.getDatabasePool();
-    const client = await pool.connect();
-    const userId = appService.getSessionUser(req);
-
-    try {
-        const result = await client.query(`
-            SELECT id,
-                   name
-              FROM categories
-             WHERE user_id = $1
-        `, [userId]);
-        res.status(200).json(result.rows);
-    } catch (err: any) {
-        console.error('Error executing query', err.stack);
-        res.status(500).send('Internal Server Error');
-    } finally {
-        client.release();
-    }
-});
+router.get('', requireAuth, (req, res) => getCategoryController().list(req, res));
 
 /**
  * POST /category
  * ----------------
- * Create a new category.
+ * Creates a new category.
  *
- * Auth: required. Body: { "name": "Fantasy" }
+ * Auth: required. Body: { "name": "Fiction" }
  *
- * Example response (200): { "id": 3, "name": "Fantasy" }
+ * Example response (200): { "id": 1, "name": "Fiction" }
  */
-// @ts-ignore
-router.post('', requireAuth, async (req: Request, res: Response) => {
-    const name = req.body.name;
-
-    const pool = appService.getDatabasePool();
-    const client = await pool.connect();
-    const userId = appService.getSessionUser(req);
-
-    try {
-        appService.getLogger().debug(`Adding category with name ${name}`);
-        const insertCategory = await client.query(
-            "INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id",
-            [name, userId]
-        );
-
-        // fetch new data
-        const result = await pool.query(`
-            SELECT categories.id,
-                   categories.name
-            FROM categories
-            WHERE categories.id = $1
-              AND categories.user_id = $2
-        `, [insertCategory.rows[0].id, userId])
-
-        res.status(200).json(result.rows[0]);
-    } catch (error) {
-        console.error("Transaction error:", error);
-        res.status(500).send("Error adding category");
-    } finally {
-        client.release();
-    }
-});
-
+router.post('', requireAuth, (req, res) => getCategoryController().create(req, res));
 
 /**
  * PUT /category/:id
  * -------------------
- * Rename a category.
+ * Renames a category.
  *
- * Auth: required. Path param `id` {number}. Body: { "name": "..." }
+ * Auth: required. Body: { "name": "New name" }
  *
- * Example response (200): { "id": 3, "name": "..." }
+ * Example response (200): { "id": 1, "name": "New name" }
+ * Responses: 400 "No category ID provided" | 200 the renamed category.
  */
-// @ts-ignore
-router.put('/:id', requireAuth, async (req: Request, res: Response) => {
-    const categoryId = req.params.id;
-    if (!categoryId) {
-        return res.status(400).send('No category ID provided');
-    }
-
-    const userId = appService.getSessionUser(req);
-
-    // Body params
-    const {
-        name
-    } = req.body;
-
-    const pool = appService.getDatabasePool();
-
-    try {
-        appService.getLogger().debug(`Updating category ${categoryId}`);
-
-        const queryResult = await pool.query(
-            'UPDATE categories SET name = $1 WHERE id = $2 AND user_id = $3',
-            [name, categoryId, userId]
-        );
-
-        if(queryResult.rowCount != 1) {
-            return res.status(500).send();
-        }
-
-        const categoryQueryResult = await pool.query(
-            `SELECT categories.id,
-                    categories.name
-              FROM categories
-             WHERE categories.id = $1
-               AND categories.user_id = $2
-             `,
-            [categoryId, userId]
-        );
-
-        res.status(200).json(categoryQueryResult.rows[0]);
-    } catch (error) {
-        // Rollback on error
-        console.error("Transaction error:", error);
-        res.status(500).send("Error updating the category");
-    }
-});
+router.put('/:id', requireAuth, (req, res) => getCategoryController().rename(req, res));
 
 /**
  * DELETE /category/:id
  * ----------------------
- * Delete a category.
+ * Deletes a category.
  *
- * Auth: required. Path param `id` {number}.
+ * Auth: required.
  *
- * Responses: 200 {"message": "Category deleted successfully"} | 404 {"error": "Category not found"}.
+ * Example response (200): { "message": "Category deleted successfully" }
+ * Responses: 200 success | 404 { "error": "Category not found" }.
  */
-// @ts-ignore
-router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
-    appService.getLogger().debug(`Delete category, id: ${id}`);
-
-    // Database connection
-    const pool = appService.getDatabasePool();
-    const client = await pool.connect();
-
-    const userId = appService.getSessionUser(req);
-
-    try {
-        // Validate the existence of the book
-        const categoryCheck = await client.query(
-            'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
-            [id, userId]
-        );
-        if (categoryCheck.rowCount === 0) {
-            return res.status(404).send({error: "Category not found"});
-        }
-
-        await client.query( 'DELETE FROM categories WHERE id = $1 AND user_id = $2', [id, userId]);
-
-        res.send({message: "Category deleted successfully"});
-    } catch (e) {
-        console.error("Error while deleting category", e);
-        res.status(500).send('Internal Server Error');
-    } finally {
-        client.release();
-    }
-});
+router.delete('/:id', requireAuth, (req, res) => getCategoryController().remove(req, res));
 
 export default router;

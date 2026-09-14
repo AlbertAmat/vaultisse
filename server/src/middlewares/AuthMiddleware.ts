@@ -31,7 +31,9 @@
 import {Request, Response, NextFunction} from "express";
 import jwt from "jsonwebtoken";
 import {appService} from "../AppService";
-import {setSessionCookie} from "../utils/SessionCookie";
+import {SessionCookie} from "../utils/SessionCookie";
+import {AuthRepository} from "../repositories/AuthRepository";
+import {UserSessionRepository} from "../repositories/UserSessionRepository";
 
 /** Sentinel `sid` for the fake ALLOW_DEV_AUTH token - never matches a real `user_sessions` row. Exported so handlers reissuing a token (e.g. password change) can fall back to it when `req.sessionKey` is unset. */
 export const DEV_SESSION_KEY = "dev";
@@ -45,6 +47,7 @@ type SessionResolution = "ok" | "no-token" | "unauthorized";
  */
 async function resolveSession(req: Request, res: Response): Promise<SessionResolution> {
     const pool = appService.getDatabasePool();
+    const authRepo = new AuthRepository(pool);
 
     // only development
     if (appService.allowDevAuth()) {
@@ -52,10 +55,7 @@ async function resolveSession(req: Request, res: Response): Promise<SessionResol
 
         // Look up the real current token_version for the fake user so the
         // check below (identical for dev and real tokens) accepts it.
-        const devUser = await pool.query(
-            "SELECT token_version FROM users WHERE id = 1 AND disabled = FALSE"
-        );
-        const devTokenVersion = devUser.rows[0]?.token_version ?? 0;
+        const devTokenVersion = (await authRepo.getActiveUserTokenVersion(1)) ?? 0;
 
         // Fake decoded token for dev
         req.cookies.token = appService.createSessionToken(1, devTokenVersion, DEV_SESSION_KEY); // fake user ID
@@ -78,17 +78,11 @@ async function resolveSession(req: Request, res: Response): Promise<SessionResol
         return "unauthorized";
     }
 
-    const result = await pool.query({
-        name: "user-prep-stmt",
-        text: "SELECT id, token_version FROM users WHERE id = $1 AND disabled = FALSE",
-        values: [decoded.user_id]
-    });
+    const currentTokenVersion = await authRepo.getActiveUserTokenVersion(decoded.user_id);
 
-    if (result.rowCount == 0) {
+    if (currentTokenVersion === null) {
         return "unauthorized";
     }
-
-    const currentTokenVersion = result.rows[0].token_version;
 
     // Tokens issued before a password change (or any other event that bumps
     // token_version) no longer match - reject them even though the JWT
@@ -99,25 +93,19 @@ async function resolveSession(req: Request, res: Response): Promise<SessionResol
     }
 
     if (decoded.sid !== DEV_SESSION_KEY) {
-        const sessionResult = await pool.query(
-            "SELECT id FROM user_sessions WHERE session_key = $1 AND user_id = $2 AND revoked_date IS NULL",
-            [decoded.sid, decoded.user_id]
-        );
+        const sessionRepo = new UserSessionRepository(pool);
+        const session = await sessionRepo.findActive(decoded.sid, decoded.user_id);
 
-        if (sessionResult.rowCount === 0) {
+        if (!session) {
             return "unauthorized";
         }
 
-        req.sessionId = sessionResult.rows[0].id;
+        req.sessionId = session.id;
         req.sessionKey = decoded.sid;
 
-        // Best-effort and throttled (only writes once the row is more than
-        // a minute stale) - keeps "Active sessions" reasonably fresh
-        // without a DB write on every single authenticated request.
-        pool.query(
-            "UPDATE user_sessions SET last_seen_date = NOW() WHERE id = $1 AND last_seen_date < NOW() - INTERVAL '1 minute'",
-            [req.sessionId]
-        ).catch((err) => appService.getLogger().error("Error updating session last_seen_date: " + err));
+        // Best-effort and throttled - see UserSessionRepository.touchLastSeen.
+        sessionRepo.touchLastSeen(req.sessionId)
+            .catch((err: unknown) => appService.getLogger().error("Error updating session last_seen_date: " + err));
     }
 
     // Check if token is near expiry (e.g., less than 5 minutes left)
@@ -128,7 +116,7 @@ async function resolveSession(req: Request, res: Response): Promise<SessionResol
         // Issue new token with extended expiration
         const newToken = appService.createSessionToken(decoded.user_id, currentTokenVersion, decoded.sid);
 
-        setSessionCookie(res, newToken);
+        SessionCookie.setSessionCookie(res, newToken);
     }
 
     return "ok";

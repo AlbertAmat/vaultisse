@@ -1,7 +1,7 @@
 import request from "supertest";
 import {appService} from "../../src/AppService";
-import {findOrCreateOidcUser, OidcUserError} from "../../src/routes/auth/oidc/OidcUsers";
-import {OidcClaims} from "../../src/routes/auth/oidc/Oidc";
+import {OidcUserService, OidcUserError} from "../../src/services/OidcUserService";
+import {OidcClaims} from "../../src/repositories/OidcRepository";
 import {nextFakeIp, TEST_PASSWORD} from "../helpers/auth";
 import {setupTestApp} from "../helpers/testApp";
 
@@ -34,8 +34,8 @@ describe("findOrCreateOidcUser", () => {
 
     it("JIT-creates a new enabled account and reuses it on the same subject", async () => {
         const claims = freshClaims();
-        const first = await findOrCreateOidcUser(pool(), claims);
-        const second = await findOrCreateOidcUser(pool(), claims);
+        const first = await new OidcUserService(pool()).findOrCreateOidcUser(claims);
+        const second = await new OidcUserService(pool()).findOrCreateOidcUser(claims);
 
         expect(second.id).toBe(first.id);
         expect(second.token_version).toBe(first.token_version);
@@ -58,7 +58,7 @@ describe("findOrCreateOidcUser", () => {
         await registerLocal(claims.email, userName);
 
         const before = await pool().query("SELECT id FROM users WHERE email = $1", [claims.email]);
-        const resolved = await findOrCreateOidcUser(pool(), claims);
+        const resolved = await new OidcUserService(pool()).findOrCreateOidcUser(claims);
 
         expect(resolved.id).toBe(before.rows[0].id);
         const after = await pool().query(
@@ -76,7 +76,7 @@ describe("findOrCreateOidcUser", () => {
         const userName = `local_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
         await registerLocal(claims.email, userName);
 
-        await expect(findOrCreateOidcUser(pool(), claims)).rejects.toBeInstanceOf(OidcUserError);
+        await expect(new OidcUserService(pool()).findOrCreateOidcUser(claims)).rejects.toBeInstanceOf(OidcUserError);
 
         const row = await pool().query(
             "SELECT oidc_issuer, oidc_sub FROM users WHERE email = $1",
@@ -88,38 +88,38 @@ describe("findOrCreateOidcUser", () => {
 
     it("JIT-creates when the email is new even if email_verified is false", async () => {
         const claims = freshClaims({emailVerified: false});
-        const created = await findOrCreateOidcUser(pool(), claims);
+        const created = await new OidcUserService(pool()).findOrCreateOidcUser(claims);
         const row = await pool().query("SELECT email, disabled FROM users WHERE id = $1", [created.id]);
         expect(row.rows[0]).toMatchObject({email: claims.email, disabled: false});
     });
 
     it("rejects a missing email", async () => {
-        await expect(findOrCreateOidcUser(pool(), freshClaims({email: "  "})))
+        await expect(new OidcUserService(pool()).findOrCreateOidcUser(freshClaims({email: "  "})))
             .rejects.toBeInstanceOf(OidcUserError);
     });
 
     it("rejects a missing subject", async () => {
-        await expect(findOrCreateOidcUser(pool(), freshClaims({sub: "  "})))
+        await expect(new OidcUserService(pool()).findOrCreateOidcUser(freshClaims({sub: "  "})))
             .rejects.toBeInstanceOf(OidcUserError);
     });
 
     it("rejects a disabled account (matched by subject)", async () => {
         const claims = freshClaims();
-        const created = await findOrCreateOidcUser(pool(), claims);
+        const created = await new OidcUserService(pool()).findOrCreateOidcUser(claims);
         await pool().query("UPDATE users SET disabled = TRUE WHERE id = $1", [created.id]);
 
-        await expect(findOrCreateOidcUser(pool(), claims)).rejects.toBeInstanceOf(OidcUserError);
+        await expect(new OidcUserService(pool()).findOrCreateOidcUser(claims)).rejects.toBeInstanceOf(OidcUserError);
     });
 
     it("rejects linking when the email already belongs to a different SSO subject", async () => {
         const first = freshClaims();
-        await findOrCreateOidcUser(pool(), first);
+        await new OidcUserService(pool()).findOrCreateOidcUser(first);
 
         const second = freshClaims({
             email: first.email,
             emailVerified: true,
             sub: `${first.sub}-other`,
         });
-        await expect(findOrCreateOidcUser(pool(), second)).rejects.toBeInstanceOf(OidcUserError);
+        await expect(new OidcUserService(pool()).findOrCreateOidcUser(second)).rejects.toBeInstanceOf(OidcUserError);
     });
 });

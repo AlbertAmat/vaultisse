@@ -61,11 +61,21 @@ code is organized inside each and how they communicate.
 
 - **TypeScript everywhere.** Avoid `any` where a real type is easy to express;
   existing `//@ts-ignore` usages in older code are not a license to add new ones.
-- **Follow existing patterns.** New backend resources should get their own route
-  file under `server/src/routes/` and be registered in `Routes.ts`, mirroring the
-  existing resources (books, authors, categories, ...). New frontend features
-  should follow the `view/controller/service/model` split already used for
-  existing pages.
+- **Follow existing patterns.** The server is layered `types/ → repositories/ →
+  services/ → controllers/ → routes/`: `types/<resource>.ts` holds the interfaces
+  a repository returns; `repositories/<Resource>Repository.ts` is data access
+  (SQL or an external API call) behind plain exported functions taking
+  `Pool | PoolClient` as the first argument; `services/<Resource>Service.ts` is
+  business logic, throwing a `DomainError` subclass (see
+  `server/src/errors/DomainError.ts`) for expected failures and calling only
+  repositories, never Express types; `controllers/<Resource>Controller.ts` is
+  thin HTTP↔service glue that maps `DomainError` to `res.status(err.httpStatus)`;
+  `routes/<Resource>Route.ts` shrinks to wiring
+  (`router.verb(path, middleware, controller.method)`) and stays registered in
+  `Routes.ts`. New backend resources should follow this same split, mirroring
+  the existing resources (books, authors, categories, ...). New frontend
+  features should follow the `view/controller/service/model` split already used
+  for existing pages.
 - **Keep the client thin.** Business logic and data access belong in the server;
   the client should call the REST API rather than talking to the database or
   external APIs (Google Books/Open Library) directly.

@@ -1,22 +1,22 @@
-import {isValidPdf, isValidEpub, isValidMobi} from "../../src/utils/FileSignature";
+import {FileSignature} from "../../src/utils/FileSignature";
 
 describe("isValidPdf", () => {
     it("accepts a buffer starting with the PDF header", () => {
-        expect(isValidPdf(Buffer.from("%PDF-1.4\n...rest of file..."))).toBe(true);
+        expect(FileSignature.isValidPdf(Buffer.from("%PDF-1.4\n...rest of file..."))).toBe(true);
     });
 
     it("accepts a PDF header preceded by a small preamble", () => {
         const buffer = Buffer.concat([Buffer.alloc(10), Buffer.from("%PDF-1.7")]);
-        expect(isValidPdf(buffer)).toBe(true);
+        expect(FileSignature.isValidPdf(buffer)).toBe(true);
     });
 
     it("rejects a file with no PDF header", () => {
-        expect(isValidPdf(Buffer.from("just some random text"))).toBe(false);
+        expect(FileSignature.isValidPdf(Buffer.from("just some random text"))).toBe(false);
     });
 
     it("rejects the PDF header appearing after the search window", () => {
         const buffer = Buffer.concat([Buffer.alloc(2000), Buffer.from("%PDF-1.4")]);
-        expect(isValidPdf(buffer)).toBe(false);
+        expect(FileSignature.isValidPdf(buffer)).toBe(false);
     });
 });
 
@@ -44,30 +44,30 @@ function buildZipEntry(fileName: string, content: string, compressionMethod = 0)
 describe("isValidEpub", () => {
     it("accepts a zip whose first entry is a stored 'mimetype' file with the epub content type", () => {
         const buffer = buildZipEntry("mimetype", "application/epub+zip");
-        expect(isValidEpub(buffer)).toBe(true);
+        expect(FileSignature.isValidEpub(buffer)).toBe(true);
     });
 
     it("rejects a zip whose mimetype entry is compressed (not stored)", () => {
         const buffer = buildZipEntry("mimetype", "application/epub+zip", /* deflate */ 8);
-        expect(isValidEpub(buffer)).toBe(false);
+        expect(FileSignature.isValidEpub(buffer)).toBe(false);
     });
 
     it("rejects a zip whose first entry isn't named 'mimetype'", () => {
         const buffer = buildZipEntry("META-INF/container.xml", "application/epub+zip");
-        expect(isValidEpub(buffer)).toBe(false);
+        expect(FileSignature.isValidEpub(buffer)).toBe(false);
     });
 
     it("rejects a zip whose mimetype content isn't the epub type (e.g. a renamed .docx/.jar)", () => {
         const buffer = buildZipEntry("mimetype", "application/vnd.other+zip");
-        expect(isValidEpub(buffer)).toBe(false);
+        expect(FileSignature.isValidEpub(buffer)).toBe(false);
     });
 
     it("rejects a non-zip buffer", () => {
-        expect(isValidEpub(Buffer.from("not a zip file at all"))).toBe(false);
+        expect(FileSignature.isValidEpub(Buffer.from("not a zip file at all"))).toBe(false);
     });
 
     it("rejects a truncated/corrupt buffer without throwing", () => {
-        expect(isValidEpub(Buffer.from([0x50, 0x4b, 0x03, 0x04]))).toBe(false);
+        expect(FileSignature.isValidEpub(Buffer.from([0x50, 0x4b, 0x03, 0x04]))).toBe(false);
     });
 });
 
@@ -75,16 +75,16 @@ describe("isValidMobi", () => {
     it("accepts a buffer with the BOOKMOBI identifier at offset 60", () => {
         const buffer = Buffer.alloc(68);
         buffer.write("BOOKMOBI", 60, "ascii");
-        expect(isValidMobi(buffer)).toBe(true);
+        expect(FileSignature.isValidMobi(buffer)).toBe(true);
     });
 
     it("rejects a buffer too short to contain the identifier", () => {
-        expect(isValidMobi(Buffer.alloc(50))).toBe(false);
+        expect(FileSignature.isValidMobi(Buffer.alloc(50))).toBe(false);
     });
 
     it("rejects a buffer with unrelated bytes at offset 60", () => {
         const buffer = Buffer.alloc(68);
         buffer.write("NOTAMOBI", 60, "ascii");
-        expect(isValidMobi(buffer)).toBe(false);
+        expect(FileSignature.isValidMobi(buffer)).toBe(false);
     });
 });
