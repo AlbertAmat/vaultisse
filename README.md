@@ -126,11 +126,30 @@ PostgreSQL.
   (bcrypt). It also wires up global middleware: `helmet` (secure headers),
   `express-rate-limit` (brute-force/DoS mitigation), `cors` (restricted to the
   configured frontend origin), and cookie/body parsing.
+The API is layered `types/ → repositories/ → services/ → controllers/ → routes/`,
+one set of files per resource (books, authors, categories, locations, loans,
+dashboard, customer, import, app, user, auth, ...):
+
 - **`src/routes/`** – one Express router per resource, registered in `Routes.ts`
   under the `/api/rest` prefix: `AppRoute`, `BooksRoute`, `LocationRoute`,
   `CustomerRoute`, `AuthorRoute`, `CategoriesRoute`, `UserRoute`, `DashboardRoute`.
   `AuthRoute` is mounted separately at the root (`/`) and handles login, register,
-  logout, and serving the built SPA in production.
+  logout, OIDC/SSO, and serving the built SPA in production. Routes do nothing but
+  wire `middleware → controller.method` for each path — no business logic.
+- **`src/controllers/`** – thin HTTP↔service glue: parse the request, call a
+  service, map the result (or a thrown `DomainError`) to a response. No SQL, no
+  business rules.
+- **`src/services/`** – business logic and orchestration. Pure functions of
+  `(pool, ...domain args) → domain result` (no Express types), calling one or
+  more repositories and throwing a typed `DomainError` subclass (see
+  `src/errors/DomainError.ts` — `NotFoundError`, `ConflictError`,
+  `ValidationError`, `ForbiddenError`, `UnauthorizedError`, `NotAcceptableError`)
+  for expected failures.
+- **`src/repositories/`** – data access behind plain exported functions taking
+  `Pool | PoolClient` as the first argument: one focused SQL statement each, or
+  (for `BookMetadataRepository.ts`/`OidcRepository.ts`) a call to an external
+  API/IdP. `withTransaction.ts` wraps a `BEGIN`/`COMMIT`/`ROLLBACK` around a
+  callback for the handful of endpoints that write across more than one query.
 - **`src/middlewares/AuthMiddleware.ts`** – `requireAuth`/`requireAuthPage`
   guards. Verify the JWT stored in the `token` cookie, check the user still
   exists and isn't disabled, check the session hasn't been individually
@@ -138,9 +157,13 @@ PostgreSQL.
   [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md). In development, setting
   `ALLOW_DEV_AUTH=true` bypasses login with a fake session — never enable
   this in production.
-- **`src/types/`** – shared TypeScript interfaces (book/stock shapes, search
-  filters, app error types).
+- **`src/types/`** – one file per resource holding the interfaces its
+  repositories return (plus the pre-existing book/stock shapes, search filters,
+  and app error types).
 - **`src/utils/Logger.ts`** – lightweight file logger (`LOGGER_PATH` env var).
+  `src/utils/` otherwise holds small dependency-free helpers (two-factor auth,
+  file-signature/ISBN validation, session-cookie option builders) used by the
+  layers above but not tied to any one resource.
 - **`src/assets/`** – static assets shipped with the API: the standalone
   `login.html`/`register.html` pages, background image, and (in production) the
   built client bundle served from `assets/app`.

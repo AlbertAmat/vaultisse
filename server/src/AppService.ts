@@ -14,7 +14,7 @@ import helmet from "helmet"; // Middleware to set secure HTTP headers
 import rateLimit from "express-rate-limit";
 import path from "path"; // Middleware to limit repeated requests
 import {blockWritesInDemo} from "./middlewares/DemoModeMiddleware"; // Rejects writes when DEMO_MODE=true
-import {normalizeGoogleApiKey} from "./utils/BookMetadata";
+import {BookMetadataRepository} from "./repositories/BookMetadataRepository";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 import {runMigrations} from "./migrate";
 
@@ -220,7 +220,7 @@ export class AppService {
         this.m_sessionTime  = Number(process.env.SESSION_TIME);
         this.m_allowDevAuth = process.env.ALLOW_DEV_AUTH == "true";
 
-        this.m_googleApiKey = normalizeGoogleApiKey(process.env.GOOGLE_BOOKS_API_KEY);
+        this.m_googleApiKey = BookMetadataRepository.normalizeGoogleApiKey(process.env.GOOGLE_BOOKS_API_KEY);
 
         this.m_libraryThingApiKey = process.env.LIBRARYTHING_API_KEY || undefined;
 
@@ -431,7 +431,7 @@ export class AppService {
      * bumping the DB column invalidates every previously issued token for
      * that user, e.g. on password change. sessionKey identifies the
      * specific `user_sessions` row this token belongs to (its `session_key`
-     * column, see utils/UserSessions.ts) - carried as the `sid` claim so
+     * column, see repositories/UserSessionRepository.ts) - carried as the `sid` claim so
      * requireAuth can look up that one session (device/IP, revocation)
      * instead of just the account as a whole.
      * @param userId

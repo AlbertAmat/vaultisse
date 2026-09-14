@@ -5,8 +5,11 @@
  */
 import crypto from "crypto";
 import {Pool, PoolClient} from "pg";
-import {appService} from "../../../AppService";
-import {OidcClaims} from "./Oidc";
+import {appService} from "../AppService";
+import * as OidcUserRepository from "../repositories/OidcUserRepository";
+import {OidcAccountRow} from "../repositories/OidcUserRepository";
+import {OidcClaims} from "../repositories/OidcRepository";
+import {ResolvedAuthUser} from "../types/auth";
 
 export class OidcUserError extends Error {
     constructor(message: string) {
@@ -15,24 +18,11 @@ export class OidcUserError extends Error {
     }
 }
 
-export interface OidcResolvedUser {
-    id: number;
-    token_version: number;
-}
-
-interface UserRow {
-    id: number;
-    token_version: number;
-    disabled: boolean;
-    oidc_issuer: string | null;
-    oidc_sub: string | null;
-}
-
-function requireActive(row: UserRow): OidcResolvedUser {
+function requireActive(row: OidcAccountRow): ResolvedAuthUser {
     if (row.disabled) {
         throw new OidcUserError("Account is disabled");
     }
-    return {id: row.id, token_version: row.token_version};
+    return {id: row.id, tokenVersion: row.tokenVersion};
 }
 
 function slugCode(preferredUsername: string | undefined, email: string): string {
@@ -47,8 +37,7 @@ async function allocateUniqueCode(db: Pool | PoolClient, base: string): Promise<
     for (let i = 0; i < 8; i++) {
         const suffix = i === 0 ? "" : `_${crypto.randomBytes(3).toString("hex")}`;
         const code = `${base.slice(0, 50 - suffix.length)}${suffix}`;
-        const existing = await db.query("SELECT 1 FROM users WHERE code = $1", [code]);
-        if (existing.rowCount === 0) {
+        if (!(await OidcUserRepository.codeExists(db, code))) {
             return code;
         }
     }
@@ -66,7 +55,7 @@ function displayName(claims: OidcClaims): string {
  * is true, so an IdP that lets anyone claim an address cannot take over
  * an existing local account.
  */
-export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcClaims): Promise<OidcResolvedUser> {
+export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcClaims): Promise<ResolvedAuthUser> {
     const email = claims.email.trim();
     const sub = (claims.sub || "").trim();
     if (!sub) {
@@ -76,63 +65,44 @@ export async function findOrCreateOidcUser(db: Pool | PoolClient, claims: OidcCl
         throw new OidcUserError("OIDC account has no email");
     }
 
-    const bySub = await db.query(
-        `SELECT id, token_version, disabled, oidc_issuer, oidc_sub
-           FROM users
-          WHERE oidc_issuer = $1 AND oidc_sub = $2`,
-        [claims.issuer, sub]
-    );
-    if (bySub.rowCount === 1) {
-        return requireActive(bySub.rows[0]);
+    const bySub = await OidcUserRepository.findBySubject(db, claims.issuer, sub);
+    if (bySub) {
+        return requireActive(bySub);
     }
 
-    const byEmail = await db.query(
-        `SELECT id, token_version, disabled, oidc_issuer, oidc_sub
-           FROM users
-          WHERE LOWER(email) = LOWER($1)`,
-        [email]
-    );
-
-    if ((byEmail.rowCount ?? 0) > 0) {
-        const row: UserRow = byEmail.rows[0];
-        if (row.disabled) {
+    const byEmail = await OidcUserRepository.findByEmail(db, email);
+    if (byEmail) {
+        if (byEmail.disabled) {
             throw new OidcUserError("Account is disabled");
         }
-        if (row.oidc_sub && (row.oidc_issuer !== claims.issuer || row.oidc_sub !== sub)) {
+        if (byEmail.oidcSub && (byEmail.oidcIssuer !== claims.issuer || byEmail.oidcSub !== sub)) {
             throw new OidcUserError("Email is already linked to a different SSO account");
         }
         if (!claims.emailVerified) {
             throw new OidcUserError("Cannot link an unverified email to an existing account");
         }
 
-        await db.query(
-            `UPDATE users SET oidc_issuer = $1, oidc_sub = $2 WHERE id = $3`,
-            [claims.issuer, sub, row.id]
-        );
-        return {id: row.id, token_version: row.token_version};
+        await OidcUserRepository.linkIdentity(db, byEmail.id, claims.issuer, sub);
+        return {id: byEmail.id, tokenVersion: byEmail.tokenVersion};
     }
 
     const code = await allocateUniqueCode(db, slugCode(claims.preferredUsername, email));
     const passwordHash = await appService.hashPassword(crypto.randomBytes(32).toString("hex"));
 
     try {
-        const inserted = await db.query(
-            `INSERT INTO users (name, code, email, password, disabled, oidc_issuer, oidc_sub)
-             VALUES ($1, $2, $3, $4, FALSE, $5, $6)
-             RETURNING id, token_version`,
-            [displayName(claims), code, email.slice(0, 100), passwordHash, claims.issuer, sub]
-        );
-        return {id: inserted.rows[0].id, token_version: inserted.rows[0].token_version};
+        return await OidcUserRepository.create(db, {
+            name: displayName(claims),
+            code,
+            email: email.slice(0, 100),
+            passwordHash,
+            issuer: claims.issuer,
+            sub,
+        });
     } catch (err: any) {
         if (err.code === "23505") {
-            const raced = await db.query(
-                `SELECT id, token_version, disabled, oidc_issuer, oidc_sub
-                   FROM users
-                  WHERE oidc_issuer = $1 AND oidc_sub = $2`,
-                [claims.issuer, sub]
-            );
-            if (raced.rowCount === 1) {
-                return requireActive(raced.rows[0]);
+            const raced = await OidcUserRepository.findBySubject(db, claims.issuer, sub);
+            if (raced) {
+                return requireActive(raced);
             }
             throw new OidcUserError("Unable to create an account for this SSO login");
         }

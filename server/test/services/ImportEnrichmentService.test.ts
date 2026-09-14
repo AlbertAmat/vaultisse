@@ -1,7 +1,7 @@
 import axios from "axios";
 import {Pool} from "pg";
 import {appService} from "../../src/AppService";
-import {enrichImportedBooks} from "../../src/utils/ImportEnrichment";
+import {enrichImportedBooks} from "../../src/services/ImportEnrichmentService";
 import {createAuthenticatedUser} from "../helpers/auth";
 import {setupTestApp} from "../helpers/testApp";
 

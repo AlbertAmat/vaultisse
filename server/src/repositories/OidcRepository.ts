@@ -1,16 +1,18 @@
 /**
- * Server-side OIDC authorization-code + PKCE (confidential client).
- * Used by AuthRoute's /auth/oidc/* handlers. The client secret never
- * leaves this process; the browser only sees a redirect to the IdP and
- * a short-lived `oidc_pending` cookie (SameSite=lax so it comes back
- * on the top-level callback navigation).
+ * Server-side OIDC authorization-code + PKCE (confidential client) - the
+ * external-IdP-facing "repository" for the Auth resource (see
+ * AuthService.ts), same "data access behind an interface" classification
+ * as BookMetadataRepository.ts. The client secret never leaves this
+ * process; the browser only sees a redirect to the IdP and a short-lived
+ * `oidc_pending` cookie (SameSite=lax so it comes back on the top-level
+ * callback navigation).
  */
 import {Issuer, generators, Client} from "openid-client";
 import jwt from "jsonwebtoken";
-import {appService} from "../../../AppService";
-import {OIDC_PENDING_MAX_AGE_MS} from "../../../utils/SessionCookie";
+import {appService} from "../AppService";
+import {OIDC_PENDING_MAX_AGE_MS} from "../utils/SessionCookie";
 
-export {OIDC_PENDING_COOKIE} from "../../../utils/SessionCookie";
+export {OIDC_PENDING_COOKIE} from "../utils/SessionCookie";
 
 const OIDC_PENDING_AUDIENCE = "vaultisse-oidc-pending";
 

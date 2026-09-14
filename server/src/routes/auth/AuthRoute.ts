@@ -6,7 +6,9 @@
  * Owns the whole unauthenticated surface: serving the login/register static
  * pages, the login/register/logout POST handlers, optional OIDC start/
  * callback, session-cookie issuance, and (once logged in) serving the
- * compiled SPA under `/app`.
+ * compiled SPA under `/app`. See AuthController/AuthService/AuthRepository
+ * (+ OidcRepository/OidcUserService/OidcUserRepository for SSO) for the
+ * actual request handling, business rules, and SQL/IdP calls respectively.
  *
  * Session model: on successful login/register a signed JWT is stored in an
  * httpOnly `token` cookie (see `AppService.createSessionToken`); every
@@ -18,29 +20,11 @@
  * POST /login directly - they get a short-lived `pending_2fa_token` cookie
  * instead, exchanged for the real session by POST /login/2fa.
  */
-import express, {Request, Response} from "express";
-import {appService} from "../../AppService";
+import express from "express";
 import path from "path";
 import rateLimit from "express-rate-limit";
-import jwt from "jsonwebtoken";
 import {requireAuth, requireAuthPage} from "../../middlewares/AuthMiddleware";
-import {verifyTotpCode, normalizeBackupCode} from "../../utils/TwoFactorAuth";
-import {createUserSession} from "../../utils/UserSessions";
-import {recordActivity, ActivityAction} from "../../utils/ActivityLog";
-import {
-    beginOidcAuthorization,
-    completeOidcAuthorization,
-    OIDC_PENDING_COOKIE,
-} from "./oidc/Oidc";
-import {findOrCreateOidcUser} from "./oidc/OidcUsers";
-import {
-    clearOidcPendingCookie,
-    clearPending2faCookie,
-    clearSessionCookie,
-    setOidcPendingCookie,
-    setPending2faCookie,
-    setSessionCookie,
-} from "../../utils/SessionCookie";
+import * as AuthController from "../../controllers/AuthController";
 
 const router = express.Router();
 
@@ -63,40 +47,12 @@ const twoFaLimiter = rateLimit({
 });
 
 /**
- * Checks `code` against `userId`'s unused backup codes; consumes (marks
- * used) and returns true on a match. Codes are hashed with the same
- * bcrypt helper as passwords (see `appService.hashPassword`), so this is a
- * linear scan + compare rather than a direct lookup - fine at the "~10
- * codes per user" scale these are generated at.
- */
-async function consumeBackupCode(userId: number, code: string): Promise<boolean> {
-    const pool = appService.getDatabasePool();
-    const result = await pool.query(
-        "SELECT id, code_hash FROM user_backup_codes WHERE user_id = $1 AND used_date IS NULL",
-        [userId]
-    );
-
-    for (const row of result.rows) {
-        if (await appService.comparePassword(code, row.code_hash)) {
-            await pool.query("UPDATE user_backup_codes SET used_date = CURRENT_TIMESTAMP WHERE id = $1", [row.id]);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// Compiled Vue app: alongside the server in production (Docker image),
-// under client/dist during local development.
-const clientDistPath = process.env.NODE_ENV === "production" ?  path.join(__dirname, "../../../../client") : path.join(__dirname, '../../../../client/dist')
-
-/**
  * GET /app/assets/*  (static)
  * -----------------------------
  * Serves the SPA's built JS/CSS assets. Auth-gated so the app bundle itself
  * isn't served to unauthenticated clients.
  */
-router.use("/app/assets", requireAuth, express.static(path.join(clientDistPath, "assets"), {
+router.use("/app/assets", requireAuth, express.static(path.join(AuthController.clientDistPath, "assets"), {
     setHeaders: (res, path) => {
         if (path.endsWith(".css")) {
             res.set('Content-Type', 'text/css');
@@ -105,33 +61,17 @@ router.use("/app/assets", requireAuth, express.static(path.join(clientDistPath, 
 }));
 
 /**
- * GET /app
- * ---------
+ * GET /app, GET /app/*
+ * ----------------------
  * Serves the SPA's `index.html` entry point (production only - in dev the
- * Vite dev server handles this). Auth: required (redirects to `/login` on
- * failure - see `requireAuthPage` - rather than the JSON 401 `requireAuth`
- * uses elsewhere, since there's no SPA on screen yet to show that in).
+ * Vite dev server handles this), including as a catch-all so client-side
+ * (Vue Router) routes like `/app/book/12` still resolve to the SPA shell on
+ * a hard refresh. Auth: required (redirects to `/login` on failure - see
+ * `requireAuthPage` - rather than the JSON 401 `requireAuth` uses
+ * elsewhere, since there's no SPA on screen yet to show that in).
  */
-router.get('/app', requireAuthPage, async (req: Request, res: Response) => {
-    const appPath = path.join(clientDistPath, "index.html");
-
-    appService.getLogger().debug(`serving /app index: ${appPath}`);
-    res.sendFile(appPath);
-})
-
-/**
- * GET /app/*
- * -----------
- * Catch-all so client-side (Vue Router) routes like `/app/book/12` still
- * resolve to the SPA shell on a hard refresh. Auth: required (see the
- * `requireAuthPage` note on `GET /app` just above).
- */
-router.get('/app/*', requireAuthPage, async (req: Request, res: Response) => {
-    const appPath = path.join(clientDistPath, "index.html");
-
-    appService.getLogger().debug(`serving /app/* index: ${appPath}`);
-    res.sendFile(appPath);
-})
+router.get('/app', requireAuthPage, AuthController.serveApp);
+router.get('/app/*', requireAuthPage, AuthController.serveApp);
 
 /**
  * GET /
@@ -141,18 +81,7 @@ router.get('/app/*', requireAuthPage, async (req: Request, res: Response) => {
  * (an invalid/expired token still lands the user on `/app`, where
  * `requireAuth` then bounces them to `/login`).
  */
-router.get("/", (req: Request, res: Response) => {
-    // Check if the user is authenticated by looking at the session
-
-    // @ts-ignore
-    if (req.cookies.token) {
-        appService.getLogger().debug("User already logged in, redirecting to /app...");
-        return res.redirect("/app"); // Redirect to /app if user is logged in
-    } else {
-        appService.getLogger().debug("User not logged in, redirecting to /login...");
-        return res.redirect("/login"); // Redirect to login page if user is not logged in
-    }
-});
+router.get("/", AuthController.redirectRoot);
 
 /**
  * GET /login
@@ -160,16 +89,7 @@ router.get("/", (req: Request, res: Response) => {
  * Serves the static login page and clears any existing session cookie.
  * Unauthenticated.
  */
-// @ts-ignore
-router.get("/login", (req: Request, res: Response) => {
-    // If user goes to login page, clear the current token.
-    // we can improve it, by checking if the token is valid, etc ad redirect to app
-    // at the moment, we will clear the token
-    clearSessionCookie(res);
-    clearPending2faCookie(res);
-    clearOidcPendingCookie(res);
-    res.sendFile(path.join(__dirname, "../..", "assets", "login.html"));
-});
+router.get("/login", AuthController.showLogin);
 
 /**
  * POST /login
@@ -194,69 +114,7 @@ router.get("/login", (req: Request, res: Response) => {
  *
  * Responses: 400 missing fields | 401 invalid credentials | 500 server error.
  */
-// @ts-ignore
-router.post("/login", authLimiter,  async (req: Request, res: Response) => {
-    appService.getLogger().debug("Handle login authentication");
-    const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
-    const {password} = req.body;
-    if (!username || !password) {
-        return res.status(400).json({message: "Missing username or password"});
-    }
-
-    try {
-        const pool = appService.getDatabasePool();
-        const userQuery = "SELECT id, code, password, token_version, totp_enabled FROM users WHERE (code = $1 OR email = $2) AND disabled = FALSE";
-        const userResult = await pool.query(userQuery, [username, username]);
-
-        if (userResult.rows.length === 0) {
-            appService.getLogger().debug("No user found for:" + username);
-            await recordActivity(pool, null, ActivityAction.LOGIN_FAILED, {metadata: {attemptedUsername: username, ip: req.ip}});
-            return res.status(401).json({message: "Invalid username or password."});
-        }
-
-        const user = userResult.rows[0];
-
-        const comparePassword = await appService.comparePassword(password, user.password);
-        if (!comparePassword) {
-            appService.getLogger().debug("invalid password for user:" + username);
-            await recordActivity(pool, user.id, ActivityAction.LOGIN_FAILED, {metadata: {ip: req.ip}});
-            return res.status(401).json({message: "Invalid username or password."});
-        }
-
-        if (user.totp_enabled) {
-            appService.getLogger().debug("Password OK, awaiting 2FA code for user:" + username);
-
-            const pendingToken = appService.createPending2faToken(user.id);
-            setPending2faCookie(res, pendingToken);
-
-            return res.json({success: true, twoFactorRequired: true, message: "Enter your verification code"});
-        }
-
-        appService.getLogger().debug("Updating last login date for user:" + username);
-        // Update the last login date
-        const updateLoginQuery = `
-            UPDATE users
-            SET last_login_date = CURRENT_TIMESTAMP
-            WHERE id = $1
-        `;
-        await pool.query(updateLoginQuery, [user.id]);
-
-        appService.getLogger().debug("Setting session and cookie for user:" + username);
-
-        const {sessionKey} = await createUserSession(pool, user.id, req.get("user-agent"), req.ip);
-        await recordActivity(pool, user.id, ActivityAction.LOGIN, {metadata: {ip: req.ip}});
-
-        const userToken = appService.createSessionToken(user.id, user.token_version, sessionKey);
-        setSessionCookie(res, userToken);
-
-        appService.getLogger().debug("Redirecting to /app for user:" + username);
-
-        res.json({success: true, message: "Login successful", redirectUrl: "/app"});
-    } catch (error) {
-        console.error("Login error:", error);
-        return res.status(500).json({message: "Internal server error"});
-    }
-});
+router.post("/login", authLimiter, AuthController.login);
 
 /**
  * POST /login/2fa
@@ -277,63 +135,7 @@ router.post("/login", authLimiter,  async (req: Request, res: Response) => {
  * Responses: 400 missing code | 401 no/expired pending login or invalid code |
  *            500 server error.
  */
-// @ts-ignore
-router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
-    const {code} = req.body;
-    // @ts-ignore
-    const pendingToken = req.cookies.pending_2fa_token;
-
-    if (!code) {
-        return res.status(400).json({message: "Missing verification code"});
-    }
-
-    const userId = appService.verifyPending2faToken(pendingToken);
-    if (userId === null) {
-        clearPending2faCookie(res);
-        return res.status(401).json({message: "Your login has expired. Please log in again."});
-    }
-
-    try {
-        const pool = appService.getDatabasePool();
-        const userResult = await pool.query(
-            "SELECT id, token_version, totp_secret FROM users WHERE id = $1 AND disabled = FALSE AND totp_enabled = TRUE",
-            [userId]
-        );
-
-        if (userResult.rows.length === 0) {
-            clearPending2faCookie(res);
-            return res.status(401).json({message: "Your login has expired. Please log in again."});
-        }
-
-        const user = userResult.rows[0];
-        const rawCode = String(code).trim();
-
-        let verified = await verifyTotpCode(user.totp_secret, rawCode);
-        if (!verified) {
-            verified = await consumeBackupCode(user.id, normalizeBackupCode(rawCode));
-        }
-
-        if (!verified) {
-            await recordActivity(pool, user.id, ActivityAction.LOGIN_FAILED, {metadata: {stage: "2fa", ip: req.ip}});
-            return res.status(401).json({message: "Invalid verification code."});
-        }
-
-        clearPending2faCookie(res);
-
-        await pool.query(`UPDATE users SET last_login_date = CURRENT_TIMESTAMP WHERE id = $1`, [user.id]);
-
-        const {sessionKey} = await createUserSession(pool, user.id, req.get("user-agent"), req.ip);
-        await recordActivity(pool, user.id, ActivityAction.LOGIN, {metadata: {ip: req.ip}});
-
-        const userToken = appService.createSessionToken(user.id, user.token_version, sessionKey);
-        setSessionCookie(res, userToken);
-
-        res.json({success: true, message: "Login successful", redirectUrl: "/app"});
-    } catch (error) {
-        console.error("2FA verification error:", error);
-        return res.status(500).json({message: "Internal server error"});
-    }
-});
+router.post("/login/2fa", twoFaLimiter, AuthController.loginTwoFactor);
 
 /**
  * GET /auth/oidc/status
@@ -344,13 +146,7 @@ router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
  *
  * Example response (200): { "enabled": true, "label": "Sign in with SSO" }
  */
-router.get("/auth/oidc/status", (req: Request, res: Response) => {
-    const config = appService.getOidcConfig();
-    res.json({
-        enabled: appService.isOidcEnabled(),
-        label: config?.buttonLabel ?? "Sign in with SSO",
-    });
-});
+router.get("/auth/oidc/status", AuthController.oidcStatus);
 
 /**
  * GET /auth/oidc/start
@@ -360,22 +156,7 @@ router.get("/auth/oidc/status", (req: Request, res: Response) => {
  * existing Authentik session is not reused silently. Rate limited like login.
  * 404 when SSO is not enabled.
  */
-router.get("/auth/oidc/start", authLimiter, async (req: Request, res: Response) => {
-    if (!appService.isOidcEnabled()) {
-        return res.status(404).json({message: "SSO is not configured"});
-    }
-
-    try {
-        const {url, pendingToken} = await beginOidcAuthorization();
-        clearSessionCookie(res);
-        setOidcPendingCookie(res, pendingToken);
-        return res.redirect(url);
-    } catch (error) {
-        appService.getLogger().error("OIDC start failed: " + error);
-        clearOidcPendingCookie(res);
-        return res.redirect("/login?error=sso");
-    }
-});
+router.get("/auth/oidc/start", authLimiter, AuthController.oidcStart);
 
 /**
  * GET /auth/oidc/callback
@@ -384,48 +165,7 @@ router.get("/auth/oidc/start", authLimiter, async (req: Request, res: Response) 
  * `token` session cookie as password login, redirect to /app. Failures
  * bounce to /login?error=sso (generic - don't leak IdP details).
  */
-router.get("/auth/oidc/callback", authLimiter, async (req: Request, res: Response) => {
-    const fail = () => {
-        clearOidcPendingCookie(res);
-        return res.redirect("/login?error=sso");
-    };
-
-    if (!appService.isOidcEnabled()) {
-        return fail();
-    }
-
-    const queryVal = (name: string): string | undefined =>
-        typeof req.query[name] === "string" ? req.query[name] as string : undefined;
-
-    try {
-        const claims = await completeOidcAuthorization(
-            {
-                code: queryVal("code"),
-                state: queryVal("state"),
-                error: queryVal("error"),
-                error_description: queryVal("error_description"),
-            },
-            req.cookies[OIDC_PENDING_COOKIE]
-        );
-
-        const pool = appService.getDatabasePool();
-        const user = await findOrCreateOidcUser(pool, claims);
-
-        await pool.query(`UPDATE users SET last_login_date = CURRENT_TIMESTAMP WHERE id = $1`, [user.id]);
-
-        const {sessionKey} = await createUserSession(pool, user.id, req.get("user-agent"), req.ip);
-        await recordActivity(pool, user.id, ActivityAction.LOGIN, {metadata: {method: "oidc", ip: req.ip}});
-
-        const userToken = appService.createSessionToken(user.id, user.token_version, sessionKey);
-        clearOidcPendingCookie(res);
-        setSessionCookie(res, userToken);
-
-        return res.redirect("/app");
-    } catch (error) {
-        appService.getLogger().error("OIDC callback failed: " + error);
-        return fail();
-    }
-});
+router.get("/auth/oidc/callback", authLimiter, AuthController.oidcCallback);
 
 /**
  * GET /register
@@ -433,13 +173,7 @@ router.get("/auth/oidc/callback", authLimiter, async (req: Request, res: Respons
  * Serves the static registration page, or redirects to `/app` if a session
  * cookie is already present. Unauthenticated.
  */
-router.get("/register", (req: Request, res: Response) => {
-    // @ts-ignore
-    if (req.cookies.token) {
-        return res.redirect("/app");
-    }
-    res.sendFile(path.join(__dirname, "../..", "assets", "register.html"));
-});
+router.get("/register", AuthController.showRegister);
 
 /**
  * POST /register
@@ -467,70 +201,10 @@ router.get("/register", (req: Request, res: Response) => {
  *  { "success": true, "message": "Register successful", "redirectUrl": "/login" }
  *
  * Responses: 400 missing/invalid fields, weak password, or a duplicate
- *            email/username (deliberately generic - see CWE-203 note below) |
- *            500 server error.
+ *            email/username (deliberately generic - see CWE-203 note in
+ *            AuthService.register) | 500 server error.
  */
-router.post("/register", authLimiter, async (req: Request, res: Response) => {
-    const { password } = req.body;
-    const userName = typeof req.body.userName === "string" ? req.body.userName.trim() : req.body.userName;
-    const email = typeof req.body.email === "string" ? req.body.email.trim() : req.body.email;
-    const name = typeof req.body.name === "string" ? req.body.name.trim() : req.body.name;
-
-    // Basic input validation
-    if (!email || !userName || !name || !password) {
-        return res.status(400).json({ message: "Missing required fields." });
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Invalid email format." });
-    }
-
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+[\]{};':"\\|,.<>/?]).{8,}$/;
-    if (!passwordRegex.test(password)) {
-        return res.status(400).json({
-            message: "Password must be at least 8 characters long and include a number, an uppercase letter, and a special symbol."
-        });
-    }
-
-    try {
-        const pool = appService.getDatabasePool();
-
-        // Hash the password securely
-        const hashedPassword = await appService.hashPassword(password);
-
-        const requiresApproval = process.env.REGISTRATION_REQUIRES_APPROVAL === "true";
-
-        // Use INSERT with unique constraints to avoid race conditions
-        const insertQuery = `
-            INSERT INTO users (name, code, email, password, disabled)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING id
-        `;
-
-        await pool.query(insertQuery, [name, userName, email, hashedPassword, requiresApproval]);
-
-        return res.status(201).json({
-            success: true,
-            message: requiresApproval
-                ? "Registration successful. An administrator needs to review and approve your account before you can log in."
-                : "Registration successful. You can now log in.",
-            requiresApproval,
-            redirectUrl: "/login",
-        });
-
-    } catch (error: any) {
-        // Handle unique constraint violation with a generic message - confirming
-        // that a specific email/username is already registered would let an
-        // attacker enumerate existing accounts (CWE-203).
-        if (error.code === "23505") { // PostgreSQL unique violation
-            return res.status(400).json({ message: "Unable to register with the provided information." });
-        }
-
-        console.error("Register error:", error);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-});
-
+router.post("/register", authLimiter, AuthController.register);
 
 /**
  * GET /logout
@@ -542,37 +216,6 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
  * this always succeeds (redirects to `/login`) even if the cookie is
  * missing/invalid/already expired.
  */
-router.get("/logout", async (req: Request, res: Response) => {
-    appService.getLogger().debug("Logout user");
-
-    // @ts-ignore
-    const token = req.cookies.token;
-    if (token) {
-        try {
-            const decoded = jwt.verify(token, appService.getJwtSecret(), {
-                algorithms: ["HS256"],
-                audience: "vaultisse",
-                issuer: "vaultisse.com"
-            }) as { user_id: number; sid: string };
-
-            const pool = appService.getDatabasePool();
-            const result = await pool.query(
-                `UPDATE user_sessions SET revoked_date = NOW()
-                 WHERE session_key = $1 AND user_id = $2 AND revoked_date IS NULL
-                 RETURNING id`,
-                [decoded.sid, decoded.user_id]
-            );
-
-            if ((result.rowCount ?? 0) > 0) {
-                await recordActivity(pool, decoded.user_id, ActivityAction.LOGOUT, {metadata: {ip: req.ip}});
-            }
-        } catch (err) {
-            // Already invalid/expired - nothing to revoke, just clear the cookie below.
-        }
-    }
-
-    clearSessionCookie(res);
-    return res.redirect("/login"); // Redirect to login;
-});
+router.get("/logout", AuthController.logout);
 
 export default router;

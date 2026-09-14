@@ -1,68 +1,59 @@
 import axios from "axios";
-import {
-    fetchBookMetadata,
-    fetchOpenLibraryCover,
-    mergeVolume,
-    normalizeGoogleApiKey,
-    normalizeLanguageCode,
-    parseIsbnStoreHtml,
-    resolveBookCover,
-    wikipediaTitleScore,
-} from "../../src/utils/BookMetadata";
+import {BookMetadataRepository} from "../../src/repositories/BookMetadataRepository";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe("normalizeLanguageCode", () => {
     it("keeps a 2-letter code", () => {
-        expect(normalizeLanguageCode("en")).toBe("en");
-        expect(normalizeLanguageCode("CA")).toBe("ca");
+        expect(BookMetadataRepository.normalizeLanguageCode("en")).toBe("en");
+        expect(BookMetadataRepository.normalizeLanguageCode("CA")).toBe("ca");
     });
 
     it("maps ISO 639-2 and Open Library /languages/ keys", () => {
-        expect(normalizeLanguageCode("eng")).toBe("en");
-        expect(normalizeLanguageCode("/languages/spa")).toBe("es");
-        expect(normalizeLanguageCode("cat")).toBe("ca");
-        expect(normalizeLanguageCode("ger")).toBe("de");
-        expect(normalizeLanguageCode("fre")).toBe("fr");
+        expect(BookMetadataRepository.normalizeLanguageCode("eng")).toBe("en");
+        expect(BookMetadataRepository.normalizeLanguageCode("/languages/spa")).toBe("es");
+        expect(BookMetadataRepository.normalizeLanguageCode("cat")).toBe("ca");
+        expect(BookMetadataRepository.normalizeLanguageCode("ger")).toBe("de");
+        expect(BookMetadataRepository.normalizeLanguageCode("fre")).toBe("fr");
     });
 
     it("accepts a regional tag's primary subtag", () => {
-        expect(normalizeLanguageCode("en-US")).toBe("en");
+        expect(BookMetadataRepository.normalizeLanguageCode("en-US")).toBe("en");
     });
 
     it("drops codes it cannot store in CHAR(2)", () => {
-        expect(normalizeLanguageCode("unknown")).toBeNull();
-        expect(normalizeLanguageCode("")).toBeNull();
-        expect(normalizeLanguageCode(undefined)).toBeNull();
+        expect(BookMetadataRepository.normalizeLanguageCode("unknown")).toBeNull();
+        expect(BookMetadataRepository.normalizeLanguageCode("")).toBeNull();
+        expect(BookMetadataRepository.normalizeLanguageCode(undefined)).toBeNull();
     });
 });
 
 describe("normalizeGoogleApiKey", () => {
     it("treats empty and the string 'undefined' as missing", () => {
-        expect(normalizeGoogleApiKey("")).toBeUndefined();
-        expect(normalizeGoogleApiKey("   ")).toBeUndefined();
-        expect(normalizeGoogleApiKey("undefined")).toBeUndefined();
-        expect(normalizeGoogleApiKey(undefined)).toBeUndefined();
+        expect(BookMetadataRepository.normalizeGoogleApiKey("")).toBeUndefined();
+        expect(BookMetadataRepository.normalizeGoogleApiKey("   ")).toBeUndefined();
+        expect(BookMetadataRepository.normalizeGoogleApiKey("undefined")).toBeUndefined();
+        expect(BookMetadataRepository.normalizeGoogleApiKey(undefined)).toBeUndefined();
     });
 
     it("keeps a real key", () => {
-        expect(normalizeGoogleApiKey(" abc ")).toBe("abc");
+        expect(BookMetadataRepository.normalizeGoogleApiKey(" abc ")).toBe("abc");
     });
 });
 
 describe("wikipediaTitleScore", () => {
     it("matches an exact title and a 'The … (novel)' hit", () => {
-        expect(wikipediaTitleScore("The Midnight Library", "The Midnight Library")).toBe(100);
-        expect(wikipediaTitleScore("Eight Mountains", "The Eight Mountains (novel)")).toBe(100);
+        expect(BookMetadataRepository.wikipediaTitleScore("The Midnight Library", "The Midnight Library")).toBe(100);
+        expect(BookMetadataRepository.wikipediaTitleScore("Eight Mountains", "The Eight Mountains (novel)")).toBe(100);
     });
 
     it("scores a subtitle page high enough for Wikipedia extras (>= 70)", () => {
-        expect(wikipediaTitleScore("The Midnight Library", "The Midnight Library: a novel")).toBe(80);
+        expect(BookMetadataRepository.wikipediaTitleScore("The Midnight Library", "The Midnight Library: a novel")).toBe(80);
     });
 
     it("rejects an author page for a novel title", () => {
-        expect(wikipediaTitleScore("32 de març", "Xavier Bosch i Sancho")).toBe(0);
+        expect(BookMetadataRepository.wikipediaTitleScore("32 de març", "Xavier Bosch i Sancho")).toBe(0);
     });
 });
 
@@ -78,7 +69,7 @@ describe("parseIsbnStoreHtml", () => {
     `;
 
     it("reads schema.org Book fields and Catalan section language", () => {
-        expect(parseIsbnStoreHtml(html, "9791387800000")).toEqual({
+        expect(BookMetadataRepository.parseIsbnStoreHtml(html, "9791387800000")).toEqual({
             title: "32 DE MARÇ",
             authors: ["XAVIER BOSCH"],
             publisher: "LA COLLECTIVA",
@@ -88,18 +79,18 @@ describe("parseIsbnStoreHtml", () => {
     });
 
     it("rejects a page that does not mention the requested ISBN", () => {
-        expect(parseIsbnStoreHtml(html, "9781786892737")).toBeNull();
+        expect(BookMetadataRepository.parseIsbnStoreHtml(html, "9781786892737")).toBeNull();
     });
 
     it("rejects a 404 title", () => {
-        expect(parseIsbnStoreHtml("<title>Página no encontrada | paquebote.com</title>", "9791387800000")).toBeNull();
+        expect(BookMetadataRepository.parseIsbnStoreHtml("<title>Página no encontrada | paquebote.com</title>", "9791387800000")).toBeNull();
     });
 });
 
 describe("mergeVolume", () => {
     it("fills empty fields and prefers a mixed-case title over ALL CAPS", () => {
         const target = {title: "32 DE MARÇ", authors: ["XAVIER BOSCH"]};
-        mergeVolume(target, {
+        BookMetadataRepository.mergeVolume(target, {
             title: "32 de març",
             publisher: "La Col·lectiva",
             imageLinks: {thumbnail: "http://covers.openlibrary.org/b/id/1-M.jpg"},
@@ -111,7 +102,7 @@ describe("mergeVolume", () => {
 
     it("keeps a longer description when the current one is still a stub", () => {
         const target = {description: "Short blurb."};
-        mergeVolume(target, {description: "A".repeat(200)});
+        BookMetadataRepository.mergeVolume(target, {description: "A".repeat(200)});
         expect(target.description?.length).toBe(200);
     });
 });
@@ -164,7 +155,7 @@ describe("fetchBookMetadata", () => {
             return Promise.resolve({status: 200, data: {}});
         });
 
-        const book = await fetchBookMetadata("9781786892737");
+        const book = await BookMetadataRepository.fetchBookMetadata("9781786892737");
         expect(book).toMatchObject({
             title: "The Midnight Library",
             authors: ["Matt Haig"],
@@ -210,7 +201,7 @@ describe("fetchBookMetadata", () => {
             return Promise.resolve({status: 200, data: {}});
         });
 
-        const book = await fetchBookMetadata("9791387800000");
+        const book = await BookMetadataRepository.fetchBookMetadata("9791387800000");
         expect(book).toMatchObject({
             title: "32 de març",
             authors: ["XAVIER BOSCH"],
@@ -223,7 +214,7 @@ describe("fetchBookMetadata", () => {
 
     it("returns null when every source is empty", async () => {
         mockedAxios.get.mockResolvedValue({status: 200, data: {}});
-        expect(await fetchBookMetadata("9780261102217")).toBeNull();
+        expect(await BookMetadataRepository.fetchBookMetadata("9780261102217")).toBeNull();
     });
 
     it("fills a missing ISBN cover from another Open Library edition", async () => {
@@ -264,7 +255,7 @@ describe("fetchBookMetadata", () => {
             return Promise.resolve({status: 200, data: {}});
         });
 
-        const book = await fetchBookMetadata("9781784707064");
+        const book = await BookMetadataRepository.fetchBookMetadata("9781784707064");
         expect(book?.title).toBe("Eight Mountains");
         expect(book?.imageLinks?.thumbnail).toContain("14856954");
     });
@@ -281,7 +272,7 @@ describe("resolveBookCover", () => {
             headers: {"content-type": "image/gif"},
             data: Buffer.alloc(40, 1),
         });
-        expect(await fetchOpenLibraryCover("9781784707064")).toBeNull();
+        expect(await BookMetadataRepository.fetchOpenLibraryCover("9781784707064")).toBeNull();
     });
 
     it("returns the ISBN cover URL when the JPEG is real", async () => {
@@ -290,7 +281,7 @@ describe("resolveBookCover", () => {
             headers: {"content-type": "image/jpeg"},
             data: Buffer.alloc(1000, 1),
         });
-        expect(await fetchOpenLibraryCover("9781786892737")).toBe(
+        expect(await BookMetadataRepository.fetchOpenLibraryCover("9781786892737")).toBe(
             "https://covers.openlibrary.org/b/isbn/9781786892737-M.jpg"
         );
     });
@@ -322,7 +313,7 @@ describe("resolveBookCover", () => {
             return Promise.resolve({status: 200, data: {}});
         });
 
-        const cover = await resolveBookCover({
+        const cover = await BookMetadataRepository.resolveBookCover({
             isbn: "9781784707064",
             title: "Eight Mountains",
             authors: ["Paolo Cognetti"],

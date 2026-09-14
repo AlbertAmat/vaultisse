@@ -1,12 +1,12 @@
 import axios from "axios";
 import {setupTestApp} from "../helpers/testApp";
 import {createAuthenticatedUser, ITestUser} from "../helpers/auth";
-import {scheduleImportedBookEnrichment} from "../../src/utils/ImportEnrichment";
+import {scheduleEnrichment} from "../../src/services/ImportEnrichmentService";
 
-jest.mock("../../src/utils/ImportEnrichment", () => ({
-    scheduleImportedBookEnrichment: jest.fn(),
+jest.mock("../../src/services/ImportEnrichmentService", () => ({
+    scheduleEnrichment: jest.fn(),
 }));
-const mockedSchedule = scheduleImportedBookEnrichment as jest.MockedFunction<typeof scheduleImportedBookEnrichment>;
+const mockedSchedule = scheduleEnrichment as jest.MockedFunction<typeof scheduleEnrichment>;
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
