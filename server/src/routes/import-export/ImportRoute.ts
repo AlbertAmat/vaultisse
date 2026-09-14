@@ -28,7 +28,31 @@ import {lazy} from "../lazySingleton";
 const router = Router();
 const getImportController = lazy(() => new ImportController(appService.getDatabasePool()));
 
+/**
+ * GET /import/template/:origin
+ * --------------------------------
+ * Downloads the starting-point CSV template for an origin that has no export of its own to convert
+ * (currently only "vaultisse" - "goodreads" is exported directly from Goodreads, never hand-authored).
+ *
+ * Auth: required.
+ *
+ * Response (200): `text/csv`, `Content-Disposition: attachment` - the header row plus one filled-in example row.
+ * Responses: 404 { "error": "No template available for this origin" }.
+ */
 router.get('/template/:origin', requireAuth, (req, res) => getImportController().downloadTemplate(req, res));
+
+/**
+ * POST /import/library
+ * -----------------------
+ * Parses and imports an uploaded CSV (origin "goodreads" or "vaultisse"), then schedules background
+ * metadata enrichment (cover/description/publisher/... fill from Open Library etc.) for the imported rows.
+ *
+ * Auth: required. Body: multipart/form-data, field `file` (.csv, max size configurable via
+ * `MAX_IMPORT_FILE_SIZE_MB`), plus a `origin` form field ("goodreads" | "vaultisse").
+ *
+ * Example response (200): { "imported": 40, "skipped": 2, "failed": 1, "errors": [{ "row": 5, "title": "...", "reason": "..." }] }
+ * Responses: 400 { "error": "No CSV file provided" } / missing or unsupported `origin` / invalid CSV.
+ */
 router.post('/library', requireAuth, uploadCsv, handleImportUploadError, (req: Request, res: Response) => getImportController().importLibrary(req, res));
 
 export default router;
