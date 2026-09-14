@@ -23,7 +23,13 @@ import {Request, Response, Router} from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
 import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
-import {BookController, upload, fileUpload, maxCoverImageSizeMb, maxEbookFileSizeMb} from "../controllers/BookController";
+import {
+    BookController,
+    upload,
+    fileUpload,
+    maxCoverImageSizeMb,
+    maxEbookFileSizeMb
+} from "../controllers/BookController";
 import {lazy} from "./lazySingleton";
 
 const router: Router = Router();

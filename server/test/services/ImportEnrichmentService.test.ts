@@ -1,7 +1,7 @@
 import axios from "axios";
 import {Pool} from "pg";
 import {appService} from "../../src/AppService";
-import {enrichImportedBooks} from "../../src/services/ImportEnrichmentService";
+import {ImportEnrichmentService} from "../../src/services/ImportEnrichmentService";
 import {createAuthenticatedUser} from "../helpers/auth";
 import {setupTestApp} from "../helpers/testApp";
 
@@ -58,7 +58,7 @@ describe("enrichImportedBooks", () => {
         );
         const bookId = inserted.rows[0].id;
 
-        await enrichImportedBooks(pool, userId, [bookId]);
+        await new ImportEnrichmentService(pool).enrichImportedBooks(userId, [bookId]);
 
         const row = await pool.query(
             "SELECT description, image_url, publisher, pages, language_code FROM books WHERE id = $1",
@@ -83,7 +83,7 @@ describe("enrichImportedBooks", () => {
         );
         const bookId = inserted.rows[0].id;
 
-        await enrichImportedBooks(pool, userId, [bookId]);
+        await new ImportEnrichmentService(pool).enrichImportedBooks(userId, [bookId]);
 
         const row = await pool.query(
             "SELECT description, publisher, pages FROM books WHERE id = $1",

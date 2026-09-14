@@ -6,8 +6,8 @@ import {CustomerRepository} from "../repositories/CustomerRepository";
 import {BookMetadataRepository} from "../repositories/BookMetadataRepository";
 import {LoanHistoryRepository} from "../repositories/LoanHistoryRepository";
 import {withTransaction} from "../repositories/withTransaction";
-import {normalizeAndValidateIsbn} from "../utils/IsbnVerification";
-import {isValidEpub, isValidMobi, isValidPdf} from "../utils/FileSignature";
+import {IsbnVerification} from "../utils/IsbnVerification";
+import {FileSignature} from "../utils/FileSignature";
 import {ReadingStatusEnum} from "../types/book/IReadingStatus";
 import {IBookAddMd} from "../types/book/IBookAddMd";
 import {
@@ -174,7 +174,7 @@ export class BookService {
             throw new NotFoundError("Book not found");
         }
 
-        const isbnCode = normalizeAndValidateIsbn(isbn ?? "");
+        const isbnCode = IsbnVerification.normalizeAndValidateIsbn(isbn ?? "");
         if (!isbnCode) {
             throw new ValidationError("Book has no ISBN");
         }
@@ -218,9 +218,9 @@ export class BookService {
 
         // Trust the actual bytes, not just the file name (which the route's fileFilter
         // only checked by extension - trivially spoofed by renaming any file).
-        const isValidContent = fileType === "epub" ? isValidEpub(file.buffer)
-            : fileType === "pdf" ? isValidPdf(file.buffer)
-                : isValidMobi(file.buffer);
+        const isValidContent = fileType === "epub" ? FileSignature.isValidEpub(file.buffer)
+            : fileType === "pdf" ? FileSignature.isValidPdf(file.buffer)
+                : FileSignature.isValidMobi(file.buffer);
         if (!isValidContent) {
             throw new ValidationError("File content does not match a valid EPUB, PDF or Kindle file");
         }
@@ -419,7 +419,7 @@ export class BookService {
      * @returns The book id.
      */
     public async createBookFromIsbn(userId: number, isbn: string, locationId: string | null, googleApiKey: string | undefined, libraryThingApiKey: string | undefined): Promise<number> {
-        const isbnCode = normalizeAndValidateIsbn(isbn);
+        const isbnCode = IsbnVerification.normalizeAndValidateIsbn(isbn);
         if (!isbnCode) {
             throw new ValidationError("No ISBN code provided");
         }

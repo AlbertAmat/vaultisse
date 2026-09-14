@@ -1,17 +1,17 @@
-import {sessionClearCookieOptions, sessionCookieOptions} from "../../src/utils/SessionCookie";
+import {SessionCookie} from "../../src/utils/SessionCookie";
 
 describe("sessionCookieOptions", () => {
     it("uses SameSite=Lax so the OIDC callback redirect can send the new session", () => {
-        expect(sessionCookieOptions()).toMatchObject({
+        expect(SessionCookie.sessionCookieOptions()).toMatchObject({
             httpOnly: true,
             sameSite: "lax",
             path: "/",
         });
-        expect(sessionClearCookieOptions()).toMatchObject({
+        expect(SessionCookie.sessionClearCookieOptions()).toMatchObject({
             httpOnly: true,
             sameSite: "lax",
             path: "/",
         });
-        expect(sessionClearCookieOptions().maxAge).toBeUndefined();
+        expect(SessionCookie.sessionClearCookieOptions().maxAge).toBeUndefined();
     });
 });

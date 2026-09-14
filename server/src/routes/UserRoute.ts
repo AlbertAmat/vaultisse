@@ -10,14 +10,17 @@
  * UserRepository (+ UserSessionRepository, ActivityLogRepository) for the
  * actual request handling, business rules, and SQL respectively.
  */
-import {Request, Router} from 'express';
+import {Request, Response, Router} from 'express';
+import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
 import multer from "multer";
 import rateLimit from "express-rate-limit";
 import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
-import * as UserController from "../controllers/UserController";
+import {UserController} from "../controllers/UserController";
+import {lazy} from "./lazySingleton";
 
 const router = Router();
+const getUserController = lazy(() => new UserController(appService.getDatabasePool()));
 
 // Strict limiter for the current-password check, same shape as the
 // login/register limiter - without it, a stolen/short-lived session token
@@ -51,21 +54,21 @@ const upload = multer({
     }
 });
 
-router.post("/image", requireAuth, upload.single("image"), handleUploadError(maxProfileImageSizeMb, "json"), UserController.uploadImage);
-router.delete("/image", requireAuth, UserController.removeImage);
-router.put("", requireAuth, UserController.updateProfile);
-router.patch("/theme", requireAuth, UserController.updateTheme);
-router.patch("/sidebar-rail", requireAuth, UserController.updateSidebarRail);
-router.patch("/leasing", requireAuth, UserController.updateLeasing);
-router.delete("", requireAuth, passwordChangeLimiter, UserController.deleteAccount);
-router.post("/password", requireAuth, passwordChangeLimiter, UserController.changePassword);
-router.get("/sessions", requireAuth, UserController.listSessions);
-router.delete("/sessions/:id", requireAuth, UserController.revokeSession);
-router.get("/activity", requireAuth, UserController.listActivity);
-router.post("/security-notice/accept", requireAuth, UserController.acceptSecurityNotice);
-router.post("/terms-of-service/accept", requireAuth, UserController.acceptTermsOfService);
-router.post("/2fa/setup", requireAuth, UserController.setupTwoFactor);
-router.post("/2fa/enable", requireAuth, twoFaLimiter, UserController.enableTwoFactor);
-router.post("/2fa/disable", requireAuth, passwordChangeLimiter, UserController.disableTwoFactor);
+router.post("/image", requireAuth, upload.single("image"), handleUploadError(maxProfileImageSizeMb, "json"), (req: Request, res: Response) => getUserController().uploadImage(req, res));
+router.delete("/image", requireAuth, (req, res) => getUserController().removeImage(req, res));
+router.put("", requireAuth, (req, res) => getUserController().updateProfile(req, res));
+router.patch("/theme", requireAuth, (req, res) => getUserController().updateTheme(req, res));
+router.patch("/sidebar-rail", requireAuth, (req, res) => getUserController().updateSidebarRail(req, res));
+router.patch("/leasing", requireAuth, (req, res) => getUserController().updateLeasing(req, res));
+router.delete("", requireAuth, passwordChangeLimiter, (req, res) => getUserController().deleteAccount(req, res));
+router.post("/password", requireAuth, passwordChangeLimiter, (req, res) => getUserController().changePassword(req, res));
+router.get("/sessions", requireAuth, (req, res) => getUserController().listSessions(req, res));
+router.delete("/sessions/:id", requireAuth, (req, res) => getUserController().revokeSession(req, res));
+router.get("/activity", requireAuth, (req, res) => getUserController().listActivity(req, res));
+router.post("/security-notice/accept", requireAuth, (req, res) => getUserController().acceptSecurityNotice(req, res));
+router.post("/terms-of-service/accept", requireAuth, (req, res) => getUserController().acceptTermsOfService(req, res));
+router.post("/2fa/setup", requireAuth, (req, res) => getUserController().setupTwoFactor(req, res));
+router.post("/2fa/enable", requireAuth, twoFaLimiter, (req: Request, res) => getUserController().enableTwoFactor(req, res));
+router.post("/2fa/disable", requireAuth, passwordChangeLimiter, (req, res) => getUserController().disableTwoFactor(req, res));
 
 export default router;

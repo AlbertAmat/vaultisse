@@ -19,13 +19,16 @@
  * for the deferred post-import metadata fill) for the actual request
  * handling, business rules, and SQL respectively.
  */
-import {Router} from 'express';
+import {Request, Response, Router} from 'express';
+import {appService} from "../../AppService";
 import {requireAuth} from "../../middlewares/AuthMiddleware";
-import * as ImportController from "../../controllers/ImportController";
+import {ImportController, uploadCsv, handleImportUploadError} from "../../controllers/ImportController";
+import {lazy} from "../lazySingleton";
 
 const router = Router();
+const getImportController = lazy(() => new ImportController(appService.getDatabasePool()));
 
-router.get('/template/:origin', requireAuth, ImportController.downloadTemplate);
-router.post('/library', requireAuth, ImportController.uploadCsv, ImportController.handleImportUploadError, ImportController.importLibrary);
+router.get('/template/:origin', requireAuth, (req, res) => getImportController().downloadTemplate(req, res));
+router.post('/library', requireAuth, uploadCsv, handleImportUploadError, (req: Request, res: Response) => getImportController().importLibrary(req, res));
 
 export default router;

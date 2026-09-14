@@ -23,10 +23,13 @@
 import express from "express";
 import path from "path";
 import rateLimit from "express-rate-limit";
+import {appService} from "../../AppService";
 import {requireAuth, requireAuthPage} from "../../middlewares/AuthMiddleware";
-import * as AuthController from "../../controllers/AuthController";
+import {AuthController, clientDistPath} from "../../controllers/AuthController";
+import {lazy} from "../lazySingleton";
 
 const router = express.Router();
+const getAuthController = lazy(() => new AuthController(appService.getDatabasePool()));
 
 // Stricter than the app-wide limiter in AppService: login/register are the
 // endpoints most worth protecting from brute-force/credential-stuffing.
@@ -52,7 +55,7 @@ const twoFaLimiter = rateLimit({
  * Serves the SPA's built JS/CSS assets. Auth-gated so the app bundle itself
  * isn't served to unauthenticated clients.
  */
-router.use("/app/assets", requireAuth, express.static(path.join(AuthController.clientDistPath, "assets"), {
+router.use("/app/assets", requireAuth, express.static(path.join(clientDistPath, "assets"), {
     setHeaders: (res, path) => {
         if (path.endsWith(".css")) {
             res.set('Content-Type', 'text/css');
@@ -70,8 +73,8 @@ router.use("/app/assets", requireAuth, express.static(path.join(AuthController.c
  * `requireAuthPage` - rather than the JSON 401 `requireAuth` uses
  * elsewhere, since there's no SPA on screen yet to show that in).
  */
-router.get('/app', requireAuthPage, AuthController.serveApp);
-router.get('/app/*', requireAuthPage, AuthController.serveApp);
+router.get('/app', requireAuthPage, (req, res) => getAuthController().serveApp(req, res));
+router.get('/app/*', requireAuthPage, (req, res) => getAuthController().serveApp(req, res));
 
 /**
  * GET /
@@ -81,7 +84,7 @@ router.get('/app/*', requireAuthPage, AuthController.serveApp);
  * (an invalid/expired token still lands the user on `/app`, where
  * `requireAuth` then bounces them to `/login`).
  */
-router.get("/", AuthController.redirectRoot);
+router.get("/", (req, res) => getAuthController().redirectRoot(req, res));
 
 /**
  * GET /login
@@ -89,7 +92,7 @@ router.get("/", AuthController.redirectRoot);
  * Serves the static login page and clears any existing session cookie.
  * Unauthenticated.
  */
-router.get("/login", AuthController.showLogin);
+router.get("/login", (req, res) => getAuthController().showLogin(req, res));
 
 /**
  * POST /login
@@ -114,7 +117,7 @@ router.get("/login", AuthController.showLogin);
  *
  * Responses: 400 missing fields | 401 invalid credentials | 500 server error.
  */
-router.post("/login", authLimiter, AuthController.login);
+router.post("/login", authLimiter, (req, res) => getAuthController().login(req, res));
 
 /**
  * POST /login/2fa
@@ -135,7 +138,7 @@ router.post("/login", authLimiter, AuthController.login);
  * Responses: 400 missing code | 401 no/expired pending login or invalid code |
  *            500 server error.
  */
-router.post("/login/2fa", twoFaLimiter, AuthController.loginTwoFactor);
+router.post("/login/2fa", twoFaLimiter, (req, res) => getAuthController().loginTwoFactor(req, res));
 
 /**
  * GET /auth/oidc/status
@@ -146,7 +149,7 @@ router.post("/login/2fa", twoFaLimiter, AuthController.loginTwoFactor);
  *
  * Example response (200): { "enabled": true, "label": "Sign in with SSO" }
  */
-router.get("/auth/oidc/status", AuthController.oidcStatus);
+router.get("/auth/oidc/status", (req, res) => getAuthController().oidcStatus(req, res));
 
 /**
  * GET /auth/oidc/start
@@ -156,7 +159,7 @@ router.get("/auth/oidc/status", AuthController.oidcStatus);
  * existing Authentik session is not reused silently. Rate limited like login.
  * 404 when SSO is not enabled.
  */
-router.get("/auth/oidc/start", authLimiter, AuthController.oidcStart);
+router.get("/auth/oidc/start", authLimiter, (req, res) => getAuthController().oidcStart(req, res));
 
 /**
  * GET /auth/oidc/callback
@@ -165,7 +168,7 @@ router.get("/auth/oidc/start", authLimiter, AuthController.oidcStart);
  * `token` session cookie as password login, redirect to /app. Failures
  * bounce to /login?error=sso (generic - don't leak IdP details).
  */
-router.get("/auth/oidc/callback", authLimiter, AuthController.oidcCallback);
+router.get("/auth/oidc/callback", authLimiter, (req, res) => getAuthController().oidcCallback(req, res));
 
 /**
  * GET /register
@@ -173,7 +176,7 @@ router.get("/auth/oidc/callback", authLimiter, AuthController.oidcCallback);
  * Serves the static registration page, or redirects to `/app` if a session
  * cookie is already present. Unauthenticated.
  */
-router.get("/register", AuthController.showRegister);
+router.get("/register", (req, res) => getAuthController().showRegister(req, res));
 
 /**
  * POST /register
@@ -204,7 +207,7 @@ router.get("/register", AuthController.showRegister);
  *            email/username (deliberately generic - see CWE-203 note in
  *            AuthService.register) | 500 server error.
  */
-router.post("/register", authLimiter, AuthController.register);
+router.post("/register", authLimiter, (req, res) => getAuthController().register(req, res));
 
 /**
  * GET /logout
@@ -216,6 +219,6 @@ router.post("/register", authLimiter, AuthController.register);
  * this always succeeds (redirects to `/login`) even if the cookie is
  * missing/invalid/already expired.
  */
-router.get("/logout", AuthController.logout);
+router.get("/logout", (req, res) => getAuthController().logout(req, res));
 
 export default router;

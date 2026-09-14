@@ -1,15 +1,13 @@
 import {Pool} from "pg";
 import {AppRepository} from "../repositories/AppRepository";
-import * as UserRepository from "../repositories/UserRepository";
+import {UserRepository} from "../repositories/UserRepository";
 import {AppPolicy, AppPolicyCategory, AppPolicyCustomer, AppPolicyFormat, AppPolicyLanguage, AppPolicyLocation} from "../types/app";
 
 /**
  * Business logic for the Policy resource: builds the bootstrap payload
  * fetched once after login. Named `PolicyService` rather than `AppService`
  * to avoid colliding with the pre-existing `AppService.ts` (the Express
- * app/config singleton class). `UserRepository` is still called as plain
- * functions here (not yet converted to a class in this rollout - that's the
- * upcoming User resource commit).
+ * app/config singleton class).
  */
 export class PolicyService {
     /**
@@ -75,7 +73,8 @@ export class PolicyService {
             console.error("Error when getting app labels. ", e);
         }
 
-        const user = await UserRepository.getProfile(this.pool, userId);
+        const userRepo = new UserRepository(this.pool);
+        const user = await userRepo.getProfile(userId);
 
         // Public-institution accounts get a persistent security-measures notice
         // after login until they acknowledge it (see SecurityNoticeDialog.vue).
@@ -83,7 +82,7 @@ export class PolicyService {
         // shown; recordSecurityNoticeSent is a no-op on every later fetch.
         if (user.isPublicInstitution && !user.securityNoticeAccepted) {
             try {
-                await UserRepository.recordSecurityNoticeSent(this.pool, userId);
+                await userRepo.recordSecurityNoticeSent(userId);
             } catch (e) {
                 console.error("Error recording security notice sent date. ", e);
             }
@@ -94,7 +93,7 @@ export class PolicyService {
         // record-on-first-serve pattern as the security notice above.
         if (!user.termsOfServiceAccepted) {
             try {
-                await UserRepository.recordTermsOfServiceSent(this.pool, userId);
+                await userRepo.recordTermsOfServiceSent(userId);
             } catch (e) {
                 console.error("Error recording terms of service sent date. ", e);
             }
