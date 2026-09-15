@@ -128,6 +128,15 @@ export class AppService {
     private readonly m_oidcConfig: OidcConfig | null;
 
     /**
+     * Extra origins appended to the CSP `img-src` directive, configured via
+     * the comma-separated CSP_EXTRA_IMG_SRC env var. Lets an operator allow
+     * a custom cover-image host (e.g. a self-hosted metadata source) without
+     * needing a new release. Empty when unset.
+     * @private
+     */
+    private readonly m_cspExtraImgSrc: string[];
+
+    /**
      * Application constructor
      * Initializes environment variables, database, middleware, and logging
      */
@@ -159,6 +168,8 @@ export class AppService {
         // use static from compiled app in /assets/app
         this.m_app.use(express.static(path.join(__dirname,  "assets", "app")));
 
+        this.m_cspExtraImgSrc = AppService.__readCspExtraImgSrc();
+
         // Secure HTTP headers
         this.m_app.use(helmet({
             contentSecurityPolicy: {
@@ -170,8 +181,12 @@ export class AppService {
                     frameSrc: ["'self'", "data:", "blob:"],
                     // Book covers are either our own uploads (data: URIs) or fetched
                     // from these ISBN metadata providers - kept in sync with the
-                    // isAllowedImageUrl() allowlist in BooksRoute.ts.
-                    imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org", "https://covers.librarything.com"],
+                    // isAllowedImageUrl() allowlist in BooksRoute.ts. archive.org and
+                    // *.archive.org are included because covers.openlibrary.org often
+                    // redirects there instead of serving the image itself (#32).
+                    // CSP_EXTRA_IMG_SRC lets an operator allow further hosts without
+                    // needing a new release.
+                    imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org", "https://archive.org", "https://*.archive.org", "https://covers.librarything.com", ...this.m_cspExtraImgSrc],
                     "script-src-attr": ["'unsafe-inline'"],
                     "script-src-elem": ["'unsafe-inline'", "'self'", frontEndUrl, "'unsafe-inline'"]
                 },
@@ -334,6 +349,20 @@ export class AppService {
         const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
 
         return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel};
+    }
+
+    /**
+     * Parse CSP_EXTRA_IMG_SRC into the extra `img-src` origins it lists, so
+     * an operator can allow a custom cover-image host without a new release.
+     * Comma-separated, e.g. "https://example.com,https://*.example.org".
+     * Returns an empty array when unset.
+     * @private
+     */
+    private static __readCspExtraImgSrc(): string[] {
+        return (process.env.CSP_EXTRA_IMG_SRC ?? "")
+            .split(",")
+            .map((origin) => origin.trim())
+            .filter((origin) => origin.length > 0);
     }
 
     /**
