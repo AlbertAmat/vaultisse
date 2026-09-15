@@ -27,7 +27,8 @@ VALUES ('1.0.0/1.sql'),
        ('1.1.5.sql'),
        ('1.1.6.sql'),
        ('1.1.7.sql'),
-       ('1.1.8.sql');
+       ('1.1.8.sql'),
+       ('1.3.0.sql');
 
 CREATE TABLE app_languages
 (
@@ -1293,6 +1294,38 @@ VALUES ('it', 'ADD_BOOK', 'Aggiungi libro'),
        ('it', 'SNACKBAR_IMPORT_SUCCESS', 'Totale libri importati: {count}');
 
 
+-- vault: a shared collection of books multiple users can belong to (issue #7).
+CREATE TABLE vault
+(
+    id               SERIAL PRIMARY KEY,
+    name             VARCHAR(65) NOT NULL,
+    description      VARCHAR(255),
+    invitation_uuid  UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    leasing_enabled  BOOLEAN NOT NULL DEFAULT FALSE,
+    date_created     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Role lookup table for vault membership. `rank` (not `code`) is what
+-- "most permissive wins" logic should compare on, since code values don't
+-- sort in permission order.
+CREATE TABLE vault_roles
+(
+    code                SMALLINT PRIMARY KEY,
+    name                VARCHAR(30) NOT NULL UNIQUE,
+    rank                SMALLINT NOT NULL UNIQUE,
+    can_borrow          BOOLEAN NOT NULL DEFAULT FALSE,
+    can_edit_catalog    BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage_members  BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage_settings BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+INSERT INTO vault_roles (code, name, rank, can_borrow, can_edit_catalog, can_manage_members, can_manage_settings)
+VALUES
+    (3, 'readonly', 0, FALSE, FALSE, FALSE, FALSE),
+    (2, 'borrower', 1, TRUE,  FALSE, FALSE, FALSE),
+    (0, 'normal',   2, TRUE,  TRUE,  FALSE, FALSE),
+    (1, 'admin',    3, TRUE,  TRUE,  TRUE,  TRUE);
+
 -- Users table
 CREATE TABLE users
 (
@@ -1335,15 +1368,62 @@ CREATE TABLE users
     -- Off by default - most accounts just track a personal collection and
     -- don't lend books out. Set from the Settings page (see PATCH
     -- /user/leasing in UserRoute.ts, AppMenu.vue and Router.ts client-side).
+    -- Superseded by vault.leasing_enabled (issue #7) - kept until app code
+    -- reads vault.leasing_enabled exclusively, then drop in a follow-up
+    -- migration.
     leasing_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     -- Optional OIDC link (issuer URL + subject from the IdP). Password-only
     -- accounts leave these NULL. UNIQUE allows several NULLs, so existing
     -- local accounts are unaffected. See server/src/utils/OidcUsers.ts.
     oidc_issuer     TEXT,
     oidc_sub        TEXT,
+    -- Which vault to load on login (issue #7); NULL until the user belongs
+    -- to at least one vault.
+    last_used_vault_id INT REFERENCES vault (id),
     UNIQUE (oidc_issuer, oidc_sub),
     FOREIGN KEY (language) REFERENCES app_languages (code) ON DELETE SET NULL
 );
+
+-- vault_users: membership + role for each vault, with an invite/accept flow
+-- (status). A vault's creator is inserted as an accepted admin (see
+-- assets/db/upgrade/1.3.0.sql's backfill) and the trigger below keeps every
+-- vault at >= 1 admin from then on.
+CREATE TABLE vault_users
+(
+    vault_id     INT NOT NULL REFERENCES vault (id) ON DELETE CASCADE,
+    user_id      INT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    role         SMALLINT NOT NULL DEFAULT 0 REFERENCES vault_roles (code),
+    status       SMALLINT NOT NULL DEFAULT 0, -- 0 pending, 1 accepted, 2 rejected
+    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (vault_id, user_id)
+);
+
+-- Enforces "a vault must keep at least one admin" at the DB level;
+-- app-level UI should also block the action before it ever hits the DB, for
+-- a better error message.
+CREATE OR REPLACE FUNCTION enforce_vault_has_admin()
+RETURNS TRIGGER AS $$
+DECLARE
+  remaining_admins INT;
+  affected_vault INT := COALESCE(OLD.vault_id, NEW.vault_id);
+BEGIN
+  IF (TG_OP = 'DELETE' AND OLD.role = 1) OR
+     (TG_OP = 'UPDATE' AND OLD.role = 1 AND NEW.role != 1) THEN
+    SELECT count(*) INTO remaining_admins
+    FROM vault_users
+    WHERE vault_id = affected_vault AND role = 1 AND user_id != OLD.user_id;
+    IF remaining_admins = 0 THEN
+      RAISE EXCEPTION 'Vault % must keep at least one admin', affected_vault;
+    END IF;
+  END IF;
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_vault_min_one_admin
+    BEFORE UPDATE OR DELETE ON vault_users
+    FOR EACH ROW
+EXECUTE FUNCTION enforce_vault_has_admin();
 
 -- Tracks the public-institution security-measures notice shown after login
 -- (see SecurityNoticeDialog.vue / GET /app/policy / POST /user/security-notice/accept).
@@ -1446,49 +1526,53 @@ CREATE INDEX idx_activity_log_actor_created ON activity_log (actor_id, created_d
 -- groups
 CREATE TABLE customer_groups
 (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL,
-    description TEXT,
-    user_id     INT NOT NULL,
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    description  TEXT,
+    user_created INT,
 
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
 
-    CONSTRAINT unique_user_customer_group UNIQUE (user_id, name)
+    CONSTRAINT unique_vault_customer_group UNIQUE (vault_id, name)
 );
 
 -- customers table
 CREATE TABLE customers
 (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(100) NOT NULL,
-    group_id INT,
-    user_id INT          NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    group_id     INT,
+    user_created INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (group_id) REFERENCES customer_groups (id) ON DELETE SET NULL
 );
 
 -- Locations table
 CREATE TABLE locations
 (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL,
-    description TEXT,
-    "default"   BOOLEAN      NOT NULL DEFAULT FALSE,
-    user_id     INT          NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    description  TEXT,
+    "default"    BOOLEAN      NOT NULL DEFAULT FALSE,
+    user_created INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL
 );
 
--- Only one location can be the default per user.
-CREATE UNIQUE INDEX locations_one_default_per_user ON locations (user_id) WHERE "default";
+-- Only one location can be the default per vault.
+CREATE UNIQUE INDEX locations_one_default_per_vault ON locations (vault_id) WHERE "default";
 
 -- Categories table
 CREATE TABLE categories
 (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(100) NOT NULL,
-    user_id INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT unique_user_category UNIQUE (user_id, name)
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    user_created INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT unique_vault_category UNIQUE (vault_id, name)
 );
 
 -- Languages table
@@ -1543,6 +1627,7 @@ VALUES ('Hardcover'),
 CREATE TABLE books
 (
     id             SERIAL PRIMARY KEY,
+    vault_id       INT NOT NULL REFERENCES vault (id),
     name           VARCHAR(255) NOT NULL,
     description    TEXT,
     image_url      TEXT,
@@ -1559,31 +1644,34 @@ CREATE TABLE books
     reading_status SMALLINT CHECK (reading_status IN (0, 1, 2)),
     date_updated   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_created   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    user_id        INT          NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    user_created   INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL,
     FOREIGN KEY (language_code) REFERENCES languages (code) ON DELETE SET NULL,
     FOREIGN KEY (format_id) REFERENCES formats (id) ON DELETE SET NULL,
-    CONSTRAINT books_isbn_user_unique UNIQUE (isbn, user_id)
+    CONSTRAINT books_isbn_vault_unique UNIQUE (isbn, vault_id)
 );
 
 CREATE TABLE book_stocks
 (
-    id          SERIAL PRIMARY KEY,
-    book_id     INT                                     NOT NULL,
-    user_id     INT                                     NOT NULL,
-    code        CHAR(10) UNIQUE                         NOT NULL,
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT                                     NOT NULL REFERENCES vault (id),
+    book_id      INT                                     NOT NULL,
+    user_created INT,
+    -- code (printed barcode) stays globally UNIQUE, not vault-scoped: it's a
+    -- physical label, so two vaults printing the same code is a real clash.
+    code         CHAR(10) UNIQUE                         NOT NULL,
     -- 0: available, 1: not available, 2: booked, 3: damaged
-    status      SMALLINT CHECK (status IN (0, 1, 2, 3)) NOT NULL DEFAULT 0,
-    location_id INT,
+    status       SMALLINT CHECK (status IN (0, 1, 2, 3)) NOT NULL DEFAULT 0,
+    location_id  INT,
 
     -- when the book is status 2: booked, this field must be informed
-    customer_id INT,
+    customer_id  INT,
 
     -- When this copy was last loaned out (status set to 2); cleared on
     -- return. Powers the Loans view's date filter - best-effort only, not
     -- enforced in lockstep with status/customer_id by a CHECK constraint.
-    loaned_at   TIMESTAMP,
+    loaned_at    TIMESTAMP,
 
     -- Constraint: if status is 2, customer_id must be NOT NULL
     CHECK (
@@ -1591,7 +1679,7 @@ CREATE TABLE book_stocks
         (status != 2 AND customer_id IS NULL)
         ),
 
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations (id),
     FOREIGN KEY (customer_id) REFERENCES customers (id)
@@ -1606,7 +1694,8 @@ CREATE TABLE book_stocks
 CREATE TABLE loan_history
 (
     id            SERIAL PRIMARY KEY,
-    user_id       INT          NOT NULL,
+    vault_id      INT          NOT NULL REFERENCES vault (id),
+    user_created  INT,
     book_id       INT,
     book_name     VARCHAR(255) NOT NULL,
     stock_id      INT,
@@ -1618,14 +1707,15 @@ CREATE TABLE loan_history
     loaned_at     TIMESTAMP    NOT NULL,
     returned_at   TIMESTAMP,
 
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE SET NULL,
     FOREIGN KEY (stock_id) REFERENCES book_stocks (id) ON DELETE SET NULL,
     FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE SET NULL,
     FOREIGN KEY (group_id) REFERENCES customer_groups (id) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_loan_history_user_loaned_at ON loan_history (user_id, loaned_at DESC);
+-- Reports/queries scope by vault, not by the individual who created the loan.
+CREATE INDEX idx_loan_history_vault_loaned_at ON loan_history (vault_id, loaned_at DESC);
 
 -- Optional backup of a book's actual ebook file(s), in case the user only
 -- keeps the file itself on an e-reader. A book can have up to one file per
@@ -1636,8 +1726,9 @@ CREATE INDEX idx_loan_history_user_loaned_at ON loan_history (user_id, loaned_at
 CREATE TABLE book_files
 (
     id           SERIAL PRIMARY KEY,
+    vault_id     INT                                                    NOT NULL REFERENCES vault (id),
     book_id      INT                                                    NOT NULL,
-    user_id      INT                                                    NOT NULL,
+    user_created INT,
     file_type    VARCHAR(4) CHECK (file_type IN ('epub', 'pdf', 'mobi')) NOT NULL,
     file_name    VARCHAR(255)                                           NOT NULL,
     file_size    INT                                                    NOT NULL,
@@ -1645,27 +1736,29 @@ CREATE TABLE book_files
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (book_id, file_type),
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL
 );
 
 CREATE TABLE authors
 (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(100) NOT NULL,
-    user_id INT          NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT unique_user_author UNIQUE (user_id, name)
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    user_created INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT unique_vault_author UNIQUE (vault_id, name)
 );
 
+-- Pure join table: no user_created, since authorship isn't "created by"
+-- anyone in particular - it's derived from the book it's attached to.
 CREATE TABLE book_authors
 (
     book_id   INT NOT NULL,
     author_id INT NOT NULL,
-    user_id   INT NOT NULL,
+    vault_id  INT NOT NULL REFERENCES vault (id),
     PRIMARY KEY (book_id, author_id),
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
-    FOREIGN KEY (author_id) REFERENCES authors (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (author_id) REFERENCES authors (id) ON DELETE CASCADE
 );
 
 -- triggers
