@@ -13,6 +13,7 @@ export interface UserProfile {
     totpEnabled: boolean;
     securityNoticeAccepted: boolean;
     termsOfServiceAccepted: boolean;
+    activeVault: number;
 }
 
 export interface ProfileUpdateFields {

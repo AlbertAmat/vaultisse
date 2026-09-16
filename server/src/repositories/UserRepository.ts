@@ -29,6 +29,7 @@ export class UserRepository {
                     u.leasing_enabled       AS "leasingEnabled",
                     u.is_public_institution AS "isPublicInstitution",
                     u.totp_enabled          AS "totpEnabled",
+                    u.last_used_vault_id    as "activeVault",
                     (sn.accepted_date IS NOT NULL)  AS "securityNoticeAccepted",
                     (tos.accepted_date IS NOT NULL) AS "termsOfServiceAccepted"
                FROM users u
@@ -135,6 +136,16 @@ export class UserRepository {
      */
     public async updateLeasing(userId: number, leasingEnabled: boolean): Promise<void> {
         await this.db.query(`UPDATE users SET leasing_enabled = $1 WHERE id = $2`, [leasingEnabled, userId]);
+    }
+
+    /**
+     * Sets which vault the caller last worked in, so it's the one loaded on next login. Caller must
+     * first verify the caller is actually a member of `vaultId` - this just writes the column.
+     * @param userId Owning user's id.
+     * @param vaultId Vault to make active.
+     */
+    public async setActiveVault(userId: number, vaultId: number): Promise<void> {
+        await this.db.query(`UPDATE users SET last_used_vault_id = $1 WHERE id = $2`, [vaultId, userId]);
     }
 
     /* ---------- Password / account ---------- */
