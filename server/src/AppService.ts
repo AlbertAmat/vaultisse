@@ -23,7 +23,7 @@ interface DatabaseConf {
     port: number;
     name: string;
     user: string;
-    password: string;
+    pass: string;
 }
 
 /** Present only when every required OIDC env var is set. See isOidcEnabled(). */
@@ -208,20 +208,29 @@ export class AppService {
 
         // Setup database configuration
         this.m_databaseConf = {
-            host: String(process.env.DB_HOST),
-            port: Number(process.env.DB_PORT),
-            name: String(process.env.DB_NAME),
-            user: String(process.env.DB_USER),
-            password: String(process.env.DB_PASSWORD),
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            name: process.env.DB_NAME,
+            user: process.env.DB_USER,
+            pass: process.env.DB_PASSWORD,
         };
+
+        let connectionString;
+        if(this.m_databaseConf.user && this.m_databaseConf.pass && this.m_databaseConf.host && this.m_databaseConf.port && this.m_databaseConf.name) {
+            // postgres://<user>:<password>@<host>:<port>/<name>
+            connectionString = `postgres://${this.m_databaseConf.user}:${this.m_databaseConf.pass}@${this.m_databaseConf.host}:${this.m_databaseConf.port}/${this.m_databaseConf.name}`;
+        }
+        if(this.m_databaseConf.host && this.m_databaseConf.name){
+            // socket:<host>?db=<name>
+            connectionString = `socket:${this.m_databaseConf.host}?db=${this.m_databaseConf.name}`;
+        }
+        if (!connectionString) {
+            throw new Error("Either use: 'DB_HOST'/'DB_NAME' for socket connection, or use 'DB_HOST'/'DB_PORT'/'DB_NAME'/'DB_USER'/'DB_PASSWORD' for TCP connection.");
+        }
 
         // Initialize PostgreSQL connection pool
         this.m_databasePool = new pg.Pool({
-            host: this.m_databaseConf.host,
-            port: this.m_databaseConf.port,
-            database: this.m_databaseConf.name,
-            user: this.m_databaseConf.user,
-            password: this.m_databaseConf.password,
+            connectionString: connectionString,
             max: 20, // max connections
             idleTimeoutMillis: 30000, // idle timeout
             connectionTimeoutMillis: 2000, // connection timeout
