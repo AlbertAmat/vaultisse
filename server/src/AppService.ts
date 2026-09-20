@@ -18,14 +18,6 @@ import {BookMetadataRepository} from "./repositories/BookMetadataRepository";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 import {runMigrations} from "./migrate";
 
-interface DatabaseConf {
-    host: string;
-    port: number;
-    name: string;
-    user: string;
-    password: string;
-}
-
 /** Present only when every required OIDC env var is set. See isOidcEnabled(). */
 export interface OidcConfig {
     issuer: string;
@@ -60,12 +52,6 @@ export class AppService {
      * @private
      */
     private m_server: Server<any, any> | null;
-
-    /**
-     * Database configuration
-     * @private
-     */
-    private readonly m_databaseConf: DatabaseConf;
 
     /**
      * PostgreSQL connection pool
@@ -206,22 +192,30 @@ export class AppService {
             credentials: true,
         }));
 
-        // Setup database configuration
-        this.m_databaseConf = {
-            host: String(process.env.DB_HOST),
-            port: Number(process.env.DB_PORT),
-            name: String(process.env.DB_NAME),
-            user: String(process.env.DB_USER),
-            password: String(process.env.DB_PASSWORD),
-        };
+        let connectionString;
+        {
+            // Setup database configuration
+            const host= process.env.DB_HOST;
+            const port= process.env.DB_PORT;
+            const name= process.env.DB_NAME;
+            const user= process.env.DB_USER;
+            const pass= process.env.DB_PASSWORD;
+            if(user && pass && host && port && name) {
+                // postgres://<user>:<password>@<host>:<port>/<name>
+                connectionString = `postgres://${user}:${pass}@${host}:${port}/${name}`;
+            }
+            if(host && name){
+                // socket:<host>?db=<name>
+                connectionString = `socket:${host}?db=${name}`;
+            }
+            if (!connectionString) {
+                throw new Error("Either use: 'DB_HOST'/'DB_NAME' for socket connection, or use 'DB_HOST'/'DB_PORT'/'DB_NAME'/'DB_USER'/'DB_PASSWORD' for TCP connection.");
+            }
+        }
 
         // Initialize PostgreSQL connection pool
         this.m_databasePool = new pg.Pool({
-            host: this.m_databaseConf.host,
-            port: this.m_databaseConf.port,
-            database: this.m_databaseConf.name,
-            user: this.m_databaseConf.user,
-            password: this.m_databaseConf.password,
+            connectionString,
             max: 20, // max connections
             idleTimeoutMillis: 30000, // idle timeout
             connectionTimeoutMillis: 2000, // connection timeout
