@@ -123,6 +123,17 @@ export class AppService {
     private readonly m_cspExtraImgSrc: string[];
 
     /**
+     * When true (ALLOW_HTTP=true), drops the CSP `upgrade-insecure-requests`
+     * directive that helmet's useDefaults otherwise adds. That directive
+     * makes browsers rewrite same-origin http:// navigation/sub-resource
+     * requests to https://, which breaks a plain-HTTP deployment (LAN IP,
+     * no reverse proxy/TLS in front) - see GitHub issue #34. Leave false
+     * whenever the app is actually served over TLS.
+     * @private
+     */
+    private readonly m_allowHttp: boolean;
+
+    /**
      * Application constructor
      * Initializes environment variables, database, middleware, and logging
      */
@@ -156,6 +167,8 @@ export class AppService {
 
         this.m_cspExtraImgSrc = AppService.__readCspExtraImgSrc();
 
+        this.m_allowHttp = process.env.ALLOW_HTTP === "true";
+
         // Secure HTTP headers
         this.m_app.use(helmet({
             contentSecurityPolicy: {
@@ -174,7 +187,12 @@ export class AppService {
                     // needing a new release.
                     imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org", "https://archive.org", "https://*.archive.org", "https://covers.librarything.com", ...this.m_cspExtraImgSrc],
                     "script-src-attr": ["'unsafe-inline'"],
-                    "script-src-elem": ["'unsafe-inline'", "'self'", frontEndUrl, "'unsafe-inline'"]
+                    "script-src-elem": ["'unsafe-inline'", "'self'", frontEndUrl, "'unsafe-inline'"],
+                    // useDefaults adds this directive, which tells the browser to
+                    // rewrite same-origin http:// requests to https:// - breaks
+                    // plain-HTTP deployments (LAN IP, no reverse proxy/TLS in
+                    // front). Setting it to null removes that default (#34).
+                    ...(this.m_allowHttp ? {upgradeInsecureRequests: null} : {}),
                 },
             },
         }));
