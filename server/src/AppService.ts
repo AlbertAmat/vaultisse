@@ -192,25 +192,10 @@ export class AppService {
             credentials: true,
         }));
 
-        let connectionString;
-        {
-            // Setup database configuration
-            const host= process.env.DB_HOST;
-            const port= process.env.DB_PORT;
-            const name= process.env.DB_NAME;
-            const user= process.env.DB_USER;
-            const pass= process.env.DB_PASSWORD;
-            if(user && pass && host && port && name) {
-                // postgres://<user>:<password>@<host>:<port>/<name>
-                connectionString = `postgres://${user}:${pass}@${host}:${port}/${name}`;
-            }
-            if(host && name){
-                // socket:<host>?db=<name>
-                connectionString = `socket:${host}?db=${name}`;
-            }
-            if (!connectionString) {
-                throw new Error("Either use: 'DB_HOST'/'DB_NAME' for socket connection, or use 'DB_HOST'/'DB_PORT'/'DB_NAME'/'DB_USER'/'DB_PASSWORD' for TCP connection.");
-            }
+        let connectionString = get_conn_string();
+        if (!connectionString) {
+            console.log("4")
+            throw new Error("Either use: 'DB_HOST'/'DB_NAME' for socket connection, or use 'DB_HOST'/'DB_PORT'/'DB_NAME'/'DB_USER'/'DB_PASSWORD' for TCP connection.");
         }
 
         // Initialize PostgreSQL connection pool
@@ -533,6 +518,27 @@ export class AppService {
     public async comparePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
         return bcrypt.compare(plainPassword, hashedPassword);
     }
+}
+
+export function get_conn_string(): string | undefined {
+    let connectionString;
+
+    // Setup database configuration
+    const host = process.env.DB_HOST;
+    const port = process.env.DB_PORT;
+    const name = process.env.DB_NAME;
+    const user = process.env.DB_USER;
+    const pass = process.env.DB_PASSWORD;
+    // this first because the postgresqul string can also contains host  and name
+    if (host && name) {
+        // socket:<host>?db=<name>
+        connectionString = `socket:${host}?db=${name}`;
+    }
+    if (user && pass && host && port && name) {
+        // postgres://<user>:<password>@<host>:<port>/<name>
+        connectionString = `postgres://${user}:${pass}@${host}:${port}/${name}`;
+    }
+    return connectionString;
 }
 
 // Export singleton instance of AppService
