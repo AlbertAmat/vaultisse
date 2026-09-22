@@ -15,7 +15,7 @@ const {getTestDbConfig} = require("./testDbConfig");
 const {runMigrations} = require("../../src/migrate");
 const pg = require("pg");
 const {Logger} = require("../../src/utils/Logger");
-const {get_conn_string} = require("../../src/AppService");
+const {AppService} = require("../../src/AppService");
 
 module.exports = async function globalSetup() {
     const config = getTestDbConfig();
@@ -39,9 +39,9 @@ module.exports = async function globalSetup() {
     await admin.query(`CREATE DATABASE "${config.database}"`);
     await admin.end();
 
-    // Run teh same migrations as what users use, removes teh reliance on databaseSchema.sql
-    // To run teh migrations we need a pool and a logger
-    let connectionString = get_conn_string();
+    // Run the same migrations as what users use, removes the reliance on databaseSchema.sql
+    // To run the migrations we need a pool and a logger
+    let connectionString = AppService.getConnectionString();
     if (!connectionString) {
         throw new Error("Either use: 'DB_HOST'/'DB_NAME' for socket connection, or use 'DB_HOST'/'DB_PORT'/'DB_NAME'/'DB_USER'/'DB_PASSWORD' for TCP connection.");
     }

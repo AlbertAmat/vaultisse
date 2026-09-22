@@ -210,9 +210,8 @@ export class AppService {
             credentials: true,
         }));
 
-        let connectionString = get_conn_string();
+        let connectionString = AppService.getConnectionString();
         if (!connectionString) {
-            console.log("4")
             throw new Error("Either use: 'DB_HOST'/'DB_NAME' for socket connection, or use 'DB_HOST'/'DB_PORT'/'DB_NAME'/'DB_USER'/'DB_PASSWORD' for TCP connection.");
         }
 
@@ -536,27 +535,36 @@ export class AppService {
     public async comparePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
         return bcrypt.compare(plainPassword, hashedPassword);
     }
-}
 
-export function get_conn_string(): string | undefined {
-    let connectionString;
+    /**
+     * Build the PostgreSQL connection string from env vars. Supports either
+     * a Unix socket connection (`DB_HOST`/`DB_NAME`) or a TCP connection
+     * (`DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`) - checked in
+     * that order because the socket form can be satisfied by a subset of
+     * the vars the TCP form also uses. Exposed as `public static` (rather
+     * than `private`) so the test suite's global setup (globalSetup.js) can
+     * build the same connection string the app itself uses.
+     * @returns The connection string, or `undefined` when the required env vars are missing.
+     */
+    public static getConnectionString(): string | undefined {
+        let connectionString;
 
-    // Setup database configuration
-    const host = process.env.DB_HOST;
-    const port = process.env.DB_PORT;
-    const name = process.env.DB_NAME;
-    const user = process.env.DB_USER;
-    const pass = process.env.DB_PASSWORD;
-    // this first because the postgresqul string can also contains host  and name
-    if (host && name) {
-        // socket:<host>?db=<name>
-        connectionString = `socket:${host}?db=${name}`;
+        const host = process.env.DB_HOST;
+        const port = process.env.DB_PORT;
+        const name = process.env.DB_NAME;
+        const user = process.env.DB_USER;
+        const pass = process.env.DB_PASSWORD;
+        // this first because the postgresql string can also contain host and name
+        if (host && name) {
+            // socket:<host>?db=<name>
+            connectionString = `socket:${host}?db=${name}`;
+        }
+        if (user && pass && host && port && name) {
+            // postgres://<user>:<password>@<host>:<port>/<name>
+            connectionString = `postgres://${user}:${pass}@${host}:${port}/${name}`;
+        }
+        return connectionString;
     }
-    if (user && pass && host && port && name) {
-        // postgres://<user>:<password>@<host>:<port>/<name>
-        connectionString = `postgres://${user}:${pass}@${host}:${port}/${name}`;
-    }
-    return connectionString;
 }
 
 // Export singleton instance of AppService
