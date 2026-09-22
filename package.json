@@ -1,6 +1,6 @@
 {
   "name": "vaultisse",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "description": "Version anchor for the Vaultisse release/Docker pipeline. Not published; client and server are built and versioned independently.",
   "repository": {
