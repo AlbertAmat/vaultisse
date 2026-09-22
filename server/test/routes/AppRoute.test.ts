@@ -1,6 +1,7 @@
 import request from "supertest";
 import {setupTestApp} from "../helpers/testApp";
 import {createAuthenticatedUser} from "../helpers/auth";
+import {appService} from "../../src/AppService";
 
 const app = setupTestApp();
 
@@ -49,5 +50,28 @@ describe("GET /app/policy", () => {
         // Real value from AppService, not a hardcoded client-side copy -
         // see the MAX_IMPORT_FILE_SIZE_MB feature this guards against drifting.
         expect(res.body.maxImportFileSizeMb).toBe(10);
+    });
+
+    it("rejects a session past its absolute lifetime, even though the JWT itself hasn't expired (security audit #11)", async () => {
+        // Without an absolute cap, a session that's used at least once every
+        // SESSION_TIME window keeps getting silently reissued by
+        // AuthMiddleware and never actually expires. Simulate that by
+        // backdating the session's created_date past MAX_SESSION_AGE_DAYS
+        // (default 30) directly, rather than waiting real time.
+        const {agent, userCode} = await createAuthenticatedUser(app);
+
+        const beforeRes = await agent.get("/api/rest/app/policy");
+        expect(beforeRes.status).toBe(200);
+
+        await appService.getDatabasePool().query(
+            `UPDATE user_sessions
+                SET created_date = NOW() - INTERVAL '31 days'
+              WHERE user_id = (SELECT id FROM users WHERE code = $1)`,
+            [userCode]
+        );
+
+        const afterRes = await agent.get("/api/rest/app/policy");
+        expect(afterRes.status).toBe(401);
+        expect(afterRes.body).toMatchObject({sessionExpired: true});
     });
 });

@@ -27,7 +27,8 @@ VALUES ('1.0.0/1.sql'),
        ('1.1.5.sql'),
        ('1.1.6.sql'),
        ('1.1.7.sql'),
-       ('1.1.8.sql');
+       ('1.1.8.sql'),
+       ('1.1.9.sql');
 
 CREATE TABLE app_languages
 (
@@ -1342,6 +1343,19 @@ CREATE TABLE users
     oidc_issuer     TEXT,
     oidc_sub        TEXT,
     UNIQUE (oidc_issuer, oidc_sub),
+    -- Per-account brute-force protection (security audit #5) - see
+    -- AuthService.ts. failed_login_count/lockout_until track wrong
+    -- passwords on POST /login; totp_failed_count/totp_lockout_until track
+    -- wrong codes on POST /login/2fa during one pending login, separately,
+    -- so a correct password doesn't reset an in-progress 2FA lockout.
+    failed_login_count SMALLINT NOT NULL DEFAULT 0,
+    lockout_until TIMESTAMP,
+    totp_failed_count SMALLINT NOT NULL DEFAULT 0,
+    totp_lockout_until TIMESTAMP,
+    -- Absolute TOTP time-step of the last code accepted at login, so the
+    -- exact same 6-digit code can't be replayed a second time inside its
+    -- ~30s validity window. See TwoFactorAuth.ts.
+    totp_last_used_step BIGINT,
     FOREIGN KEY (language) REFERENCES app_languages (code) ON DELETE SET NULL
 );
 

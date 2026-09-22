@@ -118,7 +118,8 @@ export class LocationRepository {
                FROM book_stocks, books
               WHERE book_stocks.location_id = $1
                 AND book_stocks.book_id = books.id
-                AND book_stocks.user_id = $2`,
+                AND book_stocks.user_id = $2
+                AND books.user_id = $2`,
             [locationId, userId]
         );
         return result.rows;

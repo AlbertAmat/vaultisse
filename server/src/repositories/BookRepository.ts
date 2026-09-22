@@ -62,7 +62,10 @@ export class BookRepository {
         `;
 
         if (filter.query) {
-            conditions.push(`LOWER(books.name) ILIKE $${params.push(`%${filter.query.toLocaleLowerCase()}%`)} OR LOWER(books.isbn) ILIKE $${params.push(`%${filter.query.toLocaleLowerCase()}%`)}`);
+            // Parenthesized: without it, `AND` binds tighter than `OR` and this
+            // clause escapes the `books.user_id = $1` condition above, leaking
+            // every user's books whose ISBN happens to match (security audit #1).
+            conditions.push(`(LOWER(books.name) ILIKE $${params.push(`%${filter.query.toLocaleLowerCase()}%`)} OR LOWER(books.isbn) ILIKE $${params.push(`%${filter.query.toLocaleLowerCase()}%`)})`);
         }
 
         if (filter.categoryId && filter.categoryId.length > 0) {
@@ -229,12 +232,17 @@ export class BookRepository {
                )
            ) FILTER(WHERE authors.id IS NOT NULL), '[]') AS authors
             FROM books
-                     LEFT JOIN book_stocks ON books.id = book_stocks.book_id
-                     LEFT JOIN locations ON book_stocks.location_id = locations.id
+                     -- Defense in depth (security audit #2): the outer WHERE
+                     -- already scopes books to the caller, but scoping these
+                     -- joins too means a stray cross-user book_stocks/locations
+                     -- row can never surface here even if some other bug lets
+                     -- one get created.
+                     LEFT JOIN book_stocks ON books.id = book_stocks.book_id AND book_stocks.user_id = $2
+                     LEFT JOIN locations ON book_stocks.location_id = locations.id AND locations.user_id = $2
                      LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.user_id = $2
                      LEFT JOIN book_authors ON books.id = book_authors.book_id
                      LEFT JOIN authors ON book_authors.author_id = authors.id
-                     LEFT JOIN book_files ON books.id = book_files.book_id
+                     LEFT JOIN book_files ON books.id = book_files.book_id AND book_files.user_id = $2
             WHERE books.id = $1
               AND books.user_id = $2
             GROUP BY books.id,
@@ -736,7 +744,7 @@ export class BookRepository {
                     customers.name as customer_name
              FROM book_stocks
                       LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.user_id = $2
-                      LEFT JOIN locations ON book_stocks.location_id = locations.id
+                      LEFT JOIN locations ON book_stocks.location_id = locations.id AND locations.user_id = $2
              WHERE book_stocks.id = $1
                AND book_stocks.user_id = $2`,
             [stockId, userId]
@@ -834,7 +842,7 @@ export class BookRepository {
                     bs.code AS stock_code,
                     bs.status
              FROM book_stocks bs
-                      INNER JOIN books b ON b.id = bs.book_id
+                      INNER JOIN books b ON b.id = bs.book_id AND b.user_id = bs.user_id
              WHERE bs.code = $1
                AND bs.user_id = $2 LIMIT 1`,
             [bookCode, userId]

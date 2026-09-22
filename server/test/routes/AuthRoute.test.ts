@@ -99,6 +99,20 @@ describe("POST /register", () => {
 
         expect(res.status).toBe(400);
     });
+
+    it("rejects a username containing \"@\" (security audit #7)", async () => {
+        // A username shaped like an email address is at best confusing, and
+        // was previously reachable through the login form as if it were an
+        // email lookup - see AuthRepository.findLoginCandidate's defense in
+        // depth for the other half of this fix.
+        const {email, name} = freshIdentity();
+        const res = await request(app)
+            .post("/register")
+            .set("X-Forwarded-For", nextFakeIp())
+            .send({userName: "someone@example.com", email, name, password: TEST_PASSWORD});
+
+        expect(res.status).toBe(400);
+    });
 });
 
 describe("POST /login", () => {
@@ -135,6 +149,35 @@ describe("POST /login", () => {
             .send({username: "someone"});
 
         expect(res.status).toBe(400);
+    });
+
+    it("locks the account out after repeated wrong passwords, even spread across different source IPs (security audit #5)", async () => {
+        // The per-IP rate limiter (authLimiter, 5 requests / 5 minutes)
+        // doesn't slow down credential stuffing spread across many IPs -
+        // each of these 5 wrong attempts uses a fresh one, same as an
+        // attacker rotating IPs would.
+        const {userName, email, name} = freshIdentity();
+        await request(app)
+            .post("/register")
+            .set("X-Forwarded-For", nextFakeIp())
+            .send({userName, email, name, password: TEST_PASSWORD});
+
+        for (let i = 0; i < 5; i++) {
+            const res = await request(app)
+                .post("/login")
+                .set("X-Forwarded-For", nextFakeIp())
+                .send({username: userName, password: "WrongPassword1!"});
+            expect(res.status).toBe(401);
+        }
+
+        // The account is now locked out - even the *correct* password is
+        // rejected, from yet another fresh IP.
+        const res = await request(app)
+            .post("/login")
+            .set("X-Forwarded-For", nextFakeIp())
+            .send({username: userName, password: TEST_PASSWORD});
+        expect(res.status).toBe(401);
+        expect(res.body.message).toMatch(/too many/i);
     });
 });
 

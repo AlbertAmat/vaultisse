@@ -54,18 +54,22 @@ class UserService {
     }
 
     /**
-     * Update the current user's profile fields.
+     * Update the current user's profile fields. Changing the email requires
+     * `currentPassword` (server-enforced - see `PUT /user` in
+     * server/src/routes/UserRoute.ts); omit it when the email isn't changing.
      * @param name New display name.
      * @param email New email address.
      * @param language New preferred UI language (2-letter code).
      * @param region New preferred region code.
+     * @param currentPassword Current password, required only when `email` differs from the stored one.
      */
-    public async update(name: string, email: string, language: string, region: string) {
+    public async update(name: string, email: string, language: string, region: string, currentPassword?: string) {
         await axiosInstance.put(`${PATH_PREFIX}/user`, {
             name: name,
             email: email,
             language: language,
-            region: region
+            region: region,
+            currentPassword: currentPassword,
         })
     }
 

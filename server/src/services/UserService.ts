@@ -57,12 +57,31 @@ export class UserService {
     }
 
     /**
-     * Updates the caller's profile fields.
+     * Updates the caller's profile fields. Changing the email requires
+     * re-entering the current password (security audit #8): without this,
+     * anyone holding a session (a stolen cookie, an unlocked laptop) could
+     * silently redirect the account's email - the pivot point for takeover
+     * via password reset, or for hijacking a future OIDC/SSO first login
+     * (see OidcUserService.findOrCreateOidcUser).
+     *
      * @param userId Owning user's id.
      * @param fields New field values.
+     * @param currentPassword Current password - required only when `fields.email` differs from the stored one.
+     * @throws UnauthorizedError (401) if the email is being changed and `currentPassword` doesn't match.
      */
-    public async updateProfile(userId: number, fields: ProfileUpdateFields): Promise<void> {
-        await new UserRepository(this.pool).updateProfile(userId, fields);
+    public async updateProfile(userId: number, fields: ProfileUpdateFields, currentPassword: string | undefined): Promise<void> {
+        const repo = new UserRepository(this.pool);
+
+        const currentEmail = await repo.getEmail(userId);
+        const changingEmail = currentEmail !== null && fields.email !== currentEmail;
+        if (changingEmail) {
+            const hash = await repo.getPasswordHash(userId);
+            if (!hash || !currentPassword || !(await appService.comparePassword(currentPassword, hash))) {
+                throw new UnauthorizedError("Current password is required to change your email.");
+            }
+        }
+
+        await repo.updateProfile(userId, fields);
     }
 
     /**
@@ -259,7 +278,7 @@ export class UserService {
         if (!secret) {
             throw new ValidationError("Start setup before enabling two-factor authentication.");
         }
-        if (!(await TwoFactorAuth.verifyTotpCode(secret, String(code).trim()))) {
+        if (!(await TwoFactorAuth.verifyTotpCode(secret, String(code).trim())).valid) {
             throw new UnauthorizedError("Invalid verification code.");
         }
 
