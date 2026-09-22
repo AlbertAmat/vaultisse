@@ -100,6 +100,17 @@ async function resolveSession(req: Request, res: Response): Promise<SessionResol
             return "unauthorized";
         }
 
+        // Absolute session lifetime (security audit #11): without this, a
+        // session that's used at least once every SESSION_TIME window keeps
+        // getting silently reissued below and never actually expires. Revoke
+        // it outright once it's past getMaxSessionAgeMs(), so it can't be
+        // replayed even if a still-valid JWT for it exists somewhere.
+        const sessionAgeMs = Date.now() - new Date(session.createdDate).getTime();
+        if (sessionAgeMs > appService.getMaxSessionAgeMs()) {
+            await sessionRepo.revoke(session.id, decoded.user_id);
+            return "unauthorized";
+        }
+
         req.sessionId = session.id;
         req.sessionKey = decoded.sid;
 

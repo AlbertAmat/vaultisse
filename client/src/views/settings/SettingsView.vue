@@ -215,6 +215,30 @@
 						/>
 					</div>
 
+					<!-- Only shown once the email actually differs from the loaded
+					     user - changing it requires re-entering the current
+					     password (server-enforced, see PUT /user). -->
+					<div
+						v-if="emailChanged"
+						class="settings-row"
+						style="margin-bottom: 16px"
+					>
+						<div class="settings-row-text">
+							<p style="font-size: 14px; font-weight: 530">{{t(AppLabels.USERCONF_CURRENT_PASSWORD)}}</p>
+						</div>
+						<v-text-field
+							v-model="currentPasswordForEmail"
+							:append-icon="showCurrentPasswordForEmail ? 'mdi-eye' : 'mdi-eye-off'"
+							:type="showCurrentPasswordForEmail ? 'text' : 'password'"
+							density="compact"
+							variant="outlined"
+							hide-details
+							autocomplete="current-password"
+							style="max-width: 280px; width: 100%"
+							@click:append="showCurrentPasswordForEmail = !showCurrentPasswordForEmail"
+						/>
+					</div>
+
 					<div class="settings-row">
 						<div class="settings-row-text">
 							<p style="font-size: 14px; font-weight: 530">{{t(AppLabels.USERCONF_CHANGE_PASSWORD)}}</p>
@@ -333,6 +357,11 @@ const email: Ref<string> = ref(controller.getUser().getEmail());
 const language: Ref<string> = ref(controller.getUser().getLanguage());
 const region: Ref<string> = ref(controller.getUser().getRegion());
 
+/** Whether the email field differs from the loaded user - changing it requires re-entering the current password (server-enforced, see PUT /user). */
+const emailChanged = computed(() => email.value !== controller.getUser().getEmail());
+const currentPasswordForEmail: Ref<string> = ref("");
+const showCurrentPasswordForEmail: Ref<boolean> = ref(false);
+
 // TODO: USE system_languages table
 const supportedLanguages = [
 	{text: "English", value: "en"},
@@ -362,11 +391,12 @@ const regions = [
 
 const disableSave = computed(() => {
 	const empty = name.value.trim().length === 0 || email.value.trim().length === 0 || language.value.trim().length === 0 || saving.value;
+	const missingPasswordForEmail = emailChanged.value && currentPasswordForEmail.value.trim().length === 0;
 
 	const user = controller.getUser();
 	const equal = name.value === user.getName() && email.value === user.getEmail() && language.value === user.getLanguage() && region.value === user.getRegion();
 
-	return empty || equal;
+	return empty || equal || missingPasswordForEmail;
 })
 
 async function save() {
@@ -376,8 +406,10 @@ async function save() {
 			name.value,
 			email.value,
 			language.value,
-			region.value
+			region.value,
+			emailChanged.value ? currentPasswordForEmail.value : undefined
 		)
+		currentPasswordForEmail.value = "";
 	} finally {
 		saving.value = false;
 	}

@@ -220,7 +220,14 @@ export class UserRepository {
      * @param userId Owning user's id.
      */
     public async enableTwoFactor(userId: number): Promise<void> {
-        await this.db.query(`UPDATE users SET totp_enabled = TRUE WHERE id = $1`, [userId]);
+        // Also clears any stale 2FA-lockout/replay state from a previous
+        // enable/disable cycle (security audit #5), so a fresh setup starts clean.
+        await this.db.query(
+            `UPDATE users
+                SET totp_enabled = TRUE, totp_failed_count = 0, totp_lockout_until = NULL, totp_last_used_step = NULL
+              WHERE id = $1`,
+            [userId]
+        );
     }
 
     /**
@@ -228,7 +235,13 @@ export class UserRepository {
      * @param userId Owning user's id.
      */
     public async disableTwoFactor(userId: number): Promise<void> {
-        await this.db.query(`UPDATE users SET totp_enabled = FALSE, totp_secret = NULL WHERE id = $1`, [userId]);
+        await this.db.query(
+            `UPDATE users
+                SET totp_enabled = FALSE, totp_secret = NULL,
+                    totp_failed_count = 0, totp_lockout_until = NULL, totp_last_used_step = NULL
+              WHERE id = $1`,
+            [userId]
+        );
     }
 
     /**

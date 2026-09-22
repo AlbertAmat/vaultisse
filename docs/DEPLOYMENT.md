@@ -75,7 +75,10 @@ at most your home LAN — never the public internet.
    CLOUDFLARE_TUNNEL_TOKEN=
    ```
    (If you want other devices on your LAN to reach it too, e.g. from a tablet, use
-   your machine's LAN IP instead: `FRONT_END_URL=http://192.168.1.50:3000`.)
+   your machine's LAN IP instead: `FRONT_END_URL=http://192.168.1.50:3000`. In that
+   case also set `ALLOW_HTTP=true` — unlike `localhost`, browsers don't exempt a LAN
+   IP from the CSP `upgrade-insecure-requests` directive, so without this every
+   in-app link gets rewritten to `https://` and fails to load.)
 
 2. **If you want it reachable only from this machine** (not even your LAN), restrict
    the published port to loopback by editing the `app` service's `ports:` entry in
@@ -224,6 +227,11 @@ there's nothing in the template that does this for you.
    - `TRUST_PROXY` — `false` if you're only reaching it via `TOWER-IP:3000` on your
      LAN; `true` if you add SWAG, Nginx Proxy Manager, or Cloudflare Tunnel in front
      of it, same reasoning as scenarios B and C.
+   - `ALLOW_HTTP` — `true` if you're only reaching it via plain `http://TOWER-IP:3000`
+     on your LAN (the default and most common Unraid setup); `false` if you put a
+     proxy/tunnel with TLS in front. Without this, browsers rewrite every in-app link
+     to `https://` and the app becomes unusable, since `TOWER-IP` isn't exempt from
+     the CSP `upgrade-insecure-requests` directive the way `localhost` is.
 
 3. Click **Apply**. Unraid pulls the image and starts the container; the "WebUI"
    link on its Docker tab entry opens straight to the login page.
@@ -433,6 +441,8 @@ real `JWT_SECRET` — every other production hardening step above still applies.
 - [ ] `JWT_SECRET` generated with `openssl rand -hex 32`, not left blank or default
 - [ ] `DB_PASSWORD` is a real generated password
 - [ ] `TRUST_PROXY=true` for scenarios B/C/D-public, `false` for A and LAN-only D
+- [ ] `ALLOW_HTTP=true` only for plain-HTTP LAN access (A/D with a `http://` LAN IP
+      in `FRONT_END_URL`); `false` whenever a TLS proxy/tunnel is in front
 - [ ] `APP_TAG` pinned to a version, not tracking `latest` unattended
 - [ ] Scenario A: port not forwarded on your router
 - [ ] Scenario B: app port bound to `127.0.0.1`, only 80/443 open on the firewall

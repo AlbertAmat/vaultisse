@@ -29,7 +29,7 @@ export class LoanHistoryRepository {
             `INSERT INTO loan_history (user_id, book_id, book_name, stock_id, stock_code, customer_id, customer_name, group_id, group_name, loaned_at)
              SELECT bs.user_id, bs.book_id, b.name, bs.id, bs.code, c.id, c.name, cg.id, cg.name, NOW()
              FROM book_stocks bs
-                      JOIN books b ON b.id = bs.book_id
+                      JOIN books b ON b.id = bs.book_id AND b.user_id = bs.user_id
                       JOIN customers c ON c.id = $2 AND c.user_id = bs.user_id
                       LEFT JOIN customer_groups cg ON cg.id = c.group_id
              WHERE bs.code = $1

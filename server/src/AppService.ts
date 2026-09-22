@@ -18,14 +18,6 @@ import {BookMetadataRepository} from "./repositories/BookMetadataRepository";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 import {runMigrations} from "./migrate";
 
-interface DatabaseConf {
-    host: string;
-    port: number;
-    name: string;
-    user: string;
-    password: string;
-}
-
 /** Present only when every required OIDC env var is set. See isOidcEnabled(). */
 export interface OidcConfig {
     issuer: string;
@@ -62,12 +54,6 @@ export class AppService {
     private m_server: Server<any, any> | null;
 
     /**
-     * Database configuration
-     * @private
-     */
-    private readonly m_databaseConf: DatabaseConf;
-
-    /**
      * PostgreSQL connection pool
      * @private
      */
@@ -90,6 +76,17 @@ export class AppService {
      * @private
      */
     private readonly m_sessionTime: number;
+
+    /**
+     * Absolute session lifetime in milliseconds, counted from
+     * `user_sessions.created_date` - configurable via MAX_SESSION_AGE_DAYS.
+     * Without this, a session that's used at least once every SESSION_TIME
+     * window (see AuthMiddleware's silent-reissue-near-expiry logic) never
+     * actually expires (security audit #11). Defaults to 30 days when unset
+     * or not a valid positive number.
+     * @private
+     */
+    private readonly m_maxSessionAgeMs: number;
 
     /**
      * Flag to allow development authentication
@@ -128,6 +125,26 @@ export class AppService {
     private readonly m_oidcConfig: OidcConfig | null;
 
     /**
+     * Extra origins appended to the CSP `img-src` directive, configured via
+     * the comma-separated CSP_EXTRA_IMG_SRC env var. Lets an operator allow
+     * a custom cover-image host (e.g. a self-hosted metadata source) without
+     * needing a new release. Empty when unset.
+     * @private
+     */
+    private readonly m_cspExtraImgSrc: string[];
+
+    /**
+     * When true (ALLOW_HTTP=true), drops the CSP `upgrade-insecure-requests`
+     * directive that helmet's useDefaults otherwise adds. That directive
+     * makes browsers rewrite same-origin http:// navigation/sub-resource
+     * requests to https://, which breaks a plain-HTTP deployment (LAN IP,
+     * no reverse proxy/TLS in front) - see GitHub issue #34. Leave false
+     * whenever the app is actually served over TLS.
+     * @private
+     */
+    private readonly m_allowHttp: boolean;
+
+    /**
      * Application constructor
      * Initializes environment variables, database, middleware, and logging
      */
@@ -159,6 +176,10 @@ export class AppService {
         // use static from compiled app in /assets/app
         this.m_app.use(express.static(path.join(__dirname,  "assets", "app")));
 
+        this.m_cspExtraImgSrc = AppService.__readCspExtraImgSrc();
+
+        this.m_allowHttp = process.env.ALLOW_HTTP === "true";
+
         // Secure HTTP headers
         this.m_app.use(helmet({
             contentSecurityPolicy: {
@@ -170,10 +191,19 @@ export class AppService {
                     frameSrc: ["'self'", "data:", "blob:"],
                     // Book covers are either our own uploads (data: URIs) or fetched
                     // from these ISBN metadata providers - kept in sync with the
-                    // isAllowedImageUrl() allowlist in BooksRoute.ts.
-                    imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org", "https://covers.librarything.com"],
+                    // isAllowedImageUrl() allowlist in BooksRoute.ts. archive.org and
+                    // *.archive.org are included because covers.openlibrary.org often
+                    // redirects there instead of serving the image itself (#32).
+                    // CSP_EXTRA_IMG_SRC lets an operator allow further hosts without
+                    // needing a new release.
+                    imgSrc: ["'self'", "data:", "https://books.google.com", "http://books.google.com", "https://covers.openlibrary.org", "https://archive.org", "https://*.archive.org", "https://covers.librarything.com", ...this.m_cspExtraImgSrc],
                     "script-src-attr": ["'unsafe-inline'"],
-                    "script-src-elem": ["'unsafe-inline'", "'self'", frontEndUrl, "'unsafe-inline'"]
+                    "script-src-elem": ["'unsafe-inline'", "'self'", frontEndUrl, "'unsafe-inline'"],
+                    // useDefaults adds this directive, which tells the browser to
+                    // rewrite same-origin http:// requests to https:// - breaks
+                    // plain-HTTP deployments (LAN IP, no reverse proxy/TLS in
+                    // front). Setting it to null removes that default (#34).
+                    ...(this.m_allowHttp ? {upgradeInsecureRequests: null} : {}),
                 },
             },
         }));
@@ -191,22 +221,14 @@ export class AppService {
             credentials: true,
         }));
 
-        // Setup database configuration
-        this.m_databaseConf = {
-            host: String(process.env.DB_HOST),
-            port: Number(process.env.DB_PORT),
-            name: String(process.env.DB_NAME),
-            user: String(process.env.DB_USER),
-            password: String(process.env.DB_PASSWORD),
-        };
+        let connectionString = AppService.getConnectionString();
+        if (!connectionString) {
+            throw new Error("Either use: 'DB_HOST'/'DB_NAME' for socket connection, or use 'DB_HOST'/'DB_PORT'/'DB_NAME'/'DB_USER'/'DB_PASSWORD' for TCP connection.");
+        }
 
         // Initialize PostgreSQL connection pool
         this.m_databasePool = new pg.Pool({
-            host: this.m_databaseConf.host,
-            port: this.m_databaseConf.port,
-            database: this.m_databaseConf.name,
-            user: this.m_databaseConf.user,
-            password: this.m_databaseConf.password,
+            connectionString,
             max: 20, // max connections
             idleTimeoutMillis: 30000, // idle timeout
             connectionTimeoutMillis: 2000, // connection timeout
@@ -218,6 +240,13 @@ export class AppService {
         }
         this.m_jwtSecret    = process.env.JWT_SECRET;
         this.m_sessionTime  = Number(process.env.SESSION_TIME);
+
+        const parsedMaxSessionAgeDays = Number(process.env.MAX_SESSION_AGE_DAYS);
+        const maxSessionAgeDays = Number.isFinite(parsedMaxSessionAgeDays) && parsedMaxSessionAgeDays > 0
+            ? parsedMaxSessionAgeDays
+            : 30;
+        this.m_maxSessionAgeMs = maxSessionAgeDays * 24 * 60 * 60 * 1000;
+
         this.m_allowDevAuth = process.env.ALLOW_DEV_AUTH == "true";
 
         this.m_googleApiKey = BookMetadataRepository.normalizeGoogleApiKey(process.env.GOOGLE_BOOKS_API_KEY);
@@ -311,6 +340,11 @@ export class AppService {
         return this.m_sessionTime;
     }
 
+    /** Absolute session lifetime in milliseconds, counted from `user_sessions.created_date` - see AuthMiddleware.ts. */
+    public getMaxSessionAgeMs(): number {
+        return this.m_maxSessionAgeMs;
+    }
+
     /** Get database connection pool */
     public getDatabasePool(): pg.Pool {
         return this.m_databasePool;
@@ -334,6 +368,20 @@ export class AppService {
         const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
 
         return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel};
+    }
+
+    /**
+     * Parse CSP_EXTRA_IMG_SRC into the extra `img-src` origins it lists, so
+     * an operator can allow a custom cover-image host without a new release.
+     * Comma-separated, e.g. "https://example.com,https://*.example.org".
+     * Returns an empty array when unset.
+     * @private
+     */
+    private static __readCspExtraImgSrc(): string[] {
+        return (process.env.CSP_EXTRA_IMG_SRC ?? "")
+            .split(",")
+            .map((origin) => origin.trim())
+            .filter((origin) => origin.length > 0);
     }
 
     /**
@@ -509,6 +557,36 @@ export class AppService {
      */
     public async comparePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
         return bcrypt.compare(plainPassword, hashedPassword);
+    }
+
+    /**
+     * Build the PostgreSQL connection string from env vars. Supports either
+     * a Unix socket connection (`DB_HOST`/`DB_NAME`) or a TCP connection
+     * (`DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`) - checked in
+     * that order because the socket form can be satisfied by a subset of
+     * the vars the TCP form also uses. Exposed as `public static` (rather
+     * than `private`) so the test suite's global setup (globalSetup.js) can
+     * build the same connection string the app itself uses.
+     * @returns The connection string, or `undefined` when the required env vars are missing.
+     */
+    public static getConnectionString(): string | undefined {
+        let connectionString;
+
+        const host = process.env.DB_HOST;
+        const port = process.env.DB_PORT;
+        const name = process.env.DB_NAME;
+        const user = process.env.DB_USER;
+        const pass = process.env.DB_PASSWORD;
+        // this first because the postgresql string can also contain host and name
+        if (host && name) {
+            // socket:<host>?db=<name>
+            connectionString = `socket:${host}?db=${name}`;
+        }
+        if (user && pass && host && port && name) {
+            // postgres://<user>:<password>@<host>:<port>/<name>
+            connectionString = `postgres://${user}:${pass}@${host}:${port}/${name}`;
+        }
+        return connectionString;
     }
 }
 

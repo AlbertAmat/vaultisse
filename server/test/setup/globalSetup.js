@@ -11,9 +11,11 @@
  * deployment.
  */
 const {Client} = require("pg");
-const fs = require("fs");
-const path = require("path");
 const {getTestDbConfig} = require("./testDbConfig");
+const {runMigrations} = require("../../src/migrate");
+const pg = require("pg");
+const {Logger} = require("../../src/utils/Logger");
+const {AppService} = require("../../src/AppService");
 
 module.exports = async function globalSetup() {
     const config = getTestDbConfig();
@@ -37,17 +39,20 @@ module.exports = async function globalSetup() {
     await admin.query(`CREATE DATABASE "${config.database}"`);
     await admin.end();
 
-    const schemaPath = path.join(__dirname, "..", "..", "..", "assets", "db", "databaseSchema.sql");
-    const schemaSql = fs.readFileSync(schemaPath, "utf-8");
-
-    const db = new Client({
-        host: config.host,
-        port: config.port,
-        user: config.user,
-        password: config.password,
-        database: config.database,
+    // Run the same migrations as what users use, removes the reliance on databaseSchema.sql
+    // To run the migrations we need a pool and a logger
+    let connectionString = AppService.getConnectionString();
+    if (!connectionString) {
+        throw new Error("Either use: 'DB_HOST'/'DB_NAME' for socket connection, or use 'DB_HOST'/'DB_PORT'/'DB_NAME'/'DB_USER'/'DB_PASSWORD' for TCP connection.");
+    }
+    const m_databasePool = new pg.Pool({
+        connectionString,
+        max: 20, // max connections
+        idleTimeoutMillis: 30000, // idle timeout
+        connectionTimeoutMillis: 2000, // connection timeout
     });
-    await db.connect();
-    await db.query(schemaSql);
-    await db.end();
+    const m_logger = new Logger(String(process.env.LOGGER_PATH));
+
+    await runMigrations(m_databasePool, m_logger)
+    await m_databasePool.end();
 };

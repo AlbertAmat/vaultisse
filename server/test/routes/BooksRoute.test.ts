@@ -161,6 +161,20 @@ describe("GET /book/search", () => {
         expect(res.body.books).toEqual([]);
     });
 
+    it("does not leak another user's books via a matching ISBN (security audit #1)", async () => {
+        // Regression test for an `AND`/`OR` precedence bug: the query used
+        // to be `books.user_id = $1 AND name ILIKE $2 OR isbn ILIKE $3`,
+        // which (without parentheses around the name/isbn pair) evaluates as
+        // `(books.user_id = $1 AND name ILIKE $2) OR (isbn ILIKE $3)` -
+        // escaping the user_id scoping entirely for any book whose ISBN
+        // happened to match, regardless of who owns it.
+        const otherUser = await createAuthenticatedUser(app);
+        await otherUser.agent.post("/api/rest/book").field("name", "Someone Else's Book").field("isbn", "9780261102217");
+
+        const res = await user.agent.get("/api/rest/book/search").query({query: "978026110"});
+        expect(res.body.books).toEqual([]);
+    });
+
     it("filters by category_id", async () => {
         const categoryRes = await user.agent.post("/api/rest/category").send({name: "Sci-Fi Search Test"});
         const categoryId = categoryRes.body.id;
@@ -462,6 +476,20 @@ describe("book stock lifecycle", () => {
         const deleteRes = await user.agent.delete(`/api/rest/book/${bookId}/stock/${stockId}`);
         expect(deleteRes.status).toBe(200);
         expect(deleteRes.body).toBe(true);
+    });
+
+    it("refuses to add a stock to another user's book (security audit #2)", async () => {
+        // Regression test for an IDOR: addBookStock checked that the
+        // location/customer belonged to the caller, but never checked the
+        // book itself, so any authenticated user could attach a stock (and
+        // from there, read the book's title/ISBN/cover, and plant their own
+        // data on the victim's book page) to a book they don't own.
+        const otherUser = await createAuthenticatedUser(app, "Victim");
+        const victimBookId = (await otherUser.agent.post("/api/rest/book").field("name", "Victim's Private Book")).body;
+        const locationId = await createLocation(user.agent, "Attacker Shelf");
+
+        const res = await user.agent.post(`/api/rest/book/${victimBookId}/stock`).send({status: 0, location_id: locationId});
+        expect(res.status).toBe(404);
     });
 
     it("loans a stock to a customer and returns it, recording loan history both times", async () => {

@@ -328,10 +328,11 @@ export default class User {
      * @param email - New email address
      * @param language - New preferred language
      * @param region - New region
+     * @param currentPassword - Current password, required only when `email` differs from the stored one (server-enforced, see PUT /user)
      */
-    public async update(name: string, email: string, language: string, region: string) {
+    public async update(name: string, email: string, language: string, region: string, currentPassword?: string) {
         try {
-            await userService.update(name, email, language, region);
+            await userService.update(name, email, language, region, currentPassword);
             appSnackbarController.show({ message: i18n.global.t(AppLabels.SNACKBAR_PROFILE_UPDATED) });
             this.m_email.value = email;
             this.m_name.value = name;

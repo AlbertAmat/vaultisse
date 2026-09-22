@@ -505,6 +505,16 @@ export class BookService {
             throw new NotAcceptableError('Status "booked" not allowed in add stock action');
         }
 
+        const repo = new BookRepository(this.pool);
+
+        // Without this check, any authenticated user could add a stock to any
+        // other user's book (IDOR - security audit #2): the location/customer
+        // ownership checks below don't cover the book itself.
+        const bookOk = await repo.exists(Number(bookId), userId);
+        if (!bookOk) {
+            throw new NotFoundError("Book not found");
+        }
+
         const locationOk = await new LocationRepository(this.pool).exists(Number(fields.locationId), userId);
         if (!locationOk) {
             throw new NotFoundError("Location not found");
@@ -517,7 +527,6 @@ export class BookService {
             }
         }
 
-        const repo = new BookRepository(this.pool);
         const code = await repo.generateStockCode();
         const stockId = await repo.insertStockWithId(bookId, code, fields.status, fields.locationId, fields.customerId, userId);
 

@@ -19,15 +19,25 @@ export class AuthRepository {
 
     /**
      * Looks up an active (non-disabled) user by code or email, for password login.
+     *
+     * Matches on the email column *only* when `usernameOrEmail` looks like an
+     * email address, rather than `(code = $1 OR email = $2)` - a username
+     * crafted to look like a different, real user's email address could
+     * otherwise match that other user's row instead of the email itself
+     * (security audit #7). Paired with AuthService.register rejecting `@` in
+     * new usernames as the primary fix; this is the defense-in-depth half.
+     *
      * @param usernameOrEmail Either the user's code or email.
      * @returns The login candidate, or null if none matches.
      */
     public async findLoginCandidate(usernameOrEmail: string): Promise<LoginCandidate | null> {
+        const looksLikeEmail = usernameOrEmail.includes("@");
         const result = await this.db.query(
-            `SELECT id, code, password, token_version AS "tokenVersion", totp_enabled AS "totpEnabled"
+            `SELECT id, code, password, token_version AS "tokenVersion", totp_enabled AS "totpEnabled",
+                    failed_login_count AS "failedLoginCount", lockout_until AS "lockoutUntil"
                FROM users
-              WHERE (code = $1 OR email = $2) AND disabled = FALSE`,
-            [usernameOrEmail, usernameOrEmail]
+              WHERE ${looksLikeEmail ? "email" : "code"} = $1 AND disabled = FALSE`,
+            [usernameOrEmail]
         );
         return result.rows[0] ?? null;
     }
@@ -39,12 +49,80 @@ export class AuthRepository {
      */
     public async findPendingTwoFactorUser(userId: number): Promise<PendingTwoFactorUser | null> {
         const result = await this.db.query(
-            `SELECT id, token_version AS "tokenVersion", totp_secret AS "totpSecret"
+            `SELECT id, token_version AS "tokenVersion", totp_secret AS "totpSecret",
+                    totp_failed_count AS "totpFailedCount", totp_lockout_until AS "totpLockoutUntil",
+                    totp_last_used_step AS "totpLastUsedStep"
                FROM users
               WHERE id = $1 AND disabled = FALSE AND totp_enabled = TRUE`,
             [userId]
         );
         return result.rows[0] ?? null;
+    }
+
+    /**
+     * Records a wrong password on POST /login, locking the account out for a
+     * while once `maxAttempts` is reached (security audit #5) - rate
+     * limiting elsewhere in the app is per-IP only, so this is what actually
+     * slows down credential stuffing spread across many source IPs.
+     * @param userId Owning user's id.
+     * @param maxAttempts Consecutive failures allowed before locking out.
+     * @param lockoutUntil Timestamp to lock the account until, once `maxAttempts` is hit.
+     */
+    public async recordFailedLoginAttempt(userId: number, maxAttempts: number, lockoutUntil: Date): Promise<void> {
+        await this.db.query(
+            `UPDATE users
+                SET failed_login_count = failed_login_count + 1,
+                    lockout_until = CASE WHEN failed_login_count + 1 >= $2 THEN $3::timestamp ELSE lockout_until END
+              WHERE id = $1`,
+            [userId, maxAttempts, lockoutUntil]
+        );
+    }
+
+    /**
+     * Clears the password-lockout counter after a successful login.
+     * @param userId Owning user's id.
+     */
+    public async resetFailedLoginAttempts(userId: number): Promise<void> {
+        await this.db.query(`UPDATE users SET failed_login_count = 0, lockout_until = NULL WHERE id = $1`, [userId]);
+    }
+
+    /**
+     * Records a wrong 2FA code on POST /login/2fa, locking the account's 2FA
+     * step out for a while once `maxAttempts` is reached (security audit #5).
+     * Kept separate from the password-lockout counter above so a correct
+     * password (which an attacker may already know) can't be used to reset
+     * an in-progress 2FA lockout.
+     * @param userId Owning user's id.
+     * @param maxAttempts Consecutive failures allowed before locking out.
+     * @param lockoutUntil Timestamp to lock the 2FA step until, once `maxAttempts` is hit.
+     */
+    public async recordFailedTwoFactorAttempt(userId: number, maxAttempts: number, lockoutUntil: Date): Promise<void> {
+        await this.db.query(
+            `UPDATE users
+                SET totp_failed_count = totp_failed_count + 1,
+                    totp_lockout_until = CASE WHEN totp_failed_count + 1 >= $2 THEN $3::timestamp ELSE totp_lockout_until END
+              WHERE id = $1`,
+            [userId, maxAttempts, lockoutUntil]
+        );
+    }
+
+    /**
+     * Clears the 2FA-lockout counter after a successful 2FA login.
+     * @param userId Owning user's id.
+     */
+    public async resetTwoFactorFailures(userId: number): Promise<void> {
+        await this.db.query(`UPDATE users SET totp_failed_count = 0, totp_lockout_until = NULL WHERE id = $1`, [userId]);
+    }
+
+    /**
+     * Records the absolute TOTP time-step of the code just accepted, so the
+     * exact same code can't be replayed a second time inside its validity
+     * window (security audit #5).
+     * @param userId Owning user's id.
+     * @param step Absolute TOTP time-step, per TwoFactorAuth.verifyTotpCode.
+     */
+    public async setTotpLastUsedStep(userId: number, step: number): Promise<void> {
+        await this.db.query(`UPDATE users SET totp_last_used_step = $2 WHERE id = $1`, [userId, step]);
     }
 
     /**

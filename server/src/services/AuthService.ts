@@ -13,6 +13,24 @@ export type LoginOutcome =
     | {kind: "success"; token: string}
     | {kind: "twoFactorRequired"; pendingToken: string};
 
+/** Consecutive wrong passwords allowed before an account is locked out of POST /login (security audit #5). */
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+
+/** Consecutive wrong 2FA codes allowed before an account's pending login is locked out of POST /login/2fa (security audit #5). */
+const MAX_FAILED_TOTP_ATTEMPTS = 5;
+
+/** How long an account stays locked out after crossing either threshold above - matches the per-IP rate limiters' own "try again after 15 minutes" wording (see AuthRoute.ts). */
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+
+/**
+ * Fixed bcrypt hash (cost 12, matching appService.hashPassword) of a
+ * password nobody has. Compared against whenever no account matches the
+ * login attempt, so that path costs the same bcrypt work a real
+ * wrong-password check would - without this, response time alone reveals
+ * whether a username/email is registered (security audit #10).
+ */
+const DUMMY_PASSWORD_HASH = "$2b$12$JBpLRwvJEpRaodWGua89..FDpxEcAU4UiPhCwBrPRpGpG.GPkyLGC";
+
 export interface RegisterFields {
     userName: string;
     email: string;
@@ -59,15 +77,36 @@ export class AuthService {
         const candidate = await authRepo.findLoginCandidate(usernameOrEmail);
         if (!candidate) {
             appService.getLogger().debug("No user found for:" + usernameOrEmail);
+            // Timing-safe (security audit #10): pay the same bcrypt cost a
+            // real wrong-password check would below, so response time
+            // doesn't leak whether this username/email is registered.
+            await appService.comparePassword(password, DUMMY_PASSWORD_HASH);
             await new ActivityLogRepository(this.pool).recordActivity(null, ActivityAction.LOGIN_FAILED, {metadata: {attemptedUsername: usernameOrEmail, ip}});
             throw new UnauthorizedError("Invalid username or password.");
         }
 
+        // Per-account lockout (security audit #5): the per-IP rate limiter
+        // in AuthRoute.ts doesn't slow down credential stuffing spread
+        // across many source IPs. Checked before the password comparison so
+        // a locked-out account doesn't keep paying bcrypt's cost either.
+        if (candidate.lockoutUntil && candidate.lockoutUntil.getTime() > Date.now()) {
+            appService.getLogger().debug("Account locked out, rejecting login for:" + usernameOrEmail);
+            await new ActivityLogRepository(this.pool).recordActivity(candidate.id, ActivityAction.LOGIN_FAILED, {metadata: {ip, reason: "locked"}});
+            throw new UnauthorizedError("Too many failed attempts. Please try again later.");
+        }
+
         if (!(await appService.comparePassword(password, candidate.password))) {
             appService.getLogger().debug("invalid password for user:" + usernameOrEmail);
+            await authRepo.recordFailedLoginAttempt(candidate.id, MAX_FAILED_LOGIN_ATTEMPTS, new Date(Date.now() + LOCKOUT_DURATION_MS));
             await new ActivityLogRepository(this.pool).recordActivity(candidate.id, ActivityAction.LOGIN_FAILED, {metadata: {ip}});
             throw new UnauthorizedError("Invalid username or password.");
         }
+
+        // Correct password - clear the password-lockout counter. The
+        // separate 2FA-lockout counter (if any) is untouched here, so
+        // knowing the password can't be used to reset an in-progress 2FA
+        // lockout (security audit #5).
+        await authRepo.resetFailedLoginAttempts(candidate.id);
 
         if (candidate.totpEnabled) {
             appService.getLogger().debug("Password OK, awaiting 2FA code for user:" + usernameOrEmail);
@@ -133,17 +172,37 @@ export class AuthService {
             throw new PendingLoginExpiredError("Your login has expired. Please log in again.");
         }
 
+        // Per-pending-login 2FA lockout (security audit #5): without this,
+        // the pending_2fa_token stays valid for its whole 5-minute window no
+        // matter how many codes are tried, and the per-IP rate limiter in
+        // AuthRoute.ts doesn't stop an attacker who already knows the
+        // password from just switching IPs. Forcing a fresh /login here
+        // (rather than just a 401) also means a fresh password check.
+        if (user.totpLockoutUntil && user.totpLockoutUntil.getTime() > Date.now()) {
+            await new ActivityLogRepository(this.pool).recordActivity(user.id, ActivityAction.LOGIN_FAILED, {metadata: {stage: "2fa", ip, reason: "locked"}});
+            throw new PendingLoginExpiredError("Too many failed attempts. Please log in again.");
+        }
+
         const rawCode = String(code).trim();
-        let verified = await TwoFactorAuth.verifyTotpCode(user.totpSecret, rawCode);
+        // afterTimeStep rejects a code that's already been accepted once,
+        // stopping the exact same 6-digit code from being replayed a second
+        // time inside its ~30s validity window (security audit #5).
+        const totpResult = await TwoFactorAuth.verifyTotpCode(user.totpSecret, rawCode, user.totpLastUsedStep);
+        let verified = totpResult.valid;
+        if (verified && totpResult.timeStep !== undefined) {
+            await authRepo.setTotpLastUsedStep(user.id, totpResult.timeStep);
+        }
         if (!verified) {
             verified = await this.consumeBackupCode(user.id, TwoFactorAuth.normalizeBackupCode(rawCode));
         }
 
         if (!verified) {
+            await authRepo.recordFailedTwoFactorAttempt(user.id, MAX_FAILED_TOTP_ATTEMPTS, new Date(Date.now() + LOCKOUT_DURATION_MS));
             await new ActivityLogRepository(this.pool).recordActivity(user.id, ActivityAction.LOGIN_FAILED, {metadata: {stage: "2fa", ip}});
             throw new UnauthorizedError("Invalid verification code.");
         }
 
+        await authRepo.resetTwoFactorFailures(user.id);
         await authRepo.updateLastLogin(user.id);
 
         const {sessionKey} = await new UserSessionRepository(this.pool).createUserSession(user.id, userAgent, ip);
@@ -163,6 +222,15 @@ export class AuthService {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(fields.email)) {
             throw new ValidationError("Invalid email format.");
+        }
+
+        // Usernames that look like an email address are confusing and
+        // pointless to allow now that AuthRepository.findLoginCandidate
+        // matches email-shaped login input against the email column only
+        // (the actual fix for security audit #7's account-shadowing risk) -
+        // such a username could never be used to log in anyway.
+        if (fields.userName.includes("@")) {
+            throw new ValidationError("Username cannot contain \"@\".");
         }
 
         const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+[\]{};':"\\|,.<>/?]).{8,}$/;

@@ -98,13 +98,16 @@ export class UserSessionRepository {
 
     /**
      * Used by AuthMiddleware.resolveSession to check a token's `sid` claim against a live, not-revoked session on every authenticated request.
+     * `createdDate` is returned too so the caller can enforce an absolute
+     * session lifetime (security audit #11) - without it, a session that's
+     * used at least once per SESSION_TIME window never actually expires.
      * @param sessionKey Session key (the JWT's `sid` claim).
      * @param userId Owning user's id.
-     * @returns The matching session's id, or null.
+     * @returns The matching session's id and creation date, or null.
      */
-    public async findActive(sessionKey: string, userId: number): Promise<{id: number} | null> {
+    public async findActive(sessionKey: string, userId: number): Promise<{id: number; createdDate: Date} | null> {
         const result = await this.db.query(
-            `SELECT id FROM user_sessions WHERE session_key = $1 AND user_id = $2 AND revoked_date IS NULL`,
+            `SELECT id, created_date AS "createdDate" FROM user_sessions WHERE session_key = $1 AND user_id = $2 AND revoked_date IS NULL`,
             [sessionKey, userId]
         );
         return result.rows[0] ?? null;

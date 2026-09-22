@@ -20,6 +20,53 @@ describe("PUT /user", () => {
         const policyRes = await user.agent.get("/api/rest/app/policy");
         expect(policyRes.body.user).toMatchObject({name: "Updated Name", language: "es"});
     });
+
+    describe("changing the email (security audit #8)", () => {
+        it("rejects an email change with no currentPassword", async () => {
+            const user = await createAuthenticatedUser(app);
+
+            const res = await user.agent.put("/api/rest/user").send({
+                name: user.name,
+                email: "new-" + user.email,
+                language: "en",
+                region: "US",
+            });
+            expect(res.status).toBe(401);
+
+            const policyRes = await user.agent.get("/api/rest/app/policy");
+            expect(policyRes.body.user.email).toBe(user.email);
+        });
+
+        it("rejects an email change with the wrong currentPassword", async () => {
+            const user = await createAuthenticatedUser(app);
+
+            const res = await user.agent.put("/api/rest/user").send({
+                name: user.name,
+                email: "new-" + user.email,
+                language: "en",
+                region: "US",
+                currentPassword: "WrongPassword1!",
+            });
+            expect(res.status).toBe(401);
+        });
+
+        it("allows an email change with the correct currentPassword", async () => {
+            const user = await createAuthenticatedUser(app);
+            const newEmail = "new-" + user.email;
+
+            const res = await user.agent.put("/api/rest/user").send({
+                name: user.name,
+                email: newEmail,
+                language: "en",
+                region: "US",
+                currentPassword: TEST_PASSWORD,
+            });
+            expect(res.status).toBe(200);
+
+            const policyRes = await user.agent.get("/api/rest/app/policy");
+            expect(policyRes.body.user.email).toBe(newEmail);
+        });
+    });
 });
 
 describe("PATCH /user/theme", () => {
