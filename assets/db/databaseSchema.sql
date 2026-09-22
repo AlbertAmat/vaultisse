@@ -28,7 +28,7 @@ VALUES ('1.0.0/1.sql'),
        ('1.1.6.sql'),
        ('1.1.7.sql'),
        ('1.1.8.sql'),
-       ('1.1.9.sql');
+       ('1.2.2.sql');
 
 CREATE TABLE app_languages
 (

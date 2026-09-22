@@ -49,6 +49,12 @@ const DEFAULT_UPGRADE_DIR = path.join(__dirname, "..", "..", "..", "assets", "db
  * `discoverMigrationFiles()` returns it.
  */
 const LEGACY_CHECKS: Record<string, (pool: Pool) => Promise<boolean>> = {
+    // 0.0.1.sql recreates the pre-1.0.0 baseline from nothing, so any real
+    // install that predates this migration-tracking scheme entirely already
+    // has every table it creates - `users` is the simplest stable anchor.
+    // Without this entry, such an install's first run after 0.0.1.sql
+    // shipped would try to re-run it and fail on "relation already exists".
+    "0.0.1.sql": (pool) => tableExists(pool, "users"),
     "1.0.0/1.sql": (pool) => columnExists(pool, "customers", "group_id"),
     "1.0.0/2.sql": (pool) => tableExists(pool, "user_backup_codes"),
     "1.0.0/3.sql": (pool) => labelExists(pool, "en", "LOANS"),

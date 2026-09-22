@@ -1,5 +1,5 @@
--- Upgrade to v1.1.9 - schema changes made on 2026-09-22.
--- Brings an already-installed database in line with the v1.1.9 databaseSchema.sql.
+-- Upgrade to v1.2.2 - schema changes made on 2026-09-22.
+-- Brings an already-installed database in line with the v1.2.2 databaseSchema.sql.
 -- (New installs should use databaseSchema.sql directly and skip this file.)
 
 -- Per-account brute-force protection (security audit #5): login and 2FA
