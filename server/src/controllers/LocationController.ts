@@ -19,8 +19,8 @@ export class LocationController {
      */
     public async list(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const locations = await new LocationService(this.pool).listLocations(userId);
+            const vaultId = appService.getSessionVault(req);
+            const locations = await new LocationService(this.pool).listLocations(vaultId);
             res.status(200).json(locations);
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -41,8 +41,8 @@ export class LocationController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
-            const locationBooks = await new LocationService(this.pool).getLocationBooks(locationId, userId);
+            const vaultId = appService.getSessionVault(req);
+            const locationBooks = await new LocationService(this.pool).getLocationBooks(locationId, vaultId);
             res.status(200).json(locationBooks);
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -69,8 +69,8 @@ export class LocationController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
-            const locationBooks = await new LocationService(this.pool).moveBooksToLocation(locationId, userId, books);
+            const vaultId = appService.getSessionVault(req);
+            const locationBooks = await new LocationService(this.pool).moveBooksToLocation(locationId, vaultId, books);
             res.status(200).json(locationBooks);
         } catch (err) {
             if (err instanceof DomainError) {
@@ -89,9 +89,9 @@ export class LocationController {
      */
     public async create(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Adding location with name ${req.body.name}`);
-            const location = await new LocationService(this.pool).createLocation(userId, req.body.name, req.body.description);
+            const location = await new LocationService(this.pool).createLocation(vaultId, req.body.name, req.body.description);
             res.status(200).json(location);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -112,9 +112,9 @@ export class LocationController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Updating location ${locationId}`);
-            const location = await new LocationService(this.pool).renameLocation(locationId, userId, req.body.name, req.body.description);
+            const location = await new LocationService(this.pool).renameLocation(locationId, vaultId, req.body.name, req.body.description);
             res.status(200).json(location);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -135,9 +135,9 @@ export class LocationController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Setting location ${locationId} as default`);
-            const locations = await new LocationService(this.pool).setDefaultLocation(locationId, userId);
+            const locations = await new LocationService(this.pool).setDefaultLocation(locationId, vaultId);
             res.status(200).json(locations);
         } catch (err) {
             if (err instanceof DomainError) {
@@ -158,8 +158,8 @@ export class LocationController {
         const id = Number(req.params.id);
 
         try {
-            const userId = appService.getSessionUser(req);
-            await new LocationService(this.pool).deleteLocation(id, userId);
+            const vaultId = appService.getSessionVault(req);
+            await new LocationService(this.pool).deleteLocation(id, vaultId);
             res.send({message: "Location deleted successfully"});
         } catch (e) {
             if (e instanceof DomainError) {

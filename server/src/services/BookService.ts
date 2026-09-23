@@ -42,23 +42,23 @@ export class BookService {
 
     /**
      * Paginated/filterable/sortable book search.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param filter Search query, category/status filters, date range, sort and page.
      * @returns The total matching row count, the page size, and this page's books.
      */
-    public async searchBooks(userId: number, filter: BookSearchFilter): Promise<{total: number; limit: number; books: BookSearchResult[]}> {
+    public async searchBooks(vaultId: number, filter: BookSearchFilter): Promise<{total: number; limit: number; books: BookSearchResult[]}> {
         const MAX_ROWS = 50;
-        const {total, books} = await new BookRepository(this.pool).search(userId, filter);
+        const {total, books} = await new BookRepository(this.pool).search(vaultId, filter);
         return {total, limit: MAX_ROWS, books};
     }
 
     /**
      * KPI counters for the Books view.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Every counter.
      */
-    public async getCounters(userId: number): Promise<BookCounters> {
-        return new BookRepository(this.pool).getCounters(userId);
+    public async getCounters(vaultId: number): Promise<BookCounters> {
+        return new BookRepository(this.pool).getCounters(vaultId);
     }
 
     /* ---------- Single book CRUD ---------- */
@@ -66,11 +66,11 @@ export class BookService {
     /**
      * Full detail for one book, throwing NotFoundError if it doesn't belong to the caller.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The book detail.
      */
-    public async getBookDetail(id: number, userId: number): Promise<BookDetail> {
-        const book = await new BookRepository(this.pool).findDetailById(id, userId);
+    public async getBookDetail(id: number, vaultId: number): Promise<BookDetail> {
+        const book = await new BookRepository(this.pool).findDetailById(id, vaultId);
         if (!book) {
             throw new NotFoundError("Book not found");
         }
@@ -80,12 +80,12 @@ export class BookService {
     /**
      * Updates a book's editable fields and author links.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param fields New field values, plus the full desired author-id list.
      */
     public async updateBook(
         id: number,
-        userId: number,
+        vaultId: number,
         fields: {
             name: string; image_url: string | null; isbn: string | null; category_id: number | null;
             language_code: string | null; authors?: number[]; description: string | null;
@@ -101,12 +101,12 @@ export class BookService {
         }
 
         const repo = new BookRepository(this.pool);
-        const found = await repo.exists(id, userId);
+        const found = await repo.exists(id, vaultId);
         if (!found) {
             throw new NotFoundError("Book not found");
         }
 
-        await repo.updateFields(id, userId, fields);
+        await repo.updateFields(id, vaultId, fields);
 
         if (fields.authors && Array.isArray(fields.authors)) {
             const existingAuthors = await repo.getAuthorIds(id);
@@ -114,13 +114,13 @@ export class BookService {
             const authorsToAdd = fields.authors.filter((authorId) => !existingAuthors.includes(authorId));
 
             for (const authorId of authorsToRemove) {
-                await repo.removeAuthorLink(id, authorId, userId);
+                await repo.removeAuthorLink(id, authorId, vaultId);
             }
 
             for (const authorId of authorsToAdd) {
-                const authorOk = await new AuthorRepository(this.pool).exists(authorId, userId);
+                const authorOk = await new AuthorRepository(this.pool).exists(authorId, vaultId);
                 if (authorOk) {
-                    await repo.addAuthorLink(id, authorId, userId);
+                    await repo.addAuthorLink(id, authorId, vaultId);
                 } else {
                     console.warn(`Author with ID ${authorId} not found, skipping association.`);
                 }
@@ -131,15 +131,15 @@ export class BookService {
     /**
      * Deletes a book, throwing NotFoundError if it doesn't belong to the caller.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async deleteBook(id: number, userId: number): Promise<void> {
+    public async deleteBook(id: number, vaultId: number): Promise<void> {
         const repo = new BookRepository(this.pool);
-        const found = await repo.exists(id, userId);
+        const found = await repo.exists(id, vaultId);
         if (!found) {
             throw new NotFoundError("Book not found");
         }
-        await repo.remove(id, userId);
+        await repo.remove(id, vaultId);
     }
 
     /* ---------- Cover image ---------- */
@@ -147,29 +147,29 @@ export class BookService {
     /**
      * Sets a book's cover image from an uploaded file.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param file Uploaded image file, or undefined to clear the cover.
      * @returns Rows affected.
      */
-    public async updateBookImage(id: number, userId: number, file: Express.Multer.File | undefined): Promise<number> {
+    public async updateBookImage(id: number, vaultId: number, file: Express.Multer.File | undefined): Promise<number> {
         let imageUrl = "";
         if (file) {
             const base64 = file.buffer.toString("base64");
             imageUrl = `data:${file.mimetype};base64,${base64}`;
         }
-        return new BookRepository(this.pool).updateImageUrl(id, userId, imageUrl);
+        return new BookRepository(this.pool).updateImageUrl(id, vaultId, imageUrl);
     }
 
     /**
      * Looks up and sets a book's cover from its ISBN via BookMetadataRepository.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param libraryThingApiKey Optional LibraryThing API key, for the cover fallback.
      * @returns The resolved cover image URL.
      */
-    public async findBookCover(id: number, userId: number, libraryThingApiKey: string | undefined): Promise<string> {
+    public async findBookCover(id: number, vaultId: number, libraryThingApiKey: string | undefined): Promise<string> {
         const repo = new BookRepository(this.pool);
-        const isbn = await repo.getIsbn(id, userId);
+        const isbn = await repo.getIsbn(id, vaultId);
         if (isbn === undefined) {
             throw new NotFoundError("Book not found");
         }
@@ -184,7 +184,7 @@ export class BookService {
             throw new NotFoundError("No cover found for this book");
         }
 
-        await repo.updateImageUrl(id, userId, imageUrl);
+        await repo.updateImageUrl(id, vaultId, imageUrl);
         return imageUrl;
     }
 
@@ -205,11 +205,11 @@ export class BookService {
     /**
      * Validates and stores an uploaded ebook file, replacing any existing file of the same type.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param file Uploaded file.
      * @returns The stored file's metadata.
      */
-    public async uploadBookFile(id: number, userId: number, file: Express.Multer.File | undefined): Promise<BookFileMeta> {
+    public async uploadBookFile(id: number, vaultId: number, file: Express.Multer.File | undefined): Promise<BookFileMeta> {
         if (!file) {
             throw new ValidationError("No file provided");
         }
@@ -226,23 +226,23 @@ export class BookService {
         }
 
         const repo = new BookRepository(this.pool);
-        const found = await repo.exists(id, userId);
+        const found = await repo.exists(id, vaultId);
         if (!found) {
             throw new NotFoundError("Book not found");
         }
 
-        return repo.upsertFile(id, userId, fileType, file.originalname, file.size, file.buffer);
+        return repo.upsertFile(id, vaultId, fileType, file.originalname, file.size, file.buffer);
     }
 
     /**
      * Looks up one ebook file's bytes for download, throwing NotFoundError if it doesn't exist.
      * @param id Book id.
      * @param fileId File id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The file's bytes/name/type.
      */
-    public async downloadBookFile(id: number, fileId: number, userId: number): Promise<BookFileForDownload> {
-        const file = await new BookRepository(this.pool).findFileForDownload(id, fileId, userId);
+    public async downloadBookFile(id: number, fileId: number, vaultId: number): Promise<BookFileForDownload> {
+        const file = await new BookRepository(this.pool).findFileForDownload(id, fileId, vaultId);
         if (!file) {
             throw new NotFoundError("File not found");
         }
@@ -253,23 +253,23 @@ export class BookService {
      * Deletes one ebook file.
      * @param id Book id.
      * @param fileId File id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching file was found and deleted.
      */
-    public async deleteBookFile(id: number, fileId: number, userId: number): Promise<boolean> {
-        return new BookRepository(this.pool).deleteFile(id, fileId, userId);
+    public async deleteBookFile(id: number, fileId: number, vaultId: number): Promise<boolean> {
+        return new BookRepository(this.pool).deleteFile(id, fileId, vaultId);
     }
 
     /* ---------- Manual create ---------- */
 
     /**
      * Creates a minimal manually-entered book, then auto-places a stock if the caller has exactly one location.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param fields Name/description/isbn and an optional cover upload.
      * @returns The new book's id.
      */
     public async createBook(
-        userId: number,
+        vaultId: number,
         fields: {name: string; description: string; isbn: string; file: Express.Multer.File | undefined}
     ): Promise<number> {
         let imageUrl = "";
@@ -281,7 +281,7 @@ export class BookService {
         const repo = new BookRepository(this.pool);
 
         if (fields.isbn) {
-            const alreadyExists = await repo.isbnExists(fields.isbn, userId);
+            const alreadyExists = await repo.isbnExists(fields.isbn, vaultId);
             if (alreadyExists) {
                 // NOTE: the original route used 404 for this, not 409 - preserved
                 // exactly even though it's a conflict, not a "not found".
@@ -289,14 +289,14 @@ export class BookService {
             }
         }
 
-        const bookId = await repo.insert(userId, {
+        const bookId = await repo.insert(vaultId, {
             name: fields.name,
             description: fields.description,
             imageUrl,
             isbn: fields.isbn,
         });
 
-        await this.automaticallyAddBookToLocation(bookId, userId);
+        await this.automaticallyAddBookToLocation(bookId, vaultId);
 
         return bookId;
     }
@@ -304,15 +304,15 @@ export class BookService {
     /**
      * Auto-places a fresh stock for a newly-created book at the caller's sole location, if they have exactly one.
      * @param bookId Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    private async automaticallyAddBookToLocation(bookId: number, userId: number): Promise<void> {
+    private async automaticallyAddBookToLocation(bookId: number, vaultId: number): Promise<void> {
         const repo = new BookRepository(this.pool);
-        const locationId = await repo.soleLocationId(userId);
+        const locationId = await repo.soleLocationId(vaultId);
         if (locationId === null) return;
 
         const code = await repo.generateStockCode();
-        await repo.insertStockMinimal(bookId, code, locationId, userId);
+        await repo.insertStockMinimal(bookId, code, locationId, vaultId);
     }
 
     /* ---------- ISBN auto-create ---------- */
@@ -345,47 +345,47 @@ export class BookService {
     /**
      * Finds or creates a category by name.
      * @param name Category name, or null to no-op.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The category id, or null if `name` was null.
      */
-    private async ensureCategory(name: string | null, userId: number): Promise<number | null> {
+    private async ensureCategory(name: string | null, vaultId: number): Promise<number | null> {
         if (!name) return null;
         const repo = new BookRepository(this.pool);
-        const existing = await repo.findCategoryByName(name, userId);
+        const existing = await repo.findCategoryByName(name, vaultId);
         if (existing !== null) return existing;
-        return repo.insertCategory(name, userId);
+        return repo.insertCategory(name, vaultId);
     }
 
     /**
      * Finds a book by ISBN, overlaying fresh metadata onto it; otherwise inserts a new one.
      * @param book Looked-up book fields.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The book id.
      */
-    private async getOrCreateBook(book: IsbnBookInput, userId: number): Promise<number> {
+    private async getOrCreateBook(book: IsbnBookInput, vaultId: number): Promise<number> {
         const repo = new BookRepository(this.pool);
-        const existingId = await repo.findByIsbn(book.isbnCode, userId);
+        const existingId = await repo.findByIsbn(book.isbnCode, vaultId);
         if (existingId !== null) {
-            await repo.fillEmptyFields(existingId, book, userId);
+            await repo.fillEmptyFields(existingId, book, vaultId);
             return existingId;
         }
-        return repo.insertFull(book, userId);
+        return repo.insertFull(book, vaultId);
     }
 
     /**
      * Finds or creates each author by name and links them to a book.
      * @param bookId Book id.
      * @param authorNames Author names to ensure/link.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    private async ensureAuthorsAndLink(bookId: number, authorNames: string[], userId: number): Promise<void> {
+    private async ensureAuthorsAndLink(bookId: number, authorNames: string[], vaultId: number): Promise<void> {
         const repo = new BookRepository(this.pool);
         for (const author of authorNames) {
-            let authorId = await repo.findAuthorByName(author, userId);
+            let authorId = await repo.findAuthorByName(author, vaultId);
             if (authorId === null) {
-                authorId = await repo.insertAuthorRow(author, userId);
+                authorId = await repo.insertAuthorRow(author, vaultId);
             }
-            await repo.linkAuthorToBook(bookId, authorId, userId);
+            await repo.linkAuthorToBook(bookId, authorId, vaultId);
         }
     }
 
@@ -393,15 +393,15 @@ export class BookService {
      * Places a fresh stock for a book at a specific location, if it belongs to the caller.
      * @param bookId Book id.
      * @param locationId Location id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    private async addBookToLocation(bookId: number, locationId: string, userId: number): Promise<void> {
+    private async addBookToLocation(bookId: number, locationId: string, vaultId: number): Promise<void> {
         const repo = new BookRepository(this.pool);
-        const exist = await repo.locationExistsForUser(locationId, userId);
+        const exist = await repo.locationExistsForVault(locationId, vaultId);
         if (!exist) return;
 
         const code = await repo.generateStockCode();
-        await repo.insertStockAtLocation(bookId, code, locationId, userId);
+        await repo.insertStockAtLocation(bookId, code, locationId, vaultId);
     }
 
     /**
@@ -411,14 +411,14 @@ export class BookService {
      * are preserved as distinctly-worded thrown Errors for the controller to
      * relay verbatim.
      *
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param isbn Raw ISBN input.
      * @param locationId Location to place the new stock at, or null to auto-place.
      * @param googleApiKey Optional Google Books API key.
      * @param libraryThingApiKey Optional LibraryThing API key.
      * @returns The book id.
      */
-    public async createBookFromIsbn(userId: number, isbn: string, locationId: string | null, googleApiKey: string | undefined, libraryThingApiKey: string | undefined): Promise<number> {
+    public async createBookFromIsbn(vaultId: number, isbn: string, locationId: string | null, googleApiKey: string | undefined, libraryThingApiKey: string | undefined): Promise<number> {
         const isbnCode = IsbnVerification.normalizeAndValidateIsbn(isbn);
         if (!isbnCode) {
             throw new ValidationError("No ISBN code provided");
@@ -451,7 +451,7 @@ export class BookService {
         try {
             const repo = new BookRepository(this.pool);
             await repo.ensureLanguage(languageCode);
-            const categoryId = await this.ensureCategory(categoryName, userId);
+            const categoryId = await this.ensureCategory(categoryName, vaultId);
 
             const bookId = await this.getOrCreateBook({
                 name: this.truncate(name, 255)!,
@@ -463,20 +463,20 @@ export class BookService {
                 formattedPublishedDate,
                 languageCode,
                 pages: pages && pages > 0 ? pages : null,
-            }, userId);
+            }, vaultId);
 
             if (authors?.length) {
                 await this.ensureAuthorsAndLink(
                     bookId,
                     authors.map((author: string) => this.truncate(author, 100)).filter((author): author is string => Boolean(author)),
-                    userId
+                    vaultId
                 );
             }
 
             if (locationId) {
-                await this.addBookToLocation(bookId, locationId, userId);
+                await this.addBookToLocation(bookId, locationId, vaultId);
             } else {
-                await this.automaticallyAddBookToLocation(bookId, userId);
+                await this.automaticallyAddBookToLocation(bookId, vaultId);
             }
 
             return bookId;
@@ -491,13 +491,13 @@ export class BookService {
     /**
      * Adds a new (non-booked) stock for a book.
      * @param bookId Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param fields Status/location/optional customer for the new stock.
      * @returns The new stock's detail.
      */
     public async addBookStock(
         bookId: string,
-        userId: number,
+        vaultId: number,
         fields: {status: number; locationId: string; customerId: string | undefined}
     ): Promise<BookStockDetail> {
         const BOOKED_STATUS = 2;
@@ -510,27 +510,27 @@ export class BookService {
         // Without this check, any authenticated user could add a stock to any
         // other user's book (IDOR - security audit #2): the location/customer
         // ownership checks below don't cover the book itself.
-        const bookOk = await repo.exists(Number(bookId), userId);
+        const bookOk = await repo.exists(Number(bookId), vaultId);
         if (!bookOk) {
             throw new NotFoundError("Book not found");
         }
 
-        const locationOk = await new LocationRepository(this.pool).exists(Number(fields.locationId), userId);
+        const locationOk = await new LocationRepository(this.pool).exists(Number(fields.locationId), vaultId);
         if (!locationOk) {
             throw new NotFoundError("Location not found");
         }
 
         if (fields.customerId) {
-            const customerOk = await new CustomerRepository(this.pool).exists(Number(fields.customerId), userId);
+            const customerOk = await new CustomerRepository(this.pool).exists(Number(fields.customerId), vaultId);
             if (!customerOk) {
                 throw new NotFoundError("Customer not found");
             }
         }
 
         const code = await repo.generateStockCode();
-        const stockId = await repo.insertStockWithId(bookId, code, fields.status, fields.locationId, fields.customerId, userId);
+        const stockId = await repo.insertStockWithId(bookId, code, fields.status, fields.locationId, fields.customerId, vaultId);
 
-        const stock = await repo.findStockDetail(stockId, userId);
+        const stock = await repo.findStockDetail(stockId, vaultId);
         return stock!;
     }
 
@@ -538,43 +538,43 @@ export class BookService {
      * Deletes one book stock.
      * @param bookId Book id.
      * @param stockId Stock id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching stock was found and deleted.
      */
-    public async deleteBookStock(bookId: string, stockId: string, userId: number): Promise<boolean> {
-        return new BookRepository(this.pool).deleteStock(bookId, stockId, userId);
+    public async deleteBookStock(bookId: string, stockId: string, vaultId: number): Promise<boolean> {
+        return new BookRepository(this.pool).deleteStock(bookId, stockId, vaultId);
     }
 
     /**
      * Updates a book stock's status/location/customer, recording a loan/return in loan_history when the status crosses in/out of "booked".
      * @param bookId Book id.
      * @param stockId Stock id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param fields New status/location/customer.
      * @returns The updated stock's detail.
      */
     public async updateBookStock(
         bookId: string,
         stockId: string,
-        userId: number,
+        vaultId: number,
         fields: {status: number; location_id: number; customer_id: number | null | undefined}
     ): Promise<BookStockDetail | undefined> {
-        const locationOk = await new LocationRepository(this.pool).exists(fields.location_id, userId);
+        const locationOk = await new LocationRepository(this.pool).exists(fields.location_id, vaultId);
         if (!locationOk) {
             throw new NotFoundError("Location not found");
         }
 
         if (fields.customer_id) {
-            const customerOk = await new CustomerRepository(this.pool).exists(fields.customer_id, userId);
+            const customerOk = await new CustomerRepository(this.pool).exists(fields.customer_id, vaultId);
             if (!customerOk) {
                 throw new NotFoundError("Customer not found");
             }
         }
 
         const repo = new BookRepository(this.pool);
-        const previousStatus = await repo.getStockStatus(stockId, bookId, userId);
+        const previousStatus = await repo.getStockStatus(stockId, bookId, vaultId);
 
-        const rowsAffected = await repo.updateStock(bookId, stockId, userId, fields.status, fields.location_id, fields.customer_id);
+        const rowsAffected = await repo.updateStock(bookId, stockId, vaultId, fields.status, fields.location_id, fields.customer_id);
         if (rowsAffected !== 1) {
             // Original route sent a bare 500 here but (bug) never returned, so
             // execution continued into the same response - not faithfully
@@ -583,13 +583,13 @@ export class BookService {
             throw new Error("Book stock update affected an unexpected number of rows");
         }
 
-        const stock = await repo.findStockDetail(stockId, userId);
+        const stock = await repo.findStockDetail(stockId, vaultId);
 
         const newStatus = Number(fields.status);
         if (stock && Number(previousStatus) !== 2 && newStatus === 2) {
-            await new LoanHistoryRepository(this.pool).recordLoan(userId, stock.code, Number(fields.customer_id));
+            await new LoanHistoryRepository(this.pool).recordLoan(vaultId, stock.code, Number(fields.customer_id));
         } else if (stock && Number(previousStatus) === 2 && newStatus !== 2) {
-            await new LoanHistoryRepository(this.pool).recordReturn(userId, stock.code);
+            await new LoanHistoryRepository(this.pool).recordReturn(vaultId, stock.code);
         }
 
         return stock ?? undefined;
@@ -598,11 +598,11 @@ export class BookService {
     /**
      * Looks up a book + stock by the stock's code, for the "add stock via scan" flow.
      * @param bookCode Stock code.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The book/stock summary.
      */
-    public async getAddMetadata(bookCode: string, userId: number): Promise<IBookAddMd> {
-        const row = await new BookRepository(this.pool).findStockAndBookByCode(bookCode, userId);
+    public async getAddMetadata(bookCode: string, vaultId: number): Promise<IBookAddMd> {
+        const row = await new BookRepository(this.pool).findStockAndBookByCode(bookCode, vaultId);
         if (!row) {
             throw new NotFoundError("Book stock not found");
         }
@@ -621,16 +621,16 @@ export class BookService {
      * UPDATE + recordReturn pairs - same atomicity fix as
      * CustomerService.lendBooksToCustomer / returnBookFromCustomer.
      *
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param bookStockCodes Stock codes to return.
      */
-    public async bulkReturnBooks(userId: number, bookStockCodes: string[]): Promise<void> {
+    public async bulkReturnBooks(vaultId: number, bookStockCodes: string[]): Promise<void> {
         await withTransaction(this.pool, async (client: PoolClient) => {
             const txBookRepo = new BookRepository(client);
             const txLoanHistoryRepo = new LoanHistoryRepository(client);
             for (const bookStockCode of bookStockCodes) {
-                await txBookRepo.returnStockByCode(bookStockCode, userId);
-                await txLoanHistoryRepo.recordReturn(userId, bookStockCode);
+                await txBookRepo.returnStockByCode(bookStockCode, vaultId);
+                await txLoanHistoryRepo.recordReturn(vaultId, bookStockCode);
             }
         });
     }

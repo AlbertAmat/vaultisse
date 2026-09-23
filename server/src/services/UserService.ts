@@ -2,11 +2,12 @@ import {Pool} from "pg";
 import {appService} from "../AppService";
 import {UserRepository} from "../repositories/UserRepository";
 import {UserSessionRepository} from "../repositories/UserSessionRepository";
+import {VaultRepository} from "../repositories/VaultRepository";
 import {ActivityLogRepository, ActivityAction} from "../repositories/ActivityLogRepository";
 import {withTransaction} from "../repositories/withTransaction";
 import {TwoFactorAuth} from "../utils/TwoFactorAuth";
 import {ActivityLogEntry, ProfileUpdateFields, TwoFactorSetup, UserSession} from "../types/user";
-import {NotFoundError, UnauthorizedError, ValidationError} from "../errors/DomainError";
+import {ConflictError, NotFoundError, UnauthorizedError, ValidationError} from "../errors/DomainError";
 
 /** Thrown by changePassword when the new password fails a strength rule - carries the same `missing` list the original inline check returned. */
 export class WeakPasswordError extends ValidationError {
@@ -122,9 +123,26 @@ export class UserService {
 
     /**
      * Deletes the caller's account after re-verifying their password.
+     *
+     * Any vault this account is the *sole* member of (its personal library,
+     * for almost every account - see AuthService.register's bootstrap) is
+     * torn down first, content and all: `books`/`customers`/etc. only
+     * restrict-delete their vault, they don't cascade from it, so the vault
+     * itself can't just be left for `ON DELETE CASCADE` from `users` to
+     * clean up (see VaultRepository.deleteVaultCompletely). A vault shared
+     * with other members is left untouched even if this account is its only
+     * admin - deciding what happens to a shared vault when its one admin
+     * leaves is a Vault-management decision the caller should make
+     * explicitly (transfer admin, or promote another member) before
+     * deleting their own account, not something account deletion should
+     * decide silently. `trg_vault_min_one_admin` (assets/db/upgrade/1.3.0.sql)
+     * then rejects the whole deletion with a clear error, mapped to
+     * ConflictError below, rather than a raw 500.
+     *
      * @param userId Owning user's id.
      * @param password Current password, for re-authentication.
      * @throws UnauthorizedError (401, matching the original route) if `password` doesn't match.
+     * @throws ConflictError (409) if this account is the sole admin of a vault it shares with other members.
      */
     public async deleteAccount(userId: number, password: string): Promise<void> {
         const repo = new UserRepository(this.pool);
@@ -132,7 +150,22 @@ export class UserService {
         if (!hash || !(await appService.comparePassword(password, hash))) {
             throw new UnauthorizedError("Invalid password.");
         }
-        await repo.deleteAccount(userId);
+
+        try {
+            await withTransaction(this.pool, async (client) => {
+                const vaultRepo = new VaultRepository(client);
+                const soleVaultIds = await vaultRepo.findSoleMemberVaultIds(userId);
+                for (const vaultId of soleVaultIds) {
+                    await vaultRepo.deleteVaultCompletely(vaultId);
+                }
+                await new UserRepository(client).deleteAccount(userId);
+            });
+        } catch (error: any) {
+            if (error.code === "P0001") {
+                throw new ConflictError("You're the only admin of a shared vault - transfer admin to another member, or delete the vault, before deleting your account.");
+            }
+            throw error;
+        }
     }
 
     /**

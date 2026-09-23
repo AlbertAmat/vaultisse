@@ -4,7 +4,7 @@
  * =============================================================================
  * Mounted at `/api/rest/book` (see server/src/routes/Routes.ts).
  *
- * Owns everything related to a user's book catalog:
+ * Owns everything related to a vault's book catalog:
  *  - searching/listing/reading/updating/deleting `books`
  *  - creating books either manually or automatically from an ISBN lookup
  *    (Open Library, optional Google Books, Wikipedia, ISBN store fallback)
@@ -13,7 +13,7 @@
  *
  * Every route in this file requires a valid session - see `requireAuth` in
  * server/src/middlewares/AuthMiddleware.ts. All queries are additionally
- * scoped by `user_id` so one user can never read/modify another user's data.
+ * scoped by `vault_id` (issue #7) so one vault can never read/modify another vault's data.
  *
  * See BookController/BookService/BookRepository (+ BookMetadataRepository
  * for the external ISBN lookup) for the actual request handling, business

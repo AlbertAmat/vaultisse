@@ -19,8 +19,8 @@ export class CategoryController {
      */
     public async list(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const categories = await new CategoryService(this.pool).listCategories(userId);
+            const vaultId = appService.getSessionVault(req);
+            const categories = await new CategoryService(this.pool).listCategories(vaultId);
             res.status(200).json(categories);
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -35,9 +35,9 @@ export class CategoryController {
      */
     public async create(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Adding category with name ${req.body.name}`);
-            const category = await new CategoryService(this.pool).createCategory(userId, req.body.name);
+            const category = await new CategoryService(this.pool).createCategory(vaultId, req.body.name);
             res.status(200).json(category);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -58,9 +58,9 @@ export class CategoryController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Updating category ${categoryId}`);
-            const category = await new CategoryService(this.pool).renameCategory(Number(categoryId), userId, req.body.name);
+            const category = await new CategoryService(this.pool).renameCategory(Number(categoryId), vaultId, req.body.name);
             res.status(200).json(category);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -78,8 +78,8 @@ export class CategoryController {
         appService.getLogger().debug(`Delete category, id: ${id}`);
 
         try {
-            const userId = appService.getSessionUser(req);
-            await new CategoryService(this.pool).deleteCategory(id, userId);
+            const vaultId = appService.getSessionVault(req);
+            await new CategoryService(this.pool).deleteCategory(id, vaultId);
             res.send({message: "Category deleted successfully"});
         } catch (e) {
             if (e instanceof DomainError) {

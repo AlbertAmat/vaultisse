@@ -14,17 +14,17 @@ export class LoanRepository {
 
     /**
      * Lists books currently on loan (`book_stocks.status = 2`), paginated and optionally filtered by customer group/date range.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param filter Pagination and optional group/date-range filters.
      * @returns The total matching row count (across all pages) and this page's rows.
      */
-    public async list(userId: number, filter: LoanListFilter): Promise<{total: number; loans: Loan[]}> {
+    public async list(vaultId: number, filter: LoanListFilter): Promise<{total: number; loans: Loan[]}> {
         const page = Math.max(0, filter.page ?? 0);
         const skip = LoanRepository.MAX_ROWS * page;
 
-        const params: any[] = [userId];
+        const params: any[] = [vaultId];
         const conditions: string[] = [
-            `bs.user_id = $1`,
+            `bs.vault_id = $1`,
             `bs.status = 2`
         ];
 
@@ -41,9 +41,9 @@ export class LoanRepository {
         const whereClause = `WHERE ${conditions.join(' AND ')}`;
         const fromClause = `
             FROM book_stocks bs
-                     JOIN books b ON b.id = bs.book_id AND b.user_id = bs.user_id
-                     JOIN customers c ON c.id = bs.customer_id AND c.user_id = bs.user_id
-                     LEFT JOIN customer_groups cg ON cg.id = c.group_id AND cg.user_id = bs.user_id
+                     JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
+                     JOIN customers c ON c.id = bs.customer_id AND c.vault_id = bs.vault_id
+                     LEFT JOIN customer_groups cg ON cg.id = c.group_id AND cg.vault_id = bs.vault_id
         `;
 
         const totalResult = await this.db.query(`SELECT COUNT(*) ${fromClause} ${whereClause}`, params);
@@ -72,14 +72,14 @@ export class LoanRepository {
 
     /**
      * Unpaginated `loan_history` export for a date range, optionally filtered by customer group/customer, for the Loans view's Excel report.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param filter Required date range and optional group/customer filters.
      * @returns Every matching loan-history row.
      */
-    public async report(userId: number, filter: LoanReportFilter): Promise<LoanHistoryRow[]> {
-        const params: any[] = [userId, filter.dateFrom, filter.dateTo];
+    public async report(vaultId: number, filter: LoanReportFilter): Promise<LoanHistoryRow[]> {
+        const params: any[] = [vaultId, filter.dateFrom, filter.dateTo];
         const conditions: string[] = [
-            `user_id = $1`,
+            `vault_id = $1`,
             `loaned_at >= $2::date`,
             `loaned_at < $3::date + INTERVAL '1 day'`
         ];

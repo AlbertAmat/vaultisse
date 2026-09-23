@@ -474,6 +474,32 @@ export class AppService {
     }
 
     /**
+     * Get the caller's active vault id (issue #7, multi-user vault sharing),
+     * as attached to `req` by `requireAuth`/`requireAuthPage`
+     * (server/src/middlewares/AuthMiddleware.ts) from the session user's
+     * `users.last_used_vault_id`. Every catalog resource (books, categories,
+     * authors, locations, customers, loans, dashboard) is scoped to this,
+     * not to the user directly.
+     *
+     * Unlike `getSessionUser`, this doesn't re-verify the JWT itself - it
+     * trusts `req.vaultId`, which only a route behind `requireAuth`/
+     * `requireAuthPage` ever has set. Every controller that calls this is
+     * mounted behind one of those.
+     *
+     * @param req Express request.
+     * @throws Error if the caller has no active vault (shouldn't happen -
+     *   registration/OIDC JIT-create always provisions one - but a route
+     *   mounted without requireAuth, or a user predating that guarantee in
+     *   test setup, could hit this).
+     */
+    public getSessionVault(req: Request): number {
+        if (req.vaultId === undefined) {
+            throw new Error("No active vault for this session");
+        }
+        return req.vaultId;
+    }
+
+    /**
      * Create a signed JWT session token. tokenVersion must match the user's
      * current users.token_version at verification time (see requireAuth) -
      * bumping the DB column invalidates every previously issued token for

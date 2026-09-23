@@ -90,11 +90,11 @@ export class ImportService {
      * own transaction) - a bad row is skipped and reported rather than
      * failing the whole import.
      *
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param books Parsed rows to import.
      * @returns The import result summary and the ids of successfully-imported books.
      */
-    public async importBooks(userId: number, books: IImportedBook[]): Promise<{result: ImportResult; importedIds: number[]}> {
+    public async importBooks(vaultId: number, books: IImportedBook[]): Promise<{result: ImportResult; importedIds: number[]}> {
         let imported = 0;
         let skipped = 0;
         const errors: ImportError[] = [];
@@ -113,8 +113,8 @@ export class ImportService {
 
                     const repo = new ImportRepository(client);
                     const isDuplicate = book.isbn
-                        ? await repo.existsByIsbn(book.isbn, userId)
-                        : await repo.existsByName(book.name, userId);
+                        ? await repo.existsByIsbn(book.isbn, vaultId)
+                        : await repo.existsByName(book.name, vaultId);
 
                     if (isDuplicate) {
                         await client.query("ROLLBACK");
@@ -123,7 +123,7 @@ export class ImportService {
                     }
 
                     const formatId = await repo.findFormatId(book.formatName);
-                    const categoryId = await repo.ensureCategory(book.categoryName ?? null, userId);
+                    const categoryId = await repo.ensureCategory(book.categoryName ?? null, vaultId);
                     await new BookRepository(client).ensureLanguage(book.languageCode ?? null);
 
                     // CSV Cover column only (Vaultisse origin). Do not resolve a
@@ -133,7 +133,7 @@ export class ImportService {
                     // running - see ImportEnrichmentService for the deferred fill.
                     const imageUrl = book.imageUrl && BookService.isAllowedImageUrl(book.imageUrl) ? book.imageUrl : null;
 
-                    const bookId = await repo.insertBook(userId, {
+                    const bookId = await repo.insertBook(vaultId, {
                         name: this.truncate(book.name, 255) as string,
                         description: book.description ?? null,
                         imageUrl,
@@ -147,10 +147,10 @@ export class ImportService {
                         readingStatus: book.readingStatus ?? null,
                     });
 
-                    await repo.ensureAuthors(bookId, book.authors, userId);
+                    await repo.ensureAuthors(bookId, book.authors, vaultId);
 
                     for (const locationName of book.locations ?? []) {
-                        await repo.addStockAtLocation(bookId, locationName, userId);
+                        await repo.addStockAtLocation(bookId, locationName, vaultId);
                     }
 
                     await client.query("COMMIT");

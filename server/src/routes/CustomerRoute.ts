@@ -8,7 +8,7 @@
  *  - `customers`: CRUD, and lending/returning books to a customer (a "loan"
  *    is a `book_stocks` row with `status = 2` and `customer_id` set to them).
  *
- * All routes require auth and are scoped to the caller's `user_id`. See
+ * All routes require auth and are scoped to the caller's active vault (`vault_id`, issue #7). See
  * CustomerController/CustomerService/CustomerRepository for the actual
  * request handling, business rules, and SQL respectively.
  */

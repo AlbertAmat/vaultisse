@@ -19,8 +19,8 @@ export class AuthorController {
      */
     public async list(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const authors = await new AuthorService(this.pool).listAuthors(userId);
+            const vaultId = appService.getSessionVault(req);
+            const authors = await new AuthorService(this.pool).listAuthors(vaultId);
             res.status(200).json(authors);
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -35,9 +35,9 @@ export class AuthorController {
      */
     public async search(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`search authors with query ${req.body.query}`);
-            const authors = await new AuthorService(this.pool).searchAuthors(userId, req.body.query);
+            const authors = await new AuthorService(this.pool).searchAuthors(vaultId, req.body.query);
             res.status(200).json(authors);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -52,9 +52,9 @@ export class AuthorController {
      */
     public async create(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Adding author with name ${req.body.name}`);
-            const author = await new AuthorService(this.pool).createAuthor(userId, req.body.name);
+            const author = await new AuthorService(this.pool).createAuthor(vaultId, req.body.name);
             res.status(200).json(author);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -75,9 +75,9 @@ export class AuthorController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Updating author ${authorId}`);
-            const author = await new AuthorService(this.pool).renameAuthor(authorId, userId, req.body.name);
+            const author = await new AuthorService(this.pool).renameAuthor(authorId, vaultId, req.body.name);
             res.status(200).json(author);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -95,8 +95,8 @@ export class AuthorController {
         appService.getLogger().debug(`Delete author, id: ${id}`);
 
         try {
-            const userId = appService.getSessionUser(req);
-            await new AuthorService(this.pool).deleteAuthor(id, userId);
+            const vaultId = appService.getSessionVault(req);
+            await new AuthorService(this.pool).deleteAuthor(id, vaultId);
             res.send({message: "Author deleted successfully"});
         } catch (e) {
             if (e instanceof DomainError) {

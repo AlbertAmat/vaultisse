@@ -4,10 +4,14 @@ import {appService} from "../AppService";
 import {AuthRepository} from "../repositories/AuthRepository";
 import {OidcRepository} from "../repositories/OidcRepository";
 import {OidcUserService} from "./OidcUserService";
+import {UserRepository} from "../repositories/UserRepository";
 import {UserSessionRepository} from "../repositories/UserSessionRepository";
+import {VaultRepository} from "../repositories/VaultRepository";
 import {ActivityLogRepository, ActivityAction} from "../repositories/ActivityLogRepository";
 import {TwoFactorAuth} from "../utils/TwoFactorAuth";
+import {withTransaction} from "../repositories/withTransaction";
 import {UnauthorizedError, ValidationError} from "../errors/DomainError";
+import {VaultRoleCode, VaultUserStatus} from "../types/vault";
 
 export type LoginOutcome =
     | {kind: "success"; token: string}
@@ -242,12 +246,24 @@ export class AuthService {
         const requiresApproval = process.env.REGISTRATION_REQUIRES_APPROVAL === "true";
 
         try {
-            await new AuthRepository(this.pool).register({
-                name: fields.name,
-                code: fields.userName,
-                email: fields.email,
-                passwordHash: hashedPassword,
-                disabled: requiresApproval,
+            await withTransaction(this.pool, async (client) => {
+                const newUserId = await new AuthRepository(client).register({
+                    name: fields.name,
+                    code: fields.userName,
+                    email: fields.email,
+                    passwordHash: hashedPassword,
+                    disabled: requiresApproval,
+                });
+
+                // Provision a personal vault (issue #7): every catalog
+                // resource is vault-scoped now, so a brand-new account
+                // needs somewhere of its own to put a book. Mirrors
+                // assets/db/upgrade/1.3.0.sql's backfill for pre-existing
+                // accounts - same name shape, same solo-admin membership.
+                const vaultRepo = new VaultRepository(client);
+                const vaultId = await vaultRepo.createVault(`${fields.name}'s library`, null);
+                await vaultRepo.addMember(vaultId, newUserId, VaultRoleCode.ADMIN, VaultUserStatus.ACCEPTED);
+                await new UserRepository(client).setActiveVault(newUserId, vaultId);
             });
         } catch (err: any) {
             if (err.code === "23505") { // PostgreSQL unique violation

@@ -10,84 +10,84 @@ export class CategoryRepository {
     }
 
     /**
-     * Lists every category belonging to `userId`.
-     * @param userId Owning user's id.
+     * Lists every category belonging to `vaultId`.
+     * @param vaultId Vault id.
      * @returns Every matching category.
      */
-    public async findAll(userId: number): Promise<Category[]> {
+    public async findAll(vaultId: number): Promise<Category[]> {
         const result = await this.db.query(
-            `SELECT id, name FROM categories WHERE user_id = $1`,
-            [userId]
+            `SELECT id, name FROM categories WHERE vault_id = $1`,
+            [vaultId]
         );
         return result.rows;
     }
 
     /**
-     * Looks up one category by id, scoped to `userId`.
+     * Looks up one category by id, scoped to `vaultId`.
      * @param id Category id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The category, or null if it doesn't exist or belongs to someone else.
      */
-    public async findById(id: number, userId: number): Promise<Category | null> {
+    public async findById(id: number, vaultId: number): Promise<Category | null> {
         const result = await this.db.query(
             `SELECT categories.id, categories.name
                FROM categories
               WHERE categories.id = $1
-                AND categories.user_id = $2`,
-            [id, userId]
+                AND categories.vault_id = $2`,
+            [id, vaultId]
         );
         return result.rows[0] ?? null;
     }
 
     /**
-     * Inserts a new category owned by `userId`.
-     * @param userId Owning user's id.
+     * Inserts a new category owned by `vaultId`.
+     * @param vaultId Vault id.
      * @param name Category name.
      * @returns The new row's id.
      */
-    public async create(userId: number, name: string): Promise<number> {
+    public async create(vaultId: number, name: string): Promise<number> {
         const result = await this.db.query(
-            "INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id",
-            [name, userId]
+            "INSERT INTO categories (name, vault_id) VALUES ($1, $2) RETURNING id",
+            [name, vaultId]
         );
         return result.rows[0].id;
     }
 
     /**
-     * Renames a category, scoped to `userId`.
+     * Renames a category, scoped to `vaultId`.
      * @param id Category id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name New name.
-     * @returns Rows affected - 0 if `id` doesn't exist or belongs to another user.
+     * @returns Rows affected - 0 if `id` doesn't exist or belongs to another vault.
      */
-    public async rename(id: number, userId: number, name: string): Promise<number> {
+    public async rename(id: number, vaultId: number, name: string): Promise<number> {
         const result = await this.db.query(
-            "UPDATE categories SET name = $1 WHERE id = $2 AND user_id = $3",
-            [name, id, userId]
+            "UPDATE categories SET name = $1 WHERE id = $2 AND vault_id = $3",
+            [name, id, vaultId]
         );
         return result.rowCount ?? 0;
     }
 
     /**
-     * Checks whether a category exists and belongs to `userId`.
+     * Checks whether a category exists and belongs to `vaultId`.
      * @param id Category id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching category exists.
      */
-    public async exists(id: number, userId: number): Promise<boolean> {
+    public async exists(id: number, vaultId: number): Promise<boolean> {
         const result = await this.db.query(
-            "SELECT id FROM categories WHERE id = $1 AND user_id = $2",
-            [id, userId]
+            "SELECT id FROM categories WHERE id = $1 AND vault_id = $2",
+            [id, vaultId]
         );
         return (result.rowCount ?? 0) > 0;
     }
 
     /**
-     * Deletes a category, scoped to `userId`. No-op if it doesn't exist or belongs to someone else.
+     * Deletes a category, scoped to `vaultId`. No-op if it doesn't exist or belongs to someone else.
      * @param id Category id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async remove(id: number, userId: number): Promise<void> {
-        await this.db.query("DELETE FROM categories WHERE id = $1 AND user_id = $2", [id, userId]);
+    public async remove(id: number, vaultId: number): Promise<void> {
+        await this.db.query("DELETE FROM categories WHERE id = $1 AND vault_id = $2", [id, vaultId]);
     }
 }

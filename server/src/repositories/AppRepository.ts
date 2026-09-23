@@ -19,22 +19,22 @@ export class AppRepository {
     }
 
     /**
-     * Lists `{id, name}` for every customer belonging to `userId`, for the policy payload's customer dropdown.
-     * @param userId Owning user's id.
+     * Lists `{id, name}` for every customer belonging to `vaultId`, for the policy payload's customer dropdown.
+     * @param vaultId Vault id.
      * @returns Every matching customer.
      */
-    public async getCustomerNames(userId: number): Promise<AppPolicyCustomer[]> {
-        const result = await this.db.query(`SELECT id, name FROM customers WHERE user_id = $1`, [userId]);
+    public async getCustomerNames(vaultId: number): Promise<AppPolicyCustomer[]> {
+        const result = await this.db.query(`SELECT id, name FROM customers WHERE vault_id = $1`, [vaultId]);
         return result.rows;
     }
 
     /**
-     * Lists `{id, name}` for every category belonging to `userId`, for the policy payload's category dropdown.
-     * @param userId Owning user's id.
+     * Lists `{id, name}` for every category belonging to `vaultId`, for the policy payload's category dropdown.
+     * @param vaultId Vault id.
      * @returns Every matching category.
      */
-    public async getCategoryNames(userId: number): Promise<AppPolicyCategory[]> {
-        const result = await this.db.query(`SELECT id, name FROM categories WHERE user_id = $1`, [userId]);
+    public async getCategoryNames(vaultId: number): Promise<AppPolicyCategory[]> {
+        const result = await this.db.query(`SELECT id, name FROM categories WHERE vault_id = $1`, [vaultId]);
         return result.rows;
     }
 
@@ -57,17 +57,17 @@ export class AppRepository {
     }
 
     /**
-     * Lists `{id, name, description, default}` for every location belonging to `userId`, for the policy payload's location dropdown.
-     * @param userId Owning user's id.
+     * Lists `{id, name, description, default}` for every location belonging to `vaultId`, for the policy payload's location dropdown.
+     * @param vaultId Vault id.
      * @returns Every matching location.
      */
-    public async getLocationSummaries(userId: number): Promise<AppPolicyLocation[]> {
+    public async getLocationSummaries(vaultId: number): Promise<AppPolicyLocation[]> {
         const result = await this.db.query(
             `SELECT id, name, description, "default"
                FROM locations
-              WHERE user_id = $1
+              WHERE vault_id = $1
               ORDER BY id`,
-            [userId]
+            [vaultId]
         );
         return result.rows;
     }

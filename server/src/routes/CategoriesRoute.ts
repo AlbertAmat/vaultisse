@@ -2,9 +2,9 @@
  * =============================================================================
  * CategoriesRoute
  * =============================================================================
- * Mounted at `/api/rest/category`. CRUD for the user's book `categories`
+ * Mounted at `/api/rest/category`. CRUD for the vault's book `categories`
  * (genres/shelving sections). All routes require auth and are scoped to the
- * caller's `user_id`. See CategoryController/CategoryService/CategoryRepository
+ * caller's active vault (`vault_id`, issue #7). See CategoryController/CategoryService/CategoryRepository
  * for the actual request handling, business rules, and SQL respectively.
  */
 import {Router} from 'express';

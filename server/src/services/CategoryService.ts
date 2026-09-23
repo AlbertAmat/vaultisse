@@ -13,23 +13,23 @@ export class CategoryService {
 
     /**
      * Lists the caller's categories.
-     * @param userId Owning user's id.
-     * @returns Every category belonging to `userId`.
+     * @param vaultId Vault id.
+     * @returns Every category belonging to `vaultId`.
      */
-    public async listCategories(userId: number): Promise<Category[]> {
-        return new CategoryRepository(this.pool).findAll(userId);
+    public async listCategories(vaultId: number): Promise<Category[]> {
+        return new CategoryRepository(this.pool).findAll(vaultId);
     }
 
     /**
      * Creates a category and returns the freshly-created row.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name Category name.
      * @returns The newly-created category.
      */
-    public async createCategory(userId: number, name: string): Promise<Category> {
+    public async createCategory(vaultId: number, name: string): Promise<Category> {
         const repo = new CategoryRepository(this.pool);
-        const id = await repo.create(userId, name);
-        const category = await repo.findById(id, userId);
+        const id = await repo.create(vaultId, name);
+        const category = await repo.findById(id, vaultId);
         if (!category) {
             throw new NotFoundError("Category not found after creation");
         }
@@ -50,14 +50,14 @@ export class CategoryService {
      * generic catch-all still produces the same 500 as before.
      *
      * @param id Category id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name New name.
      * @returns The renamed category.
      */
-    public async renameCategory(id: number, userId: number, name: string): Promise<Category> {
+    public async renameCategory(id: number, vaultId: number, name: string): Promise<Category> {
         const repo = new CategoryRepository(this.pool);
-        await repo.rename(id, userId, name);
-        const category = await repo.findById(id, userId);
+        await repo.rename(id, vaultId, name);
+        const category = await repo.findById(id, vaultId);
         if (!category) {
             throw new Error("Category not found after rename");
         }
@@ -67,14 +67,14 @@ export class CategoryService {
     /**
      * Deletes a category, throwing NotFoundError if it doesn't belong to the caller.
      * @param id Category id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async deleteCategory(id: number, userId: number): Promise<void> {
+    public async deleteCategory(id: number, vaultId: number): Promise<void> {
         const repo = new CategoryRepository(this.pool);
-        const found = await repo.exists(id, userId);
+        const found = await repo.exists(id, vaultId);
         if (!found) {
             throw new NotFoundError("Category not found");
         }
-        await repo.remove(id, userId);
+        await repo.remove(id, vaultId);
     }
 }

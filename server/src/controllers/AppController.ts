@@ -31,7 +31,7 @@ export class AppController {
     public async getPolicy(req: Request, res: Response): Promise<void> {
         try {
             const userId = appService.getSessionUser(req);
-            const policy = await new PolicyService(this.pool).getPolicy(userId, appService.getMaxImportFileSizeMb());
+            const policy = await new PolicyService(this.pool).getPolicy(userId, req.vaultId, appService.getMaxImportFileSizeMb());
             res.status(200).json(policy);
         } catch (err) {
             // The original handler had no top-level try/catch, so a failure in

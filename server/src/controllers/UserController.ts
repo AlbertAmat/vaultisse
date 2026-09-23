@@ -142,7 +142,7 @@ export class UserController {
             await new UserService(this.pool).deleteAccount(appService.getSessionUser(req), password);
             res.redirect("/login"); // Redirect to login page if user is not logged in
         } catch (err: any) {
-            if (err instanceof UnauthorizedError) {
+            if (err instanceof DomainError) {
                 res.status(err.httpStatus).json({message: err.message});
                 return;
             }

@@ -228,4 +228,74 @@ export class VaultRepository {
     public async removeMember(vaultId: number, userId: number): Promise<void> {
         await this.db.query("DELETE FROM vault_users WHERE vault_id = $1 AND user_id = $2", [vaultId, userId]);
     }
+
+    /**
+     * Lists every vault `userId` belongs to where they're the *only* member -
+     * used by UserService.deleteAccount to find which of a deleted account's
+     * vaults have no one else left depending on them (a shared vault the
+     * caller isn't the sole member of is left untouched, even if they're its
+     * only admin - see deleteVaultCompletely's own note on why that case
+     * isn't handled here).
+     * @param userId Member's id.
+     * @returns Every vault id where `userId` is the sole `vault_users` row.
+     */
+    public async findSoleMemberVaultIds(userId: number): Promise<number[]> {
+        const result = await this.db.query(
+            `SELECT vu.vault_id
+               FROM vault_users vu
+              WHERE vu.user_id = $1
+                AND (SELECT COUNT(*) FROM vault_users vu2 WHERE vu2.vault_id = vu.vault_id) = 1`,
+            [userId]
+        );
+        return result.rows.map((row: {vault_id: number}) => row.vault_id);
+    }
+
+    /**
+     * Fully tears down a vault: every table hanging off `vault_id` (books -
+     * which cascades book_stocks/book_authors/book_files - then customers,
+     * customer_groups, locations, categories, authors, and loan_history),
+     * then the vault row itself.
+     *
+     * `trg_vault_min_one_admin` (assets/db/upgrade/1.3.0.sql) exists to stop
+     * a vault being left admin-less while other members/content remain, not
+     * to allow tearing the whole thing down - it would otherwise block
+     * deleting this vault's own `vault_users` row (or the cascade from
+     * deleting `vault` itself) once no admins remain. Disabled for just that
+     * one statement, always re-enabled even on failure, and never left
+     * disabled across a `COMMIT` since a caller runs this inside its own
+     * transaction (see UserService.deleteAccount).
+     *
+     * Callers must have already confirmed nothing else depends on this vault
+     * (see findSoleMemberVaultIds) - this has no ownership/membership check
+     * of its own.
+     *
+     * @param vaultId Vault id to tear down completely.
+     */
+    public async deleteVaultCompletely(vaultId: number): Promise<void> {
+        await this.db.query("DELETE FROM books WHERE vault_id = $1", [vaultId]);
+        await this.db.query("DELETE FROM customers WHERE vault_id = $1", [vaultId]);
+        await this.db.query("DELETE FROM customer_groups WHERE vault_id = $1", [vaultId]);
+        await this.db.query("DELETE FROM locations WHERE vault_id = $1", [vaultId]);
+        await this.db.query("DELETE FROM categories WHERE vault_id = $1", [vaultId]);
+        await this.db.query("DELETE FROM authors WHERE vault_id = $1", [vaultId]);
+        await this.db.query("DELETE FROM loan_history WHERE vault_id = $1", [vaultId]);
+
+        // No try/finally re-enabling this on failure: ALTER TABLE ... TRIGGER
+        // is transactional DDL, so if any statement below throws, the whole
+        // transaction this runs in (see UserService.deleteAccount) rolls
+        // back and undoes the DISABLE along with everything else - a
+        // finally block here would instead run against an already-aborted
+        // transaction and mask the real error with "current transaction is
+        // aborted, commands ignored until end of transaction block".
+        await this.db.query("ALTER TABLE vault_users DISABLE TRIGGER trg_vault_min_one_admin");
+        await this.db.query("DELETE FROM vault_users WHERE vault_id = $1", [vaultId]);
+        // users.last_used_vault_id references this vault too (set on login/
+        // register - see AppService/AuthService) - clear it for anyone still
+        // pointing at it (normally just the caller, about to be deleted
+        // right after this by UserService.deleteAccount) so the FK doesn't
+        // block the vault delete below.
+        await this.db.query("UPDATE users SET last_used_vault_id = NULL WHERE last_used_vault_id = $1", [vaultId]);
+        await this.db.query("DELETE FROM vault WHERE id = $1", [vaultId]);
+        await this.db.query("ALTER TABLE vault_users ENABLE TRIGGER trg_vault_min_one_admin");
+    }
 }
