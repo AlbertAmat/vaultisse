@@ -61,6 +61,14 @@ describe("GET /book/:id", () => {
         const res = await user.agent.get("/api/rest/book/999999999");
         expect(res.status).toBe(404);
     });
+
+    it("reports who added the book (created_by)", async () => {
+        const createRes = await user.agent.post("/api/rest/book").field("name", "Attributed Book");
+        const id = createRes.body;
+
+        const res = await user.agent.get(`/api/rest/book/${id}`);
+        expect(res.body.created_by).toBe(user.name);
+    });
 });
 
 describe("PUT /book/:id", () => {

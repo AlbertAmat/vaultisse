@@ -24,6 +24,25 @@ describe("registration bootstrap", () => {
     });
 });
 
+describe("GET /vault/roles", () => {
+    it("lists the four fixed roles with their permissions, least to most privileged", async () => {
+        const res = await admin.agent.get("/api/rest/vault/roles");
+        expect(res.status).toBe(200);
+
+        const byName = Object.fromEntries(res.body.map((r: any) => [r.name, r]));
+        expect(Object.keys(byName).sort()).toEqual(["admin", "borrower", "normal", "readonly"]);
+
+        expect(byName.readonly).toMatchObject({can_borrow: false, can_edit_catalog: false, can_manage_members: false, can_manage_settings: false});
+        expect(byName.borrower).toMatchObject({can_borrow: true, can_edit_catalog: false, can_manage_members: false, can_manage_settings: false});
+        expect(byName.normal).toMatchObject({can_borrow: true, can_edit_catalog: true, can_manage_members: false, can_manage_settings: false});
+        expect(byName.admin).toMatchObject({can_borrow: true, can_edit_catalog: true, can_manage_members: true, can_manage_settings: true});
+
+        // rank, not code, is what sorts least to most permissive.
+        const byRank = [...res.body].sort((a: any, b: any) => a.rank - b.rank).map((r: any) => r.name);
+        expect(byRank).toEqual(["readonly", "borrower", "normal", "admin"]);
+    });
+});
+
 describe("vault CRUD", () => {
     it("creates a vault with the caller as its first (admin) member", async () => {
         const createRes = await admin.agent.post("/api/rest/vault").send({name: "Shared Library", description: "Test"});
@@ -75,6 +94,14 @@ describe("vault CRUD", () => {
 
         const deleteRes = await admin.agent.delete(`/api/rest/vault/${vaultId}`);
         expect(deleteRes.status).toBe(409);
+    });
+
+    it("404s fetching a vault the caller isn't a member of at all", async () => {
+        const outsider = await createAuthenticatedUser(app, "Outsider");
+        const createRes = await admin.agent.post("/api/rest/vault").send({name: "Not yours"});
+
+        const res = await outsider.agent.get(`/api/rest/vault/${createRes.body.id}`);
+        expect(res.status).toBe(404);
     });
 });
 
@@ -191,6 +218,65 @@ describe("member management", () => {
 
         const res = await admin.agent.delete(`/api/rest/vault/${vaultId}/members/${adminPolicy.body.user.id}`);
         expect(res.status).toBe(400);
+    });
+
+    it("rejects a pending join request, leaving the member excluded from the vault", async () => {
+        const {vaultId, bob, bobId} = await createVaultWithPendingBob();
+
+        const rejectRes = await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 2});
+        expect(rejectRes.status).toBe(200);
+
+        const membersRes = await admin.agent.get(`/api/rest/vault/${vaultId}/members`);
+        expect(membersRes.body).toEqual(expect.arrayContaining([
+            expect.objectContaining({user_id: bobId, status: 2}),
+        ]));
+
+        // Still not an accepted member - listing the vault's members (or
+        // anything else vault-scoped) is refused, same as if never invited.
+        const bobMembersRes = await bob.agent.get(`/api/rest/vault/${vaultId}/members`);
+        expect(bobMembersRes.status).toBe(404);
+    });
+
+    it("a pending (not-yet-accepted) member can't list the vault's members", async () => {
+        const {vaultId, bob} = await createVaultWithPendingBob();
+        const res = await bob.agent.get(`/api/rest/vault/${vaultId}/members`);
+        expect(res.status).toBe(404);
+    });
+
+    it("400s updating a member with neither role nor status", async () => {
+        const {vaultId, bobId} = await createVaultWithPendingBob();
+        const res = await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({});
+        expect(res.status).toBe(400);
+    });
+
+    it("400s updating a member with an invalid status value", async () => {
+        const {vaultId, bobId} = await createVaultWithPendingBob();
+        const res = await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 99});
+        expect(res.status).toBe(400);
+    });
+
+    it("404s updating someone who was never a member of the vault", async () => {
+        const createRes = await admin.agent.post("/api/rest/vault").send({name: "Shared Library"});
+        const vaultId = createRes.body.id;
+        const outsider = await createAuthenticatedUser(app, "Outsider");
+        const outsiderPolicy = await outsider.agent.get("/api/rest/app/policy");
+
+        const updateRes = await admin.agent.put(`/api/rest/vault/${vaultId}/members/${outsiderPolicy.body.user.id}`).send({status: 1});
+        expect(updateRes.status).toBe(404);
+    });
+
+    it("removing someone who was never a member of the vault is a no-op, not an error", async () => {
+        // Unlike updateMember, VaultRepository.removeMember never checks
+        // whether it actually deleted a row - DELETE FROM ... WHERE (no
+        // match) is silently a no-op, so this "succeeds" (200) same as a
+        // real removal would.
+        const createRes = await admin.agent.post("/api/rest/vault").send({name: "Shared Library"});
+        const vaultId = createRes.body.id;
+        const outsider = await createAuthenticatedUser(app, "Outsider");
+        const outsiderPolicy = await outsider.agent.get("/api/rest/app/policy");
+
+        const removeRes = await admin.agent.delete(`/api/rest/vault/${vaultId}/members/${outsiderPolicy.body.user.id}`);
+        expect(removeRes.status).toBe(200);
     });
 });
 
