@@ -1,4 +1,6 @@
 export interface UserProfile {
+    /** Numeric account id - e.g. matches `vault_users.user_id` for VaultsCard.vue to tell "my own row" apart from other members. */
+    id: number;
     code: string;
     name: string;
     email: string;

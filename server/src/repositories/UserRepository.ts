@@ -18,7 +18,8 @@ export class UserRepository {
      */
     public async getProfile(userId: number): Promise<UserProfile> {
         const result = await this.db.query(
-            `SELECT u.code,
+            `SELECT u.id,
+                    u.code,
                     u.name,
                     u.email,
                     u.language,

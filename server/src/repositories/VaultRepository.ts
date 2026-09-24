@@ -111,11 +111,30 @@ export class VaultRepository {
     }
 
     /**
-     * Deletes a vault. Blocked at the DB level (FK RESTRICT) while it still owns any content.
+     * Deletes a vault. Blocked at the DB level (FK RESTRICT, surfaced as
+     * Postgres error code 23503 - see VaultService.deleteVault) while it
+     * still owns any content.
+     *
+     * `trg_vault_min_one_admin` (assets/db/upgrade/1.3.0.sql) exists to stop
+     * a vault being left admin-less while it still has other members, not
+     * to allow deleting the vault outright - it would otherwise block the
+     * `ON DELETE CASCADE` this triggers on the vault's own `vault_users`
+     * rows too (removing the last one always looks like "removing the last
+     * admin"). Disabled for just the delete itself, always re-enabled
+     * afterward regardless of outcome - this repository is never called
+     * inside a shared transaction (see the one caller, VaultService.deleteVault),
+     * so a failed delete here doesn't abort anything the re-enable would
+     * then run against.
+     *
      * @param vaultId Vault id.
      */
     public async removeVault(vaultId: number): Promise<void> {
-        await this.db.query("DELETE FROM vault WHERE id = $1", [vaultId]);
+        await this.db.query("ALTER TABLE vault_users DISABLE TRIGGER trg_vault_min_one_admin");
+        try {
+            await this.db.query("DELETE FROM vault WHERE id = $1", [vaultId]);
+        } finally {
+            await this.db.query("ALTER TABLE vault_users ENABLE TRIGGER trg_vault_min_one_admin");
+        }
     }
 
     /**
@@ -222,11 +241,35 @@ export class VaultRepository {
     /**
      * Removes a member from a vault (also used for a member leaving on their own).
      * The DB trigger `trg_vault_min_one_admin` rejects removing a vault's last admin.
+     *
+     * Also reassigns `users.last_used_vault_id` (falling back to another
+     * vault this user still belongs to, or NULL if none) when it pointed at
+     * `vaultId` - AuthMiddleware resolves every request's `req.vaultId`
+     * fresh from that column, so leaving it dangling here wouldn't just
+     * block deleting the vault later (it has no `ON DELETE` clause), it
+     * would leave this user's *next request* still resolving into a vault
+     * they were just removed from. One statement, not a separate
+     * check-then-update: the two CTEs run against the same pre-statement
+     * snapshot, so `fallback` explicitly excludes `vaultId` rather than
+     * relying on `removed` having already run.
+     *
      * @param vaultId Vault id.
      * @param userId Member's id.
      */
     public async removeMember(vaultId: number, userId: number): Promise<void> {
-        await this.db.query("DELETE FROM vault_users WHERE vault_id = $1 AND user_id = $2", [vaultId, userId]);
+        await this.db.query(
+            `WITH removed AS (
+                 DELETE FROM vault_users WHERE vault_id = $1 AND user_id = $2 RETURNING user_id
+             ), fallback AS (
+                 SELECT vault_id FROM vault_users WHERE user_id = $2 AND vault_id != $1 ORDER BY vault_id LIMIT 1
+             )
+             UPDATE users
+                SET last_used_vault_id = (SELECT vault_id FROM fallback)
+              WHERE id = $2
+                AND last_used_vault_id = $1
+                AND EXISTS (SELECT 1 FROM removed)`,
+            [vaultId, userId]
+        );
     }
 
     /**
