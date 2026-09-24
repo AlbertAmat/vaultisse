@@ -26,4 +26,6 @@ export default interface IBook extends IBookItem {
     date_updated: string;
     /** This book's backed-up ebook files, up to one per type (epub/pdf/mobi). */
     files: IBookFile[];
+    /** Display name of whoever added this book to the vault, or null if unknown (predates tracking, or that account has since been deleted). */
+    created_by: string | null;
 }

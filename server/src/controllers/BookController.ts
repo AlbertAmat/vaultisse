@@ -282,7 +282,8 @@ export class BookController {
     public async create(req: Request, res: Response): Promise<void> {
         try {
             const vaultId = appService.getSessionVault(req);
-            const bookId = await new BookService(this.pool).createBook(vaultId, {
+            const userId = appService.getSessionUser(req);
+            const bookId = await new BookService(this.pool).createBook(vaultId, userId, {
                 name: req.body.name,
                 description: req.body.description,
                 isbn: req.body.isbn,
@@ -307,8 +308,10 @@ export class BookController {
     public async createFromIsbn(req: Request, res: Response): Promise<void> {
         try {
             const vaultId = appService.getSessionVault(req);
+            const userId = appService.getSessionUser(req);
             const bookId = await new BookService(this.pool).createBookFromIsbn(
                 vaultId,
+                userId,
                 req.params.isbn,
                 req.body.location,
                 appService.getGoogleApiKey(),

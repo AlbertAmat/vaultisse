@@ -91,10 +91,11 @@ export class ImportService {
      * failing the whole import.
      *
      * @param vaultId Vault id.
+     * @param userId Acting user's id, recorded as `books.user_created` for every successfully-imported row.
      * @param books Parsed rows to import.
      * @returns The import result summary and the ids of successfully-imported books.
      */
-    public async importBooks(vaultId: number, books: IImportedBook[]): Promise<{result: ImportResult; importedIds: number[]}> {
+    public async importBooks(vaultId: number, userId: number, books: IImportedBook[]): Promise<{result: ImportResult; importedIds: number[]}> {
         let imported = 0;
         let skipped = 0;
         const errors: ImportError[] = [];
@@ -133,7 +134,7 @@ export class ImportService {
                     // running - see ImportEnrichmentService for the deferred fill.
                     const imageUrl = book.imageUrl && BookService.isAllowedImageUrl(book.imageUrl) ? book.imageUrl : null;
 
-                    const bookId = await repo.insertBook(vaultId, {
+                    const bookId = await repo.insertBook(vaultId, userId, {
                         name: this.truncate(book.name, 255) as string,
                         description: book.description ?? null,
                         imageUrl,

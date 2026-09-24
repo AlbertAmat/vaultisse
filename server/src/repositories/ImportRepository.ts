@@ -136,10 +136,10 @@ export class ImportRepository {
      * @param fields Imported book fields.
      * @returns The new row's id.
      */
-    public async insertBook(vaultId: number, fields: InsertImportedBookFields): Promise<number> {
+    public async insertBook(vaultId: number, userId: number, fields: InsertImportedBookFields): Promise<number> {
         const result = await this.db.query(
-            `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, reading_status, vault_id)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, reading_status, vault_id, user_created)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
              RETURNING id`,
             [
                 fields.name,
@@ -154,6 +154,7 @@ export class ImportRepository {
                 fields.pages,
                 fields.readingStatus,
                 vaultId,
+                userId,
             ]
         );
         return result.rows[0].id;

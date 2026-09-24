@@ -200,6 +200,7 @@ export class BookRepository {
                    books.pages,
                    books.format_id,
                    books.reading_status,
+                   creator.name AS created_by,
                    COALESCE(
                            json_agg(
                                DISTINCT jsonb_build_object(
@@ -243,6 +244,11 @@ export class BookRepository {
                      LEFT JOIN book_authors ON books.id = book_authors.book_id
                      LEFT JOIN authors ON book_authors.author_id = authors.id
                      LEFT JOIN book_files ON books.id = book_files.book_id AND book_files.vault_id = $2
+                     -- Not scoped to vault_id like the others above: a book's
+                     -- creator (audit trail only, see assets/db/upgrade/1.3.0.sql)
+                     -- may since have left the vault, but the name they added
+                     -- it under is still worth showing.
+                     LEFT JOIN users creator ON creator.id = books.user_created
             WHERE books.id = $1
               AND books.vault_id = $2
             GROUP BY books.id,
@@ -258,7 +264,8 @@ export class BookRepository {
                      books.date_updated,
                      books.pages,
                      books.format_id,
-                     books.reading_status;
+                     books.reading_status,
+                     creator.name;
         `, [id, vaultId]);
 
         if (result.rows.length !== 1) {
@@ -408,10 +415,10 @@ export class BookRepository {
      * @param book Name/description/image/isbn fields.
      * @returns The new row's id.
      */
-    public async insert(vaultId: number, book: {name: string; description: string; imageUrl: string; isbn: string}): Promise<number> {
+    public async insert(vaultId: number, userId: number, book: {name: string; description: string; imageUrl: string; isbn: string}): Promise<number> {
         const result = await this.db.query(
-            "INSERT INTO books (name, description, image_url, isbn, vault_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-            [book.name, book.description, book.imageUrl, book.isbn, vaultId]
+            "INSERT INTO books (name, description, image_url, isbn, vault_id, user_created) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+            [book.name, book.description, book.imageUrl, book.isbn, vaultId, userId]
         );
         return result.rows[0].id;
     }
@@ -564,12 +571,12 @@ export class BookRepository {
      * @param vaultId Vault id.
      * @returns The new row's id.
      */
-    public async insertFull(book: IsbnBookInput, vaultId: number): Promise<number> {
+    public async insertFull(book: IsbnBookInput, vaultId: number, userId: number): Promise<number> {
         const result = await this.db.query(
             `INSERT INTO books (
                 name, description, image_url, isbn, category_id,
-                publisher, published_date, language_code, pages, vault_id
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+                publisher, published_date, language_code, pages, vault_id, user_created
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
             RETURNING id`,
             [
                 book.name,
@@ -582,6 +589,7 @@ export class BookRepository {
                 book.languageCode,
                 book.pages,
                 vaultId,
+                userId,
             ]
         );
         return result.rows[0].id;

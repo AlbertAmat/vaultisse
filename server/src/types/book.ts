@@ -72,6 +72,8 @@ export interface BookDetail {
     files: BookFileMeta[];
     stocks: BookStockDetail[];
     authors: BookAuthor[];
+    /** Display name of whoever added this book to the vault, or null if unknown (predates tracking, or that account has since been deleted). */
+    created_by: string | null;
 }
 
 export interface UpdateBookFields {

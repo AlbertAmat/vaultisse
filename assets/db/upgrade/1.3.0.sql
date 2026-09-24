@@ -373,3 +373,13 @@ VALUES ('en', 'REMOVE', 'Remove'),
        ('it', 'SNACKBAR_MEMBER_UPDATED', 'Membro aggiornato correttamente'),
        ('it', 'SNACKBAR_MEMBER_REMOVED', 'Membro rimosso correttamente'),
        ('it', 'SNACKBAR_INVITE_LINK_COPIED', 'Link di invito copiato negli appunti');
+
+-- ============================================================
+-- 6. UI LABEL: book attribution (who added it) - see BookView.vue
+-- ============================================================
+
+INSERT INTO app_labels (language, code, text)
+VALUES ('en', 'BOOK_ADDED_BY', 'Added by'),
+       ('ca', 'BOOK_ADDED_BY', 'Afegit per'),
+       ('es', 'BOOK_ADDED_BY', 'Añadido por'),
+       ('it', 'BOOK_ADDED_BY', 'Aggiunto da');

@@ -56,6 +56,9 @@ export default class Book extends BookItem {
     /** Timestamp the book was last updated. */
     private readonly m_dateUpdated: Date;
 
+    /** Display name of whoever added this book to the vault, or null if unknown. */
+    private readonly m_createdBy: string | null;
+
     /** @param data Raw full book detail data from the server. */
     public constructor(data: IBook) {
         super(data);
@@ -64,6 +67,7 @@ export default class Book extends BookItem {
         this.m_publishedDate = ref(data.published_date ? new Date(data.published_date) : null);
         this.m_dateCreated = new Date(data.date_created);
         this.m_dateUpdated = new Date(data.date_updated);
+        this.m_createdBy = data.created_by;
         this.m_pages = ref(data.pages || 0);
         this.m_format = shallowRef(data.format_id ? applicationService.getFormat(data.format_id) || null : null);
 
@@ -91,7 +95,13 @@ export default class Book extends BookItem {
             date_created: "",
             date_updated: "",
             files: [],
+            created_by: null,
         })
+    }
+
+    /** @returns Display name of whoever added this book to the vault, or null if unknown (predates tracking, or that account has since been deleted). */
+    public getCreatedBy(): string | null {
+        return this.m_createdBy;
     }
 
     /** @returns The book's description. */

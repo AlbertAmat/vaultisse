@@ -346,4 +346,7 @@ export enum AppLabels {
     SNACKBAR_MEMBER_UPDATED = "SNACKBAR_MEMBER_UPDATED",
     SNACKBAR_MEMBER_REMOVED = "SNACKBAR_MEMBER_REMOVED",
     SNACKBAR_INVITE_LINK_COPIED = "SNACKBAR_INVITE_LINK_COPIED",
+
+    // Book attribution (issue #7 follow-up): who added a book to the vault - see BookView.vue.
+    BOOK_ADDED_BY = "BOOK_ADDED_BY",
 }

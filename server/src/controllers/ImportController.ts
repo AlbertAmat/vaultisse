@@ -104,8 +104,9 @@ export class ImportController {
         }
 
         const vaultId = appService.getSessionVault(req);
+        const userId = appService.getSessionUser(req);
 
-        const {result, importedIds} = await importService.importBooks(vaultId, books);
+        const {result, importedIds} = await importService.importBooks(vaultId, userId, books);
 
         res.status(200).json(result);
         new ImportEnrichmentService(this.pool).scheduleEnrichment(

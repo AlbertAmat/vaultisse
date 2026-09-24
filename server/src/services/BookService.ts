@@ -265,11 +265,13 @@ export class BookService {
     /**
      * Creates a minimal manually-entered book, then auto-places a stock if the caller has exactly one location.
      * @param vaultId Vault id.
+     * @param userId Acting user's id, recorded as `books.user_created` (audit trail only - see BookRepository.findDetailById's `created_by`).
      * @param fields Name/description/isbn and an optional cover upload.
      * @returns The new book's id.
      */
     public async createBook(
         vaultId: number,
+        userId: number,
         fields: {name: string; description: string; isbn: string; file: Express.Multer.File | undefined}
     ): Promise<number> {
         let imageUrl = "";
@@ -289,7 +291,7 @@ export class BookService {
             }
         }
 
-        const bookId = await repo.insert(vaultId, {
+        const bookId = await repo.insert(vaultId, userId, {
             name: fields.name,
             description: fields.description,
             imageUrl,
@@ -360,16 +362,17 @@ export class BookService {
      * Finds a book by ISBN, overlaying fresh metadata onto it; otherwise inserts a new one.
      * @param book Looked-up book fields.
      * @param vaultId Vault id.
+     * @param userId Acting user's id, recorded as `books.user_created` only when actually inserting a new row.
      * @returns The book id.
      */
-    private async getOrCreateBook(book: IsbnBookInput, vaultId: number): Promise<number> {
+    private async getOrCreateBook(book: IsbnBookInput, vaultId: number, userId: number): Promise<number> {
         const repo = new BookRepository(this.pool);
         const existingId = await repo.findByIsbn(book.isbnCode, vaultId);
         if (existingId !== null) {
             await repo.fillEmptyFields(existingId, book, vaultId);
             return existingId;
         }
-        return repo.insertFull(book, vaultId);
+        return repo.insertFull(book, vaultId, userId);
     }
 
     /**
@@ -412,13 +415,14 @@ export class BookService {
      * relay verbatim.
      *
      * @param vaultId Vault id.
+     * @param userId Acting user's id, recorded as `books.user_created` only when this actually inserts a new row (not on a find-and-overlay match).
      * @param isbn Raw ISBN input.
      * @param locationId Location to place the new stock at, or null to auto-place.
      * @param googleApiKey Optional Google Books API key.
      * @param libraryThingApiKey Optional LibraryThing API key.
      * @returns The book id.
      */
-    public async createBookFromIsbn(vaultId: number, isbn: string, locationId: string | null, googleApiKey: string | undefined, libraryThingApiKey: string | undefined): Promise<number> {
+    public async createBookFromIsbn(vaultId: number, userId: number, isbn: string, locationId: string | null, googleApiKey: string | undefined, libraryThingApiKey: string | undefined): Promise<number> {
         const isbnCode = IsbnVerification.normalizeAndValidateIsbn(isbn);
         if (!isbnCode) {
             throw new ValidationError("No ISBN code provided");
@@ -463,7 +467,7 @@ export class BookService {
                 formattedPublishedDate,
                 languageCode,
                 pages: pages && pages > 0 ? pages : null,
-            }, vaultId);
+            }, vaultId, userId);
 
             if (authors?.length) {
                 await this.ensureAuthorsAndLink(

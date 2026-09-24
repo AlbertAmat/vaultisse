@@ -1431,6 +1431,13 @@ VALUES ('en', 'REMOVE', 'Remove'),
        ('it', 'SNACKBAR_MEMBER_REMOVED', 'Membro rimosso correttamente'),
        ('it', 'SNACKBAR_INVITE_LINK_COPIED', 'Link di invito copiato negli appunti');
 
+-- Book attribution (issue #7 follow-up): who added a book to the vault - see BookView.vue.
+INSERT INTO app_labels (language, code, text)
+VALUES ('en', 'BOOK_ADDED_BY', 'Added by'),
+       ('ca', 'BOOK_ADDED_BY', 'Afegit per'),
+       ('es', 'BOOK_ADDED_BY', 'Añadido por'),
+       ('it', 'BOOK_ADDED_BY', 'Aggiunto da');
+
 -- vault: a shared collection of books multiple users can belong to (issue #7).
 CREATE TABLE vault
 (
