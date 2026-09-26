@@ -4,6 +4,8 @@
  * change, logout, session management in UserRoute.ts) can use them without
  * re-decoding the JWT or re-querying the DB.
  */
+import {VaultPermissions} from "./vault";
+
 export {};
 
 // Deliberately a .ts file, not .d.ts: a .d.ts is never emitted, so the
@@ -31,6 +33,12 @@ declare global {
              * "no vault to act in" rather than assume it's always present.
              */
             vaultId?: number;
+            /**
+             * The caller's role permissions in `vaultId`, set alongside it -
+             * only ever from an ACCEPTED `vault_users` row. Checked per route
+             * by `requireVaultPermission` (VaultPermissionMiddleware.ts).
+             */
+            vaultPermissions?: VaultPermissions;
         }
     }
 }

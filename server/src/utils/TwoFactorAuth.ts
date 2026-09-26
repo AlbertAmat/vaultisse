@@ -60,7 +60,7 @@ export class TwoFactorAuth {
     }
 
     /**
-     * Verifies a 6-digit TOTP code against the stored secret (otplib tolerates ±1 time step for clock drift).
+     * Verifies a 6-digit TOTP code against the stored secret, tolerating ±1 time step (±30s) of clock drift/submission latency.
      *
      * `afterTimeStep`, when given, rejects a code whose time-step is at or
      * before it - this is what stops the exact same 6-digit code from being
@@ -84,6 +84,13 @@ export class TwoFactorAuth {
             const result = await verifyOtp({
                 secret,
                 token: code,
+                // otplib v13's `epochTolerance` is in *seconds*, not time-steps
+                // like the old v12 `authenticator.check()`'s `window` option -
+                // passing 1 here (as a naive v12->v13 port would) means
+                // near-zero drift tolerance, not ±1 step. One full period
+                // reproduces v12's default ±1-step (±30s) tolerance for
+                // clock drift and submission latency.
+                epochTolerance: TOTP_PERIOD_SECONDS,
                 ...(afterTimeStep != null ? {afterTimeStep} : {}),
             });
             if (!result.valid) {

@@ -92,12 +92,21 @@ async function resolveSession(req: Request, res: Response): Promise<SessionResol
         return "unauthorized";
     }
 
-    // The vault every catalog resource is scoped to (issue #7). A user with
-    // none (shouldn't happen - registration/OIDC JIT-create always
-    // provisions one) leaves req.vaultId unset; vault-scoped routes must
+    // The vault every catalog resource is scoped to (issue #7), plus the
+    // caller's role permissions in it - both resolved only through an
+    // ACCEPTED membership (see AuthRepository.getActiveUserTokenVersion). A
+    // user with none leaves req.vaultId unset; vault-scoped routes must
     // treat that as "nothing to act in", not assume it's always present.
-    if (activeUser.activeVaultId !== null) {
+    if (activeUser.activeVaultId !== null && activeUser.permissions !== null) {
         req.vaultId = activeUser.activeVaultId;
+        req.vaultPermissions = activeUser.permissions;
+    }
+
+    // last_used_vault_id pointed somewhere the caller is no longer an
+    // accepted member of - repair it so GET /app/policy reports the vault
+    // requests are really scoped to.
+    if (activeUser.storedVaultId !== activeUser.activeVaultId) {
+        await authRepo.repairActiveVault(decoded.user_id, activeUser.activeVaultId);
     }
 
     if (decoded.sid !== DEV_SESSION_KEY) {

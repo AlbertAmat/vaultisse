@@ -22,6 +22,7 @@
 import {Request, Response, Router} from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
+import {requireVaultPermission} from "../middlewares/VaultPermissionMiddleware";
 import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
 import {
     BookController,
@@ -88,7 +89,7 @@ router.get('/:id', requireAuth, (req, res) => getBookController().getById(req, r
  * Example response (200): { "message": "Book updated successfully" }
  * Responses: 200 success | 400 invalid image URL/reading status | 404 "Book not found".
  */
-router.put('/:id', requireAuth, (req, res) => getBookController().update(req, res));
+router.put('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().update(req, res));
 
 /**
  * DELETE /book/:id
@@ -100,7 +101,7 @@ router.put('/:id', requireAuth, (req, res) => getBookController().update(req, re
  * Example response (200): { "message": "Book deleted successfully" }
  * Responses: 200 success | 404 "Book not found".
  */
-router.delete('/:id', requireAuth, (req, res) => getBookController().remove(req, res));
+router.delete('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().remove(req, res));
 
 /**
  * POST /book/:id/image
@@ -112,7 +113,7 @@ router.delete('/:id', requireAuth, (req, res) => getBookController().remove(req,
  * Example response (200): 1 (the number of rows affected)
  * Responses: 413 file too large.
  */
-router.post('/:id/image', requireAuth, upload.single("image"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getBookController().updateImage(req, res));
+router.post('/:id/image', requireAuth, requireVaultPermission("canEditCatalog"), upload.single("image"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getBookController().updateImage(req, res));
 
 /**
  * POST /book/:id/cover/find
@@ -124,7 +125,7 @@ router.post('/:id/image', requireAuth, upload.single("image"), handleUploadError
  * Example response (200): "https://covers.openlibrary.org/b/isbn/9780261102217-M.jpg"
  * Responses: 200 the resolved cover URL | 404 "Book not found" / "No cover found for this book" | 400 "Book has no ISBN".
  */
-router.post('/:id/cover/find', requireAuth, (req, res) => getBookController().findCover(req, res));
+router.post('/:id/cover/find', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().findCover(req, res));
 
 /**
  * POST /book/:id/file
@@ -137,7 +138,7 @@ router.post('/:id/cover/find', requireAuth, (req, res) => getBookController().fi
  * Example response (200): { "id": 1, "file_type": "epub", "file_name": "hobbit.epub", "file_size": 512000, "date_created": "2026-01-05T10:00:00.000Z" }
  * Responses: 400 file content doesn't match a valid EPUB/PDF/Kindle file | 404 "Book not found" | 413 file too large.
  */
-router.post('/:id/file', requireAuth, fileUpload.single("file"), handleUploadError(maxEbookFileSizeMb), (req: Request, res: Response) => getBookController().uploadFile(req, res));
+router.post('/:id/file', requireAuth, requireVaultPermission("canEditCatalog"), fileUpload.single("file"), handleUploadError(maxEbookFileSizeMb), (req: Request, res: Response) => getBookController().uploadFile(req, res));
 
 /**
  * GET /book/:id/file/:fileId/download
@@ -160,7 +161,7 @@ router.get('/:id/file/:fileId/download', requireAuth, (req, res) => getBookContr
  *
  * Example response (200): true
  */
-router.delete('/:id/file/:fileId', requireAuth, (req, res) => getBookController().deleteFile(req, res));
+router.delete('/:id/file/:fileId', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().deleteFile(req, res));
 
 /**
  * POST /book
@@ -172,7 +173,7 @@ router.delete('/:id/file/:fileId', requireAuth, (req, res) => getBookController(
  * Example response (200): 42 (the new book's id)
  * Responses: 404 "Book with provided ISBN code already exist" | 413 file too large.
  */
-router.post('', requireAuth, upload.single("image"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getBookController().create(req, res));
+router.post('', requireAuth, requireVaultPermission("canEditCatalog"), upload.single("image"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getBookController().create(req, res));
 
 /**
  * POST /book/isbn/:isbn
@@ -185,7 +186,7 @@ router.post('', requireAuth, upload.single("image"), handleUploadError(maxCoverI
  * Example response (200): 42 (the book's id)
  * Responses: 400 "No ISBN code provided" | 404 "Book not found" | 500 on a fetch/DB-transaction failure.
  */
-router.post('/isbn/:isbn', requireAuth, (req, res) => getBookController().createFromIsbn(req, res));
+router.post('/isbn/:isbn', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().createFromIsbn(req, res));
 
 /**
  * POST /book/:id/stock
@@ -198,7 +199,7 @@ router.post('/isbn/:isbn', requireAuth, (req, res) => getBookController().create
  *    "customer_id": null, "customer_name": null }
  * Responses: 404 "Location not found" / "Customer not found" | 406 status "booked" not allowed here.
  */
-router.post('/:id/stock', requireAuth, (req, res) => getBookController().addStock(req, res));
+router.post('/:id/stock', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().addStock(req, res));
 
 /**
  * DELETE /book/:id/stock/:stock_id
@@ -209,7 +210,7 @@ router.post('/:id/stock', requireAuth, (req, res) => getBookController().addStoc
  *
  * Example response (200): true
  */
-router.delete('/:id/stock/:stock_id', requireAuth, (req, res) => getBookController().deleteStock(req, res));
+router.delete('/:id/stock/:stock_id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().deleteStock(req, res));
 
 /**
  * PUT /book/:id/stock/:stock_id
@@ -223,7 +224,7 @@ router.delete('/:id/stock/:stock_id', requireAuth, (req, res) => getBookControll
  *    "customer_id": 7, "customer_name": "Jane Doe" }
  * Responses: 404 "Location not found" / "Customer not found".
  */
-router.put('/:id/stock/:stock_id', requireAuth, (req, res) => getBookController().updateStock(req, res));
+router.put('/:id/stock/:stock_id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().updateStock(req, res));
 
 /**
  * GET /book/:bookCode/add/md
@@ -247,6 +248,6 @@ router.get('/:bookCode/add/md', requireAuth, (req, res) => getBookController().g
  *
  * Response (200): empty body on success.
  */
-router.post('/return', requireAuth, upload.single("image"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getBookController().bulkReturn(req, res));
+router.post('/return', requireAuth, requireVaultPermission("canBorrow"), upload.single("image"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getBookController().bulkReturn(req, res));
 
 export default router;

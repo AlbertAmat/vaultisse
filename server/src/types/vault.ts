@@ -54,6 +54,18 @@ export interface VaultMembership {
     can_manage_settings: boolean;
 }
 
+/**
+ * The caller's effective permissions in their active vault, attached to
+ * `req.vaultPermissions` by AuthMiddleware and checked per route by
+ * `requireVaultPermission` (see middlewares/VaultPermissionMiddleware.ts).
+ */
+export interface VaultPermissions {
+    canBorrow: boolean;
+    canEditCatalog: boolean;
+    canManageMembers: boolean;
+    canManageSettings: boolean;
+}
+
 export interface VaultUpdateFields {
     name: string;
     description: string;

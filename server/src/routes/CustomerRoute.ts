@@ -15,6 +15,7 @@
 import {Router} from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
+import {requireVaultPermission} from "../middlewares/VaultPermissionMiddleware";
 import {CustomerController} from "../controllers/CustomerController";
 import {lazy} from "./lazySingleton";
 
@@ -44,7 +45,7 @@ router.get('/group', requireAuth, (req, res) => getCustomerController().listGrou
  * Example response (201): { "id": 1, "name": "Class 4B", "description": "" }
  * Responses: 400 "Group name is required" | 409 "A group with this name already exists" | 201 the new group.
  */
-router.post('/group', requireAuth, (req, res) => getCustomerController().createGroup(req, res));
+router.post('/group', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().createGroup(req, res));
 
 /**
  * PUT /customer/group/:id
@@ -57,7 +58,7 @@ router.post('/group', requireAuth, (req, res) => getCustomerController().createG
  * Responses: 400 "No group ID provided" / "Group name is required" | 404 "Group not found" |
  *            409 "A group with this name already exists" | 200 the renamed group.
  */
-router.put('/group/:id', requireAuth, (req, res) => getCustomerController().renameGroup(req, res));
+router.put('/group/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().renameGroup(req, res));
 
 /**
  * DELETE /customer/group/:id
@@ -69,7 +70,7 @@ router.put('/group/:id', requireAuth, (req, res) => getCustomerController().rena
  * Example response (200): { "message": "Customer group deleted successfully" }
  * Responses: 400 "No group ID provided" | 404 "Group not found" | 200 success.
  */
-router.delete('/group/:id', requireAuth, (req, res) => getCustomerController().deleteGroup(req, res));
+router.delete('/group/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().deleteGroup(req, res));
 
 // Customer <-> group assignment
 
@@ -83,7 +84,7 @@ router.delete('/group/:id', requireAuth, (req, res) => getCustomerController().d
  * Example response (200): { "id": 7, "name": "Jane Doe", "group_id": 1 }
  * Responses: 400 "No customer ID provided" / "No group ID provided" | 404 "Group not found" / "Customer not found" | 200 the updated customer.
  */
-router.put('/:id/group/:groupId', requireAuth, (req, res) => getCustomerController().assignGroup(req, res));
+router.put('/:id/group/:groupId', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().assignGroup(req, res));
 
 /**
  * DELETE /customer/:id/group
@@ -95,7 +96,7 @@ router.put('/:id/group/:groupId', requireAuth, (req, res) => getCustomerControll
  * Example response (200): { "id": 7, "name": "Jane Doe", "group_id": null }
  * Responses: 400 "No customer ID provided" | 404 "Customer not found" | 200 the updated customer.
  */
-router.delete('/:id/group', requireAuth, (req, res) => getCustomerController().unassignGroup(req, res));
+router.delete('/:id/group', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().unassignGroup(req, res));
 
 // Customers
 
@@ -119,7 +120,7 @@ router.get('', requireAuth, (req, res) => getCustomerController().list(req, res)
  *
  * Example response (200): { "id": 7, "name": "Jane Doe", "group_id": null, "group_name": null }
  */
-router.post('', requireAuth, (req, res) => getCustomerController().create(req, res));
+router.post('', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().create(req, res));
 
 /**
  * PUT /customer/:id
@@ -131,7 +132,7 @@ router.post('', requireAuth, (req, res) => getCustomerController().create(req, r
  * Example response (200): { "id": 7, "name": "New name", "group_id": 1, "group_name": "Class 4B" }
  * Responses: 400 "No customer ID provided" | 200 the renamed customer.
  */
-router.put('/:id', requireAuth, (req, res) => getCustomerController().rename(req, res));
+router.put('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().rename(req, res));
 
 /**
  * DELETE /customer/:id
@@ -143,7 +144,7 @@ router.put('/:id', requireAuth, (req, res) => getCustomerController().rename(req
  * Example response (200): { "message": "Customer deleted successfully" }
  * Responses: 200 success | 404 { "error": "Customer not found" }.
  */
-router.delete('/:id', requireAuth, (req, res) => getCustomerController().remove(req, res));
+router.delete('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().remove(req, res));
 
 // Lending
 
@@ -169,7 +170,7 @@ router.get('/:id/books', requireAuth, (req, res) => getCustomerController().getB
  * Example response (200): [{ "id": 3, "name": "The Hobbit", "image_url": null, "isbn": "9780261102217", "code": "abc123" }]
  * Responses: 400 "No customer ID provided" / "No books provided" | 404 "Customer not found" | 200 the customer's loaned books after the change.
  */
-router.post('/:id/add/books', requireAuth, (req, res) => getCustomerController().addBooks(req, res));
+router.post('/:id/add/books', requireAuth, requireVaultPermission("canBorrow"), (req, res) => getCustomerController().addBooks(req, res));
 
 /**
  * DELETE /customer/:id/book/:bookStockCode
@@ -180,6 +181,6 @@ router.post('/:id/add/books', requireAuth, (req, res) => getCustomerController()
  *
  * Responses: 400 "No customer ID provided" / "No book stock code provided" | 200 empty body on success.
  */
-router.delete('/:id/book/:bookStockCode', requireAuth, (req, res) => getCustomerController().returnBook(req, res));
+router.delete('/:id/book/:bookStockCode', requireAuth, requireVaultPermission("canBorrow"), (req, res) => getCustomerController().returnBook(req, res));
 
 export default router;

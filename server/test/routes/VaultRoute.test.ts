@@ -413,3 +413,111 @@ describe("deleting a vault with content (transfer)", () => {
         expect(bookRes.rows[0]).toEqual({vault_id: vaultBId});
     });
 });
+
+describe("vault access control (security audit: role enforcement / stale active vault)", () => {
+    /**
+     * Admin creates a shared vault holding one category, Bob requests to join
+     * it via the invite link, and is left PENDING - the starting point for
+     * every scenario below.
+     */
+    async function createSharedVaultWithPendingBob() {
+        const createRes = await admin.agent.post("/api/rest/vault").send({name: "Shared Library"});
+        const vaultId = createRes.body.id;
+        await admin.agent.put(`/api/rest/vault/${vaultId}/active`);
+        await admin.agent.post("/api/rest/category").send({name: "Admin's secret shelf"});
+
+        const detailRes = await admin.agent.get(`/api/rest/vault/${vaultId}`);
+        const bob = await createAuthenticatedUser(app, "Bob");
+        await bob.agent.post(`/api/rest/vault/join/${detailRes.body.invitationUuid}`);
+        const bobPolicy = await bob.agent.get("/api/rest/app/policy");
+        return {vaultId, bob, bobId: bobPolicy.body.user.id};
+    }
+
+    /**
+     * Looks up a role's code by its name.
+     * @param name Role name, e.g. "normal".
+     */
+    async function roleCode(name: string): Promise<number> {
+        const rolesRes = await admin.agent.get("/api/rest/vault/roles");
+        return rolesRes.body.find((r: any) => r.name === name).code;
+    }
+
+    it("a readonly member can read the catalog but not change it", async () => {
+        const {vaultId, bob, bobId} = await createSharedVaultWithPendingBob();
+        await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 1}); // accepted, readonly
+        await bob.agent.put(`/api/rest/vault/${vaultId}/active`);
+
+        const listRes = await bob.agent.get("/api/rest/category");
+        expect(listRes.status).toBe(200);
+        expect(listRes.body).toEqual([expect.objectContaining({name: "Admin's secret shelf"})]);
+
+        const createRes = await bob.agent.post("/api/rest/category").send({name: "Vandalism"});
+        expect(createRes.status).toBe(403);
+
+        const categoryId = listRes.body[0].id;
+        expect((await bob.agent.put(`/api/rest/category/${categoryId}`).send({name: "Renamed"})).status).toBe(403);
+        expect((await bob.agent.delete(`/api/rest/category/${categoryId}`)).status).toBe(403);
+        expect((await bob.agent.post("/api/rest/customer").send({name: "Someone"})).status).toBe(403);
+        expect((await bob.agent.post(`/api/rest/customer/1/add/books`).send({books: []})).status).toBe(403);
+    });
+
+    it("a borrower can lend but not edit the catalog", async () => {
+        const {vaultId, bob, bobId} = await createSharedVaultWithPendingBob();
+        await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 1, role: await roleCode("borrower")});
+        await bob.agent.put(`/api/rest/vault/${vaultId}/active`);
+
+        expect((await bob.agent.post("/api/rest/category").send({name: "Nope"})).status).toBe(403);
+        // Past the permission check - fails later on the (nonexistent) customer, not with a 403.
+        expect((await bob.agent.post(`/api/rest/customer/999999999/add/books`).send({books: []})).status).not.toBe(403);
+    });
+
+    it("a normal member can edit the catalog", async () => {
+        const {vaultId, bob, bobId} = await createSharedVaultWithPendingBob();
+        await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 1, role: await roleCode("normal")});
+        await bob.agent.put(`/api/rest/vault/${vaultId}/active`);
+
+        const createRes = await bob.agent.post("/api/rest/category").send({name: "Bob's shelf"});
+        expect(createRes.status).toBe(200);
+    });
+
+    it("a pending member can't reach the vault by deleting another vault (fallback must skip non-accepted memberships)", async () => {
+        const {vaultId, bob} = await createSharedVaultWithPendingBob();
+
+        const throwaway = await bob.agent.post("/api/rest/vault").send({name: "Throwaway"});
+        await bob.agent.put(`/api/rest/vault/${throwaway.body.id}/active`);
+        expect((await bob.agent.delete(`/api/rest/vault/${throwaway.body.id}`)).status).toBe(200);
+
+        const bobPolicy = await bob.agent.get("/api/rest/app/policy");
+        expect(bobPolicy.body.user.activeVault).not.toBe(vaultId);
+
+        const listRes = await bob.agent.get("/api/rest/category");
+        expect(listRes.body).not.toEqual(expect.arrayContaining([expect.objectContaining({name: "Admin's secret shelf"})]));
+    });
+
+    it("a pending member whose active vault points at the vault anyway (e.g. stale data) gets no access", async () => {
+        const {vaultId, bob, bobId} = await createSharedVaultWithPendingBob();
+        await appService.getDatabasePool().query("UPDATE users SET last_used_vault_id = $1 WHERE id = $2", [vaultId, bobId]);
+
+        const listRes = await bob.agent.get("/api/rest/category");
+        expect(listRes.body).not.toEqual(expect.arrayContaining([expect.objectContaining({name: "Admin's secret shelf"})]));
+        await bob.agent.post("/api/rest/category").send({name: "Planted"});
+
+        const categories = await appService.getDatabasePool().query("SELECT name FROM categories WHERE vault_id = $1", [vaultId]);
+        expect(categories.rows.map((r: any) => r.name)).toEqual(["Admin's secret shelf"]);
+    });
+
+    it("rejecting an accepted member cuts off their access immediately, even if the vault was active for them", async () => {
+        const {vaultId, bob, bobId} = await createSharedVaultWithPendingBob();
+        await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 1});
+        await bob.agent.put(`/api/rest/vault/${vaultId}/active`);
+        expect((await bob.agent.get("/api/rest/category")).body).toHaveLength(1);
+
+        await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 2});
+
+        const listRes = await bob.agent.get("/api/rest/category");
+        expect(listRes.body).not.toEqual(expect.arrayContaining([expect.objectContaining({name: "Admin's secret shelf"})]));
+
+        const bobPolicy = await bob.agent.get("/api/rest/app/policy");
+        expect(bobPolicy.body.user.activeVault).not.toBe(vaultId);
+    });
+});

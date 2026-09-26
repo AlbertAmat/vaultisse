@@ -8,6 +8,7 @@
  */
 import {Pool, PoolClient} from "pg";
 import {BackupCode, LoginCandidate, NewUserFields, PendingTwoFactorUser} from "../types/auth";
+import {VaultPermissions, VaultUserStatus} from "../types/vault";
 
 /** Data access for password login/registration/logout and AuthMiddleware's per-request session check. */
 export class AuthRepository {
@@ -199,17 +200,77 @@ export class AuthRepository {
      * hint as a minor, deliberate simplification (not a behavior change).
      *
      * @param userId User id to check.
-     * Also returns `last_used_vault_id` (the caller's active vault, issue
-     * #7) so AuthMiddleware can attach `req.vaultId` without a second
-     * round trip - every request already pays this query's cost.
+     * Also resolves the caller's active vault (issue #7) and their role
+     * permissions in it, so AuthMiddleware can attach `req.vaultId`/
+     * `req.vaultPermissions` without a second round trip - every request
+     * already pays this query's cost.
      *
-     * @returns The current token_version and active vault id, or null if the user doesn't exist or is disabled.
+     * The active vault is only ever resolved through an ACCEPTED
+     * `vault_users` row: `last_used_vault_id` when the user is still an
+     * accepted member there, otherwise their lowest-id accepted vault, or
+     * none. Never trusts `last_used_vault_id` on its own - a membership
+     * rejected/left/never approved while that column still pointed at the
+     * vault would otherwise keep resolving every request into it (security
+     * audit: stale active vault). `storedVaultId` is returned too so the
+     * caller can repair the column when the two differ.
+     *
+     * @returns The current token_version, stored and effective active vault ids, and permissions in the effective one (null when there's no accepted vault), or null if the user doesn't exist or is disabled.
      */
-    public async getActiveUserTokenVersion(userId: number): Promise<{tokenVersion: number; activeVaultId: number | null} | null> {
+    public async getActiveUserTokenVersion(userId: number): Promise<{
+        tokenVersion: number;
+        storedVaultId: number | null;
+        activeVaultId: number | null;
+        permissions: VaultPermissions | null;
+    } | null> {
         const result = await this.db.query(
-            `SELECT token_version AS "tokenVersion", last_used_vault_id AS "activeVaultId" FROM users WHERE id = $1 AND disabled = FALSE`,
-            [userId]
+            `SELECT u.token_version       AS "tokenVersion",
+                    u.last_used_vault_id  AS "storedVaultId",
+                    m.vault_id            AS "activeVaultId",
+                    m.can_borrow          AS "canBorrow",
+                    m.can_edit_catalog    AS "canEditCatalog",
+                    m.can_manage_members  AS "canManageMembers",
+                    m.can_manage_settings AS "canManageSettings"
+               FROM users u
+               LEFT JOIN LATERAL (
+                   SELECT vu.vault_id, vr.can_borrow, vr.can_edit_catalog, vr.can_manage_members, vr.can_manage_settings
+                     FROM vault_users vu
+                     JOIN vault_roles vr ON vr.code = vu.role
+                    WHERE vu.user_id = u.id
+                      AND vu.status = $2
+                    ORDER BY (vu.vault_id = u.last_used_vault_id) DESC NULLS LAST, vu.vault_id
+                    LIMIT 1
+               ) m ON TRUE
+              WHERE u.id = $1 AND u.disabled = FALSE`,
+            [userId, VaultUserStatus.ACCEPTED]
         );
-        return result.rows[0] ?? null;
+
+        const row = result.rows[0];
+        if (!row) {
+            return null;
+        }
+
+        return {
+            tokenVersion: row.tokenVersion,
+            storedVaultId: row.storedVaultId,
+            activeVaultId: row.activeVaultId,
+            permissions: row.activeVaultId === null ? null : {
+                canBorrow: row.canBorrow,
+                canEditCatalog: row.canEditCatalog,
+                canManageMembers: row.canManageMembers,
+                canManageSettings: row.canManageSettings,
+            },
+        };
+    }
+
+    /**
+     * Points `users.last_used_vault_id` at the vault AuthMiddleware actually
+     * resolved for this request, when the stored value had gone stale (see
+     * getActiveUserTokenVersion) - keeps GET /app/policy's `activeVault` in
+     * step with what the catalog routes are really scoped to.
+     * @param userId User id.
+     * @param vaultId Effective active vault, or null if the user has no accepted vault.
+     */
+    public async repairActiveVault(userId: number, vaultId: number | null): Promise<void> {
+        await this.db.query(`UPDATE users SET last_used_vault_id = $1 WHERE id = $2`, [vaultId, userId]);
     }
 }

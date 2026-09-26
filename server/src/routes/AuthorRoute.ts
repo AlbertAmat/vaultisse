@@ -10,6 +10,7 @@
 import {Router} from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
+import {requireVaultPermission} from "../middlewares/VaultPermissionMiddleware";
 import {AuthorController} from "../controllers/AuthorController";
 import {lazy} from "./lazySingleton";
 
@@ -47,7 +48,7 @@ router.post('/search', requireAuth, (req, res) => getAuthorController().search(r
  *
  * Example response (200): { "id": 1, "name": "J.R.R. Tolkien" }
  */
-router.post('', requireAuth, (req, res) => getAuthorController().create(req, res));
+router.post('', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getAuthorController().create(req, res));
 
 /**
  * PUT /author/:id
@@ -59,7 +60,7 @@ router.post('', requireAuth, (req, res) => getAuthorController().create(req, res
  * Example response (200): { "id": 1, "name": "New name" }
  * Responses: 400 "No author ID provided" | 200 the renamed author.
  */
-router.put('/:id', requireAuth, (req, res) => getAuthorController().rename(req, res));
+router.put('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getAuthorController().rename(req, res));
 
 /**
  * DELETE /author/:id
@@ -71,6 +72,6 @@ router.put('/:id', requireAuth, (req, res) => getAuthorController().rename(req, 
  * Example response (200): { "message": "Author deleted successfully" }
  * Responses: 200 success | 404 { "error": "Author not found" }.
  */
-router.delete('/:id', requireAuth, (req, res) => getAuthorController().remove(req, res));
+router.delete('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getAuthorController().remove(req, res));
 
 export default router;

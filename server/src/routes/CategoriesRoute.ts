@@ -10,6 +10,7 @@
 import {Router} from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
+import {requireVaultPermission} from "../middlewares/VaultPermissionMiddleware";
 import {CategoryController} from "../controllers/CategoryController";
 import {lazy} from "./lazySingleton";
 
@@ -36,7 +37,7 @@ router.get('', requireAuth, (req, res) => getCategoryController().list(req, res)
  *
  * Example response (200): { "id": 1, "name": "Fiction" }
  */
-router.post('', requireAuth, (req, res) => getCategoryController().create(req, res));
+router.post('', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCategoryController().create(req, res));
 
 /**
  * PUT /category/:id
@@ -48,7 +49,7 @@ router.post('', requireAuth, (req, res) => getCategoryController().create(req, r
  * Example response (200): { "id": 1, "name": "New name" }
  * Responses: 400 "No category ID provided" | 200 the renamed category.
  */
-router.put('/:id', requireAuth, (req, res) => getCategoryController().rename(req, res));
+router.put('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCategoryController().rename(req, res));
 
 /**
  * DELETE /category/:id
@@ -60,6 +61,6 @@ router.put('/:id', requireAuth, (req, res) => getCategoryController().rename(req
  * Example response (200): { "message": "Category deleted successfully" }
  * Responses: 200 success | 404 { "error": "Category not found" }.
  */
-router.delete('/:id', requireAuth, (req, res) => getCategoryController().remove(req, res));
+router.delete('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCategoryController().remove(req, res));
 
 export default router;

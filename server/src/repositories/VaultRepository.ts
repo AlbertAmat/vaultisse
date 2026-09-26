@@ -126,9 +126,10 @@ export class VaultRepository {
      * so a failed delete here doesn't abort anything the re-enable would
      * then run against.
      *
-     * Reassigns `users.last_used_vault_id` (to another vault that user
-     * belongs to, or NULL) for every member this vault is currently active
-     * for, before touching anything else - that column has no `ON DELETE`
+     * Reassigns `users.last_used_vault_id` (to another vault that user is
+     * an ACCEPTED member of, or NULL - never a pending/rejected one, which
+     * would hand them a vault they were never let into) for every member
+     * this vault is currently active for, before touching anything else - that column has no `ON DELETE`
      * clause, so leaving it dangling would otherwise fail this very DELETE
      * with the same 23503 that VaultService.deleteVault reads as "still has
      * content", even for a vault that's genuinely empty.
@@ -140,11 +141,11 @@ export class VaultRepository {
             `UPDATE users u
                 SET last_used_vault_id = (
                     SELECT vu.vault_id FROM vault_users vu
-                    WHERE vu.user_id = u.id AND vu.vault_id != $1
+                    WHERE vu.user_id = u.id AND vu.vault_id != $1 AND vu.status = $2
                     ORDER BY vu.vault_id LIMIT 1
                 )
               WHERE u.last_used_vault_id = $1`,
-            [vaultId]
+            [vaultId, VaultUserStatus.ACCEPTED]
         );
 
         await this.db.query("ALTER TABLE vault_users DISABLE TRIGGER trg_vault_min_one_admin");
@@ -391,6 +392,8 @@ export class VaultRepository {
     /**
      * Updates a member's role and/or status. Passing only one of `role`/`status` leaves the other untouched.
      * The DB trigger `trg_vault_min_one_admin` rejects a change that would leave the vault without an admin.
+     * A status change away from ACCEPTED also moves the member's `last_used_vault_id` off this vault
+     * (to another accepted vault, or NULL).
      * @param vaultId Vault id.
      * @param userId Member's id.
      * @param fields Fields to change.
@@ -405,6 +408,24 @@ export class VaultRepository {
                 AND user_id = $4`,
             [fields.role ?? null, fields.status ?? null, vaultId, userId]
         );
+
+        // Moving a member out of ACCEPTED (rejecting them, or sending them
+        // back to pending) must not leave this vault active for them - same
+        // reasoning as removeMember below.
+        if (fields.status !== undefined && fields.status !== VaultUserStatus.ACCEPTED) {
+            await this.db.query(
+                `UPDATE users
+                    SET last_used_vault_id = (
+                        SELECT vault_id FROM vault_users
+                         WHERE user_id = $2 AND vault_id != $1 AND status = $3
+                         ORDER BY vault_id LIMIT 1
+                    )
+                  WHERE id = $2
+                    AND last_used_vault_id = $1`,
+                [vaultId, userId, VaultUserStatus.ACCEPTED]
+            );
+        }
+
         return result.rowCount ?? 0;
     }
 
@@ -413,7 +434,7 @@ export class VaultRepository {
      * The DB trigger `trg_vault_min_one_admin` rejects removing a vault's last admin.
      *
      * Also reassigns `users.last_used_vault_id` (falling back to another
-     * vault this user still belongs to, or NULL if none) when it pointed at
+     * vault this user is still an ACCEPTED member of, or NULL if none) when it pointed at
      * `vaultId` - AuthMiddleware resolves every request's `req.vaultId`
      * fresh from that column, so leaving it dangling here wouldn't just
      * block deleting the vault later (it has no `ON DELETE` clause), it
@@ -431,14 +452,14 @@ export class VaultRepository {
             `WITH removed AS (
                  DELETE FROM vault_users WHERE vault_id = $1 AND user_id = $2 RETURNING user_id
              ), fallback AS (
-                 SELECT vault_id FROM vault_users WHERE user_id = $2 AND vault_id != $1 ORDER BY vault_id LIMIT 1
+                 SELECT vault_id FROM vault_users WHERE user_id = $2 AND vault_id != $1 AND status = $3 ORDER BY vault_id LIMIT 1
              )
              UPDATE users
                 SET last_used_vault_id = (SELECT vault_id FROM fallback)
               WHERE id = $2
                 AND last_used_vault_id = $1
                 AND EXISTS (SELECT 1 FROM removed)`,
-            [vaultId, userId]
+            [vaultId, userId, VaultUserStatus.ACCEPTED]
         );
     }
 

@@ -11,6 +11,7 @@
 import {Router} from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
+import {requireVaultPermission} from "../middlewares/VaultPermissionMiddleware";
 import {LocationController} from "../controllers/LocationController";
 import {lazy} from "./lazySingleton";
 
@@ -50,7 +51,7 @@ router.get('/:id/books', requireAuth, (req, res) => getLocationController().getB
  * Example response (200): [{ "id": 10, "name": "The Hobbit", "book_id": 3, "code": "abc123", "status": 0, "image_url": null }]
  * Responses: 400 "No location ID provided" / "No books provided" | 404 "Location does not exist" | 200 the location's books after the move.
  */
-router.post('/:id/add/books', requireAuth, (req, res) => getLocationController().addBooks(req, res));
+router.post('/:id/add/books', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLocationController().addBooks(req, res));
 
 /**
  * POST /location
@@ -61,7 +62,7 @@ router.post('/:id/add/books', requireAuth, (req, res) => getLocationController()
  *
  * Example response (200): { "id": 1, "name": "Living room shelf", "description": "", "default": false, "total_books": 0 }
  */
-router.post('', requireAuth, (req, res) => getLocationController().create(req, res));
+router.post('', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLocationController().create(req, res));
 
 /**
  * PUT /location/:id
@@ -73,7 +74,7 @@ router.post('', requireAuth, (req, res) => getLocationController().create(req, r
  * Example response (200): { "id": 1, "name": "New name", "description": "New description", "default": false, "total_books": 3 }
  * Responses: 400 "No location ID provided" | 200 the renamed location.
  */
-router.put('/:id', requireAuth, (req, res) => getLocationController().rename(req, res));
+router.put('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLocationController().rename(req, res));
 
 /**
  * PUT /location/:id/default
@@ -85,7 +86,7 @@ router.put('/:id', requireAuth, (req, res) => getLocationController().rename(req
  * Example response (200): [{ "id": 1, "name": "Living room shelf", "description": "", "default": true, "total_books": 42 }]
  * Responses: 400 "No location ID provided" | 404 "Location does not exist" | 200 every one of the caller's locations, after the change.
  */
-router.put('/:id/default', requireAuth, (req, res) => getLocationController().setDefault(req, res));
+router.put('/:id/default', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLocationController().setDefault(req, res));
 
 /**
  * DELETE /location/:id
@@ -97,6 +98,6 @@ router.put('/:id/default', requireAuth, (req, res) => getLocationController().se
  * Example response (200): { "message": "Location deleted successfully" }
  * Responses: 200 success | 404 { "error": "Location not found" }.
  */
-router.delete('/:id', requireAuth, (req, res) => getLocationController().remove(req, res));
+router.delete('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLocationController().remove(req, res));
 
 export default router;

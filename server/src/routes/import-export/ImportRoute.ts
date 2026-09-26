@@ -22,6 +22,7 @@
 import {Request, Response, Router} from 'express';
 import {appService} from "../../AppService";
 import {requireAuth} from "../../middlewares/AuthMiddleware";
+import {requireVaultPermission} from "../../middlewares/VaultPermissionMiddleware";
 import {ImportController, uploadCsv, handleImportUploadError} from "../../controllers/ImportController";
 import {lazy} from "../lazySingleton";
 
@@ -53,6 +54,6 @@ router.get('/template/:origin', requireAuth, (req, res) => getImportController()
  * Example response (200): { "imported": 40, "skipped": 2, "failed": 1, "errors": [{ "row": 5, "title": "...", "reason": "..." }] }
  * Responses: 400 { "error": "No CSV file provided" } / missing or unsupported `origin` / invalid CSV.
  */
-router.post('/library', requireAuth, uploadCsv, handleImportUploadError, (req: Request, res: Response) => getImportController().importLibrary(req, res));
+router.post('/library', requireAuth, requireVaultPermission("canEditCatalog"), uploadCsv, handleImportUploadError, (req: Request, res: Response) => getImportController().importLibrary(req, res));
 
 export default router;
