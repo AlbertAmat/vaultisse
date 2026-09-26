@@ -28,7 +28,8 @@ VALUES ('1.0.0/1.sql'),
        ('1.1.6.sql'),
        ('1.1.7.sql'),
        ('1.1.8.sql'),
-       ('1.2.2.sql');
+       ('1.2.2.sql'),
+       ('1.3.0.sql');
 
 CREATE TABLE app_languages
 (
@@ -1294,6 +1295,207 @@ VALUES ('it', 'ADD_BOOK', 'Aggiungi libro'),
        ('it', 'SNACKBAR_IMPORT_SUCCESS', 'Totale libri importati: {count}');
 
 
+-- Settings > Vaults card (issue #7): manage the vaults the caller belongs
+-- to and their members - see client/src/views/settings/VaultsCard.vue,
+-- VaultMembersDialog.vue and VaultJoinView.vue (the invite-link landing page).
+INSERT INTO app_labels (language, code, text)
+VALUES ('en', 'REMOVE', 'Remove'),
+       ('en', 'VAULTS', 'Vaults'),
+       ('en', 'VAULTS_DESC', 'A vault is a shared library. Switch between the vaults you belong to, invite others to yours, and manage members'' roles.'),
+       ('en', 'VAULTS_EMPTY', 'You don''t belong to any vault yet'),
+       ('en', 'VAULT_ACTIVE', 'Active'),
+       ('en', 'VAULT_SWITCH', 'Switch'),
+       ('en', 'VAULT_MANAGE', 'Manage'),
+       ('en', 'ADD_VAULT', 'New vault'),
+       ('en', 'VAULT_SETTINGS', 'Settings'),
+       ('en', 'VAULT_INVITE', 'Invite link'),
+       ('en', 'VAULT_INVITE_DESC', 'Anyone with this link can request to join this vault. You''ll need to approve them before they can see or add anything.'),
+       ('en', 'VAULT_MEMBERS', 'Members'),
+       ('en', 'VAULT_YOU', 'You'),
+       ('en', 'VAULT_STATUS_PENDING', 'Pending'),
+       ('en', 'VAULT_STATUS_REJECTED', 'Rejected'),
+       ('en', 'VAULT_LEAVE', 'Leave'),
+       ('en', 'VAULT_LEAVE_DESC', 'Are you sure you want to leave this vault? You''ll lose access to its books and data unless you''re invited back.'),
+       ('en', 'VAULT_REMOVE_MEMBER', 'Remove member'),
+       ('en', 'VAULT_REMOVE_MEMBER_DESC', 'Are you sure you want to remove {name} from this vault?'),
+       ('en', 'DELETE_VAULT', 'Delete vault'),
+       ('en', 'DELETE_VAULT_DESC', 'Are you sure you want to delete this vault? This can''t be undone. If it still has books, customers, or other content, you''ll be asked to move it into another vault first.'),
+       ('en', 'VAULT_JOIN_REQUEST', 'Request to join'),
+       ('en', 'VAULT_JOIN_REQUESTED', 'Request sent. A member with permission to manage members needs to approve it before you can access this vault.'),
+       ('en', 'VAULT_JOIN_INVALID', 'This invite link is invalid or has expired.'),
+       ('en', 'SNACKBAR_VAULT_CREATED', 'Vault created successfully'),
+       ('en', 'SNACKBAR_VAULT_UPDATED', 'Vault updated successfully'),
+       ('en', 'SNACKBAR_VAULT_DELETED', 'Vault deleted successfully'),
+       ('en', 'SNACKBAR_VAULT_SWITCHED', 'Active vault switched'),
+       ('en', 'SNACKBAR_VAULT_LEFT', 'You''ve left the vault'),
+       ('en', 'SNACKBAR_MEMBER_UPDATED', 'Member updated successfully'),
+       ('en', 'SNACKBAR_MEMBER_REMOVED', 'Member removed successfully'),
+       ('en', 'SNACKBAR_INVITE_LINK_COPIED', 'Invite link copied to clipboard'),
+
+       ('ca', 'REMOVE', 'Elimina'),
+       ('ca', 'VAULTS', 'Biblioteques'),
+       ('ca', 'VAULTS_DESC', 'Una biblioteca es pot compartir amb altres persones. Canvia entre les biblioteques a què pertanys, convida-hi altres persones i gestiona els rols dels membres.'),
+       ('ca', 'VAULTS_EMPTY', 'Encara no pertanys a cap biblioteca'),
+       ('ca', 'VAULT_ACTIVE', 'Activa'),
+       ('ca', 'VAULT_SWITCH', 'Canvia-hi'),
+       ('ca', 'VAULT_MANAGE', 'Gestiona'),
+       ('ca', 'ADD_VAULT', 'Biblioteca nova'),
+       ('ca', 'VAULT_SETTINGS', 'Configuració'),
+       ('ca', 'VAULT_INVITE', 'Enllaç d''invitació'),
+       ('ca', 'VAULT_INVITE_DESC', 'Qualsevol persona amb aquest enllaç pot sol·licitar unir-se a aquesta biblioteca. Hauràs d''aprovar-la abans que pugui veure-hi o afegir-hi res.'),
+       ('ca', 'VAULT_MEMBERS', 'Membres'),
+       ('ca', 'VAULT_YOU', 'Tu'),
+       ('ca', 'VAULT_STATUS_PENDING', 'Pendent'),
+       ('ca', 'VAULT_STATUS_REJECTED', 'Rebutjat'),
+       ('ca', 'VAULT_LEAVE', 'Abandona'),
+       ('ca', 'VAULT_LEAVE_DESC', 'Segur que vols abandonar aquesta biblioteca? Perdràs l''accés als seus llibres i dades tret que et tornin a convidar.'),
+       ('ca', 'VAULT_REMOVE_MEMBER', 'Elimina el membre'),
+       ('ca', 'VAULT_REMOVE_MEMBER_DESC', 'Segur que vols eliminar {name} d''aquesta biblioteca?'),
+       ('ca', 'DELETE_VAULT', 'Elimina la biblioteca'),
+       ('ca', 'DELETE_VAULT_DESC', 'Segur que vols eliminar aquesta biblioteca? Aquesta acció no es pot desfer. Si encara té llibres, clients o altre contingut, se''t demanarà que el moguis a una altra biblioteca abans.'),
+       ('ca', 'VAULT_JOIN_REQUEST', 'Sol·licita unir-t''hi'),
+       ('ca', 'VAULT_JOIN_REQUESTED', 'Sol·licitud enviada. Un membre amb permís per gestionar membres l''ha d''aprovar abans que puguis accedir a aquesta biblioteca.'),
+       ('ca', 'VAULT_JOIN_INVALID', 'Aquest enllaç d''invitació no és vàlid o ha caducat.'),
+       ('ca', 'SNACKBAR_VAULT_CREATED', 'Biblioteca creada correctament'),
+       ('ca', 'SNACKBAR_VAULT_UPDATED', 'Biblioteca actualitzada correctament'),
+       ('ca', 'SNACKBAR_VAULT_DELETED', 'Biblioteca eliminada correctament'),
+       ('ca', 'SNACKBAR_VAULT_SWITCHED', 'Biblioteca activa canviada'),
+       ('ca', 'SNACKBAR_VAULT_LEFT', 'Has abandonat la biblioteca'),
+       ('ca', 'SNACKBAR_MEMBER_UPDATED', 'Membre actualitzat correctament'),
+       ('ca', 'SNACKBAR_MEMBER_REMOVED', 'Membre eliminat correctament'),
+       ('ca', 'SNACKBAR_INVITE_LINK_COPIED', 'Enllaç d''invitació copiat al porta-retalls'),
+
+       ('es', 'REMOVE', 'Quitar'),
+       ('es', 'VAULTS', 'Bibliotecas'),
+       ('es', 'VAULTS_DESC', 'Una biblioteca se puede compartir con otras personas. Cambia entre las bibliotecas a las que perteneces, invita a otras personas y gestiona los roles de los miembros.'),
+       ('es', 'VAULTS_EMPTY', 'Todavía no perteneces a ninguna biblioteca'),
+       ('es', 'VAULT_ACTIVE', 'Activa'),
+       ('es', 'VAULT_SWITCH', 'Cambiar'),
+       ('es', 'VAULT_MANAGE', 'Gestionar'),
+       ('es', 'ADD_VAULT', 'Nueva biblioteca'),
+       ('es', 'VAULT_SETTINGS', 'Configuración'),
+       ('es', 'VAULT_INVITE', 'Enlace de invitación'),
+       ('es', 'VAULT_INVITE_DESC', 'Cualquiera con este enlace puede solicitar unirse a esta biblioteca. Tendrás que aprobarlo antes de que pueda ver o añadir nada.'),
+       ('es', 'VAULT_MEMBERS', 'Miembros'),
+       ('es', 'VAULT_YOU', 'Tú'),
+       ('es', 'VAULT_STATUS_PENDING', 'Pendiente'),
+       ('es', 'VAULT_STATUS_REJECTED', 'Rechazado'),
+       ('es', 'VAULT_LEAVE', 'Abandonar'),
+       ('es', 'VAULT_LEAVE_DESC', '¿Seguro que quieres abandonar esta biblioteca? Perderás el acceso a sus libros y datos a menos que vuelvan a invitarte.'),
+       ('es', 'VAULT_REMOVE_MEMBER', 'Quitar miembro'),
+       ('es', 'VAULT_REMOVE_MEMBER_DESC', '¿Seguro que quieres quitar a {name} de esta biblioteca?'),
+       ('es', 'DELETE_VAULT', 'Eliminar biblioteca'),
+       ('es', 'DELETE_VAULT_DESC', '¿Seguro que quieres eliminar esta biblioteca? Esta acción no se puede deshacer. Si todavía tiene libros, clientes u otro contenido, se te pedirá que lo muevas a otra biblioteca antes.'),
+       ('es', 'VAULT_JOIN_REQUEST', 'Solicitar unirme'),
+       ('es', 'VAULT_JOIN_REQUESTED', 'Solicitud enviada. Un miembro con permiso para gestionar miembros debe aprobarla antes de que puedas acceder a esta biblioteca.'),
+       ('es', 'VAULT_JOIN_INVALID', 'Este enlace de invitación no es válido o ha caducado.'),
+       ('es', 'SNACKBAR_VAULT_CREATED', 'Biblioteca creada correctamente'),
+       ('es', 'SNACKBAR_VAULT_UPDATED', 'Biblioteca actualizada correctamente'),
+       ('es', 'SNACKBAR_VAULT_DELETED', 'Biblioteca eliminada correctamente'),
+       ('es', 'SNACKBAR_VAULT_SWITCHED', 'Biblioteca activa cambiada'),
+       ('es', 'SNACKBAR_VAULT_LEFT', 'Has abandonado la biblioteca'),
+       ('es', 'SNACKBAR_MEMBER_UPDATED', 'Miembro actualizado correctamente'),
+       ('es', 'SNACKBAR_MEMBER_REMOVED', 'Miembro eliminado correctamente'),
+       ('es', 'SNACKBAR_INVITE_LINK_COPIED', 'Enlace de invitación copiado al portapapeles'),
+
+       ('it', 'REMOVE', 'Rimuovi'),
+       ('it', 'VAULTS', 'Biblioteche'),
+       ('it', 'VAULTS_DESC', 'Una biblioteca può essere condivisa con altre persone. Passa da una biblioteca all''altra tra quelle a cui appartieni, invita altre persone nella tua e gestisci i ruoli dei membri.'),
+       ('it', 'VAULTS_EMPTY', 'Non appartieni ancora a nessuna biblioteca'),
+       ('it', 'VAULT_ACTIVE', 'Attiva'),
+       ('it', 'VAULT_SWITCH', 'Passa a questa'),
+       ('it', 'VAULT_MANAGE', 'Gestisci'),
+       ('it', 'ADD_VAULT', 'Nuova biblioteca'),
+       ('it', 'VAULT_SETTINGS', 'Impostazioni'),
+       ('it', 'VAULT_INVITE', 'Link di invito'),
+       ('it', 'VAULT_INVITE_DESC', 'Chiunque abbia questo link può richiedere di unirsi a questa biblioteca. Dovrai approvarlo prima che possa vedere o aggiungere qualcosa.'),
+       ('it', 'VAULT_MEMBERS', 'Membri'),
+       ('it', 'VAULT_YOU', 'Tu'),
+       ('it', 'VAULT_STATUS_PENDING', 'In attesa'),
+       ('it', 'VAULT_STATUS_REJECTED', 'Rifiutato'),
+       ('it', 'VAULT_LEAVE', 'Abbandona'),
+       ('it', 'VAULT_LEAVE_DESC', 'Sei sicuro di voler abbandonare questa biblioteca? Perderai l''accesso ai suoi libri e dati a meno che tu non venga invitato di nuovo.'),
+       ('it', 'VAULT_REMOVE_MEMBER', 'Rimuovi membro'),
+       ('it', 'VAULT_REMOVE_MEMBER_DESC', 'Sei sicuro di voler rimuovere {name} da questa biblioteca?'),
+       ('it', 'DELETE_VAULT', 'Elimina biblioteca'),
+       ('it', 'DELETE_VAULT_DESC', 'Sei sicuro di voler eliminare questa biblioteca? Questa azione non può essere annullata. Se contiene ancora libri, clienti o altri contenuti, ti verrà chiesto di spostarli prima in un''altra biblioteca.'),
+       ('it', 'VAULT_JOIN_REQUEST', 'Richiedi di unirti'),
+       ('it', 'VAULT_JOIN_REQUESTED', 'Richiesta inviata. Un membro con il permesso di gestire i membri deve approvarla prima che tu possa accedere a questa biblioteca.'),
+       ('it', 'VAULT_JOIN_INVALID', 'Questo link di invito non è valido o è scaduto.'),
+       ('it', 'SNACKBAR_VAULT_CREATED', 'Biblioteca creata correttamente'),
+       ('it', 'SNACKBAR_VAULT_UPDATED', 'Biblioteca aggiornata correttamente'),
+       ('it', 'SNACKBAR_VAULT_DELETED', 'Biblioteca eliminata correttamente'),
+       ('it', 'SNACKBAR_VAULT_SWITCHED', 'Biblioteca attiva cambiata'),
+       ('it', 'SNACKBAR_VAULT_LEFT', 'Hai abbandonato la biblioteca'),
+       ('it', 'SNACKBAR_MEMBER_UPDATED', 'Membro aggiornato correttamente'),
+       ('it', 'SNACKBAR_MEMBER_REMOVED', 'Membro rimosso correttamente'),
+       ('it', 'SNACKBAR_INVITE_LINK_COPIED', 'Link di invito copiato negli appunti');
+
+-- Book attribution (issue #7 follow-up): who added a book to the vault - see BookView.vue.
+INSERT INTO app_labels (language, code, text)
+VALUES ('en', 'BOOK_ADDED_BY', 'Added by'),
+       ('ca', 'BOOK_ADDED_BY', 'Afegit per'),
+       ('es', 'BOOK_ADDED_BY', 'Añadido por'),
+       ('it', 'BOOK_ADDED_BY', 'Aggiunto da');
+
+-- ============================================================
+-- 7. UI LABELS: vault deletion with content transfer - see VaultMembersDialog.vue
+-- ============================================================
+
+INSERT INTO app_labels (language, code, text)
+VALUES ('en', 'VAULT_DELETE_ONLY_VAULT', 'This is the only vault you belong to - you can''t delete it'),
+       ('en', 'VAULT_TRANSFER_TITLE', 'Move its content first'),
+       ('en', 'VAULT_TRANSFER_DESC', 'This vault still has books, customers or other content. Choose another vault to move everything into before deleting it.'),
+       ('en', 'VAULT_TRANSFER_TARGET', 'Move into'),
+       ('en', 'VAULT_TRANSFER_CONFIRM', 'Move & delete'),
+       ('ca', 'VAULT_DELETE_ONLY_VAULT', 'Aquesta és l''única biblioteca a la qual pertanys - no la pots eliminar'),
+       ('ca', 'VAULT_TRANSFER_TITLE', 'Mou el contingut primer'),
+       ('ca', 'VAULT_TRANSFER_DESC', 'Aquesta biblioteca encara té llibres, clients o altre contingut. Tria una altra biblioteca on moure-ho tot abans d''eliminar-la.'),
+       ('ca', 'VAULT_TRANSFER_TARGET', 'Moure a'),
+       ('ca', 'VAULT_TRANSFER_CONFIRM', 'Moure i eliminar'),
+       ('es', 'VAULT_DELETE_ONLY_VAULT', 'Esta es la única biblioteca a la que perteneces - no puedes eliminarla'),
+       ('es', 'VAULT_TRANSFER_TITLE', 'Mueve el contenido primero'),
+       ('es', 'VAULT_TRANSFER_DESC', 'Esta biblioteca todavía tiene libros, clientes u otro contenido. Elige otra biblioteca donde moverlo todo antes de eliminarla.'),
+       ('es', 'VAULT_TRANSFER_TARGET', 'Mover a'),
+       ('es', 'VAULT_TRANSFER_CONFIRM', 'Mover y eliminar'),
+       ('it', 'VAULT_DELETE_ONLY_VAULT', 'Questa è l''unica biblioteca a cui appartieni - non puoi eliminarla'),
+       ('it', 'VAULT_TRANSFER_TITLE', 'Sposta prima il contenuto'),
+       ('it', 'VAULT_TRANSFER_DESC', 'Questa biblioteca contiene ancora libri, clienti o altri contenuti. Scegli un''altra biblioteca in cui spostare tutto prima di eliminarla.'),
+       ('it', 'VAULT_TRANSFER_TARGET', 'Sposta in'),
+       ('it', 'VAULT_TRANSFER_CONFIRM', 'Sposta ed elimina');
+
+-- vault: a shared collection of books multiple users can belong to (issue #7).
+CREATE TABLE vault
+(
+    id               SERIAL PRIMARY KEY,
+    name             VARCHAR(65) NOT NULL,
+    description      VARCHAR(255),
+    invitation_uuid  UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    leasing_enabled  BOOLEAN NOT NULL DEFAULT FALSE,
+    date_created     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Role lookup table for vault membership. `rank` (not `code`) is what
+-- "most permissive wins" logic should compare on, since code values don't
+-- sort in permission order.
+CREATE TABLE vault_roles
+(
+    code                SMALLINT PRIMARY KEY,
+    name                VARCHAR(30) NOT NULL UNIQUE,
+    rank                SMALLINT NOT NULL UNIQUE,
+    can_borrow          BOOLEAN NOT NULL DEFAULT FALSE,
+    can_edit_catalog    BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage_members  BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage_settings BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+INSERT INTO vault_roles (code, name, rank, can_borrow, can_edit_catalog, can_manage_members, can_manage_settings)
+VALUES
+    (3, 'readonly', 0, FALSE, FALSE, FALSE, FALSE),
+    (2, 'borrower', 1, TRUE,  FALSE, FALSE, FALSE),
+    (0, 'normal',   2, TRUE,  TRUE,  FALSE, FALSE),
+    (1, 'admin',    3, TRUE,  TRUE,  TRUE,  TRUE);
+
 -- Users table
 CREATE TABLE users
 (
@@ -1336,12 +1538,18 @@ CREATE TABLE users
     -- Off by default - most accounts just track a personal collection and
     -- don't lend books out. Set from the Settings page (see PATCH
     -- /user/leasing in UserRoute.ts, AppMenu.vue and Router.ts client-side).
+    -- Superseded by vault.leasing_enabled (issue #7) - kept until app code
+    -- reads vault.leasing_enabled exclusively, then drop in a follow-up
+    -- migration.
     leasing_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     -- Optional OIDC link (issuer URL + subject from the IdP). Password-only
     -- accounts leave these NULL. UNIQUE allows several NULLs, so existing
     -- local accounts are unaffected. See server/src/utils/OidcUsers.ts.
     oidc_issuer     TEXT,
     oidc_sub        TEXT,
+    -- Which vault to load on login (issue #7); NULL until the user belongs
+    -- to at least one vault.
+    last_used_vault_id INT REFERENCES vault (id),
     UNIQUE (oidc_issuer, oidc_sub),
     -- Per-account brute-force protection (security audit #5) - see
     -- AuthService.ts. failed_login_count/lockout_until track wrong
@@ -1358,6 +1566,47 @@ CREATE TABLE users
     totp_last_used_step BIGINT,
     FOREIGN KEY (language) REFERENCES app_languages (code) ON DELETE SET NULL
 );
+
+-- vault_users: membership + role for each vault, with an invite/accept flow
+-- (status). A vault's creator is inserted as an accepted admin (see
+-- assets/db/upgrade/1.3.0.sql's backfill) and the trigger below keeps every
+-- vault at >= 1 admin from then on.
+CREATE TABLE vault_users
+(
+    vault_id     INT NOT NULL REFERENCES vault (id) ON DELETE CASCADE,
+    user_id      INT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    role         SMALLINT NOT NULL DEFAULT 0 REFERENCES vault_roles (code),
+    status       SMALLINT NOT NULL DEFAULT 0, -- 0 pending, 1 accepted, 2 rejected
+    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (vault_id, user_id)
+);
+
+-- Enforces "a vault must keep at least one admin" at the DB level;
+-- app-level UI should also block the action before it ever hits the DB, for
+-- a better error message.
+CREATE OR REPLACE FUNCTION enforce_vault_has_admin()
+RETURNS TRIGGER AS $$
+DECLARE
+  remaining_admins INT;
+  affected_vault INT := COALESCE(OLD.vault_id, NEW.vault_id);
+BEGIN
+  IF (TG_OP = 'DELETE' AND OLD.role = 1) OR
+     (TG_OP = 'UPDATE' AND OLD.role = 1 AND NEW.role != 1) THEN
+    SELECT count(*) INTO remaining_admins
+    FROM vault_users
+    WHERE vault_id = affected_vault AND role = 1 AND user_id != OLD.user_id;
+    IF remaining_admins = 0 THEN
+      RAISE EXCEPTION 'Vault % must keep at least one admin', affected_vault;
+    END IF;
+  END IF;
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_vault_min_one_admin
+    BEFORE UPDATE OR DELETE ON vault_users
+    FOR EACH ROW
+EXECUTE FUNCTION enforce_vault_has_admin();
 
 -- Tracks the public-institution security-measures notice shown after login
 -- (see SecurityNoticeDialog.vue / GET /app/policy / POST /user/security-notice/accept).
@@ -1460,49 +1709,53 @@ CREATE INDEX idx_activity_log_actor_created ON activity_log (actor_id, created_d
 -- groups
 CREATE TABLE customer_groups
 (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL,
-    description TEXT,
-    user_id     INT NOT NULL,
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    description  TEXT,
+    user_created INT,
 
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
 
-    CONSTRAINT unique_user_customer_group UNIQUE (user_id, name)
+    CONSTRAINT unique_vault_customer_group UNIQUE (vault_id, name)
 );
 
 -- customers table
 CREATE TABLE customers
 (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(100) NOT NULL,
-    group_id INT,
-    user_id INT          NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    group_id     INT,
+    user_created INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (group_id) REFERENCES customer_groups (id) ON DELETE SET NULL
 );
 
 -- Locations table
 CREATE TABLE locations
 (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL,
-    description TEXT,
-    "default"   BOOLEAN      NOT NULL DEFAULT FALSE,
-    user_id     INT          NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    description  TEXT,
+    "default"    BOOLEAN      NOT NULL DEFAULT FALSE,
+    user_created INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL
 );
 
--- Only one location can be the default per user.
-CREATE UNIQUE INDEX locations_one_default_per_user ON locations (user_id) WHERE "default";
+-- Only one location can be the default per vault.
+CREATE UNIQUE INDEX locations_one_default_per_vault ON locations (vault_id) WHERE "default";
 
 -- Categories table
 CREATE TABLE categories
 (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(100) NOT NULL,
-    user_id INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT unique_user_category UNIQUE (user_id, name)
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    user_created INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT unique_vault_category UNIQUE (vault_id, name)
 );
 
 -- Languages table
@@ -1557,6 +1810,7 @@ VALUES ('Hardcover'),
 CREATE TABLE books
 (
     id             SERIAL PRIMARY KEY,
+    vault_id       INT NOT NULL REFERENCES vault (id),
     name           VARCHAR(255) NOT NULL,
     description    TEXT,
     image_url      TEXT,
@@ -1573,31 +1827,34 @@ CREATE TABLE books
     reading_status SMALLINT CHECK (reading_status IN (0, 1, 2)),
     date_updated   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_created   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    user_id        INT          NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    user_created   INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL,
     FOREIGN KEY (language_code) REFERENCES languages (code) ON DELETE SET NULL,
     FOREIGN KEY (format_id) REFERENCES formats (id) ON DELETE SET NULL,
-    CONSTRAINT books_isbn_user_unique UNIQUE (isbn, user_id)
+    CONSTRAINT books_isbn_vault_unique UNIQUE (isbn, vault_id)
 );
 
 CREATE TABLE book_stocks
 (
-    id          SERIAL PRIMARY KEY,
-    book_id     INT                                     NOT NULL,
-    user_id     INT                                     NOT NULL,
-    code        CHAR(10) UNIQUE                         NOT NULL,
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT                                     NOT NULL REFERENCES vault (id),
+    book_id      INT                                     NOT NULL,
+    user_created INT,
+    -- code (printed barcode) stays globally UNIQUE, not vault-scoped: it's a
+    -- physical label, so two vaults printing the same code is a real clash.
+    code         CHAR(10) UNIQUE                         NOT NULL,
     -- 0: available, 1: not available, 2: booked, 3: damaged
-    status      SMALLINT CHECK (status IN (0, 1, 2, 3)) NOT NULL DEFAULT 0,
-    location_id INT,
+    status       SMALLINT CHECK (status IN (0, 1, 2, 3)) NOT NULL DEFAULT 0,
+    location_id  INT,
 
     -- when the book is status 2: booked, this field must be informed
-    customer_id INT,
+    customer_id  INT,
 
     -- When this copy was last loaned out (status set to 2); cleared on
     -- return. Powers the Loans view's date filter - best-effort only, not
     -- enforced in lockstep with status/customer_id by a CHECK constraint.
-    loaned_at   TIMESTAMP,
+    loaned_at    TIMESTAMP,
 
     -- Constraint: if status is 2, customer_id must be NOT NULL
     CHECK (
@@ -1605,7 +1862,7 @@ CREATE TABLE book_stocks
         (status != 2 AND customer_id IS NULL)
         ),
 
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations (id),
     FOREIGN KEY (customer_id) REFERENCES customers (id)
@@ -1620,7 +1877,8 @@ CREATE TABLE book_stocks
 CREATE TABLE loan_history
 (
     id            SERIAL PRIMARY KEY,
-    user_id       INT          NOT NULL,
+    vault_id      INT          NOT NULL REFERENCES vault (id),
+    user_created  INT,
     book_id       INT,
     book_name     VARCHAR(255) NOT NULL,
     stock_id      INT,
@@ -1632,14 +1890,15 @@ CREATE TABLE loan_history
     loaned_at     TIMESTAMP    NOT NULL,
     returned_at   TIMESTAMP,
 
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE SET NULL,
     FOREIGN KEY (stock_id) REFERENCES book_stocks (id) ON DELETE SET NULL,
     FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE SET NULL,
     FOREIGN KEY (group_id) REFERENCES customer_groups (id) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_loan_history_user_loaned_at ON loan_history (user_id, loaned_at DESC);
+-- Reports/queries scope by vault, not by the individual who created the loan.
+CREATE INDEX idx_loan_history_vault_loaned_at ON loan_history (vault_id, loaned_at DESC);
 
 -- Optional backup of a book's actual ebook file(s), in case the user only
 -- keeps the file itself on an e-reader. A book can have up to one file per
@@ -1650,8 +1909,9 @@ CREATE INDEX idx_loan_history_user_loaned_at ON loan_history (user_id, loaned_at
 CREATE TABLE book_files
 (
     id           SERIAL PRIMARY KEY,
+    vault_id     INT                                                    NOT NULL REFERENCES vault (id),
     book_id      INT                                                    NOT NULL,
-    user_id      INT                                                    NOT NULL,
+    user_created INT,
     file_type    VARCHAR(4) CHECK (file_type IN ('epub', 'pdf', 'mobi')) NOT NULL,
     file_name    VARCHAR(255)                                           NOT NULL,
     file_size    INT                                                    NOT NULL,
@@ -1659,27 +1919,29 @@ CREATE TABLE book_files
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (book_id, file_type),
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL
 );
 
 CREATE TABLE authors
 (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(100) NOT NULL,
-    user_id INT          NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT unique_user_author UNIQUE (user_id, name)
+    id           SERIAL PRIMARY KEY,
+    vault_id     INT NOT NULL REFERENCES vault (id),
+    name         VARCHAR(100) NOT NULL,
+    user_created INT,
+    FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT unique_vault_author UNIQUE (vault_id, name)
 );
 
+-- Pure join table: no user_created, since authorship isn't "created by"
+-- anyone in particular - it's derived from the book it's attached to.
 CREATE TABLE book_authors
 (
     book_id   INT NOT NULL,
     author_id INT NOT NULL,
-    user_id   INT NOT NULL,
+    vault_id  INT NOT NULL REFERENCES vault (id),
     PRIMARY KEY (book_id, author_id),
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
-    FOREIGN KEY (author_id) REFERENCES authors (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (author_id) REFERENCES authors (id) ON DELETE CASCADE
 );
 
 -- triggers

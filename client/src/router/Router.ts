@@ -16,6 +16,7 @@ import {customersRoute} from "@/router/routes/CustomersRoute";
 import {authorsRoute} from "@/router/routes/AuthorsRoute";
 import {loansRoute} from "@/router/routes/LoansRoute";
 import {legalRoute} from "@/router/routes/LegalRoute";
+import {vaultJoinRoute} from "@/router/routes/VaultJoinRoute";
 import {applicationService} from "@/service/ApplicationService";
 
 // Define your routes
@@ -34,6 +35,7 @@ const routes: Array<RouteRecordRaw> = [
     loansRoute.getRoute(),
     settingsRoute.getRoute(),
     legalRoute.getRoute(),
+    vaultJoinRoute.getRoute(),
 
     // Not found
     notFoundRoute.getRoute(),

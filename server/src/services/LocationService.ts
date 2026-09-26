@@ -14,21 +14,21 @@ export class LocationService {
 
     /**
      * Lists the caller's locations.
-     * @param userId Owning user's id.
-     * @returns Every location belonging to `userId`.
+     * @param vaultId Vault id.
+     * @returns Every location belonging to `vaultId`.
      */
-    public async listLocations(userId: number): Promise<Location[]> {
-        return new LocationRepository(this.pool).findAll(userId);
+    public async listLocations(vaultId: number): Promise<Location[]> {
+        return new LocationRepository(this.pool).findAll(vaultId);
     }
 
     /**
      * Lists the books stored at one location. No existence/ownership check - matches the original route (an unknown/foreign id just returns an empty list).
      * @param locationId Location id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Every book stock at that location.
      */
-    public async getLocationBooks(locationId: number, userId: number): Promise<LocationBook[]> {
-        return new LocationRepository(this.pool).getBooks(locationId, userId);
+    public async getLocationBooks(locationId: number, vaultId: number): Promise<LocationBook[]> {
+        return new LocationRepository(this.pool).getBooks(locationId, vaultId);
     }
 
     /**
@@ -38,13 +38,13 @@ export class LocationService {
      * all-or-nothing.
      *
      * @param locationId Destination location id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param stockCodes Book stock codes to move.
      * @returns The destination location's books after the move.
      */
-    public async moveBooksToLocation(locationId: number, userId: number, stockCodes: string[]): Promise<LocationBook[]> {
+    public async moveBooksToLocation(locationId: number, vaultId: number, stockCodes: string[]): Promise<LocationBook[]> {
         const repo = new LocationRepository(this.pool);
-        const exist = await repo.exists(locationId, userId);
+        const exist = await repo.exists(locationId, vaultId);
         if (!exist) {
             throw new NotFoundError("Location does not exist");
         }
@@ -52,24 +52,24 @@ export class LocationService {
         await withTransaction(this.pool, async (client) => {
             const txRepo = new LocationRepository(client);
             for (const stockCode of stockCodes) {
-                await txRepo.moveBookStock(locationId, userId, stockCode);
+                await txRepo.moveBookStock(locationId, vaultId, stockCode);
             }
         });
 
-        return repo.getBooks(locationId, userId);
+        return repo.getBooks(locationId, vaultId);
     }
 
     /**
      * Creates a location and returns the freshly-created row.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name Location name.
      * @param description Location description.
      * @returns The newly-created location.
      */
-    public async createLocation(userId: number, name: string, description: string): Promise<Location> {
+    public async createLocation(vaultId: number, name: string, description: string): Promise<Location> {
         const repo = new LocationRepository(this.pool);
-        const id = await repo.create(userId, name, description);
-        const location = await repo.findById(id, userId);
+        const id = await repo.create(vaultId, name, description);
+        const location = await repo.findById(id, vaultId);
         if (!location) {
             throw new NotFoundError("Location not found after creation");
         }
@@ -85,18 +85,18 @@ export class LocationService {
      * AuthorService.renameAuthor. Throws a plain Error, not a DomainError.
      *
      * @param id Location id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name New name.
      * @param description New description.
      * @returns The renamed location.
      */
-    public async renameLocation(id: string, userId: number, name: string, description: string): Promise<Location> {
+    public async renameLocation(id: string, vaultId: number, name: string, description: string): Promise<Location> {
         const repo = new LocationRepository(this.pool);
-        const rowsAffected = await repo.rename(id, userId, name, description);
+        const rowsAffected = await repo.rename(id, vaultId, name, description);
         if (rowsAffected !== 1) {
             throw new Error("Location rename affected an unexpected number of rows");
         }
-        const location = await repo.findById(id, userId);
+        const location = await repo.findById(id, vaultId);
         if (!location) {
             throw new Error("Location not found after rename");
         }
@@ -109,36 +109,36 @@ export class LocationService {
      * from this exact hand-rolled BEGIN/COMMIT/ROLLBACK, the first real caller).
      *
      * @param locationId Location id to make the new default.
-     * @param userId Owning user's id.
-     * @returns Every location belonging to `userId`, after the change.
+     * @param vaultId Vault id.
+     * @returns Every location belonging to `vaultId`, after the change.
      */
-    public async setDefaultLocation(locationId: number, userId: number): Promise<Location[]> {
+    public async setDefaultLocation(locationId: number, vaultId: number): Promise<Location[]> {
         const repo = new LocationRepository(this.pool);
-        const exist = await repo.exists(locationId, userId);
+        const exist = await repo.exists(locationId, vaultId);
         if (!exist) {
             throw new NotFoundError("Location does not exist");
         }
 
         await withTransaction(this.pool, async (client) => {
             const txRepo = new LocationRepository(client);
-            await txRepo.clearDefault(userId);
-            await txRepo.setDefault(locationId, userId);
+            await txRepo.clearDefault(vaultId);
+            await txRepo.setDefault(locationId, vaultId);
         });
 
-        return repo.findAll(userId);
+        return repo.findAll(vaultId);
     }
 
     /**
      * Deletes a location, throwing NotFoundError if it doesn't belong to the caller.
      * @param id Location id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async deleteLocation(id: number, userId: number): Promise<void> {
+    public async deleteLocation(id: number, vaultId: number): Promise<void> {
         const repo = new LocationRepository(this.pool);
-        const found = await repo.exists(id, userId);
+        const found = await repo.exists(id, vaultId);
         if (!found) {
             throw new NotFoundError("Location not found");
         }
-        await repo.remove(id, userId);
+        await repo.remove(id, vaultId);
     }
 }

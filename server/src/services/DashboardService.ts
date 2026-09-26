@@ -31,10 +31,10 @@ export class DashboardService {
 
     /**
      * Builds the full dashboard payload: runs every DashboardRepository query concurrently, then folds/shapes the results.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The dashboard's KPIs and chart data.
      */
-    public async getDashboard(userId: number): Promise<DashboardData> {
+    public async getDashboard(vaultId: number): Promise<DashboardData> {
         const repo = new DashboardRepository(this.pool);
         const [
             lastBooks,
@@ -54,22 +54,22 @@ export class DashboardService {
             currentlyReading,
             totalRead
         ] = await Promise.all([
-            repo.findRecentBooks(userId),
-            repo.countBooks(userId),
-            repo.countBooksThisMonth(userId),
-            repo.countBooksLastMonth(userId),
-            repo.countCategories(userId),
-            repo.countCustomers(userId),
-            repo.getBooksPerMonth(userId),
-            repo.getStockStatusCounts(userId),
-            repo.countBookedBooks(userId),
-            repo.countLocations(userId),
-            repo.countAuthors(userId),
-            repo.getTopCategoryShelfRows(userId),
-            repo.getCurrentlyOnLoan(userId),
-            repo.findByReadingStatus(userId, ReadingStatusEnum.WANT_TO_READ),
-            repo.findByReadingStatus(userId, ReadingStatusEnum.CURRENTLY_READING),
-            repo.countByReadingStatus(userId, ReadingStatusEnum.READ),
+            repo.findRecentBooks(vaultId),
+            repo.countBooks(vaultId),
+            repo.countBooksThisMonth(vaultId),
+            repo.countBooksLastMonth(vaultId),
+            repo.countCategories(vaultId),
+            repo.countCustomers(vaultId),
+            repo.getBooksPerMonth(vaultId),
+            repo.getStockStatusCounts(vaultId),
+            repo.countBookedBooks(vaultId),
+            repo.countLocations(vaultId),
+            repo.countAuthors(vaultId),
+            repo.getTopCategoryShelfRows(vaultId),
+            repo.getCurrentlyOnLoan(vaultId),
+            repo.findByReadingStatus(vaultId, ReadingStatusEnum.WANT_TO_READ),
+            repo.findByReadingStatus(vaultId, ReadingStatusEnum.CURRENTLY_READING),
+            repo.countByReadingStatus(vaultId, ReadingStatusEnum.READ),
         ]);
 
         return {

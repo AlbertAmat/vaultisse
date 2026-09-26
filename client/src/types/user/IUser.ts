@@ -10,6 +10,8 @@
  * };
  */
 export interface IUser {
+    /** Numeric account id - matches `vault_users.user_id` for telling a caller's own row apart from other vault members (see VaultsCard.vue). */
+    id: number;
     /** Unique immutable login code. */
     code: string;
     /** Display name. */
@@ -45,4 +47,10 @@ export interface IUser {
      * `securityNoticeAccepted`.
      */
     termsOfServiceAccepted: boolean;
+    /**
+     * The vault (shared library, issue #7) this account last worked in -
+     * loaded on login, and what every catalog resource (books, categories,
+     * etc.) is scoped to server-side. See VaultsCard.vue for switching it.
+     */
+    activeVault: number;
 }

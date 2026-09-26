@@ -24,37 +24,37 @@ export class ImportRepository {
     }
 
     /**
-     * A book with this ISBN already exists for this user (`books_isbn_user_unique`).
+     * A book with this ISBN already exists for this vault (`books_isbn_vault_unique`).
      * @param isbn ISBN to check.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching book exists.
      */
-    public async existsByIsbn(isbn: string, userId: number): Promise<boolean> {
-        const result = await this.db.query("SELECT 1 FROM books WHERE isbn = $1 AND user_id = $2", [isbn, userId]);
+    public async existsByIsbn(isbn: string, vaultId: number): Promise<boolean> {
+        const result = await this.db.query("SELECT 1 FROM books WHERE isbn = $1 AND vault_id = $2", [isbn, vaultId]);
         return (result.rowCount ?? 0) > 0;
     }
 
     /**
      * Without an ISBN there's no unique key to rely on, so fall back to an
-     * exact (case-insensitive) title match among the user's other ISBN-less
+     * exact (case-insensitive) title match among the vault's other ISBN-less
      * books - good enough to make re-uploading the same export a no-op without
      * risking a false-positive skip against an unrelated book that happens to
      * share a title.
      *
      * @param name Book title.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching ISBN-less book exists.
      */
-    public async existsByName(name: string, userId: number): Promise<boolean> {
+    public async existsByName(name: string, vaultId: number): Promise<boolean> {
         const result = await this.db.query(
-            "SELECT 1 FROM books WHERE LOWER(name) = LOWER($1) AND isbn IS NULL AND user_id = $2",
-            [name, userId]
+            "SELECT 1 FROM books WHERE LOWER(name) = LOWER($1) AND isbn IS NULL AND vault_id = $2",
+            [name, vaultId]
         );
         return (result.rowCount ?? 0) > 0;
     }
 
     /**
-     * `formats` is a small, fixed, global (not user-scoped) table - matched, never created, from an import.
+     * `formats` is a small, fixed, global (not vault-scoped) table - matched, never created, from an import.
      * @param formatName Format name to look up, or null to no-op.
      * @returns The format id, or null.
      */
@@ -67,35 +67,35 @@ export class ImportRepository {
     }
 
     /**
-     * Find-or-create a category by name for this user. `null` if `name` is falsy - imported without a category rather than guessing one.
+     * Find-or-create a category by name for this vault. `null` if `name` is falsy - imported without a category rather than guessing one.
      * @param name Category name, or null.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The category id, or null.
      */
-    public async ensureCategory(name: string | null, userId: number): Promise<number | null> {
+    public async ensureCategory(name: string | null, vaultId: number): Promise<number | null> {
         if (!name) {
             return null;
         }
         const repo = new BookRepository(this.db);
-        const existing = await repo.findCategoryByName(name, userId);
+        const existing = await repo.findCategoryByName(name, vaultId);
         if (existing !== null) {
             return existing;
         }
-        return repo.insertCategory(name, userId);
+        return repo.insertCategory(name, vaultId);
     }
 
     /**
-     * Find-or-create a location by name for this user.
+     * Find-or-create a location by name for this vault.
      * @param name Location name.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The location id.
      */
-    private async ensureLocation(name: string, userId: number): Promise<number> {
-        const existing = await this.db.query("SELECT id FROM locations WHERE name = $1 AND user_id = $2", [name, userId]);
+    private async ensureLocation(name: string, vaultId: number): Promise<number> {
+        const existing = await this.db.query("SELECT id FROM locations WHERE name = $1 AND vault_id = $2", [name, vaultId]);
         if ((existing.rowCount ?? 0) > 0) {
             return existing.rows[0].id;
         }
-        const insert = await this.db.query("INSERT INTO locations (name, user_id) VALUES ($1, $2) RETURNING id", [name, userId]);
+        const insert = await this.db.query("INSERT INTO locations (name, vault_id) VALUES ($1, $2) RETURNING id", [name, vaultId]);
         return insert.rows[0].id;
     }
 
@@ -103,43 +103,43 @@ export class ImportRepository {
      * Create one "available" (status 0) stock for `bookId` at a location found-or-created by `locationName` - one call per entry in `IImportedBook.locations`.
      * @param bookId Book id.
      * @param locationName Location name to find-or-create.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async addStockAtLocation(bookId: number, locationName: string, userId: number): Promise<void> {
-        const locationId = await this.ensureLocation(locationName, userId);
+    public async addStockAtLocation(bookId: number, locationName: string, vaultId: number): Promise<void> {
+        const locationId = await this.ensureLocation(locationName, vaultId);
         const code = await new BookRepository(this.db).generateStockCode();
         await this.db.query(
-            "INSERT INTO book_stocks (book_id, code, status, location_id, user_id) VALUES ($1, $2, $3, $4, $5)",
-            [bookId, code, 0, locationId, userId]
+            "INSERT INTO book_stocks (book_id, code, status, location_id, vault_id) VALUES ($1, $2, $3, $4, $5)",
+            [bookId, code, 0, locationId, vaultId]
         );
     }
 
     /**
-     * Find-or-create each author by name (truncated to fit `authors.name`) for this user, then link them all to `bookId` in `book_authors`.
+     * Find-or-create each author by name (truncated to fit `authors.name`) for this vault, then link them all to `bookId` in `book_authors`.
      * @param bookId Book id.
      * @param authors Author names.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async ensureAuthors(bookId: number, authors: string[], userId: number): Promise<void> {
+    public async ensureAuthors(bookId: number, authors: string[], vaultId: number): Promise<void> {
         const repo = new BookRepository(this.db);
         for (const name of authors) {
             const truncated = name.length > 100 ? name.substring(0, 100) : name;
-            const existingId = await repo.findAuthorByName(truncated, userId);
-            const authorId = existingId ?? await repo.insertAuthorRow(truncated, userId);
-            await repo.linkAuthorToBook(bookId, authorId, userId);
+            const existingId = await repo.findAuthorByName(truncated, vaultId);
+            const authorId = existingId ?? await repo.insertAuthorRow(truncated, vaultId);
+            await repo.linkAuthorToBook(bookId, authorId, vaultId);
         }
     }
 
     /**
      * Inserts one imported book row.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param fields Imported book fields.
      * @returns The new row's id.
      */
-    public async insertBook(userId: number, fields: InsertImportedBookFields): Promise<number> {
+    public async insertBook(vaultId: number, userId: number, fields: InsertImportedBookFields): Promise<number> {
         const result = await this.db.query(
-            `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, reading_status, user_id)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, reading_status, vault_id, user_created)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
              RETURNING id`,
             [
                 fields.name,
@@ -153,6 +153,7 @@ export class ImportRepository {
                 fields.languageCode,
                 fields.pages,
                 fields.readingStatus,
+                vaultId,
                 userId,
             ]
         );

@@ -103,13 +103,14 @@ export class ImportController {
             return;
         }
 
+        const vaultId = appService.getSessionVault(req);
         const userId = appService.getSessionUser(req);
 
-        const {result, importedIds} = await importService.importBooks(userId, books);
+        const {result, importedIds} = await importService.importBooks(vaultId, userId, books);
 
         res.status(200).json(result);
         new ImportEnrichmentService(this.pool).scheduleEnrichment(
-            userId,
+            vaultId,
             importedIds,
             appService.getGoogleApiKey(),
             appService.getLibraryThingApiKey()

@@ -9,6 +9,10 @@ import {appService} from "../AppService";
 import {OidcUserRepository, OidcAccountRow} from "../repositories/OidcUserRepository";
 import {OidcClaims} from "../repositories/OidcRepository";
 import {ResolvedAuthUser} from "../types/auth";
+import {UserRepository} from "../repositories/UserRepository";
+import {VaultRepository} from "../repositories/VaultRepository";
+import {withTransaction} from "../repositories/withTransaction";
+import {VaultRoleCode, VaultUserStatus} from "../types/vault";
 
 export class OidcUserError extends Error {
     public constructor(message: string) {
@@ -126,13 +130,26 @@ export class OidcUserService {
         const passwordHash = await appService.hashPassword(crypto.randomBytes(32).toString("hex"));
 
         try {
-            return await repo.create({
-                name: this.displayName(claims),
-                code,
-                email: email.slice(0, 100),
-                passwordHash,
-                issuer: claims.issuer,
-                sub,
+            return await withTransaction(this.pool, async (client) => {
+                const txRepo = new OidcUserRepository(client);
+                const user = await txRepo.create({
+                    name: this.displayName(claims),
+                    code,
+                    email: email.slice(0, 100),
+                    passwordHash,
+                    issuer: claims.issuer,
+                    sub,
+                });
+
+                // Provision a personal vault (issue #7), same as password
+                // registration (see AuthService.register) - a JIT-created
+                // account needs somewhere of its own to put a book too.
+                const vaultRepo = new VaultRepository(client);
+                const vaultId = await vaultRepo.createVault(`${this.displayName(claims)}'s library`, null);
+                await vaultRepo.addMember(vaultId, user.id, VaultRoleCode.ADMIN, VaultUserStatus.ACCEPTED);
+                await new UserRepository(client).setActiveVault(user.id, vaultId);
+
+                return user;
             });
         } catch (err: any) {
             if (err.code === "23505") {

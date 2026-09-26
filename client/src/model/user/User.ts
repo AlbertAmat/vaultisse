@@ -6,6 +6,7 @@ import { ref, Ref } from "vue";
 
 // Service for performing API calls related to the user
 import { userService } from "@/service/user/UserService";
+import { vaultService } from "@/service/vault/VaultService";
 
 // Controller for showing feedback messages (snackbars) to the user
 import { appSnackbarController } from "@/components/appSnackbar/AppSnackbarController";
@@ -17,6 +18,13 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
  * access and modify the user's profile data reactively.
  */
 export default class User {
+
+    /**
+     * Numeric account id - matches `vault_users.user_id` for telling a
+     * caller's own row apart from other vault members (see VaultsCard.vue).
+     * @private
+     */
+    private readonly m_id: number;
 
     /**
      * Unique immutable user code assigned by the system.
@@ -111,10 +119,19 @@ export default class User {
     private m_totpEnabled: Ref<boolean>;
 
     /**
+     * The vault (shared library, issue #7) this account last worked in.
+     * Stored as a reactive value so the app shell (nav, page data) reflects
+     * a switch immediately - see `switchVault()`.
+     * @private
+     */
+    private m_activeVault: Ref<number>;
+
+    /**
      * Initializes a User instance with data from the backend.
      * @param data - IUser object containing initial user information.
      */
     public constructor(data: IUser) {
+        this.m_id = data.id;
         this.m_code = data.code;
         this.m_email = ref(data.email);
         this.m_name = ref(data.name);
@@ -128,6 +145,14 @@ export default class User {
         this.m_securityNoticeAccepted = ref(data.securityNoticeAccepted);
         this.m_termsOfServiceAccepted = ref(data.termsOfServiceAccepted);
         this.m_totpEnabled = ref(data.totpEnabled);
+        this.m_activeVault = ref(data.activeVault);
+    }
+
+    /**
+     * Returns the numeric account id - matches `vault_users.user_id`.
+     */
+    public getId(): number {
+        return this.m_id;
     }
 
     /**
@@ -293,6 +318,26 @@ export default class User {
      */
     public setTotpEnabled(enabled: boolean) {
         this.m_totpEnabled.value = enabled;
+    }
+
+    /**
+     * Returns the id of the vault (shared library, issue #7) this account
+     * last worked in - what every catalog resource is scoped to server-side.
+     */
+    public getActiveVaultId(): number {
+        return this.m_activeVault.value;
+    }
+
+    /**
+     * Switches the caller's active vault and updates the local reactive
+     * value on success. The app shell reads catalog data fresh from the
+     * server on navigation, so callers should reload the current page
+     * (see VaultsCard.vue) after this resolves.
+     * @param vaultId Vault to make active - the caller must already be an accepted member.
+     */
+    public async switchVault(vaultId: number) {
+        await vaultService.setActive(vaultId);
+        this.m_activeVault.value = vaultId;
     }
 
     /**

@@ -199,13 +199,17 @@ export class AuthRepository {
      * hint as a minor, deliberate simplification (not a behavior change).
      *
      * @param userId User id to check.
-     * @returns The current token_version, or null if the user doesn't exist or is disabled.
+     * Also returns `last_used_vault_id` (the caller's active vault, issue
+     * #7) so AuthMiddleware can attach `req.vaultId` without a second
+     * round trip - every request already pays this query's cost.
+     *
+     * @returns The current token_version and active vault id, or null if the user doesn't exist or is disabled.
      */
-    public async getActiveUserTokenVersion(userId: number): Promise<number | null> {
+    public async getActiveUserTokenVersion(userId: number): Promise<{tokenVersion: number; activeVaultId: number | null} | null> {
         const result = await this.db.query(
-            `SELECT token_version FROM users WHERE id = $1 AND disabled = FALSE`,
+            `SELECT token_version AS "tokenVersion", last_used_vault_id AS "activeVaultId" FROM users WHERE id = $1 AND disabled = FALSE`,
             [userId]
         );
-        return result.rows[0]?.token_version ?? null;
+        return result.rows[0] ?? null;
     }
 }

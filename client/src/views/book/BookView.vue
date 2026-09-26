@@ -149,6 +149,10 @@
 											{{ readingStatusName || emptyValue }}
 										</div>
 									</div>
+									<div v-if="createdBy" class="pb-book-view-field">
+										<div class="pb-eyebrow">{{t(AppLabels.BOOK_ADDED_BY)}}</div>
+										<div class="pb-book-view-value">{{ createdBy }}</div>
+									</div>
 								</div>
 
 								<p v-if="description" class="pb-book-view-description">{{ description }}</p>
@@ -567,6 +571,9 @@ const publishedDateDisplay = computed(() => {
 	const date = model.getBook().getPublishDate();
 	return date ? date.toLocaleDateString() : null;
 })
+
+/** Read-only, unlike the fields above - who added a book is never editable. */
+const createdBy = computed(() => model.getBook().getCreatedBy());
 
 const isbn = computed({
 	get() {

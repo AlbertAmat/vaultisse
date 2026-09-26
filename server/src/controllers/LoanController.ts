@@ -19,8 +19,8 @@ export class LoanController {
      */
     public async list(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const result = await new LoanService(this.pool).listLoans(userId, {
+            const vaultId = appService.getSessionVault(req);
+            const result = await new LoanService(this.pool).listLoans(vaultId, {
                 groupId: req.query.group_id ? Number(req.query.group_id) : null,
                 dateFrom: req.query.date_from ? String(req.query.date_from) : null,
                 dateTo: req.query.date_to ? String(req.query.date_to) : null,
@@ -40,8 +40,8 @@ export class LoanController {
      */
     public async report(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const rows = await new LoanService(this.pool).getLoanReport(userId, {
+            const vaultId = appService.getSessionVault(req);
+            const rows = await new LoanService(this.pool).getLoanReport(vaultId, {
                 dateFrom: req.query.date_from ? String(req.query.date_from) : null,
                 dateTo: req.query.date_to ? String(req.query.date_to) : null,
                 groupId: req.query.group_id ? Number(req.query.group_id) : null,

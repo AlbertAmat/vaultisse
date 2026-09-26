@@ -28,16 +28,16 @@ export class BookRepository {
 
     /**
      * Paginated/filterable/sortable book search, each row carrying its author list.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param filter Search query, category/status filters, date range, sort and page.
      * @returns The total matching row count (across all pages) and this page's books.
      */
-    public async search(userId: number, filter: BookSearchFilter): Promise<{total: number; books: BookSearchResult[]}> {
+    public async search(vaultId: number, filter: BookSearchFilter): Promise<{total: number; books: BookSearchResult[]}> {
         const MAX_ROWS = 50;
         const skip = MAX_ROWS * filter.page;
 
-        const params: any[] = [userId];
-        const conditions: string[] = [`books.user_id = $1`];
+        const params: any[] = [vaultId];
+        const conditions: string[] = [`books.vault_id = $1`];
 
         let sqlStatement = `
             SELECT books.id,
@@ -63,8 +63,8 @@ export class BookRepository {
 
         if (filter.query) {
             // Parenthesized: without it, `AND` binds tighter than `OR` and this
-            // clause escapes the `books.user_id = $1` condition above, leaking
-            // every user's books whose ISBN happens to match (security audit #1).
+            // clause escapes the `books.vault_id = $1` condition above, leaking
+            // every vault's books whose ISBN happens to match (security audit #1).
             conditions.push(`(LOWER(books.name) ILIKE $${params.push(`%${filter.query.toLocaleLowerCase()}%`)} OR LOWER(books.isbn) ILIKE $${params.push(`%${filter.query.toLocaleLowerCase()}%`)})`);
         }
 
@@ -76,18 +76,18 @@ export class BookRepository {
         for (const rawFilter of filter.filters) {
             switch (rawFilter) {
                 case SearchFilter.NO_STOCK: {
-                    conditions.push(`books.id NOT IN (SELECT book_id FROM book_stocks WHERE user_id = $${params.length + 1})`);
-                    params.push(userId);
+                    conditions.push(`books.id NOT IN (SELECT book_id FROM book_stocks WHERE vault_id = $${params.length + 1})`);
+                    params.push(vaultId);
                     break;
                 }
                 case SearchFilter.HAS_STOCK: {
-                    conditions.push(`books.id IN (SELECT book_id FROM book_stocks WHERE user_id = $${params.length + 1})`);
-                    params.push(userId);
+                    conditions.push(`books.id IN (SELECT book_id FROM book_stocks WHERE vault_id = $${params.length + 1})`);
+                    params.push(vaultId);
                     break;
                 }
                 case SearchFilter.ON_LOAN: {
-                    conditions.push(`books.id IN (SELECT book_id FROM book_stocks WHERE user_id = $${params.length + 1} AND status = 2)`);
-                    params.push(userId);
+                    conditions.push(`books.id IN (SELECT book_id FROM book_stocks WHERE vault_id = $${params.length + 1} AND status = 2)`);
+                    params.push(vaultId);
                     break;
                 }
                 case SearchFilter.RECENT: {
@@ -153,17 +153,17 @@ export class BookRepository {
 
     /**
      * KPI counters for the Books view (total, recent, on loan, no stock, want-to-read, currently-reading).
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Every counter.
      */
-    public async getCounters(userId: number): Promise<BookCounters> {
+    public async getCounters(vaultId: number): Promise<BookCounters> {
         const [total, recent, onLoan, noStock, wantToRead, currentlyReading] = await Promise.all([
-            this.db.query(`SELECT COUNT(*) FROM books WHERE user_id = $1`, [userId]),
-            this.db.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND date_created >= NOW() - INTERVAL '30 days'`, [userId]),
-            this.db.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND id IN (SELECT book_id FROM book_stocks WHERE user_id = $1 AND status = 2)`, [userId]),
-            this.db.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND id NOT IN (SELECT book_id FROM book_stocks WHERE user_id = $1)`, [userId]),
-            this.db.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND reading_status = $2`, [userId, ReadingStatusEnum.WANT_TO_READ]),
-            this.db.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND reading_status = $2`, [userId, ReadingStatusEnum.CURRENTLY_READING]),
+            this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1`, [vaultId]),
+            this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND date_created >= NOW() - INTERVAL '30 days'`, [vaultId]),
+            this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND id IN (SELECT book_id FROM book_stocks WHERE vault_id = $1 AND status = 2)`, [vaultId]),
+            this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND id NOT IN (SELECT book_id FROM book_stocks WHERE vault_id = $1)`, [vaultId]),
+            this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND reading_status = $2`, [vaultId, ReadingStatusEnum.WANT_TO_READ]),
+            this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND reading_status = $2`, [vaultId, ReadingStatusEnum.CURRENTLY_READING]),
         ]);
 
         return {
@@ -181,10 +181,10 @@ export class BookRepository {
     /**
      * Full detail for one book: fields, files, stocks (with location/customer), and authors.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The book detail, or null if it doesn't exist or belongs to someone else.
      */
-    public async findDetailById(id: number, userId: number): Promise<BookDetail | null> {
+    public async findDetailById(id: number, vaultId: number): Promise<BookDetail | null> {
         const result = await this.db.query(`
             SELECT books.id,
                    books.name,
@@ -200,6 +200,7 @@ export class BookRepository {
                    books.pages,
                    books.format_id,
                    books.reading_status,
+                   creator.name AS created_by,
                    COALESCE(
                            json_agg(
                                DISTINCT jsonb_build_object(
@@ -234,17 +235,22 @@ export class BookRepository {
             FROM books
                      -- Defense in depth (security audit #2): the outer WHERE
                      -- already scopes books to the caller, but scoping these
-                     -- joins too means a stray cross-user book_stocks/locations
+                     -- joins too means a stray cross-vault book_stocks/locations
                      -- row can never surface here even if some other bug lets
                      -- one get created.
-                     LEFT JOIN book_stocks ON books.id = book_stocks.book_id AND book_stocks.user_id = $2
-                     LEFT JOIN locations ON book_stocks.location_id = locations.id AND locations.user_id = $2
-                     LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.user_id = $2
+                     LEFT JOIN book_stocks ON books.id = book_stocks.book_id AND book_stocks.vault_id = $2
+                     LEFT JOIN locations ON book_stocks.location_id = locations.id AND locations.vault_id = $2
+                     LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.vault_id = $2
                      LEFT JOIN book_authors ON books.id = book_authors.book_id
                      LEFT JOIN authors ON book_authors.author_id = authors.id
-                     LEFT JOIN book_files ON books.id = book_files.book_id AND book_files.user_id = $2
+                     LEFT JOIN book_files ON books.id = book_files.book_id AND book_files.vault_id = $2
+                     -- Not scoped to vault_id like the others above: a book's
+                     -- creator (audit trail only, see assets/db/upgrade/1.3.0.sql)
+                     -- may since have left the vault, but the name they added
+                     -- it under is still worth showing.
+                     LEFT JOIN users creator ON creator.id = books.user_created
             WHERE books.id = $1
-              AND books.user_id = $2
+              AND books.vault_id = $2
             GROUP BY books.id,
                      books.name,
                      books.description,
@@ -258,8 +264,9 @@ export class BookRepository {
                      books.date_updated,
                      books.pages,
                      books.format_id,
-                     books.reading_status;
-        `, [id, userId]);
+                     books.reading_status,
+                     creator.name;
+        `, [id, vaultId]);
 
         if (result.rows.length !== 1) {
             return null;
@@ -268,23 +275,23 @@ export class BookRepository {
     }
 
     /**
-     * Checks whether a book exists and belongs to `userId`.
+     * Checks whether a book exists and belongs to `vaultId`.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching book exists.
      */
-    public async exists(id: number, userId: number): Promise<boolean> {
-        const result = await this.db.query('SELECT id FROM books WHERE id = $1 AND user_id = $2', [id, userId]);
+    public async exists(id: number, vaultId: number): Promise<boolean> {
+        const result = await this.db.query('SELECT id FROM books WHERE id = $1 AND vault_id = $2', [id, vaultId]);
         return (result.rowCount ?? 0) > 0;
     }
 
     /**
      * Updates a book's editable fields.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param fields New field values.
      */
-    public async updateFields(id: number, userId: number, fields: UpdateBookFields): Promise<void> {
+    public async updateFields(id: number, vaultId: number, fields: UpdateBookFields): Promise<void> {
         await this.db.query(
             `UPDATE books
              SET name           = $1,
@@ -300,7 +307,7 @@ export class BookRepository {
                  reading_status = $11,
                  date_updated   = CURRENT_TIMESTAMP
              WHERE id = $12
-               AND user_id = $13`,
+               AND vault_id = $13`,
             [
                 fields.name,
                 fields.description,
@@ -314,7 +321,7 @@ export class BookRepository {
                 fields.pages,
                 fields.reading_status ?? null,
                 id,
-                userId,
+                vaultId,
             ]
         );
     }
@@ -333,29 +340,29 @@ export class BookRepository {
      * Removes one author link from a book.
      * @param bookId Book id.
      * @param authorId Author id to unlink.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async removeAuthorLink(bookId: number, authorId: number, userId: number): Promise<void> {
-        await this.db.query('DELETE FROM book_authors WHERE book_id = $1 AND author_id = $2 AND user_id = $3', [bookId, authorId, userId]);
+    public async removeAuthorLink(bookId: number, authorId: number, vaultId: number): Promise<void> {
+        await this.db.query('DELETE FROM book_authors WHERE book_id = $1 AND author_id = $2 AND vault_id = $3', [bookId, authorId, vaultId]);
     }
 
     /**
      * Adds one author link to a book.
      * @param bookId Book id.
      * @param authorId Author id to link.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async addAuthorLink(bookId: number, authorId: number, userId: number): Promise<void> {
-        await this.db.query('INSERT INTO book_authors (book_id, author_id, user_id) VALUES ($1, $2, $3)', [bookId, authorId, userId]);
+    public async addAuthorLink(bookId: number, authorId: number, vaultId: number): Promise<void> {
+        await this.db.query('INSERT INTO book_authors (book_id, author_id, vault_id) VALUES ($1, $2, $3)', [bookId, authorId, vaultId]);
     }
 
     /**
-     * Deletes a book, scoped to `userId`.
+     * Deletes a book, scoped to `vaultId`.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async remove(id: number, userId: number): Promise<void> {
-        await this.db.query('DELETE FROM books WHERE id = $1 AND user_id = $2', [id, userId]);
+    public async remove(id: number, vaultId: number): Promise<void> {
+        await this.db.query('DELETE FROM books WHERE id = $1 AND vault_id = $2', [id, vaultId]);
     }
 
     /* ---------- Cover image ---------- */
@@ -363,14 +370,14 @@ export class BookRepository {
     /**
      * Sets a book's cover image URL (uploaded file or looked-up cover).
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param imageUrl New image URL (or data: URI).
      * @returns Rows affected.
      */
-    public async updateImageUrl(id: number, userId: number, imageUrl: string): Promise<number> {
+    public async updateImageUrl(id: number, vaultId: number, imageUrl: string): Promise<number> {
         const result = await this.db.query(
-            "UPDATE books SET image_url = $1 WHERE id = $2 AND user_id = $3",
-            [imageUrl, id, userId]
+            "UPDATE books SET image_url = $1 WHERE id = $2 AND vault_id = $3",
+            [imageUrl, id, vaultId]
         );
         return result.rowCount ?? 0;
     }
@@ -378,11 +385,11 @@ export class BookRepository {
     /**
      * Looks up a book's stored ISBN.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The stored ISBN (possibly null), or undefined if the book itself wasn't found.
      */
-    public async getIsbn(id: number, userId: number): Promise<string | null | undefined> {
-        const result = await this.db.query("SELECT isbn FROM books WHERE id = $1 AND user_id = $2", [id, userId]);
+    public async getIsbn(id: number, vaultId: number): Promise<string | null | undefined> {
+        const result = await this.db.query("SELECT isbn FROM books WHERE id = $1 AND vault_id = $2", [id, vaultId]);
         if (result.rowCount !== 1) {
             return undefined; // book not found - distinct from `null` (found, but no isbn stored)
         }
@@ -392,37 +399,37 @@ export class BookRepository {
     /* ---------- Manual create ---------- */
 
     /**
-     * Checks whether an ISBN is already used by one of `userId`'s books.
+     * Checks whether an ISBN is already used by one of `vaultId`'s books.
      * @param isbn ISBN to check.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching book exists.
      */
-    public async isbnExists(isbn: string, userId: number): Promise<boolean> {
-        const result = await this.db.query('SELECT id FROM books WHERE isbn = $1 AND user_id = $2', [isbn, userId]);
+    public async isbnExists(isbn: string, vaultId: number): Promise<boolean> {
+        const result = await this.db.query('SELECT id FROM books WHERE isbn = $1 AND vault_id = $2', [isbn, vaultId]);
         return result.rowCount === 1;
     }
 
     /**
      * Inserts a minimal manually-created book.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param book Name/description/image/isbn fields.
      * @returns The new row's id.
      */
-    public async insert(userId: number, book: {name: string; description: string; imageUrl: string; isbn: string}): Promise<number> {
+    public async insert(vaultId: number, userId: number, book: {name: string; description: string; imageUrl: string; isbn: string}): Promise<number> {
         const result = await this.db.query(
-            "INSERT INTO books (name, description, image_url, isbn, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-            [book.name, book.description, book.imageUrl, book.isbn, userId]
+            "INSERT INTO books (name, description, image_url, isbn, vault_id, user_created) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+            [book.name, book.description, book.imageUrl, book.isbn, vaultId, userId]
         );
         return result.rows[0].id;
     }
 
     /**
-     * The user's sole location id, or null if they have zero or more than one - used by the "auto-place a new book" rule.
-     * @param userId Owning user's id.
+     * The vault's sole location id, or null if they have zero or more than one - used by the "auto-place a new book" rule.
+     * @param vaultId Vault id.
      * @returns The sole location id, or null.
      */
-    public async soleLocationId(userId: number): Promise<number | null> {
-        const result = await this.db.query(`SELECT id FROM locations WHERE user_id = $1`, [userId]);
+    public async soleLocationId(vaultId: number): Promise<number | null> {
+        const result = await this.db.query(`SELECT id FROM locations WHERE vault_id = $1`, [vaultId]);
         if (result.rowCount !== 1) {
             return null;
         }
@@ -434,12 +441,12 @@ export class BookRepository {
      * @param bookId Book id.
      * @param code New stock code.
      * @param locationId Location id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async insertStockMinimal(bookId: number, code: string, locationId: number, userId: number): Promise<void> {
+    public async insertStockMinimal(bookId: number, code: string, locationId: number, vaultId: number): Promise<void> {
         await this.db.query(
-            "INSERT INTO book_stocks (book_id, code, location_id, user_id) VALUES ($1, $2, $3, $4)",
-            [bookId, code, locationId, userId]
+            "INSERT INTO book_stocks (book_id, code, location_id, vault_id) VALUES ($1, $2, $3, $4)",
+            [bookId, code, locationId, vaultId]
         );
     }
 
@@ -448,7 +455,7 @@ export class BookRepository {
     /**
      * Inserts or replaces a book's ebook file of a given type.
      * @param bookId Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param fileType File format.
      * @param fileName Original file name.
      * @param fileSize File size in bytes.
@@ -457,14 +464,14 @@ export class BookRepository {
      */
     public async upsertFile(
         bookId: number,
-        userId: number,
+        vaultId: number,
         fileType: "epub" | "pdf" | "mobi",
         fileName: string,
         fileSize: number,
         fileData: Buffer
     ): Promise<BookFileMeta> {
         const result = await this.db.query(
-            `INSERT INTO book_files (book_id, user_id, file_type, file_name, file_size, file_data)
+            `INSERT INTO book_files (book_id, vault_id, file_type, file_name, file_size, file_data)
              VALUES ($1, $2, $3, $4, $5, $6)
              ON CONFLICT (book_id, file_type) DO UPDATE
                  SET file_name    = EXCLUDED.file_name,
@@ -472,7 +479,7 @@ export class BookRepository {
                      file_data    = EXCLUDED.file_data,
                      date_created = CURRENT_TIMESTAMP
              RETURNING id, file_type, file_name, file_size, date_created`,
-            [bookId, userId, fileType, fileName, fileSize, fileData]
+            [bookId, vaultId, fileType, fileName, fileSize, fileData]
         );
         return result.rows[0];
     }
@@ -481,13 +488,13 @@ export class BookRepository {
      * Looks up one ebook file's bytes for download.
      * @param bookId Book id.
      * @param fileId File id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The file's bytes/name/type, or null if it doesn't exist or belongs to someone else.
      */
-    public async findFileForDownload(bookId: number, fileId: number, userId: number): Promise<BookFileForDownload | null> {
+    public async findFileForDownload(bookId: number, fileId: number, vaultId: number): Promise<BookFileForDownload | null> {
         const result = await this.db.query(
-            "SELECT file_data, file_name, file_type FROM book_files WHERE id = $1 AND book_id = $2 AND user_id = $3",
-            [fileId, bookId, userId]
+            "SELECT file_data, file_name, file_type FROM book_files WHERE id = $1 AND book_id = $2 AND vault_id = $3",
+            [fileId, bookId, vaultId]
         );
         if (result.rowCount !== 1) {
             return null;
@@ -499,13 +506,13 @@ export class BookRepository {
      * Deletes one ebook file.
      * @param bookId Book id.
      * @param fileId File id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching file was found and deleted.
      */
-    public async deleteFile(bookId: number, fileId: number, userId: number): Promise<boolean> {
+    public async deleteFile(bookId: number, fileId: number, vaultId: number): Promise<boolean> {
         const result = await this.db.query(
-            "DELETE FROM book_files WHERE id = $1 AND book_id = $2 AND user_id = $3",
-            [fileId, bookId, userId]
+            "DELETE FROM book_files WHERE id = $1 AND book_id = $2 AND vault_id = $3",
+            [fileId, bookId, vaultId]
         );
         return result.rowCount === 1;
     }
@@ -526,50 +533,50 @@ export class BookRepository {
     }
 
     /**
-     * Finds a category by exact name, scoped to `userId`.
+     * Finds a category by exact name, scoped to `vaultId`.
      * @param name Category name.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The category id, or null if none matches.
      */
-    public async findCategoryByName(name: string, userId: number): Promise<number | null> {
-        const result = await this.db.query('SELECT id FROM categories WHERE name = $1 AND user_id = $2', [name, userId]);
+    public async findCategoryByName(name: string, vaultId: number): Promise<number | null> {
+        const result = await this.db.query('SELECT id FROM categories WHERE name = $1 AND vault_id = $2', [name, vaultId]);
         return result.rows[0]?.id ?? null;
     }
 
     /**
-     * Inserts a new category owned by `userId`.
+     * Inserts a new category owned by `vaultId`.
      * @param name Category name.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The new row's id.
      */
-    public async insertCategory(name: string, userId: number): Promise<number> {
-        const result = await this.db.query('INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id', [name, userId]);
+    public async insertCategory(name: string, vaultId: number): Promise<number> {
+        const result = await this.db.query('INSERT INTO categories (name, vault_id) VALUES ($1, $2) RETURNING id', [name, vaultId]);
         return result.rows[0].id;
     }
 
     /**
-     * Finds a book by exact ISBN, scoped to `userId`.
+     * Finds a book by exact ISBN, scoped to `vaultId`.
      * @param isbnCode ISBN to search for.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The book id, or null if none matches.
      */
-    public async findByIsbn(isbnCode: string, userId: number): Promise<number | null> {
-        const result = await this.db.query('SELECT id FROM books WHERE isbn = $1 AND user_id = $2', [isbnCode, userId]);
+    public async findByIsbn(isbnCode: string, vaultId: number): Promise<number | null> {
+        const result = await this.db.query('SELECT id FROM books WHERE isbn = $1 AND vault_id = $2', [isbnCode, vaultId]);
         return result.rows[0]?.id ?? null;
     }
 
     /**
      * Inserts a full book row from looked-up ISBN metadata.
      * @param book Looked-up book fields.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The new row's id.
      */
-    public async insertFull(book: IsbnBookInput, userId: number): Promise<number> {
+    public async insertFull(book: IsbnBookInput, vaultId: number, userId: number): Promise<number> {
         const result = await this.db.query(
             `INSERT INTO books (
                 name, description, image_url, isbn, category_id,
-                publisher, published_date, language_code, pages, user_id
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+                publisher, published_date, language_code, pages, vault_id, user_created
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
             RETURNING id`,
             [
                 book.name,
@@ -581,6 +588,7 @@ export class BookRepository {
                 book.formattedPublishedDate,
                 book.languageCode,
                 book.pages,
+                vaultId,
                 userId,
             ]
         );
@@ -591,9 +599,9 @@ export class BookRepository {
      * Overlays freshly looked-up metadata onto an existing row, but only where the stored value is null/empty/pages=0. Never renames the book.
      * @param bookId Book id.
      * @param book Looked-up book fields to overlay.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async fillEmptyFields(bookId: number, book: IsbnBookInput, userId: number): Promise<void> {
+    public async fillEmptyFields(bookId: number, book: IsbnBookInput, vaultId: number): Promise<void> {
         await this.db.query(
             `UPDATE books SET
                 description = COALESCE(NULLIF(BTRIM(description), ''), $1),
@@ -606,7 +614,7 @@ export class BookRepository {
                     WHEN pages IS NULL OR pages = 0 THEN COALESCE($7, pages)
                     ELSE pages
                 END
-            WHERE id = $8 AND user_id = $9`,
+            WHERE id = $8 AND vault_id = $9`,
             [
                 book.description ?? null,
                 book.imageUrl ?? null,
@@ -616,30 +624,30 @@ export class BookRepository {
                 book.languageCode ?? null,
                 book.pages ?? null,
                 bookId,
-                userId,
+                vaultId,
             ]
         );
     }
 
     /**
-     * Finds an author by exact name, scoped to `userId`.
+     * Finds an author by exact name, scoped to `vaultId`.
      * @param name Author name.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The author id, or null if none matches.
      */
-    public async findAuthorByName(name: string, userId: number): Promise<number | null> {
-        const result = await this.db.query('SELECT id FROM authors WHERE name = $1 AND user_id = $2', [name, userId]);
+    public async findAuthorByName(name: string, vaultId: number): Promise<number | null> {
+        const result = await this.db.query('SELECT id FROM authors WHERE name = $1 AND vault_id = $2', [name, vaultId]);
         return result.rows[0]?.id ?? null;
     }
 
     /**
-     * Inserts a new author owned by `userId`.
+     * Inserts a new author owned by `vaultId`.
      * @param name Author name.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The new row's id.
      */
-    public async insertAuthorRow(name: string, userId: number): Promise<number> {
-        const result = await this.db.query('INSERT INTO authors (name, user_id) VALUES ($1,$2) RETURNING id', [name, userId]);
+    public async insertAuthorRow(name: string, vaultId: number): Promise<number> {
+        const result = await this.db.query('INSERT INTO authors (name, vault_id) VALUES ($1,$2) RETURNING id', [name, vaultId]);
         return result.rows[0].id;
     }
 
@@ -647,23 +655,23 @@ export class BookRepository {
      * Links an author to a book, no-op if the link already exists.
      * @param bookId Book id.
      * @param authorId Author id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async linkAuthorToBook(bookId: number, authorId: number, userId: number): Promise<void> {
+    public async linkAuthorToBook(bookId: number, authorId: number, vaultId: number): Promise<void> {
         await this.db.query(
-            `INSERT INTO book_authors (book_id, author_id, user_id) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`,
-            [bookId, authorId, userId]
+            `INSERT INTO book_authors (book_id, author_id, vault_id) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`,
+            [bookId, authorId, vaultId]
         );
     }
 
     /**
-     * Checks whether a location exists and belongs to `userId`.
+     * Checks whether a location exists and belongs to `vaultId`.
      * @param locationId Location id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching location exists.
      */
-    public async locationExistsForUser(locationId: string | number, userId: number): Promise<boolean> {
-        const result = await this.db.query('SELECT id FROM locations WHERE id = $1 AND user_id = $2', [locationId, userId]);
+    public async locationExistsForVault(locationId: string | number, vaultId: number): Promise<boolean> {
+        const result = await this.db.query('SELECT id FROM locations WHERE id = $1 AND vault_id = $2', [locationId, vaultId]);
         return result.rowCount === 1;
     }
 
@@ -672,12 +680,12 @@ export class BookRepository {
      * @param bookId Book id.
      * @param code New stock code.
      * @param locationId Location id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async insertStockAtLocation(bookId: number, code: string, locationId: string | number, userId: number): Promise<void> {
+    public async insertStockAtLocation(bookId: number, code: string, locationId: string | number, vaultId: number): Promise<void> {
         await this.db.query(
-            `INSERT INTO book_stocks (book_id, code, status, location_id, customer_id, user_id) VALUES ($1,$2,$3,$4,$5,$6)`,
-            [bookId, code, 0, locationId, null, userId]
+            `INSERT INTO book_stocks (book_id, code, status, location_id, customer_id, vault_id) VALUES ($1,$2,$3,$4,$5,$6)`,
+            [bookId, code, 0, locationId, null, vaultId]
         );
     }
 
@@ -709,7 +717,7 @@ export class BookRepository {
      * @param status Initial stock status.
      * @param locationId Location id.
      * @param customerId Customer id, if pre-booked.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The new row's id.
      */
     public async insertStockWithId(
@@ -718,11 +726,11 @@ export class BookRepository {
         status: number,
         locationId: string | number,
         customerId: string | number | null | undefined,
-        userId: number
+        vaultId: number
     ): Promise<number> {
         const result = await this.db.query(
-            "INSERT INTO book_stocks (book_id, code, status, location_id, customer_id, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-            [bookId, code, status, locationId, customerId, userId]
+            "INSERT INTO book_stocks (book_id, code, status, location_id, customer_id, vault_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+            [bookId, code, status, locationId, customerId, vaultId]
         );
         return result.rows[0].id;
     }
@@ -730,10 +738,10 @@ export class BookRepository {
     /**
      * Full detail for one book stock (with location/customer names).
      * @param stockId Stock id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The stock detail, or null if it doesn't exist or belongs to someone else.
      */
-    public async findStockDetail(stockId: string | number, userId: number): Promise<BookStockDetail | null> {
+    public async findStockDetail(stockId: string | number, vaultId: number): Promise<BookStockDetail | null> {
         const result = await this.db.query(
             `SELECT book_stocks.id,
                     book_stocks.code,
@@ -743,11 +751,11 @@ export class BookRepository {
                     customers.id   as customer_id,
                     customers.name as customer_name
              FROM book_stocks
-                      LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.user_id = $2
-                      LEFT JOIN locations ON book_stocks.location_id = locations.id AND locations.user_id = $2
+                      LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.vault_id = $2
+                      LEFT JOIN locations ON book_stocks.location_id = locations.id AND locations.vault_id = $2
              WHERE book_stocks.id = $1
-               AND book_stocks.user_id = $2`,
-            [stockId, userId]
+               AND book_stocks.vault_id = $2`,
+            [stockId, vaultId]
         );
         return result.rows[0] ?? null;
     }
@@ -756,13 +764,13 @@ export class BookRepository {
      * Deletes one book stock.
      * @param bookId Book id.
      * @param stockId Stock id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Whether a matching stock was found and deleted.
      */
-    public async deleteStock(bookId: string | number, stockId: string | number, userId: number): Promise<boolean> {
+    public async deleteStock(bookId: string | number, stockId: string | number, vaultId: number): Promise<boolean> {
         const result = await this.db.query(
-            'DELETE FROM book_stocks WHERE book_id = $1 AND id = $2 AND user_id = $3',
-            [bookId, stockId, userId]
+            'DELETE FROM book_stocks WHERE book_id = $1 AND id = $2 AND vault_id = $3',
+            [bookId, stockId, vaultId]
         );
         return result.rowCount === 1;
     }
@@ -771,13 +779,13 @@ export class BookRepository {
      * Looks up one book stock's current status.
      * @param stockId Stock id.
      * @param bookId Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The stock's status, or undefined if it doesn't exist.
      */
-    public async getStockStatus(stockId: string | number, bookId: string | number, userId: number): Promise<number | undefined> {
+    public async getStockStatus(stockId: string | number, bookId: string | number, vaultId: number): Promise<number | undefined> {
         const result = await this.db.query(
-            'SELECT status FROM book_stocks WHERE id = $1 AND book_id = $2 AND user_id = $3',
-            [stockId, bookId, userId]
+            'SELECT status FROM book_stocks WHERE id = $1 AND book_id = $2 AND vault_id = $3',
+            [stockId, bookId, vaultId]
         );
         return result.rows[0]?.status;
     }
@@ -793,7 +801,7 @@ export class BookRepository {
      *
      * @param bookId Book id.
      * @param stockId Stock id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param status New status.
      * @param locationId New location id.
      * @param customerId New customer id, or null/undefined to clear it.
@@ -802,7 +810,7 @@ export class BookRepository {
     public async updateStock(
         bookId: string | number,
         stockId: string | number,
-        userId: number,
+        vaultId: number,
         status: number,
         locationId: number,
         customerId: number | null | undefined
@@ -817,8 +825,8 @@ export class BookRepository {
                                  WHEN $1 != 2 THEN NULL
                                  ELSE loaned_at
                  END
-             WHERE book_id = $4 AND id = $5 AND user_id = $6`,
-            [status, locationId, customerId, bookId, stockId, userId]
+             WHERE book_id = $4 AND id = $5 AND vault_id = $6`,
+            [status, locationId, customerId, bookId, stockId, vaultId]
         );
         return result.rowCount ?? 0;
     }
@@ -826,10 +834,10 @@ export class BookRepository {
     /**
      * Looks up a book stock (and its book) by the stock's own code.
      * @param bookCode Stock code.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The book/stock summary, or null if none matches.
      */
-    public async findStockAndBookByCode(bookCode: string, userId: number): Promise<{
+    public async findStockAndBookByCode(bookCode: string, vaultId: number): Promise<{
         book_id: number; name: string; image_url: string | null; isbn: string | null;
         stock_id: number; stock_code: string; status: number;
     } | null> {
@@ -842,10 +850,10 @@ export class BookRepository {
                     bs.code AS stock_code,
                     bs.status
              FROM book_stocks bs
-                      INNER JOIN books b ON b.id = bs.book_id AND b.user_id = bs.user_id
+                      INNER JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
              WHERE bs.code = $1
-               AND bs.user_id = $2 LIMIT 1`,
-            [bookCode, userId]
+               AND bs.vault_id = $2 LIMIT 1`,
+            [bookCode, vaultId]
         );
         return result.rows[0] ?? null;
     }
@@ -853,12 +861,12 @@ export class BookRepository {
     /**
      * Marks a book stock (by code) as returned.
      * @param bookStockCode Stock code.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async returnStockByCode(bookStockCode: string, userId: number): Promise<void> {
+    public async returnStockByCode(bookStockCode: string, vaultId: number): Promise<void> {
         await this.db.query(
-            'UPDATE book_stocks SET customer_id = $1, status = $2, loaned_at = NULL WHERE code = $3 AND user_id = $4',
-            [null, 0, bookStockCode, userId]
+            'UPDATE book_stocks SET customer_id = $1, status = $2, loaned_at = NULL WHERE code = $3 AND vault_id = $4',
+            [null, 0, bookStockCode, vaultId]
         );
     }
 
@@ -867,16 +875,16 @@ export class BookRepository {
     /**
      * Looks up the subset of a book's fields ImportEnrichmentService can fill in from looked-up metadata.
      * @param id Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The book's enrichable fields, or null if it doesn't exist or belongs to someone else.
      */
-    public async findRowForEnrichment(id: number, userId: number): Promise<BookEnrichmentRow | null> {
+    public async findRowForEnrichment(id: number, vaultId: number): Promise<BookEnrichmentRow | null> {
         const result = await this.db.query(
             `SELECT id, name, isbn, description, image_url, publisher, published_date,
                     language_code, pages, category_id
                FROM books
-              WHERE id = $1 AND user_id = $2`,
-            [id, userId]
+              WHERE id = $1 AND vault_id = $2`,
+            [id, vaultId]
         );
         return result.rows[0] ?? null;
     }
@@ -884,17 +892,17 @@ export class BookRepository {
     /**
      * Lists a book's linked author names, for the Wikipedia-lookup fallback's author-overlap check.
      * @param bookId Book id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Every linked author's name.
      */
-    public async getAuthorNames(bookId: number, userId: number): Promise<string[]> {
+    public async getAuthorNames(bookId: number, vaultId: number): Promise<string[]> {
         const result = await this.db.query(
             `SELECT a.name
                FROM book_authors ba
                JOIN authors a ON a.id = ba.author_id
-              WHERE ba.book_id = $1 AND ba.user_id = $2
+              WHERE ba.book_id = $1 AND ba.vault_id = $2
               ORDER BY a.name`,
-            [bookId, userId]
+            [bookId, vaultId]
         );
         return result.rows.map((row: {name: string}) => row.name);
     }

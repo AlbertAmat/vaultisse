@@ -74,8 +74,8 @@ export class BookController {
             : undefined;
 
         try {
-            const userId = appService.getSessionUser(req);
-            const result = await new BookService(this.pool).searchBooks(userId, {
+            const vaultId = appService.getSessionVault(req);
+            const result = await new BookService(this.pool).searchBooks(vaultId, {
                 query, categoryId, filters, dateFrom, dateTo, sort, page,
             });
             res.status(200).json(result);
@@ -92,8 +92,8 @@ export class BookController {
      */
     public async counters(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const result = await new BookService(this.pool).getCounters(userId);
+            const vaultId = appService.getSessionVault(req);
+            const result = await new BookService(this.pool).getCounters(vaultId);
             res.status(200).json(result);
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -110,8 +110,8 @@ export class BookController {
         const id = Number(req.params.id);
         appService.getLogger().debug(`Get book, id: ${id}`);
         try {
-            const userId = appService.getSessionUser(req);
-            const book = await new BookService(this.pool).getBookDetail(id, userId);
+            const vaultId = appService.getSessionVault(req);
+            const book = await new BookService(this.pool).getBookDetail(id, vaultId);
             res.status(200).json(book);
         } catch (err: any) {
             if (err instanceof DomainError) {
@@ -133,8 +133,8 @@ export class BookController {
         appService.getLogger().debug(`Update book, id: ${id}`);
 
         try {
-            const userId = appService.getSessionUser(req);
-            await new BookService(this.pool).updateBook(id, userId, req.body);
+            const vaultId = appService.getSessionVault(req);
+            await new BookService(this.pool).updateBook(id, vaultId, req.body);
             res.send({message: "Book updated successfully"});
         } catch (e) {
             if (e instanceof DomainError) {
@@ -156,8 +156,8 @@ export class BookController {
         appService.getLogger().debug(`Delete book, id: ${id}`);
 
         try {
-            const userId = appService.getSessionUser(req);
-            await new BookService(this.pool).deleteBook(id, userId);
+            const vaultId = appService.getSessionVault(req);
+            await new BookService(this.pool).deleteBook(id, vaultId);
             res.send({message: "Book deleted successfully"});
         } catch (e) {
             if (e instanceof DomainError) {
@@ -177,8 +177,8 @@ export class BookController {
     public async updateImage(req: Request, res: Response): Promise<void> {
         const id = Number(req.params.id);
         try {
-            const userId = appService.getSessionUser(req);
-            const rowCount = await new BookService(this.pool).updateBookImage(id, userId, req.file);
+            const vaultId = appService.getSessionVault(req);
+            const rowCount = await new BookService(this.pool).updateBookImage(id, vaultId, req.file);
             res.status(200).json(rowCount);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -194,8 +194,8 @@ export class BookController {
     public async findCover(req: Request, res: Response): Promise<void> {
         const id = Number(req.params.id);
         try {
-            const userId = appService.getSessionUser(req);
-            const imageUrl = await new BookService(this.pool).findBookCover(id, userId, appService.getLibraryThingApiKey());
+            const vaultId = appService.getSessionVault(req);
+            const imageUrl = await new BookService(this.pool).findBookCover(id, vaultId, appService.getLibraryThingApiKey());
             res.status(200).json(imageUrl);
         } catch (error: unknown) {
             if (error instanceof DomainError) {
@@ -215,8 +215,8 @@ export class BookController {
     public async uploadFile(req: Request, res: Response): Promise<void> {
         const id = Number(req.params.id);
         try {
-            const userId = appService.getSessionUser(req);
-            const file = await new BookService(this.pool).uploadBookFile(id, userId, req.file);
+            const vaultId = appService.getSessionVault(req);
+            const file = await new BookService(this.pool).uploadBookFile(id, vaultId, req.file);
             res.status(200).json(file);
         } catch (error) {
             if (error instanceof DomainError) {
@@ -237,8 +237,8 @@ export class BookController {
         const id = Number(req.params.id);
         const fileId = Number(req.params.fileId);
         try {
-            const userId = appService.getSessionUser(req);
-            const {file_data, file_name, file_type} = await new BookService(this.pool).downloadBookFile(id, fileId, userId);
+            const vaultId = appService.getSessionVault(req);
+            const {file_data, file_name, file_type} = await new BookService(this.pool).downloadBookFile(id, fileId, vaultId);
             const contentType = file_type === "epub" ? "application/epub+zip"
                 : file_type === "pdf" ? "application/pdf"
                     : "application/x-mobipocket-ebook";
@@ -265,8 +265,8 @@ export class BookController {
         const id = Number(req.params.id);
         const fileId = Number(req.params.fileId);
         try {
-            const userId = appService.getSessionUser(req);
-            const deleted = await new BookService(this.pool).deleteBookFile(id, fileId, userId);
+            const vaultId = appService.getSessionVault(req);
+            const deleted = await new BookService(this.pool).deleteBookFile(id, fileId, vaultId);
             res.status(200).json(deleted);
         } catch (error) {
             console.error("Error deleting book file:", error);
@@ -281,8 +281,9 @@ export class BookController {
      */
     public async create(req: Request, res: Response): Promise<void> {
         try {
+            const vaultId = appService.getSessionVault(req);
             const userId = appService.getSessionUser(req);
-            const bookId = await new BookService(this.pool).createBook(userId, {
+            const bookId = await new BookService(this.pool).createBook(vaultId, userId, {
                 name: req.body.name,
                 description: req.body.description,
                 isbn: req.body.isbn,
@@ -306,8 +307,10 @@ export class BookController {
      */
     public async createFromIsbn(req: Request, res: Response): Promise<void> {
         try {
+            const vaultId = appService.getSessionVault(req);
             const userId = appService.getSessionUser(req);
             const bookId = await new BookService(this.pool).createBookFromIsbn(
+                vaultId,
                 userId,
                 req.params.isbn,
                 req.body.location,
@@ -337,9 +340,9 @@ export class BookController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Adding book stock with status ${req.body.status} in book id: ${bookId}`);
-            const stock = await new BookService(this.pool).addBookStock(bookId, userId, {
+            const stock = await new BookService(this.pool).addBookStock(bookId, vaultId, {
                 status: req.body.status,
                 locationId: req.body.location_id,
                 customerId: req.body.customer_id,
@@ -369,9 +372,9 @@ export class BookController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Removing book stock with status ${stockId} and book id: ${bookId}`);
-            const deleted = await new BookService(this.pool).deleteBookStock(bookId, stockId, userId);
+            const deleted = await new BookService(this.pool).deleteBookStock(bookId, stockId, vaultId);
             res.status(200).json(deleted);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -393,9 +396,9 @@ export class BookController {
         }
 
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Updating book stock ${stockId}`);
-            const stock = await new BookService(this.pool).updateBookStock(bookId, stockId, userId, {
+            const stock = await new BookService(this.pool).updateBookStock(bookId, stockId, vaultId, {
                 status: req.body.status,
                 location_id: req.body.location_id,
                 customer_id: req.body.customer_id,
@@ -419,8 +422,8 @@ export class BookController {
     public async getAddMetadata(req: Request, res: Response): Promise<void> {
         const bookCode = String(req.params.bookCode).trim();
         try {
-            const userId = appService.getSessionUser(req);
-            const response = await new BookService(this.pool).getAddMetadata(bookCode, userId);
+            const vaultId = appService.getSessionVault(req);
+            const response = await new BookService(this.pool).getAddMetadata(bookCode, vaultId);
             res.status(200).json(response);
         } catch (error) {
             if (error instanceof DomainError) {
@@ -439,8 +442,8 @@ export class BookController {
      */
     public async bulkReturn(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            await new BookService(this.pool).bulkReturnBooks(userId, req.body.books);
+            const vaultId = appService.getSessionVault(req);
+            await new BookService(this.pool).bulkReturnBooks(vaultId, req.body.books);
             res.status(200).send();
         } catch (error) {
             console.error("Transaction error:", error);

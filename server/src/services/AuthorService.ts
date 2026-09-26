@@ -13,33 +13,33 @@ export class AuthorService {
 
     /**
      * Lists the caller's authors.
-     * @param userId Owning user's id.
-     * @returns Every author belonging to `userId`.
+     * @param vaultId Vault id.
+     * @returns Every author belonging to `vaultId`.
      */
-    public async listAuthors(userId: number): Promise<Author[]> {
-        return new AuthorRepository(this.pool).findAll(userId);
+    public async listAuthors(vaultId: number): Promise<Author[]> {
+        return new AuthorRepository(this.pool).findAll(vaultId);
     }
 
     /**
      * Case-insensitive author search for the autocomplete/picker.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param query Substring to search for.
      * @returns Every matching author.
      */
-    public async searchAuthors(userId: number, query: string): Promise<Author[]> {
-        return new AuthorRepository(this.pool).search(userId, query);
+    public async searchAuthors(vaultId: number, query: string): Promise<Author[]> {
+        return new AuthorRepository(this.pool).search(vaultId, query);
     }
 
     /**
      * Creates an author and returns the freshly-created row.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name Author name.
      * @returns The newly-created author.
      */
-    public async createAuthor(userId: number, name: string): Promise<Author> {
+    public async createAuthor(vaultId: number, name: string): Promise<Author> {
         const repo = new AuthorRepository(this.pool);
-        const id = await repo.create(userId, name);
-        const author = await repo.findById(id, userId);
+        const id = await repo.create(vaultId, name);
+        const author = await repo.findById(id, vaultId);
         if (!author) {
             throw new NotFoundError("Author not found after creation");
         }
@@ -56,17 +56,17 @@ export class AuthorService {
      * generic catch-all produces that same 500.
      *
      * @param id Author id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name New name.
      * @returns The renamed author.
      */
-    public async renameAuthor(id: string, userId: number, name: string): Promise<Author> {
+    public async renameAuthor(id: string, vaultId: number, name: string): Promise<Author> {
         const repo = new AuthorRepository(this.pool);
-        const rowsAffected = await repo.rename(id, userId, name);
+        const rowsAffected = await repo.rename(id, vaultId, name);
         if (rowsAffected !== 1) {
             throw new Error("Author rename affected an unexpected number of rows");
         }
-        const author = await repo.findById(id, userId);
+        const author = await repo.findById(id, vaultId);
         if (!author) {
             throw new Error("Author not found after rename");
         }
@@ -76,14 +76,14 @@ export class AuthorService {
     /**
      * Deletes an author, throwing NotFoundError if it doesn't belong to the caller.
      * @param id Author id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async deleteAuthor(id: number, userId: number): Promise<void> {
+    public async deleteAuthor(id: number, vaultId: number): Promise<void> {
         const repo = new AuthorRepository(this.pool);
-        const found = await repo.exists(id, userId);
+        const found = await repo.exists(id, vaultId);
         if (!found) {
             throw new NotFoundError("Author not found");
         }
-        await repo.remove(id, userId);
+        await repo.remove(id, vaultId);
     }
 }

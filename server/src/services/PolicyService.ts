@@ -23,11 +23,18 @@ export class PolicyService {
      * fetched independently and defaults to `[]`/`{}` on failure so one
      * failing query doesn't take down the whole app shell.
      *
-     * @param userId Owning user's id.
+     * The catalog reference lists (categories/locations/customers) are
+     * scoped to the caller's active vault (issue #7), not to the user
+     * directly - `vaultId` may be undefined for a user with no active vault
+     * (shouldn't happen outside test setup races), in which case those
+     * lists are simply left empty rather than erroring.
+     *
+     * @param userId Owning user's id - used only for the profile/labels/notice-acknowledgement bookkeeping below, which stays per-account.
+     * @param vaultId Caller's active vault id, or undefined if they have none.
      * @param maxImportFileSizeMb Configured import-file size cap, passed through into the payload as-is.
      * @returns The full policy payload.
      */
-    public async getPolicy(userId: number, maxImportFileSizeMb: number): Promise<AppPolicy> {
+    public async getPolicy(userId: number, vaultId: number | undefined, maxImportFileSizeMb: number): Promise<AppPolicy> {
         const repo = new AppRepository(this.pool);
 
         let categories: AppPolicyCategory[] = [];
@@ -38,7 +45,9 @@ export class PolicyService {
         let labels: Record<string, string> = {};
 
         try {
-            categories = await repo.getCategoryNames(userId);
+            if (vaultId !== undefined) {
+                categories = await repo.getCategoryNames(vaultId);
+            }
         } catch (e) {
             console.error("Error when getting categories. ", e);
         }
@@ -56,13 +65,17 @@ export class PolicyService {
         }
 
         try {
-            locations = await repo.getLocationSummaries(userId);
+            if (vaultId !== undefined) {
+                locations = await repo.getLocationSummaries(vaultId);
+            }
         } catch (e) {
             console.error("Error when getting locations. ", e);
         }
 
         try {
-            customers = await repo.getCustomerNames(userId);
+            if (vaultId !== undefined) {
+                customers = await repo.getCustomerNames(vaultId);
+            }
         } catch (e) {
             console.error("Error when getting customers. ", e);
         }

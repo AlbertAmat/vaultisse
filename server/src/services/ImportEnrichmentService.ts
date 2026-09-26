@@ -23,13 +23,13 @@ export class ImportEnrichmentService {
     /**
      * Fires off `enrichImportedBooks` on the next event-loop tick, without awaiting it - the CSV-import response must
      * return before nginx's `proxy_read_timeout`, so enrichment runs in the background instead.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param bookIds Freshly-imported book ids to enrich.
      * @param googleApiKey Optional Google Books API key.
      * @param libraryThingApiKey Optional LibraryThing API key.
      */
     public scheduleEnrichment(
-        userId: number,
+        vaultId: number,
         bookIds: number[],
         googleApiKey?: string,
         libraryThingApiKey?: string
@@ -38,7 +38,7 @@ export class ImportEnrichmentService {
             return;
         }
         setImmediate(() => {
-            this.enrichImportedBooks(userId, bookIds, googleApiKey, libraryThingApiKey).catch((err) => {
+            this.enrichImportedBooks(vaultId, bookIds, googleApiKey, libraryThingApiKey).catch((err) => {
                 console.error("Import enrichment failed:", err);
             });
         });
@@ -46,43 +46,43 @@ export class ImportEnrichmentService {
 
     /**
      * Enriches a batch of freshly-imported books, a few at a time.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param bookIds Book ids to enrich.
      * @param googleApiKey Optional Google Books API key.
      * @param libraryThingApiKey Optional LibraryThing API key.
      */
     public async enrichImportedBooks(
-        userId: number,
+        vaultId: number,
         bookIds: number[],
         googleApiKey?: string,
         libraryThingApiKey?: string
     ): Promise<void> {
         for (let i = 0; i < bookIds.length; i += ENRICH_CONCURRENCY) {
             const batch = bookIds.slice(i, i + ENRICH_CONCURRENCY);
-            await Promise.all(batch.map((id) => this.enrichOneBook(userId, id, googleApiKey, libraryThingApiKey)));
+            await Promise.all(batch.map((id) => this.enrichOneBook(vaultId, id, googleApiKey, libraryThingApiKey)));
         }
     }
 
     /**
      * Fills in a single book's still-empty fields from looked-up metadata.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param bookId Book id.
      * @param googleApiKey Optional Google Books API key.
      * @param libraryThingApiKey Optional LibraryThing API key.
      */
     private async enrichOneBook(
-        userId: number,
+        vaultId: number,
         bookId: number,
         googleApiKey?: string,
         libraryThingApiKey?: string
     ): Promise<void> {
         const repo = new BookRepository(this.pool);
-        const book = await repo.findRowForEnrichment(bookId, userId);
+        const book = await repo.findRowForEnrichment(bookId, vaultId);
         if (!book || !this.needsEnrichment(book)) {
             return;
         }
 
-        const authors = await repo.getAuthorNames(bookId, userId);
+        const authors = await repo.getAuthorNames(bookId, vaultId);
         let description: string | null = null;
         let imageUrl: string | null = null;
         let publisher: string | null = null;
@@ -116,7 +116,7 @@ export class ImportEnrichmentService {
         if (language) {
             await repo.ensureLanguage(language);
         }
-        const categoryId = book.category_id ?? await this.ensureCategory(categoryName, userId);
+        const categoryId = book.category_id ?? await this.ensureCategory(categoryName, vaultId);
 
         await repo.fillEmptyFields(
             bookId,
@@ -131,7 +131,7 @@ export class ImportEnrichmentService {
                 languageCode: language,
                 pages,
             },
-            userId
+            vaultId
         );
     }
 
@@ -153,19 +153,19 @@ export class ImportEnrichmentService {
     /**
      * Finds or creates a category by name.
      * @param name Category name, or null to no-op.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The category id, or null if `name` was null.
      */
-    private async ensureCategory(name: string | null, userId: number): Promise<number | null> {
+    private async ensureCategory(name: string | null, vaultId: number): Promise<number | null> {
         if (!name) {
             return null;
         }
         const repo = new BookRepository(this.pool);
-        const existing = await repo.findCategoryByName(name, userId);
+        const existing = await repo.findCategoryByName(name, vaultId);
         if (existing !== null) {
             return existing;
         }
-        return repo.insertCategory(name, userId);
+        return repo.insertCategory(name, vaultId);
     }
 
     /**

@@ -17,26 +17,26 @@ export class CustomerService {
 
     /**
      * Lists the caller's customer groups.
-     * @param userId Owning user's id.
-     * @returns Every group belonging to `userId`.
+     * @param vaultId Vault id.
+     * @returns Every group belonging to `vaultId`.
      */
-    public async listGroups(userId: number): Promise<CustomerGroupWithCount[]> {
-        return new CustomerRepository(this.pool).findAllGroups(userId);
+    public async listGroups(vaultId: number): Promise<CustomerGroupWithCount[]> {
+        return new CustomerRepository(this.pool).findAllGroups(vaultId);
     }
 
     /**
      * Creates a customer group, throwing ValidationError on a blank name and ConflictError on a duplicate name.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name Group name.
      * @param description Optional group description.
      * @returns The newly-created group.
      */
-    public async createGroup(userId: number, name: string, description: string | undefined): Promise<CustomerGroup> {
+    public async createGroup(vaultId: number, name: string, description: string | undefined): Promise<CustomerGroup> {
         if (!name || !name.trim()) {
             throw new ValidationError("Group name is required");
         }
         try {
-            return await new CustomerRepository(this.pool).createGroup(userId, name.trim(), description || null);
+            return await new CustomerRepository(this.pool).createGroup(vaultId, name.trim(), description || null);
         } catch (error: any) {
             if (error.code === '23505') {
                 throw new ConflictError("A group with this name already exists");
@@ -48,17 +48,17 @@ export class CustomerService {
     /**
      * Renames/redescribes a customer group, throwing ValidationError on a blank name, NotFoundError if it doesn't belong to the caller, and ConflictError on a duplicate name.
      * @param id Group id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name New name.
      * @param description New description.
      * @returns The updated group.
      */
-    public async renameGroup(id: number, userId: number, name: string, description: string | undefined): Promise<CustomerGroup> {
+    public async renameGroup(id: number, vaultId: number, name: string, description: string | undefined): Promise<CustomerGroup> {
         if (!name || !name.trim()) {
             throw new ValidationError("Group name is required");
         }
         try {
-            const group = await new CustomerRepository(this.pool).renameGroup(id, userId, name.trim(), description || null);
+            const group = await new CustomerRepository(this.pool).renameGroup(id, vaultId, name.trim(), description || null);
             if (!group) {
                 throw new NotFoundError("Group not found");
             }
@@ -74,10 +74,10 @@ export class CustomerService {
     /**
      * Deletes a customer group, throwing NotFoundError if it doesn't belong to the caller.
      * @param id Group id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async deleteGroup(id: number, userId: number): Promise<void> {
-        const removed = await new CustomerRepository(this.pool).removeGroup(id, userId);
+    public async deleteGroup(id: number, vaultId: number): Promise<void> {
+        const removed = await new CustomerRepository(this.pool).removeGroup(id, vaultId);
         if (!removed) {
             throw new NotFoundError("Group not found");
         }
@@ -87,16 +87,16 @@ export class CustomerService {
      * Assigns a customer to a group, throwing NotFoundError if either doesn't belong to the caller.
      * @param customerId Customer id.
      * @param groupId Group id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The updated customer.
      */
-    public async assignCustomerToGroup(customerId: number, groupId: number, userId: number): Promise<Customer> {
+    public async assignCustomerToGroup(customerId: number, groupId: number, vaultId: number): Promise<Customer> {
         const repo = new CustomerRepository(this.pool);
-        const groupOk = await repo.groupExists(groupId, userId);
+        const groupOk = await repo.groupExists(groupId, vaultId);
         if (!groupOk) {
             throw new NotFoundError("Group not found");
         }
-        const customer = await repo.assignGroup(customerId, groupId, userId);
+        const customer = await repo.assignGroup(customerId, groupId, vaultId);
         if (!customer) {
             throw new NotFoundError("Customer not found");
         }
@@ -106,11 +106,11 @@ export class CustomerService {
     /**
      * Clears a customer's group assignment, throwing NotFoundError if it doesn't belong to the caller.
      * @param customerId Customer id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns The updated customer.
      */
-    public async removeCustomerFromGroup(customerId: number, userId: number): Promise<Customer> {
-        const customer = await new CustomerRepository(this.pool).unassignGroup(customerId, userId);
+    public async removeCustomerFromGroup(customerId: number, vaultId: number): Promise<Customer> {
+        const customer = await new CustomerRepository(this.pool).unassignGroup(customerId, vaultId);
         if (!customer) {
             throw new NotFoundError("Customer not found");
         }
@@ -121,23 +121,23 @@ export class CustomerService {
 
     /**
      * Lists the caller's customers.
-     * @param userId Owning user's id.
-     * @returns Every customer belonging to `userId`.
+     * @param vaultId Vault id.
+     * @returns Every customer belonging to `vaultId`.
      */
-    public async listCustomers(userId: number): Promise<CustomerWithLoanCount[]> {
-        return new CustomerRepository(this.pool).findAll(userId);
+    public async listCustomers(vaultId: number): Promise<CustomerWithLoanCount[]> {
+        return new CustomerRepository(this.pool).findAll(vaultId);
     }
 
     /**
      * Creates a customer and returns the freshly-created row.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name Customer name.
      * @returns The newly-created customer.
      */
-    public async createCustomer(userId: number, name: string): Promise<Customer> {
+    public async createCustomer(vaultId: number, name: string): Promise<Customer> {
         const repo = new CustomerRepository(this.pool);
-        const id = await repo.create(userId, name);
-        const customer = await repo.findById(id, userId);
+        const id = await repo.create(vaultId, name);
+        const customer = await repo.findById(id, vaultId);
         if (!customer) {
             throw new NotFoundError("Customer not found after creation");
         }
@@ -153,17 +153,17 @@ export class CustomerService {
      * documented quirk. Throws a plain Error, not a DomainError.
      *
      * @param id Customer id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param name New name.
      * @returns The renamed customer.
      */
-    public async renameCustomer(id: string, userId: number, name: string): Promise<Customer> {
+    public async renameCustomer(id: string, vaultId: number, name: string): Promise<Customer> {
         const repo = new CustomerRepository(this.pool);
-        const rowsAffected = await repo.rename(id, userId, name);
+        const rowsAffected = await repo.rename(id, vaultId, name);
         if (rowsAffected !== 1) {
             throw new Error("Customer rename affected an unexpected number of rows");
         }
-        const customer = await repo.findById(id, userId);
+        const customer = await repo.findById(id, vaultId);
         if (!customer) {
             throw new Error("Customer not found after rename");
         }
@@ -173,15 +173,15 @@ export class CustomerService {
     /**
      * Deletes a customer, throwing NotFoundError if it doesn't belong to the caller.
      * @param id Customer id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      */
-    public async deleteCustomer(id: number, userId: number): Promise<void> {
+    public async deleteCustomer(id: number, vaultId: number): Promise<void> {
         const repo = new CustomerRepository(this.pool);
-        const found = await repo.exists(id, userId);
+        const found = await repo.exists(id, vaultId);
         if (!found) {
             throw new NotFoundError("Customer not found");
         }
-        await repo.remove(id, userId);
+        await repo.remove(id, vaultId);
     }
 
     /* ---------- Lending ---------- */
@@ -189,11 +189,11 @@ export class CustomerService {
     /**
      * Lists the books currently loaned to a customer.
      * @param customerId Customer id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @returns Every book stock currently loaned to that customer.
      */
-    public async getCustomerBooks(customerId: number, userId: number): Promise<CustomerLoanedBook[]> {
-        return new CustomerRepository(this.pool).getLoanedBooks(customerId, userId);
+    public async getCustomerBooks(customerId: number, vaultId: number): Promise<CustomerLoanedBook[]> {
+        return new CustomerRepository(this.pool).getLoanedBooks(customerId, vaultId);
     }
 
     /**
@@ -203,13 +203,13 @@ export class CustomerService {
      * transaction (same fix as LocationService.moveBooksToLocation).
      *
      * @param customerId Customer id.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param stockCodes Book stock codes to lend.
      * @returns The customer's loaned books after the change.
      */
-    public async lendBooksToCustomer(customerId: number, userId: number, stockCodes: string[]): Promise<CustomerLoanedBook[]> {
+    public async lendBooksToCustomer(customerId: number, vaultId: number, stockCodes: string[]): Promise<CustomerLoanedBook[]> {
         const repo = new CustomerRepository(this.pool);
-        const customerExists = await repo.exists(customerId, userId);
+        const customerExists = await repo.exists(customerId, vaultId);
         if (!customerExists) {
             throw new NotFoundError("Customer not found");
         }
@@ -218,12 +218,12 @@ export class CustomerService {
             const txCustomerRepo = new CustomerRepository(client);
             const txLoanHistoryRepo = new LoanHistoryRepository(client);
             for (const stockCode of stockCodes) {
-                await txCustomerRepo.lendBookStock(customerId, userId, stockCode);
-                await txLoanHistoryRepo.recordLoan(userId, stockCode, customerId);
+                await txCustomerRepo.lendBookStock(customerId, vaultId, stockCode);
+                await txLoanHistoryRepo.recordLoan(vaultId, stockCode, customerId);
             }
         });
 
-        return repo.getLoanedBooks(customerId, userId);
+        return repo.getLoanedBooks(customerId, vaultId);
     }
 
     /**
@@ -233,13 +233,13 @@ export class CustomerService {
      * a loop.
      *
      * @param customerId Customer id the stock is expected to be loaned to.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param stockCode Book stock code to return.
      */
-    public async returnBookFromCustomer(customerId: number, userId: number, stockCode: string): Promise<void> {
+    public async returnBookFromCustomer(customerId: number, vaultId: number, stockCode: string): Promise<void> {
         await withTransaction(this.pool, async (client) => {
-            await new CustomerRepository(client).returnBookStock(customerId, userId, stockCode);
-            await new LoanHistoryRepository(client).recordReturn(userId, stockCode);
+            await new CustomerRepository(client).returnBookStock(customerId, vaultId, stockCode);
+            await new LoanHistoryRepository(client).recordReturn(vaultId, stockCode);
         });
     }
 }

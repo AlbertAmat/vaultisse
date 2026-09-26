@@ -2,8 +2,8 @@
  * =============================================================================
  * AuthorRoute
  * =============================================================================
- * Mounted at `/api/rest/author`. CRUD + search for the user's `authors`.
- * All routes require auth and are scoped to the caller's `user_id`. See
+ * Mounted at `/api/rest/author`. CRUD + search for the vault's `authors`.
+ * All routes require auth and are scoped to the caller's active vault (`vault_id`, issue #7). See
  * AuthorController/AuthorService/AuthorRepository for the actual request
  * handling, business rules, and SQL respectively.
  */

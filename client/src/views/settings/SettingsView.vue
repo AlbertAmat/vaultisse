@@ -78,6 +78,8 @@
 					</div>
 				</settings-card>
 
+				<vaults-card/>
+
 				<settings-card :title="t(AppLabels.USERCONF_APPEARANCE)">
 					<div class="theme-picker">
 						<button
@@ -195,6 +197,7 @@
 						/>
 					</div>
 				</settings-card>
+
 				<settings-card :title="t(AppLabels.USERCONF_ACCOUNT_SECURITY)">
 					<div class="settings-row" style="margin-bottom: 16px">
 						<div class="settings-row-text">
@@ -314,6 +317,7 @@ import TwoFactorDisableDialog from "@/views/settings/TwoFactorDisableDialog.vue"
 import DeleteAccountDialog from "@/views/settings/DeleteAccountDialog.vue";
 import SessionsCard from "@/views/settings/SessionsCard.vue";
 import LoginActivityCard from "@/views/settings/LoginActivityCard.vue";
+import VaultsCard from "@/views/settings/VaultsCard.vue";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {useI18n} from "vue-i18n";
 import {applyTheme} from "@/plugins/theme";

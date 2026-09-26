@@ -13,28 +13,28 @@ export class LoanService {
 
     /**
      * Lists books currently on loan, paginated.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param filter Pagination and optional group/date-range filters.
      * @returns The total matching row count, the page size, and this page's rows.
      */
-    public async listLoans(userId: number, filter: LoanListFilter): Promise<{total: number; limit: number; loans: Loan[]}> {
-        const {total, loans} = await new LoanRepository(this.pool).list(userId, filter);
+    public async listLoans(vaultId: number, filter: LoanListFilter): Promise<{total: number; limit: number; loans: Loan[]}> {
+        const {total, loans} = await new LoanRepository(this.pool).list(vaultId, filter);
         return {total, limit: LoanRepository.MAX_ROWS, loans};
     }
 
     /**
      * Builds the loan-history export for the Loans view's Excel report.
-     * @param userId Owning user's id.
+     * @param vaultId Vault id.
      * @param filter Required date range (`dateFrom`/`dateTo`) and optional group/customer filters.
      * @returns Every matching loan-history row.
      */
     public async getLoanReport(
-        userId: number,
+        vaultId: number,
         filter: {dateFrom: string | null; dateTo: string | null; groupId?: number | null; customerId?: number | null}
     ): Promise<LoanHistoryRow[]> {
         if (!filter.dateFrom || !filter.dateTo) {
             throw new ValidationError("date_from and date_to are required");
         }
-        return new LoanRepository(this.pool).report(userId, filter as LoanReportFilter);
+        return new LoanRepository(this.pool).report(vaultId, filter as LoanReportFilter);
     }
 }

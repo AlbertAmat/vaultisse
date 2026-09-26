@@ -21,8 +21,8 @@ export class CustomerController {
      */
     public async listGroups(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const groups = await new CustomerService(this.pool).listGroups(userId);
+            const vaultId = appService.getSessionVault(req);
+            const groups = await new CustomerService(this.pool).listGroups(vaultId);
             res.status(200).json(groups);
         } catch (error) {
             console.error('Error getting customer groups:', error);
@@ -37,8 +37,8 @@ export class CustomerController {
      */
     public async createGroup(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const group = await new CustomerService(this.pool).createGroup(userId, req.body.name, req.body.description);
+            const vaultId = appService.getSessionVault(req);
+            const group = await new CustomerService(this.pool).createGroup(vaultId, req.body.name, req.body.description);
             res.status(201).json(group);
         } catch (error) {
             if (error instanceof DomainError) {
@@ -62,8 +62,8 @@ export class CustomerController {
             return;
         }
         try {
-            const userId = appService.getSessionUser(req);
-            const group = await new CustomerService(this.pool).renameGroup(groupId, userId, req.body.name, req.body.description);
+            const vaultId = appService.getSessionVault(req);
+            const group = await new CustomerService(this.pool).renameGroup(groupId, vaultId, req.body.name, req.body.description);
             res.status(200).json(group);
         } catch (error) {
             if (error instanceof DomainError) {
@@ -87,8 +87,8 @@ export class CustomerController {
             return;
         }
         try {
-            const userId = appService.getSessionUser(req);
-            await new CustomerService(this.pool).deleteGroup(groupId, userId);
+            const vaultId = appService.getSessionVault(req);
+            await new CustomerService(this.pool).deleteGroup(groupId, vaultId);
             res.status(200).json({message: 'Customer group deleted successfully'});
         } catch (error) {
             if (error instanceof DomainError) {
@@ -119,8 +119,8 @@ export class CustomerController {
             return;
         }
         try {
-            const userId = appService.getSessionUser(req);
-            const customer = await new CustomerService(this.pool).assignCustomerToGroup(customerId, groupId, userId);
+            const vaultId = appService.getSessionVault(req);
+            const customer = await new CustomerService(this.pool).assignCustomerToGroup(customerId, groupId, vaultId);
             res.status(200).json(customer);
         } catch (error) {
             if (error instanceof DomainError) {
@@ -144,8 +144,8 @@ export class CustomerController {
             return;
         }
         try {
-            const userId = appService.getSessionUser(req);
-            const customer = await new CustomerService(this.pool).removeCustomerFromGroup(customerId, userId);
+            const vaultId = appService.getSessionVault(req);
+            const customer = await new CustomerService(this.pool).removeCustomerFromGroup(customerId, vaultId);
             res.status(200).json(customer);
         } catch (error) {
             if (error instanceof DomainError) {
@@ -166,8 +166,8 @@ export class CustomerController {
      */
     public async list(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
-            const customers = await new CustomerService(this.pool).listCustomers(userId);
+            const vaultId = appService.getSessionVault(req);
+            const customers = await new CustomerService(this.pool).listCustomers(vaultId);
             res.status(200).json({customers});
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -182,9 +182,9 @@ export class CustomerController {
      */
     public async create(req: Request, res: Response): Promise<void> {
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Adding customer with name ${req.body.name}`);
-            const customer = await new CustomerService(this.pool).createCustomer(userId, req.body.name);
+            const customer = await new CustomerService(this.pool).createCustomer(vaultId, req.body.name);
             res.status(200).json(customer);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -204,9 +204,9 @@ export class CustomerController {
             return;
         }
         try {
-            const userId = appService.getSessionUser(req);
+            const vaultId = appService.getSessionVault(req);
             appService.getLogger().debug(`Updating customer ${customerId}`);
-            const customer = await new CustomerService(this.pool).renameCustomer(customerId, userId, req.body.name);
+            const customer = await new CustomerService(this.pool).renameCustomer(customerId, vaultId, req.body.name);
             res.status(200).json(customer);
         } catch (error) {
             console.error("Transaction error:", error);
@@ -223,8 +223,8 @@ export class CustomerController {
         const id = Number(req.params.id);
         appService.getLogger().debug(`Delete customer, id: ${id}`);
         try {
-            const userId = appService.getSessionUser(req);
-            await new CustomerService(this.pool).deleteCustomer(id, userId);
+            const vaultId = appService.getSessionVault(req);
+            await new CustomerService(this.pool).deleteCustomer(id, vaultId);
             res.send({message: "Customer deleted successfully"});
         } catch (e) {
             if (e instanceof DomainError) {
@@ -250,8 +250,8 @@ export class CustomerController {
             return;
         }
         try {
-            const userId = appService.getSessionUser(req);
-            const books = await new CustomerService(this.pool).getCustomerBooks(customerId, userId);
+            const vaultId = appService.getSessionVault(req);
+            const books = await new CustomerService(this.pool).getCustomerBooks(customerId, vaultId);
             res.status(200).json(books);
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -276,8 +276,8 @@ export class CustomerController {
             return;
         }
         try {
-            const userId = appService.getSessionUser(req);
-            const customerBooks = await new CustomerService(this.pool).lendBooksToCustomer(customerId, userId, books);
+            const vaultId = appService.getSessionVault(req);
+            const customerBooks = await new CustomerService(this.pool).lendBooksToCustomer(customerId, vaultId, books);
             res.status(200).json(customerBooks);
         } catch (err) {
             if (err instanceof DomainError) {
@@ -306,8 +306,8 @@ export class CustomerController {
             return;
         }
         try {
-            const userId = appService.getSessionUser(req);
-            await new CustomerService(this.pool).returnBookFromCustomer(customerId, userId, bookStockCode);
+            const vaultId = appService.getSessionVault(req);
+            await new CustomerService(this.pool).returnBookFromCustomer(customerId, vaultId, bookStockCode);
             res.status(200).send();
         } catch (err: any) {
             console.error('Error adding books to a customer', err.stack);
