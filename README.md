@@ -61,7 +61,7 @@ language, format, cover image), and it can look books up automatically by ISBN.
 - Print barcode/ISBN labels for shelving and quick re-scanning
 - Full-text search across the catalog
 - A dashboard with collection statistics and charts
-- Multi-language UI (English, Spanish, Catalan, Italian)
+- Multi-language UI (English, Spanish, Catalan, Italian, French, German)
 - Built-in `/docs` help pages, rendered from Markdown, in the same languages
 - Cookie/session-based authentication with JWT, password hashing, optional OIDC/SSO
   (Authentik and other IdPs), rate limiting, and secure HTTP headers out of the box
@@ -411,7 +411,7 @@ authentication on your server.
 
 ## Internationalization
 
-The UI currently ships in English, Spanish, Catalan, and Italian. Labels are stored
+The UI currently ships in English, Spanish, Catalan, Italian, French, and German. Labels are stored
 in the database (`app_languages` / `app_labels` tables in `databaseSchema.sql`) and
 loaded into the client's Vue I18n instance — this keeps translations editable
 without a redeploy. The `/docs` help pages are Markdown files rendered per-language

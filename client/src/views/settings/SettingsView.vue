@@ -372,6 +372,8 @@ const supportedLanguages = [
 	{text: "Spanish", value: "es"},
 	{text: "Catalan", value: "ca"},
 	{text: "Italian", value: "it"},
+	{text: "French", value: "fr"},
+	{text: "German", value: "de"},
 ]
 
 const regions = [
