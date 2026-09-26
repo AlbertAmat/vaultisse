@@ -61,11 +61,18 @@ class VaultService {
     }
 
     /**
-     * Deletes a vault. Requires `can_manage_settings`; rejected (409) while it still owns any content.
+     * Deletes a vault. Requires `can_manage_settings`. Rejected (409) if the caller has no other vault,
+     * and (unless `transferToVaultId` names another vault the caller belongs to, to move it into first)
+     * while it still owns any content. The error dialog is suppressed so VaultMembersDialog.vue can
+     * decide for itself whether a 409 means "show the transfer picker" or a real failure to surface.
      * @param id Vault id.
+     * @param transferToVaultId Destination vault for the content, if the vault has any.
      */
-    public async remove(id: number): Promise<void> {
-        await axiosInstance.delete(`${PATH_PREFIX}/vault/${id}`);
+    public async remove(id: number, transferToVaultId?: number): Promise<void> {
+        await axiosInstance.delete(`${PATH_PREFIX}/vault/${id}`, {
+            data: transferToVaultId !== undefined ? {transferToVaultId} : undefined,
+            suppressErrorDialog: true,
+        } as any);
     }
 
     /**

@@ -126,15 +126,185 @@ export class VaultRepository {
      * so a failed delete here doesn't abort anything the re-enable would
      * then run against.
      *
+     * Reassigns `users.last_used_vault_id` (to another vault that user
+     * belongs to, or NULL) for every member this vault is currently active
+     * for, before touching anything else - that column has no `ON DELETE`
+     * clause, so leaving it dangling would otherwise fail this very DELETE
+     * with the same 23503 that VaultService.deleteVault reads as "still has
+     * content", even for a vault that's genuinely empty.
+     *
      * @param vaultId Vault id.
      */
     public async removeVault(vaultId: number): Promise<void> {
+        await this.db.query(
+            `UPDATE users u
+                SET last_used_vault_id = (
+                    SELECT vu.vault_id FROM vault_users vu
+                    WHERE vu.user_id = u.id AND vu.vault_id != $1
+                    ORDER BY vu.vault_id LIMIT 1
+                )
+              WHERE u.last_used_vault_id = $1`,
+            [vaultId]
+        );
+
         await this.db.query("ALTER TABLE vault_users DISABLE TRIGGER trg_vault_min_one_admin");
         try {
             await this.db.query("DELETE FROM vault WHERE id = $1", [vaultId]);
         } finally {
             await this.db.query("ALTER TABLE vault_users ENABLE TRIGGER trg_vault_min_one_admin");
         }
+    }
+
+    /**
+     * Finds isbns present in both vaults. mergeVaultInto moves books as-is,
+     * which would violate books_isbn_vault_unique if the target vault
+     * already has a different book with the same isbn - the caller
+     * (VaultService.deleteVault) checks this first, in the same
+     * transaction, and asks the user to resolve it manually rather than
+     * silently dropping or guessing which copy should win.
+     *
+     * @param sourceVaultId Vault being merged away.
+     * @param targetVaultId Vault receiving its content.
+     * @returns The names of the conflicting books.
+     */
+    public async findIsbnConflicts(sourceVaultId: number, targetVaultId: number): Promise<string[]> {
+        const result = await this.db.query(
+            `SELECT s.name
+               FROM books s
+               JOIN books t ON t.vault_id = $2 AND t.isbn = s.isbn
+              WHERE s.vault_id = $1
+                AND s.isbn IS NOT NULL`,
+            [sourceVaultId, targetVaultId]
+        );
+        return result.rows.map((row: {name: string}) => row.name);
+    }
+
+    /**
+     * Merges a vault's entire content into another vault the caller already
+     * belongs to, then removes the (now empty) source vault - the
+     * alternative to the plain "refuse while it still has content" path in
+     * removeVault, used when VaultService.deleteVault is given a
+     * transferToVaultId.
+     *
+     * Categories/authors/customer_groups are unique per vault by name
+     * (unique_vault_category/unique_vault_author/unique_vault_customer_group),
+     * so a same-named row already in the target is reused (references
+     * repointed, the source row dropped) instead of moved - a plain
+     * `UPDATE ... SET vault_id` would violate those constraints whenever
+     * both vaults happen to use the same name, which is common (e.g.
+     * "Fiction"). Locations and customers aren't name-unique, so they're
+     * just moved, except a source vault's default location is demoted
+     * first if the target already has one of its own
+     * (locations_one_default_per_vault allows only one per vault). Books
+     * are moved as-is - callers must have already ruled out isbn collisions
+     * with the target vault (see findIsbnConflicts), since two genuinely
+     * different physical copies sharing an isbn across vaults is an
+     * ambiguous case this method refuses to guess at.
+     *
+     * Must run inside a transaction (see VaultService.deleteVault) - a
+     * partial merge left by a crash partway through would be effectively
+     * unrecoverable. No try/finally around the trigger disable at the end,
+     * for the same reason as deleteVaultCompletely: DDL is transactional,
+     * so a failure anywhere above rolls back the DISABLE along with
+     * everything else, and a finally here would instead run against an
+     * already-aborted transaction and mask the real error.
+     *
+     * @param sourceVaultId Vault being emptied and removed.
+     * @param targetVaultId Vault receiving its content.
+     */
+    public async mergeVaultInto(sourceVaultId: number, targetVaultId: number): Promise<void> {
+        const categories = await this.db.query(
+            `SELECT s.id AS source_id, t.id AS target_id
+               FROM categories s
+               LEFT JOIN categories t ON t.vault_id = $2 AND t.name = s.name
+              WHERE s.vault_id = $1`,
+            [sourceVaultId, targetVaultId]
+        );
+        for (const row of categories.rows) {
+            if (row.target_id) {
+                await this.db.query("UPDATE books SET category_id = $1 WHERE category_id = $2", [row.target_id, row.source_id]);
+                await this.db.query("DELETE FROM categories WHERE id = $1", [row.source_id]);
+            } else {
+                await this.db.query("UPDATE categories SET vault_id = $1 WHERE id = $2", [targetVaultId, row.source_id]);
+            }
+        }
+
+        // book_authors' PK is (book_id, author_id), so repointing a book
+        // that already links both the source and target author would
+        // collide on a plain UPDATE - insert the repointed row with
+        // ON CONFLICT DO NOTHING first, then drop the old ones.
+        const authors = await this.db.query(
+            `SELECT s.id AS source_id, t.id AS target_id
+               FROM authors s
+               LEFT JOIN authors t ON t.vault_id = $2 AND t.name = s.name
+              WHERE s.vault_id = $1`,
+            [sourceVaultId, targetVaultId]
+        );
+        for (const row of authors.rows) {
+            if (row.target_id) {
+                await this.db.query(
+                    `INSERT INTO book_authors (book_id, author_id, vault_id)
+                     SELECT book_id, $1, $2 FROM book_authors WHERE author_id = $3
+                     ON CONFLICT DO NOTHING`,
+                    [row.target_id, targetVaultId, row.source_id]
+                );
+                await this.db.query("DELETE FROM book_authors WHERE author_id = $1", [row.source_id]);
+                await this.db.query("DELETE FROM authors WHERE id = $1", [row.source_id]);
+            } else {
+                await this.db.query("UPDATE authors SET vault_id = $1 WHERE id = $2", [targetVaultId, row.source_id]);
+            }
+        }
+
+        const groups = await this.db.query(
+            `SELECT s.id AS source_id, t.id AS target_id
+               FROM customer_groups s
+               LEFT JOIN customer_groups t ON t.vault_id = $2 AND t.name = s.name
+              WHERE s.vault_id = $1`,
+            [sourceVaultId, targetVaultId]
+        );
+        for (const row of groups.rows) {
+            if (row.target_id) {
+                await this.db.query("UPDATE customers SET group_id = $1 WHERE group_id = $2", [row.target_id, row.source_id]);
+                await this.db.query("DELETE FROM customer_groups WHERE id = $1", [row.source_id]);
+            } else {
+                await this.db.query("UPDATE customer_groups SET vault_id = $1 WHERE id = $2", [targetVaultId, row.source_id]);
+            }
+        }
+
+        // Demote the source vault's default location before moving it, if
+        // the target already has one of its own - the two can't coexist.
+        await this.db.query(
+            `UPDATE locations SET "default" = FALSE
+              WHERE vault_id = $1
+                AND "default" = TRUE
+                AND EXISTS (SELECT 1 FROM locations WHERE vault_id = $2 AND "default" = TRUE)`,
+            [sourceVaultId, targetVaultId]
+        );
+        await this.db.query("UPDATE locations SET vault_id = $1 WHERE vault_id = $2", [targetVaultId, sourceVaultId]);
+
+        // Customers aren't name-unique per vault - moved as-is. group_id
+        // already points at the correct (merged-or-moved) target-vault row.
+        await this.db.query("UPDATE customers SET vault_id = $1 WHERE vault_id = $2", [targetVaultId, sourceVaultId]);
+
+        // category_id already points at the correct (merged-or-moved)
+        // target-vault row; isbn conflicts were already ruled out by the caller.
+        await this.db.query("UPDATE books SET vault_id = $1 WHERE vault_id = $2", [targetVaultId, sourceVaultId]);
+
+        // Everything else hanging off books/authors just follows vault_id -
+        // no name-uniqueness of its own to reconcile.
+        await this.db.query("UPDATE book_stocks SET vault_id = $1 WHERE vault_id = $2", [targetVaultId, sourceVaultId]);
+        await this.db.query("UPDATE book_authors SET vault_id = $1 WHERE vault_id = $2", [targetVaultId, sourceVaultId]);
+        await this.db.query("UPDATE book_files SET vault_id = $1 WHERE vault_id = $2", [targetVaultId, sourceVaultId]);
+        await this.db.query("UPDATE loan_history SET vault_id = $1 WHERE vault_id = $2", [targetVaultId, sourceVaultId]);
+
+        // Anyone who had the source vault active now has its content in the
+        // target vault instead - reassign rather than leave them dangling.
+        await this.db.query("UPDATE users SET last_used_vault_id = $1 WHERE last_used_vault_id = $2", [targetVaultId, sourceVaultId]);
+
+        await this.db.query("ALTER TABLE vault_users DISABLE TRIGGER trg_vault_min_one_admin");
+        await this.db.query("DELETE FROM vault_users WHERE vault_id = $1", [sourceVaultId]);
+        await this.db.query("DELETE FROM vault WHERE id = $1", [sourceVaultId]);
+        await this.db.query("ALTER TABLE vault_users ENABLE TRIGGER trg_vault_min_one_admin");
     }
 
     /**

@@ -109,13 +109,19 @@ router.put('/:id', requireAuth, (req, res) => getVaultController().update(req, r
 /**
  * DELETE /vault/:id
  * ------------------
- * Deletes a vault. Blocked while it still owns any content (books, customers, locations, ...).
+ * Deletes a vault. Refused if the caller has no other vault to fall back to. If it still owns any
+ * content (books, customers, locations, ...), it's also refused unless `transferToVaultId` names
+ * another vault the caller belongs to - that content is merged into it first (same-named
+ * categories/authors/customer groups are reused rather than duplicated).
  *
  * Auth: required. Caller must have `can_manage_settings` (admin role).
+ * Body (optional): { "transferToVaultId": 2 }
  *
  * Example response (200): { "message": "Vault deleted successfully" }
- * Responses: 200 success | 403 { "error": "..." } | 404 { "error": "Vault not found" } |
- *            409 { "error": "Vault still has content and can't be deleted" }.
+ * Responses: 200 success | 400 { "error": "..." } | 403 { "error": "..." } | 404 { "error": "..." } |
+ *            409 { "error": "This is the only vault you belong to - you can't delete it" } |
+ *            409 { "error": "Vault still has content and can't be deleted" } (no transferToVaultId given) |
+ *            409 { "error": "Both vaults have a book with the same ISBN (...) - resolve the duplicate before merging" }.
  */
 router.delete('/:id', requireAuth, (req, res) => getVaultController().remove(req, res));
 

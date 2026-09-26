@@ -1,5 +1,6 @@
 import {setupTestApp} from "../helpers/testApp";
 import {createAuthenticatedUser, ITestUser} from "../helpers/auth";
+import {appService} from "../../src/AppService";
 
 const app = setupTestApp();
 
@@ -298,5 +299,117 @@ describe("active vault switching", () => {
 
         const res = await outsider.agent.put(`/api/rest/vault/${createRes.body.id}/active`);
         expect(res.status).toBe(404);
+    });
+});
+
+describe("deleting a vault with content (transfer)", () => {
+    it("refuses to delete the caller's only vault, even if empty", async () => {
+        const policyRes = await admin.agent.get("/api/rest/app/policy");
+        const onlyVaultId = policyRes.body.user.activeVault;
+
+        const deleteRes = await admin.agent.delete(`/api/rest/vault/${onlyVaultId}`);
+        expect(deleteRes.status).toBe(409);
+    });
+
+    it("400s when transferToVaultId is the vault being deleted", async () => {
+        const createRes = await admin.agent.post("/api/rest/vault").send({name: "Vault B"});
+        const vaultBId = createRes.body.id;
+
+        const deleteRes = await admin.agent.delete(`/api/rest/vault/${vaultBId}`).send({transferToVaultId: vaultBId});
+        expect(deleteRes.status).toBe(400);
+    });
+
+    it("404s when transferToVaultId is a vault the caller doesn't belong to", async () => {
+        const createRes = await admin.agent.post("/api/rest/vault").send({name: "Vault B"});
+        const vaultBId = createRes.body.id;
+        const outsider = await createAuthenticatedUser(app, "Outsider");
+        const outsiderPolicy = await outsider.agent.get("/api/rest/app/policy");
+
+        const deleteRes = await admin.agent.delete(`/api/rest/vault/${vaultBId}`).send({transferToVaultId: outsiderPolicy.body.user.activeVault});
+        expect(deleteRes.status).toBe(404);
+    });
+
+    it("merges content into the destination vault, deduping same-named categories/authors/customer groups, and deletes the source vault", async () => {
+        const policyRes = await admin.agent.get("/api/rest/app/policy");
+        const vaultAId = policyRes.body.user.activeVault;
+
+        const createRes = await admin.agent.post("/api/rest/vault").send({name: "Vault B"});
+        const vaultBId = createRes.body.id;
+        await admin.agent.put(`/api/rest/vault/${vaultBId}/active`);
+
+        const pool = appService.getDatabasePool();
+
+        // Pre-existing rows in vault A that should be reused (deduped) rather than duplicated.
+        const {rows: [{id: catAId}]} = await pool.query("INSERT INTO categories (vault_id, name) VALUES ($1, 'Fiction') RETURNING id", [vaultAId]);
+        const {rows: [{id: authorAId}]} = await pool.query("INSERT INTO authors (vault_id, name) VALUES ($1, 'Stephen King') RETURNING id", [vaultAId]);
+        const {rows: [{id: groupAId}]} = await pool.query("INSERT INTO customer_groups (vault_id, name) VALUES ($1, 'VIP') RETURNING id", [vaultAId]);
+        await pool.query("INSERT INTO locations (vault_id, name, \"default\") VALUES ($1, 'Main shelf', TRUE)", [vaultAId]);
+
+        // Content in vault B, one of each colliding by name with vault A's.
+        const {rows: [{id: catBId}]} = await pool.query("INSERT INTO categories (vault_id, name) VALUES ($1, 'Fiction') RETURNING id", [vaultBId]);
+        const {rows: [{id: authorBId}]} = await pool.query("INSERT INTO authors (vault_id, name) VALUES ($1, 'Stephen King') RETURNING id", [vaultBId]);
+        const {rows: [{id: groupBId}]} = await pool.query("INSERT INTO customer_groups (vault_id, name) VALUES ($1, 'VIP') RETURNING id", [vaultBId]);
+        const {rows: [{id: locBId}]} = await pool.query("INSERT INTO locations (vault_id, name, \"default\") VALUES ($1, 'Storage', TRUE) RETURNING id", [vaultBId]);
+        const {rows: [{id: customerBId}]} = await pool.query("INSERT INTO customers (vault_id, name, group_id) VALUES ($1, 'Alice', $2) RETURNING id", [vaultBId, groupBId]);
+        const {rows: [{id: bookBId}]} = await pool.query("INSERT INTO books (vault_id, name, category_id) VALUES ($1, 'The Shining', $2) RETURNING id", [vaultBId, catBId]);
+        await pool.query("INSERT INTO book_authors (book_id, author_id, vault_id) VALUES ($1, $2, $3)", [bookBId, authorBId, vaultBId]);
+        await pool.query("INSERT INTO book_stocks (vault_id, book_id, code, location_id, status) VALUES ($1, $2, 'ABC1234567', $3, 0)", [vaultBId, bookBId, locBId]);
+
+        const deleteRes = await admin.agent.delete(`/api/rest/vault/${vaultBId}`).send({transferToVaultId: vaultAId});
+        expect(deleteRes.status).toBe(200);
+
+        const getVaultBRes = await admin.agent.get(`/api/rest/vault/${vaultBId}`);
+        expect(getVaultBRes.status).toBe(404);
+
+        // The caller's active vault (vault B) followed its content into vault A.
+        const policyAfter = await admin.agent.get("/api/rest/app/policy");
+        expect(policyAfter.body.user.activeVault).toBe(vaultAId);
+
+        // Deduped: exactly one "Fiction"/"Stephen King"/"VIP" row in vault A, matching the ORIGINAL vault-A id - vault B's duplicate was dropped, not moved.
+        expect((await pool.query("SELECT id FROM categories WHERE vault_id = $1 AND name = 'Fiction'", [vaultAId])).rows).toEqual([{id: catAId}]);
+        expect((await pool.query("SELECT id FROM authors WHERE vault_id = $1 AND name = 'Stephen King'", [vaultAId])).rows).toEqual([{id: authorAId}]);
+        expect((await pool.query("SELECT id FROM customer_groups WHERE vault_id = $1 AND name = 'VIP'", [vaultAId])).rows).toEqual([{id: groupAId}]);
+        expect((await pool.query("SELECT id FROM categories WHERE id = $1", [catBId])).rows).toEqual([]);
+        expect((await pool.query("SELECT id FROM authors WHERE id = $1", [authorBId])).rows).toEqual([]);
+        expect((await pool.query("SELECT id FROM customer_groups WHERE id = $1", [groupBId])).rows).toEqual([]);
+
+        // The moved book now points at vault A's pre-existing category, and its author link was repointed.
+        const bookRes = await pool.query("SELECT vault_id, category_id FROM books WHERE id = $1", [bookBId]);
+        expect(bookRes.rows[0]).toEqual({vault_id: vaultAId, category_id: catAId});
+        const bookAuthorRes = await pool.query("SELECT author_id, vault_id FROM book_authors WHERE book_id = $1", [bookBId]);
+        expect(bookAuthorRes.rows).toEqual([{author_id: authorAId, vault_id: vaultAId}]);
+
+        // The moved customer/stock followed, and the customer's group was repointed to vault A's group.
+        const customerRes = await pool.query("SELECT vault_id, group_id FROM customers WHERE id = $1", [customerBId]);
+        expect(customerRes.rows[0]).toEqual({vault_id: vaultAId, group_id: groupAId});
+        const stockRes = await pool.query("SELECT vault_id FROM book_stocks WHERE book_id = $1", [bookBId]);
+        expect(stockRes.rows[0]).toEqual({vault_id: vaultAId});
+
+        // Only one default location remains for vault A - vault B's default was demoted on the way in.
+        const defaultLocationsRes = await pool.query("SELECT COUNT(*) FROM locations WHERE vault_id = $1 AND \"default\" = TRUE", [vaultAId]);
+        expect(Number(defaultLocationsRes.rows[0].count)).toBe(1);
+        const movedLocationRes = await pool.query("SELECT \"default\" FROM locations WHERE id = $1", [locBId]);
+        expect(movedLocationRes.rows[0].default).toBe(false);
+    });
+
+    it("409s and rolls back entirely when both vaults have a book with the same isbn", async () => {
+        const policyRes = await admin.agent.get("/api/rest/app/policy");
+        const vaultAId = policyRes.body.user.activeVault;
+
+        const createRes = await admin.agent.post("/api/rest/vault").send({name: "Vault B"});
+        const vaultBId = createRes.body.id;
+
+        const pool = appService.getDatabasePool();
+        await pool.query("INSERT INTO books (vault_id, name, isbn) VALUES ($1, 'Copy A', '1234567890')", [vaultAId]);
+        const {rows: [{id: bookBId}]} = await pool.query("INSERT INTO books (vault_id, name, isbn) VALUES ($1, 'Copy B', '1234567890') RETURNING id", [vaultBId]);
+
+        const deleteRes = await admin.agent.delete(`/api/rest/vault/${vaultBId}`).send({transferToVaultId: vaultAId});
+        expect(deleteRes.status).toBe(409);
+
+        // Nothing moved - the whole merge rolled back.
+        const getVaultBRes = await admin.agent.get(`/api/rest/vault/${vaultBId}`);
+        expect(getVaultBRes.status).toBe(200);
+        const bookRes = await pool.query("SELECT vault_id FROM books WHERE id = $1", [bookBId]);
+        expect(bookRes.rows[0]).toEqual({vault_id: vaultBId});
     });
 });

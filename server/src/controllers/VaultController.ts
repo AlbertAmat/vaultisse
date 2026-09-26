@@ -118,7 +118,8 @@ export class VaultController {
     }
 
     /**
-     * DELETE /vault/:id - deletes a vault.
+     * DELETE /vault/:id - deletes a vault. If it still owns any content, `req.body.transferToVaultId`
+     * must name another vault the caller belongs to for that content to be moved into first.
      * @param req Express request.
      * @param res Express response.
      */
@@ -129,9 +130,15 @@ export class VaultController {
             return;
         }
 
+        const transferToVaultId = req.body?.transferToVaultId !== undefined ? Number(req.body.transferToVaultId) : undefined;
+        if (transferToVaultId !== undefined && !Number.isInteger(transferToVaultId)) {
+            res.status(400).json({error: 'Invalid destination vault ID'});
+            return;
+        }
+
         try {
             const userId = appService.getSessionUser(req);
-            await new VaultService(this.pool).deleteVault(vaultId, userId);
+            await new VaultService(this.pool).deleteVault(vaultId, userId, transferToVaultId);
             res.send({message: "Vault deleted successfully"});
         } catch (e) {
             if (e instanceof DomainError) {

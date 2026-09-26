@@ -106,15 +106,47 @@ export class VaultService {
     }
 
     /**
-     * Deletes a vault, throwing ForbiddenError unless the caller has `can_manage_settings` and
-     * ConflictError if the vault still owns any content (customers, books, locations, ...) - deleting a
-     * vault out from under its content isn't supported yet, see assets/db/upgrade/1.3.0.sql's top note.
+     * Deletes a vault, throwing ForbiddenError unless the caller has `can_manage_settings`, and
+     * ConflictError if the caller has no other vault to fall back to - deleting your only vault would
+     * leave you with no active vault at all (see AuthMiddleware/AppService.getSessionVault).
+     *
+     * If the vault still owns any content (customers, books, locations, ...), deletion is refused with
+     * ConflictError unless `transferToVaultId` names another vault the caller is an accepted member of,
+     * in which case every bit of content is moved there first (VaultRepository.mergeVaultInto) and the
+     * now-empty vault is removed.
+     *
      * @param vaultId Vault id.
      * @param userId Caller's id.
+     * @param transferToVaultId If the vault has content, the vault to move it into before deleting.
      */
-    public async deleteVault(vaultId: number, userId: number): Promise<void> {
+    public async deleteVault(vaultId: number, userId: number, transferToVaultId?: number): Promise<void> {
         const repo = new VaultRepository(this.pool);
         await this.requireMembership(repo, vaultId, userId, (m) => m.can_manage_settings);
+
+        const myVaults = await repo.getVaults(userId);
+        if (!myVaults.some((v) => v.id !== vaultId)) {
+            throw new ConflictError("This is the only vault you belong to - you can't delete it");
+        }
+
+        if (transferToVaultId !== undefined) {
+            if (transferToVaultId === vaultId) {
+                throw new ValidationError("Choose a different vault to transfer into");
+            }
+            const targetMembership = await repo.getMembership(transferToVaultId, userId);
+            if (!targetMembership || targetMembership.status !== VaultUserStatus.ACCEPTED) {
+                throw new NotFoundError("Destination vault not found");
+            }
+
+            await withTransaction(this.pool, async (client) => {
+                const txRepo = new VaultRepository(client);
+                const conflicts = await txRepo.findIsbnConflicts(vaultId, transferToVaultId);
+                if (conflicts.length > 0) {
+                    throw new ConflictError(`Both vaults have a book with the same ISBN (${conflicts.join(", ")}) - resolve the duplicate before merging`);
+                }
+                await txRepo.mergeVaultInto(vaultId, transferToVaultId);
+            });
+            return;
+        }
 
         try {
             await repo.removeVault(vaultId);

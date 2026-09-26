@@ -192,6 +192,41 @@
 			</v-card-actions>
 		</v-card>
 	</v-dialog>
+
+	<!-- Shown when deleting is refused because the vault still has content -
+		 lets the caller pick one of their other vaults to move it into first. -->
+	<v-dialog v-model="transferDialogVisible" max-width="480" :close-on-content-click="false">
+		<v-card>
+			<v-card-title>{{t(AppLabels.VAULT_TRANSFER_TITLE)}}</v-card-title>
+			<v-divider></v-divider>
+			<v-card-text>
+				<p class="mb-4" style="white-space: normal">{{t(AppLabels.VAULT_TRANSFER_DESC)}}</p>
+				<v-select
+					v-model="transferTargetId"
+					:items="otherVaults.map((v) => ({title: v.name, value: v.id}))"
+					:label="t(AppLabels.VAULT_TRANSFER_TARGET)"
+					density="compact"
+					variant="outlined"
+					hide-details
+				></v-select>
+			</v-card-text>
+			<v-divider></v-divider>
+			<v-card-actions>
+				<v-spacer></v-spacer>
+				<v-btn variant="text" class="text-none" @click="transferDialogVisible = false">{{t(AppLabels.CLOSE)}}</v-btn>
+				<v-btn
+					variant="tonal"
+					color="error"
+					class="text-none"
+					:disabled="transferTargetId === null"
+					:loading="transferring"
+					@click="confirmTransferAndDelete()"
+				>
+					{{t(AppLabels.VAULT_TRANSFER_CONFIRM)}}
+				</v-btn>
+			</v-card-actions>
+		</v-card>
+	</v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -210,9 +245,11 @@ import {i18n} from "@/plugins/i18n/i18n";
 import {vaultService} from "@/service/vault/VaultService";
 import {applicationService} from "@/service/ApplicationService";
 import {vaultJoinRoute} from "@/router/routes/VaultJoinRoute";
-import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
+import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
+import {errorDialogController} from "@/components/errorDialog/ErrorDialogController";
 import IVaultInfo from "@/types/vault/IVaultInfo";
+import IVault from "@/types/vault/IVault";
 import {IVaultUser, VaultUserStatus} from "@/types/vault/IVaultUser";
 
 interface Props {
@@ -244,6 +281,11 @@ const leasingEnabled: Ref<boolean> = ref(false);
 const savingSettings: Ref<boolean> = ref(false);
 
 const actingOnId: Ref<number | null> = ref(null);
+
+const otherVaults: Ref<IVault[]> = ref([]);
+const transferDialogVisible: Ref<boolean> = ref(false);
+const transferTargetId: Ref<number | null> = ref(null);
+const transferring: Ref<boolean> = ref(false);
 
 const myUserId = applicationService.getUser().getId();
 
@@ -392,7 +434,13 @@ function removeOrLeave(member: IVaultUser) {
 }
 
 /**
- *
+ * Deletes the vault, unless it still owns content - checked upfront via
+ * getVaults()/removeVault() ordering on the server (see
+ * VaultService.deleteVault): if the caller has no other vault at all,
+ * there's nowhere to transfer content into, so that's reported directly
+ * without even attempting the delete; otherwise a 409 here can only mean
+ * "still has content", and the transfer picker (already knowing which
+ * vaults are valid destinations) is opened instead.
  */
 function deleteVault() {
 	if (!vault.value) return;
@@ -402,11 +450,53 @@ function deleteVault() {
 		t(AppLabels.DELETE_VAULT_DESC),
 		t(AppLabels.DELETE)
 	).then(async () => {
-		await vaultService.remove(vault.value!.id);
-		appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_VAULT_DELETED)});
-		emit('changed');
-		dialog.value = false;
+		otherVaults.value = (await vaultService.list()).filter((v) => v.id !== vault.value!.id);
+		if (otherVaults.value.length === 0) {
+			appSnackbarController.show({message: i18n.global.t(AppLabels.VAULT_DELETE_ONLY_VAULT), type: SnackbarType.ERROR});
+			return;
+		}
+
+		try {
+			await vaultService.remove(vault.value!.id);
+			finishDelete();
+		} catch (e: any) {
+			if (e.response?.status === 409) {
+				transferTargetId.value = otherVaults.value[0].id;
+				transferDialogVisible.value = true;
+				return;
+			}
+			errorDialogController.showDialog(e);
+		}
 	});
+}
+
+/**
+ * Retries the delete with the picked destination vault, after the vault
+ * still had content (see deleteVault()) - the server moves everything into
+ * it (deduping same-named categories/authors/customer groups) before
+ * removing the now-empty source vault.
+ */
+async function confirmTransferAndDelete() {
+	if (!vault.value || transferTargetId.value === null) return;
+	try {
+		transferring.value = true;
+		await vaultService.remove(vault.value.id, transferTargetId.value);
+		transferDialogVisible.value = false;
+		finishDelete();
+	} catch (e: any) {
+		errorDialogController.showDialog(e);
+	} finally {
+		transferring.value = false;
+	}
+}
+
+/**
+ * Shared success path for both deleteVault() and confirmTransferAndDelete().
+ */
+function finishDelete() {
+	appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_VAULT_DELETED)});
+	emit('changed');
+	dialog.value = false;
 }
 </script>
 
