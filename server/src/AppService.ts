@@ -95,6 +95,14 @@ export class AppService {
     private readonly m_allowDevAuth: boolean;
 
     /**
+     * Whether GET/POST /register are reachable. Defaults to true - set
+     * REGISTRATION_ENABLED=false once the operator's own accounts exist to
+     * stop further public sign-ups (issue #36).
+     * @private
+     */
+    private readonly m_registrationEnabled: boolean;
+
+    /**
      * The google books PI key, if not present, it will use open library
      * @private
      */
@@ -248,6 +256,8 @@ export class AppService {
         this.m_maxSessionAgeMs = maxSessionAgeDays * 24 * 60 * 60 * 1000;
 
         this.m_allowDevAuth = process.env.ALLOW_DEV_AUTH == "true";
+
+        this.m_registrationEnabled = process.env.REGISTRATION_ENABLED !== "false";
 
         this.m_googleApiKey = BookMetadataRepository.normalizeGoogleApiKey(process.env.GOOGLE_BOOKS_API_KEY);
 
@@ -434,6 +444,11 @@ export class AppService {
     /** Check if development authentication is allowed */
     public allowDevAuth(): boolean {
         return this.m_allowDevAuth;
+    }
+
+    /** Whether GET/POST /register should be served - see REGISTRATION_ENABLED. */
+    public isRegistrationEnabled(): boolean {
+        return this.m_registrationEnabled;
     }
 
     /**

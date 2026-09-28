@@ -171,10 +171,23 @@ router.get("/auth/oidc/start", authLimiter, (req, res) => getAuthController().oi
 router.get("/auth/oidc/callback", authLimiter, (req, res) => getAuthController().oidcCallback(req, res));
 
 /**
+ * GET /auth/registration/status
+ * -------------------------------
+ * Whether the register page/endpoint are reachable. Unauthenticated. Used by
+ * login.html to hide the "No account? Register" link when disabled.
+ *
+ * Example response (200): { "enabled": true }
+ */
+router.get("/auth/registration/status", (req, res) => getAuthController().registrationStatus(req, res));
+
+/**
  * GET /register
  * --------------
  * Serves the static registration page, or redirects to `/app` if a session
  * cookie is already present. Unauthenticated.
+ *
+ * `REGISTRATION_ENABLED=false` (.env, default true) redirects to `/login`
+ * instead - see REGISTRATION_ENABLED note on POST /register below.
  */
 router.get("/register", (req, res) => getAuthController().showRegister(req, res));
 
@@ -200,12 +213,18 @@ router.get("/register", (req, res) => getAuthController().showRegister(req, res)
  * AuthRoute/AuthMiddleware look up a user) until an admin flips that column
  * by hand - there's no in-app admin role/UI for this, see AUTHENTICATION.md.
  *
+ * `REGISTRATION_ENABLED=false` (.env, default true) blocks this endpoint
+ * outright with a 403, for deployments that want a fixed set of accounts
+ * once the operator's own users have signed up (issue #36) - unlike
+ * `REGISTRATION_REQUIRES_APPROVAL`, no account is created at all.
+ *
  * Example response (201):
  *  { "success": true, "message": "Register successful", "redirectUrl": "/login" }
  *
  * Responses: 400 missing/invalid fields, weak password, or a duplicate
  *            email/username (deliberately generic - see CWE-203 note in
- *            AuthService.register) | 500 server error.
+ *            AuthService.register) | 403 registration disabled
+ *            (REGISTRATION_ENABLED=false) | 500 server error.
  */
 router.post("/register", authLimiter, (req, res) => getAuthController().register(req, res));
 

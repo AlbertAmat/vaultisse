@@ -209,11 +209,24 @@ export class AuthController {
     }
 
     /**
+     * GET /auth/registration/status - whether the register page/endpoint are reachable. Unauthenticated.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public registrationStatus(req: Request, res: Response): void {
+        res.json({enabled: appService.isRegistrationEnabled()});
+    }
+
+    /**
      * GET /register - serves the static registration page, or redirects to `/app` if a session cookie is already present.
      * @param req Express request.
      * @param res Express response.
      */
     public showRegister(req: Request, res: Response): void {
+        if (!appService.isRegistrationEnabled()) {
+            res.redirect("/login");
+            return;
+        }
         // @ts-ignore
         if (req.cookies.token) {
             res.redirect("/app");
@@ -228,6 +241,11 @@ export class AuthController {
      * @param res Express response.
      */
     public async register(req: Request, res: Response): Promise<void> {
+        if (!appService.isRegistrationEnabled()) {
+            res.status(403).json({message: "Registration is disabled."});
+            return;
+        }
+
         const {password} = req.body;
         const userName = typeof req.body.userName === "string" ? req.body.userName.trim() : req.body.userName;
         const email = typeof req.body.email === "string" ? req.body.email.trim() : req.body.email;

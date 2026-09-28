@@ -61,6 +61,11 @@ disabled and can't log in until approved (see "Approving a new registration" und
 [Common operations](#common-operations-all-scenarios)) — for the first account on a
 fresh instance you almost always want this left `false`.
 
+Once every account you need exists, set `REGISTRATION_ENABLED=false` (see
+`.env.example`) to close the page off — `/register` then redirects to `/login`,
+`POST /register` returns `403`, and the login page stops linking to it. Restart the
+`app` container for the change to take effect.
+
 ---
 
 ## A. Self-hosted, local only — no public access

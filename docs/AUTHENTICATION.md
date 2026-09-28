@@ -331,6 +331,17 @@ of an application-level admin, only the person operating the deployment. See
 "Approving a new registration" in [DEPLOYMENT.md](DEPLOYMENT.md) for the SQL
 to run.
 
+## Disabling registration
+
+`REGISTRATION_ENABLED=false` (`.env`, default `true`) turns registration off
+entirely: `GET /register` redirects to `/login` instead of serving the page,
+`POST /register` responds `403` without creating anything, and the "No
+account? Register" link on the login page is hidden (it checks
+`GET /auth/registration/status`, the same pattern `oidcStatus` uses for the
+SSO button). Unlike `REGISTRATION_REQUIRES_APPROVAL`, no row is written to
+`users` at all - there's nothing to approve later. Useful once the accounts
+that need to exist already do (issue #36).
+
 ## Other defenses
 
 - **Rate limiting**: a global limiter (500 req / 10 min / IP) plus stricter,

@@ -415,7 +415,7 @@
 
                 <button type="submit" class="btn">Login</button>
 
-                <p class="foot-link">No account? <a href="/register">Register and start using the app</a></p>
+                <p class="foot-link" id="registerLink">No account? <a href="/register">Register and start using the app</a></p>
             </form>
 
             <!-- Second step, shown after POST /login responds with twoFactorRequired: true.
@@ -472,6 +472,15 @@
             divider.classList.add('is-visible');
         })
         .catch(function () { /* password login still works */ });
+
+    fetch('/auth/registration/status')
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (data) {
+            if (data && data.enabled === false) {
+                document.getElementById('registerLink').style.display = 'none';
+            }
+        })
+        .catch(function () { /* leave the register link visible */ });
 
     document.getElementById('loginForm').addEventListener('submit', async function (event) {
         event.preventDefault(); // Prevent default form submission
