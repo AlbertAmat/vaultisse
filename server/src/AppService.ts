@@ -173,8 +173,20 @@ export class AppService {
             this.m_app.set("trust proxy", 1);
         }
 
-        this.m_app.use(bodyParser.json()); // Parse JSON request bodies
-        this.m_app.use(bodyParser.urlencoded({extended: true})); // Parse URL-encoded bodies
+        // ===========================================
+        // BODY PARSER
+        // ===========================================
+        const maxJsonBodyParserSize = process.env.MAX_JSON_BODY_PARSE?.trim() || "300kb";
+        const maxUrlEncodedBodyParserSize = process.env.MAX_URLENCODED_BODY_PARSE?.trim() || "100kb";
+
+        this.m_app.use(bodyParser.json({ limit: maxJsonBodyParserSize }));
+        this.m_app.use(
+            bodyParser.urlencoded({
+                extended: true,
+                limit: maxUrlEncodedBodyParserSize,
+            })
+        );
+
         this.m_app.use(cookieParser()); // Parse cookies
 
         // Reject state-changing requests when DEMO_MODE=true - must run
