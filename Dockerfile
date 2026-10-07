@@ -56,6 +56,11 @@ COPY --from=server-build /app/server/package.json  ./server/package.json
 COPY --from=server-build /app/server/dist          ./server/dist
 COPY --from=server-build /app/server/src/assets    ./server/dist/assets
 
+# Install and verify YAZ Z39.50 client
+RUN apk add --no-cache yaz \
+    && which yaz-client \
+    && yaz-client --version
+
 # The upgrade SQL files applied automatically on startup (see
 # server/src/migrate/index.ts and GitHub issue #26) - not built by either
 # prior stage, so copied straight from the build context.
