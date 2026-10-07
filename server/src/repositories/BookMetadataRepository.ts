@@ -206,6 +206,7 @@ export class BookMetadataRepository {
         const merged: BookVolumeInfo = {};
         let resolvedFromCatalog = false;
 
+
         const openLibrary = await BookMetadataRepository.fetchOpenLibraryByIsbn(isbn);
         if (openLibrary?.title) {
             BookMetadataRepository.mergeVolume(merged, openLibrary);

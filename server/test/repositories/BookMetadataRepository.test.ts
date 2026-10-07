@@ -89,7 +89,7 @@ describe("parseIsbnStoreHtml", () => {
 
 describe("mergeVolume", () => {
     it("fills empty fields and prefers a mixed-case title over ALL CAPS", () => {
-        const target = {title: "32 DE MARÇ", authors: ["XAVIER BOSCH"]};
+        const target:Record<string, any> = {title: "32 DE MARÇ", authors: ["XAVIER BOSCH"]};
         BookMetadataRepository.mergeVolume(target, {
             title: "32 de març",
             publisher: "La Col·lectiva",
