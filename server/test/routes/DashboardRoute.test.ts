@@ -31,19 +31,13 @@ describe("GET /dashboard", () => {
         const user = await createAuthenticatedUser(app);
 
         const wantToReadRes = await user.agent.post("/api/rest/book").field("name", "Dashboard Want To Read");
-        await user.agent.put(`/api/rest/book/${wantToReadRes.body}`).send({
-            name: "Dashboard Want To Read", authors: [], reading_status: 0,
-        });
+        await user.agent.put(`/api/rest/book/${wantToReadRes.body}/reading-status`).send({reading_status: 0});
 
         const currentlyReadingRes = await user.agent.post("/api/rest/book").field("name", "Dashboard Currently Reading");
-        await user.agent.put(`/api/rest/book/${currentlyReadingRes.body}`).send({
-            name: "Dashboard Currently Reading", authors: [], reading_status: 1,
-        });
+        await user.agent.put(`/api/rest/book/${currentlyReadingRes.body}/reading-status`).send({reading_status: 1});
 
         const readRes = await user.agent.post("/api/rest/book").field("name", "Dashboard Read");
-        await user.agent.put(`/api/rest/book/${readRes.body}`).send({
-            name: "Dashboard Read", authors: [], reading_status: 2,
-        });
+        await user.agent.put(`/api/rest/book/${readRes.body}/reading-status`).send({reading_status: 2});
 
         const res = await user.agent.get("/api/rest/dashboard");
         expect(res.status).toBe(200);

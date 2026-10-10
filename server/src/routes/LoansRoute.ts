@@ -13,6 +13,7 @@
 import {Router} from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
+import {requireVaultPermission} from "../middlewares/VaultPermissionMiddleware";
 import {LoanController} from "../controllers/LoanController";
 import {lazy} from "./lazySingleton";
 
@@ -32,7 +33,29 @@ const getLoanController = lazy(() => new LoanController(appService.getDatabasePo
  *    "bookId": 3, "bookName": "The Hobbit", "imageUrl": null, "customerId": 7, "customerName": "Jane Doe",
  *    "groupId": 2, "groupName": "Class 4B" }] }
  */
-router.get('', requireAuth, (req, res) => getLoanController().list(req, res));
+/**
+ * GET /loans/mine
+ * ---------------
+ * Copies currently on loan to the caller (as a vault member, not as a customer).
+ *
+ * Auth: required, `canBorrow`.
+ * Example response (200): { "loans": [{ "stockId": 10, "stockCode": "abc123", "loanedAt": "2026-01-05T10:00:00.000Z",
+ *    "bookId": 3, "bookName": "The Hobbit", "imageUrl": null }] }
+ */
+router.get('/mine', requireAuth, requireVaultPermission("canBorrow"), (req, res) => getLoanController().mine(req, res));
+
+/**
+ * GET /loans/mine/history
+ * -----------------------
+ * The caller's whole loan history, returned and still open, most recent first.
+ *
+ * Auth: required, `canBorrow`.
+ * Example response (200): { "rows": [{ "bookId": 3, "bookName": "The Hobbit", "stockCode": "abc123",
+ *    "loanedAt": "2026-01-05T10:00:00.000Z", "returnedAt": null }] }
+ */
+router.get('/mine/history', requireAuth, requireVaultPermission("canBorrow"), (req, res) => getLoanController().mineHistory(req, res));
+
+router.get('', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLoanController().list(req, res));
 
 /**
  * GET /loans/report
@@ -47,6 +70,6 @@ router.get('', requireAuth, (req, res) => getLoanController().list(req, res));
  *    "loanedAt": "2026-01-05T10:00:00.000Z", "returnedAt": "2026-01-12T14:00:00.000Z" }] }
  * Responses: 400 "date_from and date_to are required" | 200 the report rows.
  */
-router.get('/report', requireAuth, (req, res) => getLoanController().report(req, res));
+router.get('/report', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLoanController().report(req, res));
 
 export default router;

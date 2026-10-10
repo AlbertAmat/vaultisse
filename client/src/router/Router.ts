@@ -15,6 +15,7 @@ import {settingsRoute} from "@/router/routes/SettingsRoute";
 import {customersRoute} from "@/router/routes/CustomersRoute";
 import {authorsRoute} from "@/router/routes/AuthorsRoute";
 import {loansRoute} from "@/router/routes/LoansRoute";
+import {myLoansRoute} from "@/router/routes/MyLoansRoute";
 import {legalRoute} from "@/router/routes/LegalRoute";
 import {vaultJoinRoute} from "@/router/routes/VaultJoinRoute";
 import {applicationService} from "@/service/ApplicationService";
@@ -33,6 +34,7 @@ const routes: Array<RouteRecordRaw> = [
     customersRoute.getRoute(),
     authorsRoute.getRoute(),
     loansRoute.getRoute(),
+    myLoansRoute.getRoute(),
     settingsRoute.getRoute(),
     legalRoute.getRoute(),
     vaultJoinRoute.getRoute(),
@@ -68,6 +70,18 @@ router.beforeEach((to, from, next) => {
     // this stops a direct/bookmarked link from reaching them regardless.
     const leasingPaths: string[] = [customersRoute.getPath(), loansRoute.getPath()];
     if (leasingPaths.includes(to.path) && !applicationService.getUser().isLeasingEnabled()) {
+        next(DashboardRoute.PATH);
+        return;
+    }
+
+    // Roles that can't edit the catalog (borrower, readonly) only browse the
+    // library, so the lending-management pages are off limits - the server
+    // rejects them too. "My loans" is the other way round: for members who borrow.
+    if (leasingPaths.includes(to.path) && !applicationService.canEditCatalog()) {
+        next(DashboardRoute.PATH);
+        return;
+    }
+    if (to.path === myLoansRoute.getPath() && !applicationService.canBorrow()) {
         next(DashboardRoute.PATH);
         return;
     }

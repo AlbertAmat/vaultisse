@@ -10,6 +10,7 @@
  * await stock.update(BookStockStatusEnum.BOOKED, locationId, customerId);
  */
 import {BookStockStatusEnum, IBookStock} from "@/types/book/IBookStock";
+import {IBorrower} from "@/types/book/IBorrower";
 import JsBarcode from "jsbarcode";
 import {bookService} from "@/service/book/BookService";
 import {ref, Ref} from "vue";
@@ -69,7 +70,10 @@ export default class BookStock {
     /** Id of the customer this stock is loaned/booked to, or null if none. */
     private m_customerId: Ref<number | null>;
 
-    /** Name of the customer this stock is loaned/booked to, or null if none. */
+    /** Id of the vault member this stock is loaned/booked to (instead of a customer), or null if none. */
+    private m_memberUserId: Ref<number | null>;
+
+    /** Name of the customer or vault member this stock is loaned/booked to, or null if none. */
     private m_customerName: string | null;
 
     /**
@@ -86,6 +90,7 @@ export default class BookStock {
         this.m_locationName = stock.location_name;
 
         this.m_customerId = ref(stock.customer_id);
+        this.m_memberUserId = ref(stock.member_user_id ?? null);
         this.m_customerName = stock.customer_name;
     }
 
@@ -119,7 +124,12 @@ export default class BookStock {
         return this.m_customerId.value;
     }
 
-    /** @returns The name of the customer this stock is loaned/booked to, or null if none. */
+    /** @returns The user id of the vault member this stock is loaned/booked to, or null if none. */
+    public getMemberUserId(): number | null {
+        return this.m_memberUserId.value;
+    }
+
+    /** @returns The name of the customer or vault member this stock is loaned/booked to, or null if none. */
     public getCustomerName(): string | null {
         return this.m_customerName;
     }
@@ -169,18 +179,19 @@ export default class BookStock {
     }
 
     /**
-     * Persist a new status/location/customer for this stock and sync local reactive state.
+     * Persist a new status/location/borrower for this stock and sync local reactive state.
      * @param status New status.
      * @param locationId New location id.
-     * @param customerId New customer id, or null to clear it.
+     * @param borrower New customer or vault member (both null to clear it).
      */
-    public async update(status: BookStockStatusEnum, locationId: number, customerId: number | null) {
+    public async update(status: BookStockStatusEnum, locationId: number, borrower: IBorrower) {
         try {
-            const data = await bookService.updateBookStock(this.m_book.getId(), this.m_id, status, locationId, customerId);
+            const data = await bookService.updateBookStock(this.m_book.getId(), this.m_id, status, locationId, borrower);
             this.m_status.value = data.status;
             this.m_locationId.value = data.location_id;
             this.m_locationName = data.location_name;
             this.m_customerId.value = data.customer_id;
+            this.m_memberUserId.value = data.member_user_id ?? null;
             this.m_customerName = data.customer_name;
 
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_STOCK_UPDATED)})

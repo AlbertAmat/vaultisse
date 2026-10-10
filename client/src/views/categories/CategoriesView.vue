@@ -2,6 +2,7 @@
 	<page-component :model="controller">
 		<template v-slot:append>
 			<v-btn
+				v-if="canEditCatalog"
 				@click="createCategory()"
 				class="text-none"
 				color="primary"
@@ -21,6 +22,7 @@
 				:description="t(AppLabels.EMPTY_CATEGORIES_DESC)"
 			>
 				<v-btn
+					v-if="canEditCatalog"
 					@click="createCategory()"
 					class="text-none"
 					color="primary"
@@ -68,6 +70,9 @@ import EmptyState from "@/components/emptyState/EmptyState.vue";
 import EntityListCard from "@/components/entityList/EntityListCard.vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 const controller = new CategoriesController();
 

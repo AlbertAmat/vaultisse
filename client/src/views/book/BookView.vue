@@ -39,6 +39,7 @@
 			</v-menu>
 
 			<v-btn
+				v-if="canEditCatalog"
 				variant="outlined"
 				density="comfortable"
 				icon
@@ -52,7 +53,7 @@
 				<v-icon>mdi-delete-outline</v-icon>
 			</v-btn>
 
-			<template v-if="editing">
+			<template v-if="canEditCatalog && editing">
 				<v-btn
 					class="text-none mr-2"
 					variant="text"
@@ -76,7 +77,7 @@
 			</template>
 
 			<v-btn
-				v-else
+				v-else-if="canEditCatalog"
 				class="text-none"
 				color="primary"
 				variant="elevated"
@@ -249,19 +250,6 @@
 									></v-text-field>
 								</div>
 
-								<!-- Reading status -->
-								<v-select
-									v-model="readingStatus"
-									:disabled="disableFields"
-									:items="readingStatusJson()"
-									:label="t(AppLabels.READING_STATUS)"
-									density="compact"
-									variant="outlined"
-									item-value="value"
-									item-title="text"
-									clearable
-								></v-select>
-
 								<!-- Authors -->
 								<v-autocomplete
 									v-model="authors"
@@ -387,7 +375,6 @@ interface BookSnapshot {
 	publisher: string | null;
 	publishedDate: Date | null;
 	description: string;
-	readingStatus: ReadingStatusEnum | null;
 }
 
 let snapshot: BookSnapshot | null = null;
@@ -406,6 +393,9 @@ const loadingDelete: Ref<boolean> = ref(false);
  *
  */
 const loadingAuthors: Ref<boolean> = ref(false);
+
+/** Hides edit/delete/reading-status actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 /** Toolbar reading-status menu's own save-in-flight flag, separate from the edit form's `loadingUpdate`. */
 const loadingReadingStatus: Ref<boolean> = ref(false);
@@ -496,15 +486,7 @@ const category = computed({
 
 const categoryName = computed(() => applicationService.getCategory(model.getBook().getCategoryId())?.getCategoryName() ?? null);
 
-const readingStatus = computed({
-	get() {
-		return model.getBook().getReadingStatus();
-	},
-	set(val: ReadingStatusEnum | null) {
-		model.getBook().setReadingStatus(val);
-		hasChanges.value = true;
-	}
-})
+const readingStatus = computed(() => model.getBook().getReadingStatus());
 
 const READING_STATUS_LABELS: Record<ReadingStatusEnum, AppLabels> = {
 	[ReadingStatusEnum.WANT_TO_READ]: AppLabels.WANT_TO_READ,
@@ -636,20 +618,16 @@ function categoriesJson() {
 }
 
 /**
- * Set the reading status from the toolbar menu and persist it immediately -
- * a quick-access shortcut for the same field the edit form's "Reading
- * status" select controls, for when the user doesn't want to open the full
- * edit form just to change it. Only shown outside edit mode (see the
- * `v-menu`'s `v-if="!editing"`), so there's never unsaved edit-form state to
- * clash with.
+ * Set the caller's own reading status from the toolbar menu and persist it
+ * immediately. It's personal (each vault member has their own) and open to
+ * every role, so it lives outside the edit form and its catalog permission.
  */
 async function quickSetReadingStatus(status: ReadingStatusEnum | null) {
 	if (loadingReadingStatus.value) return;
 
 	loadingReadingStatus.value = true;
 	try {
-		model.getBook().setReadingStatus(status);
-		await model.getBook().updateBook();
+		await model.getBook().changeReadingStatus(status);
 	} finally {
 		loadingReadingStatus.value = false;
 	}
@@ -684,7 +662,6 @@ function startEditing() {
 		publisher: book.getPublisher(),
 		publishedDate: book.getPublishDate(),
 		description: book.getDescription(),
-		readingStatus: book.getReadingStatus(),
 	};
 	editing.value = true;
 }
@@ -703,7 +680,6 @@ function cancelEditing() {
 		book.setPublisher(snapshot.publisher);
 		book.setPublishDate(snapshot.publishedDate);
 		book.setDescription(snapshot.description);
-		book.setReadingStatus(snapshot.readingStatus);
 	}
 
 	hasChanges.value = false;

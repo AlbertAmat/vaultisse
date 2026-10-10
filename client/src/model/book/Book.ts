@@ -7,8 +7,10 @@
  *
  * @example
  * const book = new Book(await bookService.getBook(12));
- * await book.addBookStock(BookStockStatusEnum.AVAILABLE, locationId, null, false);
+ * await book.addBookStock(BookStockStatusEnum.AVAILABLE, locationId, {customerId: null, memberUserId: null}, false);
  */
+import {ReadingStatusEnum} from "@/types/book/IReadingStatus";
+import {IBorrower} from "@/types/book/IBorrower";
 import BookItem from "@/model/book/BookItem";
 import IBook from "@/types/book/IBook";
 import {IBookFile} from "@/types/book/IBookFile";
@@ -210,12 +212,12 @@ export default class Book extends BookItem {
      * label for printing via `printDialogController`.
      * @param status Initial stock status.
      * @param locationId Destination location id.
-     * @param customerId Customer to assign the copy to, or null.
+     * @param borrower Customer or vault member to assign the copy to (both null for none).
      * @param print If true, add a printable barcode label to the print queue.
      */
-    public async addBookStock(status: BookStockStatusEnum, locationId: number, customerId: number | null, print: boolean) {
+    public async addBookStock(status: BookStockStatusEnum, locationId: number, borrower: IBorrower, print: boolean) {
         try {
-            const data = await bookService.addBookStock(this.m_id, locationId, status, customerId);
+            const data = await bookService.addBookStock(this.m_id, locationId, status, borrower);
             const stock = new BookStock(this, data)
             this.m_stocks.value = [...this.m_stocks.value, stock];
 
@@ -256,6 +258,23 @@ export default class Book extends BookItem {
         }
     }
 
+    /**
+     * Set (or clear) the caller's own reading status for this book and persist it.
+     * On failure the previous status is restored.
+     * @param status New status, or null to stop tracking the book.
+     */
+    public async changeReadingStatus(status: ReadingStatusEnum | null) {
+        const previous = this.getReadingStatus();
+        this.setReadingStatus(status);
+        try {
+            await bookService.setReadingStatus(this.m_id, status);
+            appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_UPDATED)})
+        } catch (e) {
+            this.setReadingStatus(previous);
+            console.error("Error while updating reading status.", e)
+        }
+    }
+
     /** Persist all current field values (name, metadata, authors, ...) to the server. */
     public async updateBook() {
         try {
@@ -271,8 +290,7 @@ export default class Book extends BookItem {
                 this.m_publisher.value,
                 this.m_publishedDate.value,
                 this.m_pages.value,
-                this.m_format.value ? this.m_format.value.getFormatId() : null,
-                this.getReadingStatus()
+                this.m_format.value ? this.m_format.value.getFormatId() : null
             )
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_UPDATED)})
         } catch (e) {

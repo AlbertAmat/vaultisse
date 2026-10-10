@@ -32,9 +32,11 @@ export class DashboardService {
     /**
      * Builds the full dashboard payload: runs every DashboardRepository query concurrently, then folds/shapes the results.
      * @param vaultId Vault id.
+     * @param userId Caller's id - the reading shelves are theirs alone.
+     * @param canSeeLoans Whether the caller may see who has what on loan (false for borrowers, who only see their own loans).
      * @returns The dashboard's KPIs and chart data.
      */
-    public async getDashboard(vaultId: number): Promise<DashboardData> {
+    public async getDashboard(vaultId: number, userId: number, canSeeLoans: boolean): Promise<DashboardData> {
         const repo = new DashboardRepository(this.pool);
         const [
             lastBooks,
@@ -66,10 +68,10 @@ export class DashboardService {
             repo.countLocations(vaultId),
             repo.countAuthors(vaultId),
             repo.getTopCategoryShelfRows(vaultId),
-            repo.getCurrentlyOnLoan(vaultId),
-            repo.findByReadingStatus(vaultId, ReadingStatusEnum.WANT_TO_READ),
-            repo.findByReadingStatus(vaultId, ReadingStatusEnum.CURRENTLY_READING),
-            repo.countByReadingStatus(vaultId, ReadingStatusEnum.READ),
+            canSeeLoans ? repo.getCurrentlyOnLoan(vaultId) : Promise.resolve([]),
+            repo.findByReadingStatus(vaultId, userId, ReadingStatusEnum.WANT_TO_READ),
+            repo.findByReadingStatus(vaultId, userId, ReadingStatusEnum.CURRENTLY_READING),
+            repo.countByReadingStatus(vaultId, userId, ReadingStatusEnum.READ),
         ]);
 
         return {

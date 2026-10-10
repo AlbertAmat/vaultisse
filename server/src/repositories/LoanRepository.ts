@@ -1,5 +1,5 @@
 import {Pool, PoolClient} from "pg";
-import {Loan, LoanHistoryRow, LoanListFilter, LoanReportFilter} from "../types/loan";
+import {Loan, LoanHistoryRow, LoanListFilter, LoanReportFilter, MyLoan, MyLoanHistoryRow} from "../types/loan";
 
 /** Data access for currently-on-loan `book_stocks` rows and the `loan_history` ledger. See LoanService for the business rules built on top of this. */
 export class LoanRepository {
@@ -42,7 +42,8 @@ export class LoanRepository {
         const fromClause = `
             FROM book_stocks bs
                      JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
-                     JOIN customers c ON c.id = bs.customer_id AND c.vault_id = bs.vault_id
+                     LEFT JOIN customers c ON c.id = bs.customer_id AND c.vault_id = bs.vault_id
+                     LEFT JOIN users u ON u.id = bs.member_user_id
                      LEFT JOIN customer_groups cg ON cg.id = c.group_id AND cg.vault_id = bs.vault_id
         `;
 
@@ -56,7 +57,8 @@ export class LoanRepository {
                     b.name          AS "bookName",
                     b.image_url     AS "imageUrl",
                     c.id            AS "customerId",
-                    c.name          AS "customerName",
+                    u.id            AS "memberUserId",
+                    COALESCE(c.name, u.name) AS "customerName",
                     cg.id           AS "groupId",
                     cg.name         AS "groupName"
              ${fromClause}
@@ -79,31 +81,84 @@ export class LoanRepository {
     public async report(vaultId: number, filter: LoanReportFilter): Promise<LoanHistoryRow[]> {
         const params: any[] = [vaultId, filter.dateFrom, filter.dateTo];
         const conditions: string[] = [
-            `vault_id = $1`,
-            `loaned_at >= $2::date`,
-            `loaned_at < $3::date + INTERVAL '1 day'`
+            `lh.vault_id = $1`,
+            `lh.loaned_at >= $2::date`,
+            `lh.loaned_at < $3::date + INTERVAL '1 day'`
         ];
 
         if (filter.groupId) {
-            conditions.push(`group_id = $${params.push(filter.groupId)}`);
+            conditions.push(`lh.group_id = $${params.push(filter.groupId)}`);
         }
         if (filter.customerId) {
-            conditions.push(`customer_id = $${params.push(filter.customerId)}`);
+            conditions.push(`lh.customer_id = $${params.push(filter.customerId)}`);
+        }
+        if (filter.memberUserId) {
+            conditions.push(`lh.member_user_id = $${params.push(filter.memberUserId)}`);
         }
 
         const result = await this.db.query(
-            `SELECT book_name     AS "bookName",
-                    stock_code    AS "stockCode",
-                    customer_name AS "customerName",
-                    group_name    AS "groupName",
-                    loaned_at     AS "loanedAt",
-                    returned_at   AS "returnedAt"
-             FROM loan_history
+            `SELECT lh.book_name   AS "bookName",
+                    lh.stock_code  AS "stockCode",
+                    COALESCE(c.name, u.name) AS "customerName",
+                    cg.name        AS "groupName",
+                    lh.loaned_at   AS "loanedAt",
+                    lh.returned_at AS "returnedAt"
+             FROM loan_history lh
+                      LEFT JOIN customers c ON c.id = lh.customer_id
+                      LEFT JOIN users u ON u.id = lh.member_user_id
+                      LEFT JOIN customer_groups cg ON cg.id = lh.group_id
              WHERE ${conditions.join(' AND ')}
-             ORDER BY loaned_at DESC`,
+             ORDER BY lh.loaned_at DESC`,
             params
         );
 
+        return result.rows;
+    }
+
+    /**
+     * Lists the copies currently on loan to a vault member.
+     * @param vaultId Vault id.
+     * @param userId The member's user id.
+     * @returns Every copy booked to them, most recent first.
+     */
+    public async listForMember(vaultId: number, userId: number): Promise<MyLoan[]> {
+        const result = await this.db.query(
+            `SELECT bs.id        AS "stockId",
+                    bs.code      AS "stockCode",
+                    bs.loaned_at AS "loanedAt",
+                    b.id         AS "bookId",
+                    b.name       AS "bookName",
+                    b.image_url  AS "imageUrl"
+               FROM book_stocks bs
+                    JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
+              WHERE bs.vault_id = $1
+                AND bs.status = 2
+                AND bs.member_user_id = $2
+              ORDER BY bs.loaned_at DESC NULLS LAST, bs.id DESC`,
+            [vaultId, userId]
+        );
+        return result.rows;
+    }
+
+    /**
+     * Lists a vault member's whole loan history (returned and still open).
+     * @param vaultId Vault id.
+     * @param userId The member's user id.
+     * @returns Every loan to them, most recent first.
+     */
+    public async historyForMember(vaultId: number, userId: number): Promise<MyLoanHistoryRow[]> {
+        const result = await this.db.query(
+            `SELECT book_id     AS "bookId",
+                    book_name   AS "bookName",
+                    stock_code  AS "stockCode",
+                    loaned_at   AS "loanedAt",
+                    returned_at AS "returnedAt"
+               FROM loan_history
+              WHERE vault_id = $1
+                AND member_user_id = $2
+              ORDER BY loaned_at DESC`,
+            [vaultId, userId]
+        );
         return result.rows;
     }
 }

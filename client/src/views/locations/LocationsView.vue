@@ -2,6 +2,7 @@
 	<page-component :model="controller">
 		<template v-slot:append>
 			<v-btn
+				v-if="canEditCatalog"
 				@click="createLocation()"
 				class="text-none"
 				color="primary"
@@ -21,6 +22,7 @@
 				:description="t(AppLabels.EMPTY_LOCATIONS_DESC)"
 			>
 				<v-btn
+					v-if="canEditCatalog"
 					@click="createLocation()"
 					class="text-none"
 					color="primary"
@@ -51,6 +53,7 @@
 
 						<div class="entity-card-actions" @click.stop>
 							<v-icon
+								v-if="canEditCatalog"
 								@click="setDefaultLocation(location.id)"
 								:color="location.default ? 'primary' : undefined"
 								size="small"
@@ -60,6 +63,7 @@
 								{{ location.default ? 'mdi-star' : 'mdi-star-outline' }}
 							</v-icon>
 							<v-icon
+								v-if="canEditCatalog"
 								@click="editLocation(location.id)"
 								size="small"
 								class="mx-1"
@@ -67,6 +71,7 @@
 								mdi-pencil
 							</v-icon>
 							<v-btn
+								v-if="canEditCatalog"
 								icon
 								variant="text"
 								density="compact"
@@ -123,6 +128,9 @@ import LocationBooksTable from "@/views/locations/LocationBooksTable.vue";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 const controller = new LocationsController();
 

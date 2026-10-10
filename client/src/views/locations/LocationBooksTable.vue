@@ -12,6 +12,7 @@
 			>
 				<v-spacer/>
 				<v-btn
+					v-if="canEditCatalog"
 					@click="addDialog = true;"
 					density="compact"
 					color="primary"
@@ -63,6 +64,7 @@
 
 <script setup lang="ts">
 /** Table of the books stocked at one location (fetched on mount), with a button to add more via `LocationAddBooksDialog`. */
+import {applicationService} from "@/service/ApplicationService";
 import {computed, onMounted, Ref, ref} from "vue";
 import LocationExt from "@/model/location/LocationExt";
 import BookStock from "@/model/book/BookStock";
@@ -70,6 +72,9 @@ import LocationAddBooksDialog from "@/views/locations/LocationAddBooksDialog.vue
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {bookRoute} from "@/router/routes/BookRoute";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 interface Props {
 	location: LocationExt

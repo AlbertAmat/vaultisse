@@ -30,13 +30,14 @@ export class BookRepository {
      * Paginated/filterable/sortable book search, each row carrying its author list.
      * @param vaultId Vault id.
      * @param filter Search query, category/status filters, date range, sort and page.
+     * @param userId Caller's id - reading-status filters and the returned `reading_status` are theirs alone.
      * @returns The total matching row count (across all pages) and this page's books.
      */
-    public async search(vaultId: number, filter: BookSearchFilter): Promise<{total: number; books: BookSearchResult[]}> {
+    public async search(vaultId: number, filter: BookSearchFilter, userId: number): Promise<{total: number; books: BookSearchResult[]}> {
         const MAX_ROWS = 50;
         const skip = MAX_ROWS * filter.page;
 
-        const params: any[] = [vaultId];
+        const params: any[] = [vaultId, userId];
         const conditions: string[] = [`books.vault_id = $1`];
 
         let sqlStatement = `
@@ -46,7 +47,7 @@ export class BookRepository {
                    books.isbn,
                    books.category_id,
                    books.language_code,
-                   books.reading_status,
+                   brs.status AS reading_status,
                    COALESCE(
                            json_agg(
                                    json_build_object(
@@ -59,6 +60,7 @@ export class BookRepository {
             FROM books
                      LEFT JOIN book_authors ON books.id = book_authors.book_id
                      LEFT JOIN authors ON book_authors.author_id = authors.id
+                     LEFT JOIN book_reading_status brs ON brs.book_id = books.id AND brs.user_id = $2
         `;
 
         if (filter.query) {
@@ -95,11 +97,11 @@ export class BookRepository {
                     break;
                 }
                 case SearchFilter.WANT_TO_READ: {
-                    conditions.push(`books.reading_status = ${ReadingStatusEnum.WANT_TO_READ}`);
+                    conditions.push(`brs.status = ${ReadingStatusEnum.WANT_TO_READ}`);
                     break;
                 }
                 case SearchFilter.CURRENTLY_READING: {
-                    conditions.push(`books.reading_status = ${ReadingStatusEnum.CURRENTLY_READING}`);
+                    conditions.push(`brs.status = ${ReadingStatusEnum.CURRENTLY_READING}`);
                     break;
                 }
             }
@@ -116,7 +118,7 @@ export class BookRepository {
             sqlStatement += ` WHERE ${conditions.join(' AND ')}`;
         }
 
-        let totalQuery = "SELECT COUNT(*) FROM books";
+        let totalQuery = "SELECT COUNT(*) FROM books LEFT JOIN book_reading_status brs ON brs.book_id = books.id AND brs.user_id = $2";
         if (conditions.length > 0) {
             totalQuery += ` WHERE ${conditions.join(' AND ')}`;
         }
@@ -137,7 +139,7 @@ export class BookRepository {
                 books.isbn,
                 books.category_id,
                 books.language_code,
-                books.reading_status,
+                brs.status,
                 books.date_created
             ORDER BY ${ORDER_BY_CLAUSES[filter.sort as SortType]}
             LIMIT ${MAX_ROWS} OFFSET ${skip};
@@ -154,16 +156,17 @@ export class BookRepository {
     /**
      * KPI counters for the Books view (total, recent, on loan, no stock, want-to-read, currently-reading).
      * @param vaultId Vault id.
+     * @param userId Caller's id - the want-to-read/currently-reading counters are theirs alone.
      * @returns Every counter.
      */
-    public async getCounters(vaultId: number): Promise<BookCounters> {
+    public async getCounters(vaultId: number, userId: number): Promise<BookCounters> {
         const [total, recent, onLoan, noStock, wantToRead, currentlyReading] = await Promise.all([
             this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1`, [vaultId]),
             this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND date_created >= NOW() - INTERVAL '30 days'`, [vaultId]),
             this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND id IN (SELECT book_id FROM book_stocks WHERE vault_id = $1 AND status = 2)`, [vaultId]),
             this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND id NOT IN (SELECT book_id FROM book_stocks WHERE vault_id = $1)`, [vaultId]),
-            this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND reading_status = $2`, [vaultId, ReadingStatusEnum.WANT_TO_READ]),
-            this.db.query(`SELECT COUNT(*) FROM books WHERE vault_id = $1 AND reading_status = $2`, [vaultId, ReadingStatusEnum.CURRENTLY_READING]),
+            this.countReadingStatus(vaultId, userId, ReadingStatusEnum.WANT_TO_READ),
+            this.countReadingStatus(vaultId, userId, ReadingStatusEnum.CURRENTLY_READING),
         ]);
 
         return {
@@ -176,15 +179,50 @@ export class BookRepository {
         };
     }
 
+    /**
+     * Counts the vault's books that `userId` has marked with a reading status.
+     * @param vaultId Vault id.
+     * @param userId Member's id.
+     * @param status Reading status to count.
+     */
+    private countReadingStatus(vaultId: number, userId: number, status: ReadingStatusEnum) {
+        return this.db.query(
+            `SELECT COUNT(*)
+               FROM books
+               JOIN book_reading_status brs ON brs.book_id = books.id AND brs.user_id = $2
+              WHERE books.vault_id = $1 AND brs.status = $3`,
+            [vaultId, userId, status]
+        );
+    }
+
+    /**
+     * Sets (or clears, with null) a member's reading status for a book.
+     * @param bookId Book id.
+     * @param userId Member's id.
+     * @param status New status, or null to stop tracking the book.
+     */
+    public async setReadingStatus(bookId: number, userId: number, status: ReadingStatusEnum | null): Promise<void> {
+        if (status === null) {
+            await this.db.query(`DELETE FROM book_reading_status WHERE book_id = $1 AND user_id = $2`, [bookId, userId]);
+            return;
+        }
+        await this.db.query(
+            `INSERT INTO book_reading_status (book_id, user_id, status) VALUES ($1, $2, $3)
+             ON CONFLICT (book_id, user_id) DO UPDATE SET status = EXCLUDED.status`,
+            [bookId, userId, status]
+        );
+    }
+
     /* ---------- Single book CRUD ---------- */
 
     /**
      * Full detail for one book: fields, files, stocks (with location/customer), and authors.
      * @param id Book id.
      * @param vaultId Vault id.
+     * @param userId Caller's id - `reading_status` is theirs alone.
      * @returns The book detail, or null if it doesn't exist or belongs to someone else.
      */
-    public async findDetailById(id: number, vaultId: number): Promise<BookDetail | null> {
+    public async findDetailById(id: number, vaultId: number, userId: number): Promise<BookDetail | null> {
         const result = await this.db.query(`
             SELECT books.id,
                    books.name,
@@ -199,7 +237,7 @@ export class BookRepository {
                    books.date_updated,
                    books.pages,
                    books.format_id,
-                   books.reading_status,
+                   brs.status AS reading_status,
                    creator.name AS created_by,
                    COALESCE(
                            json_agg(
@@ -221,7 +259,8 @@ export class BookRepository {
                    'location_id', locations.id,  -- Using correct column from locations table
                    'location_name', locations.name,
                    'customer_id', customers.id,
-                   'customer_name', customers.name
+                   'member_user_id', borrower_users.id,
+                   'customer_name', COALESCE(customers.name, borrower_users.name)
                )
            ) FILTER(WHERE book_stocks.id IS NOT NULL), '[]'
                    )                                                                    AS stocks,
@@ -241,6 +280,7 @@ export class BookRepository {
                      LEFT JOIN book_stocks ON books.id = book_stocks.book_id AND book_stocks.vault_id = $2
                      LEFT JOIN locations ON book_stocks.location_id = locations.id AND locations.vault_id = $2
                      LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.vault_id = $2
+                     LEFT JOIN users borrower_users ON book_stocks.member_user_id = borrower_users.id
                      LEFT JOIN book_authors ON books.id = book_authors.book_id
                      LEFT JOIN authors ON book_authors.author_id = authors.id
                      LEFT JOIN book_files ON books.id = book_files.book_id AND book_files.vault_id = $2
@@ -249,6 +289,7 @@ export class BookRepository {
                      -- may since have left the vault, but the name they added
                      -- it under is still worth showing.
                      LEFT JOIN users creator ON creator.id = books.user_created
+                     LEFT JOIN book_reading_status brs ON brs.book_id = books.id AND brs.user_id = $3
             WHERE books.id = $1
               AND books.vault_id = $2
             GROUP BY books.id,
@@ -264,9 +305,9 @@ export class BookRepository {
                      books.date_updated,
                      books.pages,
                      books.format_id,
-                     books.reading_status,
+                     brs.status,
                      creator.name;
-        `, [id, vaultId]);
+        `, [id, vaultId, userId]);
 
         if (result.rows.length !== 1) {
             return null;
@@ -304,10 +345,9 @@ export class BookRepository {
                  published_date = $8,
                  language_code  = $9,
                  pages          = $10,
-                 reading_status = $11,
                  date_updated   = CURRENT_TIMESTAMP
-             WHERE id = $12
-               AND vault_id = $13`,
+             WHERE id = $11
+               AND vault_id = $12`,
             [
                 fields.name,
                 fields.description,
@@ -319,7 +359,6 @@ export class BookRepository {
                 fields.published_date,
                 fields.language_code,
                 fields.pages,
-                fields.reading_status ?? null,
                 id,
                 vaultId,
             ]
@@ -718,6 +757,7 @@ export class BookRepository {
      * @param locationId Location id.
      * @param customerId Customer id, if pre-booked.
      * @param vaultId Vault id.
+     * @param memberUserId Vault member's user id, if pre-booked to a member instead of a customer.
      * @returns The new row's id.
      */
     public async insertStockWithId(
@@ -726,11 +766,12 @@ export class BookRepository {
         status: number,
         locationId: string | number,
         customerId: string | number | null | undefined,
-        vaultId: number
+        vaultId: number,
+        memberUserId?: string | number | null
     ): Promise<number> {
         const result = await this.db.query(
-            "INSERT INTO book_stocks (book_id, code, status, location_id, customer_id, vault_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-            [bookId, code, status, locationId, customerId, vaultId]
+            "INSERT INTO book_stocks (book_id, code, status, location_id, customer_id, member_user_id, vault_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+            [bookId, code, status, locationId, customerId ?? null, memberUserId ?? null, vaultId]
         );
         return result.rows[0].id;
     }
@@ -749,9 +790,11 @@ export class BookRepository {
                     book_stocks.location_id,
                     locations.name as location_name,
                     customers.id   as customer_id,
-                    customers.name as customer_name
+                    borrower_users.id as member_user_id,
+                    COALESCE(customers.name, borrower_users.name) as customer_name
              FROM book_stocks
                       LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.vault_id = $2
+                      LEFT JOIN users borrower_users ON book_stocks.member_user_id = borrower_users.id
                       LEFT JOIN locations ON book_stocks.location_id = locations.id AND locations.vault_id = $2
              WHERE book_stocks.id = $1
                AND book_stocks.vault_id = $2`,
@@ -805,6 +848,7 @@ export class BookRepository {
      * @param status New status.
      * @param locationId New location id.
      * @param customerId New customer id, or null/undefined to clear it.
+     * @param memberUserId New vault member's user id (instead of a customer), or null/undefined to clear it.
      * @returns Rows affected.
      */
     public async updateStock(
@@ -813,20 +857,22 @@ export class BookRepository {
         vaultId: number,
         status: number,
         locationId: number,
-        customerId: number | null | undefined
+        customerId: number | null | undefined,
+        memberUserId?: number | null
     ): Promise<number> {
         const result = await this.db.query(
             `UPDATE book_stocks
              SET status = $1::smallint,
                  location_id = $2,
                  customer_id = $3,
+                 member_user_id = $7,
                  loaned_at = CASE
                                  WHEN $1 = 2 AND status != 2 THEN NOW()
                                  WHEN $1 != 2 THEN NULL
                                  ELSE loaned_at
                  END
              WHERE book_id = $4 AND id = $5 AND vault_id = $6`,
-            [status, locationId, customerId, bookId, stockId, vaultId]
+            [status, locationId, customerId ?? null, bookId, stockId, vaultId, memberUserId ?? null]
         );
         return result.rowCount ?? 0;
     }
@@ -865,7 +911,7 @@ export class BookRepository {
      */
     public async returnStockByCode(bookStockCode: string, vaultId: number): Promise<void> {
         await this.db.query(
-            'UPDATE book_stocks SET customer_id = $1, status = $2, loaned_at = NULL WHERE code = $3 AND vault_id = $4',
+            'UPDATE book_stocks SET customer_id = $1, member_user_id = NULL, status = $2, loaned_at = NULL WHERE code = $3 AND vault_id = $4',
             [null, 0, bookStockCode, vaultId]
         );
     }

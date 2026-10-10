@@ -332,6 +332,45 @@ export class VaultRepository {
     }
 
     /**
+     * Lists the accepted members of a vault whose role can borrow - the vault-member half of the "who can a book be lent to" list.
+     * @param vaultId Vault id.
+     * @returns `{id, name}` of each borrowing member.
+     */
+    public async listBorrowingMembers(vaultId: number): Promise<{id: number; name: string}[]> {
+        const result = await this.db.query(
+            `SELECT u.id, u.name
+               FROM vault_users vu
+               JOIN vault_roles vr ON vr.code = vu.role
+               JOIN users u ON u.id = vu.user_id
+              WHERE vu.vault_id = $1
+                AND vu.status = $2
+                AND vr.can_borrow
+              ORDER BY u.name`,
+            [vaultId, VaultUserStatus.ACCEPTED]
+        );
+        return result.rows;
+    }
+
+    /**
+     * Checks whether `userId` is an accepted member of `vaultId` whose role can borrow.
+     * @param vaultId Vault id.
+     * @param userId Member's id.
+     */
+    public async canBorrow(vaultId: number, userId: number): Promise<boolean> {
+        const result = await this.db.query(
+            `SELECT 1
+               FROM vault_users vu
+               JOIN vault_roles vr ON vr.code = vu.role
+              WHERE vu.vault_id = $1
+                AND vu.user_id = $2
+                AND vu.status = $3
+                AND vr.can_borrow`,
+            [vaultId, userId, VaultUserStatus.ACCEPTED]
+        );
+        return (result.rowCount ?? 0) > 0;
+    }
+
+    /**
      * Lists every role definition, ordered least to most permissive.
      */
     public async listRoles(): Promise<VaultRole[]> {

@@ -25,7 +25,7 @@ then assembles it into one JSON response:
 | `totalCategories` / `totalCustomers` / `totalLocations` / `totalAuthors` | Simple `COUNT(*)` per table. |
 | `booksInTime` | Books added, grouped by month - powers the trend chart (`BooksInTimeChart.vue`). |
 | `stockStatus` | `book_stocks` grouped by `status` - available/not-available/booked/damaged breakdown. |
-| `totalBookedBooks` | Count of stocks with a `customer_id` set (i.e. currently loaned). |
+| `totalBookedBooks` | Count of stocks with `status = 2` (i.e. currently loaned, to a customer or a vault member). |
 | `categoryShelves` | Top 6 categories by book count, each with up to 10 of its most recent books - see [below](#category-shelves). |
 | `currentlyOnLoan` | The 5 most recent loans (by stock id), with borrower name - turns the "booked books" count into an actual browsable list. |
 

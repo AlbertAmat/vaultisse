@@ -42,6 +42,7 @@
 			/>
 
 			<v-btn
+				v-if="canEditCatalog"
 				color="primary"
 				variant="tonal"
 				class="text-none mr-2"
@@ -52,7 +53,7 @@
 				{{t(AppLabels.IMPORT)}}
 			</v-btn>
 
-			<v-menu>
+			<v-menu v-if="canEditCatalog">
 				<template v-slot:activator="{ props }">
 					<v-btn
 						color="primary"
@@ -112,6 +113,7 @@
 				:description="t(AppLabels.EMPTY_LIBRARY_DESC)"
 			>
 				<v-btn
+					v-if="canEditCatalog"
 					@click="createBookIsbnDialog = true"
 					class="text-none"
 					color="primary"
@@ -196,6 +198,9 @@ import SearchFilters from "@/views/search/components/SearchFilters.vue";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
 import {applicationService} from "@/service/ApplicationService";
 import BookItemModel from "@/model/book/BookItem";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 const model = new SearchController();
 

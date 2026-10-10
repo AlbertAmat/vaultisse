@@ -1,4 +1,5 @@
 // Vue reactivity utilities
+import {IBorrowingMember} from "@/types/book/IBorrower";
 import { ref, Ref } from "vue";
 
 // Global application constants (e.g., API prefix)
@@ -58,6 +59,24 @@ export class ApplicationService {
     private m_customer: Customer[];
 
     /**
+     * Vault members who can borrow, retrieved from the policy.
+     * @private
+     */
+    private m_borrowingMembers: IBorrowingMember[] = [];
+
+    /**
+     * Whether the caller's role in the active vault can edit the catalog (books, stocks, reading status).
+     * @private
+     */
+    private m_canEditCatalog = false;
+
+    /**
+     * Whether the caller's role in the active vault can borrow books (everyone but readonly).
+     * @private
+     */
+    private m_canBorrow = false;
+
+    /**
      * List of available languages in the application.
      * @private
      */
@@ -114,6 +133,9 @@ export class ApplicationService {
             // Populate local state with typed model instances
             this.m_user = new User(data.user);
             this.m_customer = data.customers.map((customer) => new Customer(customer));
+            this.m_borrowingMembers = data.borrowingMembers ?? [];
+            this.m_canEditCatalog = data.vaultPermissions?.canEditCatalog ?? false;
+            this.m_canBorrow = data.vaultPermissions?.canBorrow ?? false;
             this.m_categories = data.categories.map((category) => new Category(category));
             this.m_languages = data.languages.map((lang) => new Language(lang));
             this.m_formats = data.formats.map((format) => new Format(format));
@@ -166,6 +188,27 @@ export class ApplicationService {
      */
     public getCustomers(): Customer[] {
         return this.m_customer;
+    }
+
+    /**
+     * Whether the caller can edit the catalog in the active vault (false for readonly and borrower roles).
+     */
+    public canEditCatalog(): boolean {
+        return this.m_canEditCatalog;
+    }
+
+    /**
+     * Whether the caller can borrow books in the active vault (false for readonly).
+     */
+    public canBorrow(): boolean {
+        return this.m_canBorrow;
+    }
+
+    /**
+     * Retrieves the vault members who can borrow books.
+     */
+    public getBorrowingMembers(): IBorrowingMember[] {
+        return this.m_borrowingMembers;
     }
 
     /**

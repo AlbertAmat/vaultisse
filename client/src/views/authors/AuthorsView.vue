@@ -2,6 +2,7 @@
 	<page-component :model="controller">
 		<template v-slot:append>
 			<v-btn
+				v-if="canEditCatalog"
 				@click="createAuthor()"
 				class="text-none"
 				color="primary"
@@ -21,6 +22,7 @@
 				:description="t(AppLabels.EMPTY_AUTHORS_DESC)"
 			>
 				<v-btn
+					v-if="canEditCatalog"
 					@click="createAuthor()"
 					class="text-none"
 					color="primary"
@@ -55,6 +57,7 @@
  * Authors management view: a row list of all authors with inline
  * edit/delete, an empty state when there are none, and the add/edit dialog.
  */
+import {applicationService} from "@/service/ApplicationService";
 import PageComponent from "@/views/PageComponent.vue";
 import {computed, ref, Ref, ShallowRef, shallowRef} from "vue";
 import AuthorDialog from "@/views/authors/AuthorDialog.vue";
@@ -65,6 +68,9 @@ import AuthorsController from "@/controller/authors/AuthorsController";
 import BookAuthor from "@/model/author/BookAuthor";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 const controller = new AuthorsController();
 

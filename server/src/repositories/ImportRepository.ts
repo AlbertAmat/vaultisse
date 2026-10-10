@@ -138,8 +138,8 @@ export class ImportRepository {
      */
     public async insertBook(vaultId: number, userId: number, fields: InsertImportedBookFields): Promise<number> {
         const result = await this.db.query(
-            `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, reading_status, vault_id, user_created)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, vault_id, user_created)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
              RETURNING id`,
             [
                 fields.name,
@@ -152,11 +152,17 @@ export class ImportRepository {
                 fields.publishedDate,
                 fields.languageCode,
                 fields.pages,
-                fields.readingStatus,
                 vaultId,
                 userId,
             ]
         );
-        return result.rows[0].id;
+        const bookId: number = result.rows[0].id;
+        if (fields.readingStatus !== null) {
+            await this.db.query(
+                `INSERT INTO book_reading_status (book_id, user_id, status) VALUES ($1, $2, $3)`,
+                [bookId, userId, fields.readingStatus]
+            );
+        }
+        return bookId;
     }
 }

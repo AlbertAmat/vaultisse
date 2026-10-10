@@ -17,16 +17,19 @@ them afterward.
 Two tables, two different jobs:
 
 - **`book_stocks`** knows the *current* state only. `status = 2` +
-  `customer_id` = "on loan to this customer right now." Once returned,
-  `customer_id`/`loaned_at` are wiped - there's no way to ask `book_stocks`
+  exactly one of `customer_id` (a customer) or `member_user_id` (a vault
+  member with borrow permission) = "on loan to them right now." Once
+  returned, `customer_id`/`member_user_id`/`loaned_at` are wiped - there's no way to ask `book_stocks`
   "who had this book last March."
 - **`loan_history`** is an append-only log, one row per loan, written
   alongside every `book_stocks` transition into/out of `BOOKED` (see
   [`LoanHistory.ts`](../server/src/utils/LoanHistory.ts), called from both
-  `BooksRoute.ts` and `CustomerRoute.ts`). Each row snapshots the book name,
-  customer name, and group name *as they were at loan time* - so renaming or
-  deleting a customer/group/book later doesn't corrupt historical reports,
-  it just stops being reflected in future rows.
+  `BooksRoute.ts` and `CustomerRoute.ts`). Each row snapshots only the book
+  name; the borrower is referenced by `customer_id` or `member_user_id`
+  (exactly one, enforced by a CHECK) plus `group_id` (always NULL for
+  members), and names are read through those ids - so a rename shows up in
+  every report. Deleting a customer or user deletes their loan history
+  (`ON DELETE CASCADE`).
 
 `recordLoan`/`recordReturn` must be called by every code path that changes
 `book_stocks.status` into or out of `2` - forgetting one leaves the current

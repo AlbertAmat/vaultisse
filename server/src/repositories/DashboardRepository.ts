@@ -129,7 +129,7 @@ export class DashboardRepository {
      */
     public async countBookedBooks(vaultId: number): Promise<number> {
         const result = await this.db.query(
-            `SELECT COUNT(*) AS count FROM book_stocks WHERE vault_id = $1 AND customer_id IS NOT NULL`,
+            `SELECT COUNT(*) AS count FROM book_stocks WHERE vault_id = $1 AND status = 2`,
             [vaultId]
         );
         return Number(result.rows[0].count);
@@ -198,10 +198,11 @@ export class DashboardRepository {
     public async getCurrentlyOnLoan(vaultId: number): Promise<CurrentLoan[]> {
         const result = await this.db.query(`
             SELECT b.id AS "bookId", b.name AS "bookName", b.image_url AS "imageUrl",
-                   c.id AS "customerId", c.name AS "customerName"
+                   c.id AS "customerId", u.id AS "memberUserId", COALESCE(c.name, u.name) AS "customerName"
               FROM book_stocks bs
                        JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
-                       JOIN customers c ON c.id = bs.customer_id AND c.vault_id = bs.vault_id
+                       LEFT JOIN customers c ON c.id = bs.customer_id AND c.vault_id = bs.vault_id
+                       LEFT JOIN users u ON u.id = bs.member_user_id
              WHERE bs.vault_id = $1
                AND bs.status = 2
              ORDER BY bs.id DESC
@@ -213,18 +214,20 @@ export class DashboardRepository {
     /**
      * The 10 most recently updated books with a given reading status.
      * @param vaultId Vault id.
+     * @param userId Caller's id - reading status is personal.
      * @param status Reading status to filter by.
      * @returns Up to 10 matching books.
      */
-    public async findByReadingStatus(vaultId: number, status: ReadingStatusEnum): Promise<DashboardBookSummary[]> {
+    public async findByReadingStatus(vaultId: number, userId: number, status: ReadingStatusEnum): Promise<DashboardBookSummary[]> {
         const result = await this.db.query(
             `SELECT b.id, b.name, b.image_url, b.isbn
                FROM books b
+               JOIN book_reading_status brs ON brs.book_id = b.id AND brs.user_id = $2
               WHERE b.vault_id = $1
-                AND b.reading_status = $2
+                AND brs.status = $3
               ORDER BY b.date_updated DESC
                   LIMIT 10`,
-            [vaultId, status]
+            [vaultId, userId, status]
         );
         return result.rows;
     }
@@ -232,13 +235,17 @@ export class DashboardRepository {
     /**
      * Total book count with a given reading status.
      * @param vaultId Vault id.
+     * @param userId Caller's id - reading status is personal.
      * @param status Reading status to filter by.
      * @returns The number of matching books.
      */
-    public async countByReadingStatus(vaultId: number, status: ReadingStatusEnum): Promise<number> {
+    public async countByReadingStatus(vaultId: number, userId: number, status: ReadingStatusEnum): Promise<number> {
         const result = await this.db.query(
-            `SELECT COUNT(*) AS count FROM books WHERE vault_id = $1 AND reading_status = $2`,
-            [vaultId, status]
+            `SELECT COUNT(*) AS count
+               FROM books b
+               JOIN book_reading_status brs ON brs.book_id = b.id AND brs.user_id = $2
+              WHERE b.vault_id = $1 AND brs.status = $3`,
+            [vaultId, userId, status]
         );
         return Number(result.rows[0].count);
     }

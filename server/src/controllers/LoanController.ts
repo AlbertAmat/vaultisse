@@ -46,6 +46,7 @@ export class LoanController {
                 dateTo: req.query.date_to ? String(req.query.date_to) : null,
                 groupId: req.query.group_id ? Number(req.query.group_id) : null,
                 customerId: req.query.customer_id ? Number(req.query.customer_id) : null,
+                memberUserId: req.query.member_user_id ? Number(req.query.member_user_id) : null,
             });
             res.status(200).json({rows});
         } catch (err) {
@@ -54,6 +55,38 @@ export class LoanController {
                 return;
             }
             console.error('Error executing query', err);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    /**
+     * GET /loans/mine - copies currently on loan to the caller.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public async mine(req: Request, res: Response): Promise<void> {
+        try {
+            const vaultId = appService.getSessionVault(req);
+            const loans = await new LoanService(this.pool).listMyLoans(vaultId, appService.getSessionUser(req));
+            res.status(200).json({loans});
+        } catch (err: any) {
+            console.error('Error executing query', err.stack);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    /**
+     * GET /loans/mine/history - the caller's whole loan history.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public async mineHistory(req: Request, res: Response): Promise<void> {
+        try {
+            const vaultId = appService.getSessionVault(req);
+            const rows = await new LoanService(this.pool).listMyLoanHistory(vaultId, appService.getSessionUser(req));
+            res.status(200).json({rows});
+        } catch (err: any) {
+            console.error('Error executing query', err.stack);
             res.status(500).send('Internal Server Error');
         }
     }

@@ -38,7 +38,8 @@ export interface CurrentLoan {
     bookId: number;
     bookName: string;
     imageUrl: string | null;
-    customerId: number;
+    customerId: number | null;
+    memberUserId: number | null;
     customerName: string;
 }
 

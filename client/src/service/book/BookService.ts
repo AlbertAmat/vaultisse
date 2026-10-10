@@ -1,3 +1,4 @@
+import {IBorrower} from "@/types/book/IBorrower";
 import {PATH_PREFIX} from "@/Constants";
 import IBook from "@/types/book/IBook";
 import {BookStockStatusEnum, IBookStock} from "@/types/book/IBookStock";
@@ -41,7 +42,6 @@ export class BookService {
      * @param published_date Publication date, or null.
      * @param pages Page count.
      * @param format_id Format id, or null.
-     * @param reading_status The user's personal reading progress, or null to leave it untracked.
      */
     public async updateBook(
         id: number,
@@ -55,8 +55,7 @@ export class BookService {
         publisher: string | null,
         published_date: Date | null,
         pages: number,
-        format_id: number | null,
-        reading_status: ReadingStatusEnum | null
+        format_id: number | null
     ): Promise<void> {
         const {data} = await axiosInstance.put(`${PATH_PREFIX}/book/${id}`, {
             name: name,
@@ -69,10 +68,19 @@ export class BookService {
             publisher: publisher,
             published_date: published_date,
             pages: pages,
-            format_id: format_id,
-            reading_status: reading_status
+            format_id: format_id
         });
         return data;
+    }
+
+    /**
+     * Set (or clear, with null) the caller's own reading status for a book.
+     * Personal to the caller and open to every vault member, whatever their role.
+     * @param id Book id.
+     * @param reading_status New status, or null to stop tracking the book.
+     */
+    public async setReadingStatus(id: number, reading_status: ReadingStatusEnum | null): Promise<void> {
+        await axiosInstance.put(`${PATH_PREFIX}/book/${id}/reading-status`, {reading_status});
     }
 
     /**
@@ -206,14 +214,15 @@ export class BookService {
      * @param id Book id.
      * @param locationId Destination location id.
      * @param status Initial stock status (BOOKED is not allowed here).
-     * @param customerId Customer to assign the copy to, or null.
+     * @param borrower Customer or vault member to assign the copy to (both null for none).
      * @returns The created stock.
      */
-    public async addBookStock(id: number, locationId: number, status: BookStockStatusEnum, customerId: number |null): Promise<IBookStock> {
+    public async addBookStock(id: number, locationId: number, status: BookStockStatusEnum, borrower: IBorrower): Promise<IBookStock> {
         const {data} = await axiosInstance.post(`${PATH_PREFIX}/book/${id}/stock`, {
             status: status,
             location_id: locationId,
-            customer_id: customerId,
+            customer_id: borrower.customerId,
+            member_user_id: borrower.memberUserId,
         });
 
         return data;
@@ -237,14 +246,15 @@ export class BookService {
      * @param stockId Stock id.
      * @param stockStatus New status.
      * @param stockLocationId New location id.
-     * @param customerId New customer id, or null to clear.
+     * @param borrower New customer or vault member (both null to clear).
      * @returns The updated stock.
      */
-    public async updateBookStock(id: number, stockId: number, stockStatus: BookStockStatusEnum, stockLocationId: number, customerId: number | null): Promise<IBookStock> {
+    public async updateBookStock(id: number, stockId: number, stockStatus: BookStockStatusEnum, stockLocationId: number, borrower: IBorrower): Promise<IBookStock> {
         const {data} = await axiosInstance.put(`${PATH_PREFIX}/book/${id}/stock/${stockId}`, {
             status: stockStatus,
             location_id: stockLocationId,
-            customer_id: customerId
+            customer_id: borrower.customerId,
+            member_user_id: borrower.memberUserId
         });
 
         return data;

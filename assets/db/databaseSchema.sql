@@ -194,6 +194,10 @@ VALUES ('en', 'ADD_BOOK', 'Add book'),
        ('en', 'DASHBOARD_LOANED_TO', 'Loaned to'),
        ('en', 'DASHBOARD_NO_LOANS', 'Nothing out right now'),
        ('en', 'LOANS', 'Loans'),
+       ('en', 'MY_LOANS', 'My loans'),
+       ('en', 'LOAN_HISTORY', 'Loan history'),
+       ('en', 'MY_LOANS_EMPTY_DESC', 'Books you borrow from this library will show up here.'),
+       ('en', 'MY_LOAN_HISTORY_EMPTY', 'You haven''t borrowed any books yet'),
        ('en', 'LOANED_ON', 'Loaned on'),
        ('en', 'DATE_FROM', 'From'),
        ('en', 'DATE_TO', 'To'),
@@ -505,6 +509,10 @@ VALUES ('ca', 'ADD_BOOK', 'Afegir llibre'),
        ('ca', 'DASHBOARD_LOANED_TO', 'En préstec a'),
        ('ca', 'DASHBOARD_NO_LOANS', 'Ara mateix no hi ha res prestat'),
        ('ca', 'LOANS', 'Préstecs'),
+       ('ca', 'MY_LOANS', 'Els meus préstecs'),
+       ('ca', 'LOAN_HISTORY', 'Historial de préstecs'),
+       ('ca', 'MY_LOANS_EMPTY_DESC', 'Els llibres que agafis en préstec d''aquesta biblioteca apareixeran aquí.'),
+       ('ca', 'MY_LOAN_HISTORY_EMPTY', 'Encara no has agafat cap llibre en préstec'),
        ('ca', 'LOANED_ON', 'Prestat el'),
        ('ca', 'DATE_FROM', 'Des de'),
        ('ca', 'DATE_TO', 'Fins a'),
@@ -816,6 +824,10 @@ VALUES ('es', 'ADD_BOOK', 'Agregar libro'),
        ('es', 'DASHBOARD_LOANED_TO', 'Prestado a'),
        ('es', 'DASHBOARD_NO_LOANS', 'Ahora mismo no hay nada prestado'),
        ('es', 'LOANS', 'Préstamos'),
+       ('es', 'MY_LOANS', 'Mis préstamos'),
+       ('es', 'LOAN_HISTORY', 'Historial de préstamos'),
+       ('es', 'MY_LOANS_EMPTY_DESC', 'Los libros que tomes prestados de esta biblioteca aparecerán aquí.'),
+       ('es', 'MY_LOAN_HISTORY_EMPTY', 'Todavía no has tomado prestado ningún libro'),
        ('es', 'LOANED_ON', 'Prestado el'),
        ('es', 'DATE_FROM', 'Desde'),
        ('es', 'DATE_TO', 'Hasta'),
@@ -1125,6 +1137,10 @@ VALUES ('it', 'ADD_BOOK', 'Aggiungi libro'),
        ('it', 'DASHBOARD_LOANED_TO', 'In prestito a'),
        ('it', 'DASHBOARD_NO_LOANS', 'Al momento non c''è nulla in prestito'),
        ('it', 'LOANS', 'Prestiti'),
+       ('it', 'MY_LOANS', 'I miei prestiti'),
+       ('it', 'LOAN_HISTORY', 'Storico dei prestiti'),
+       ('it', 'MY_LOANS_EMPTY_DESC', 'I libri che prendi in prestito da questa biblioteca appariranno qui.'),
+       ('it', 'MY_LOAN_HISTORY_EMPTY', 'Non hai ancora preso in prestito nessun libro'),
        ('it', 'LOANED_ON', 'Prestato il'),
        ('it', 'DATE_FROM', 'Da'),
        ('it', 'DATE_TO', 'A'),
@@ -1824,10 +1840,6 @@ CREATE TABLE books
     published_date DATE,
     language_code  CHAR(2),
     pages          INT,
-    -- The user's personal reading progress for this book, independent of any
-    -- physical stock's status: 0 = want to read, 1 = currently reading,
-    -- 2 = read. NULL = untracked (not on any of these three "shelves").
-    reading_status SMALLINT CHECK (reading_status IN (0, 1, 2)),
     date_updated   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_created   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     user_created   INT,
@@ -1836,6 +1848,18 @@ CREATE TABLE books
     FOREIGN KEY (language_code) REFERENCES languages (code) ON DELETE SET NULL,
     FOREIGN KEY (format_id) REFERENCES formats (id) ON DELETE SET NULL,
     CONSTRAINT books_isbn_vault_unique UNIQUE (isbn, vault_id)
+);
+
+-- Each vault member's personal reading progress for a book, independent of
+-- any physical stock's status: 0 = want to read, 1 = currently reading,
+-- 2 = read. No row = untracked. Per user, so members of a shared vault each
+-- keep their own shelves.
+CREATE TABLE book_reading_status
+(
+    book_id INT      NOT NULL REFERENCES books (id) ON DELETE CASCADE,
+    user_id INT      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    status  SMALLINT NOT NULL CHECK (status IN (0, 1, 2)),
+    PRIMARY KEY (book_id, user_id)
 );
 
 CREATE TABLE book_stocks
@@ -1851,53 +1875,64 @@ CREATE TABLE book_stocks
     status       SMALLINT CHECK (status IN (0, 1, 2, 3)) NOT NULL DEFAULT 0,
     location_id  INT,
 
-    -- when the book is status 2: booked, this field must be informed
+    -- when the book is status 2: booked, exactly one of customer_id (a
+    -- customer) or member_user_id (a vault member with borrow permission)
+    -- must be informed
     customer_id  INT,
+    member_user_id INT,
 
     -- When this copy was last loaned out (status set to 2); cleared on
     -- return. Powers the Loans view's date filter - best-effort only, not
     -- enforced in lockstep with status/customer_id by a CHECK constraint.
     loaned_at    TIMESTAMP,
 
-    -- Constraint: if status is 2, customer_id must be NOT NULL
+    -- Constraint: if status is 2, exactly one of customer_id/member_user_id
+    -- must be NOT NULL; otherwise both must be NULL
     CHECK (
-        (status = 2 AND customer_id IS NOT NULL) OR
-        (status != 2 AND customer_id IS NULL)
+        (status = 2 AND (customer_id IS NOT NULL) <> (member_user_id IS NOT NULL)) OR
+        (status != 2 AND customer_id IS NULL AND member_user_id IS NULL)
         ),
 
     FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations (id),
-    FOREIGN KEY (customer_id) REFERENCES customers (id)
+    FOREIGN KEY (customer_id) REFERENCES customers (id),
+    FOREIGN KEY (member_user_id) REFERENCES users (id)
 );
 
 -- Persistent log of every loan and its return, independent of book_stocks
--- (which only tracks the *current* loan - customer_id/loaned_at are wiped
--- on return). Powers the Loans view's Excel report. Book/customer/group
--- names are snapshotted at loan time so the report stays readable even if
--- one of them is later renamed or deleted; the *_id columns are kept (as
--- ON DELETE SET NULL) only to support filtering the report by group/customer.
+-- (which only tracks the *current* loan - customer_id/member_user_id/loaned_at
+-- are wiped on return). Powers the Loans view's Excel report. The borrower
+-- is referenced, not snapshotted: names are read through customer_id /
+-- member_user_id / group_id, so a rename shows everywhere. Deleting the
+-- customer or user deletes their loan history (ON DELETE CASCADE).
+-- A loan is to exactly one of a customer or a vault member; a member has no
+-- group, so group_id must be NULL for member loans.
 CREATE TABLE loan_history
 (
-    id            SERIAL PRIMARY KEY,
-    vault_id      INT          NOT NULL REFERENCES vault (id),
-    user_created  INT,
-    book_id       INT,
-    book_name     VARCHAR(255) NOT NULL,
-    stock_id      INT,
-    stock_code    CHAR(10)     NOT NULL,
-    customer_id   INT,
-    customer_name VARCHAR(100) NOT NULL,
-    group_id      INT,
-    group_name    VARCHAR(100),
-    loaned_at     TIMESTAMP    NOT NULL,
-    returned_at   TIMESTAMP,
+    id             SERIAL PRIMARY KEY,
+    vault_id       INT          NOT NULL REFERENCES vault (id),
+    user_created   INT,
+    book_id        INT,
+    book_name      VARCHAR(255) NOT NULL,
+    stock_id       INT,
+    stock_code     CHAR(10)     NOT NULL,
+    customer_id    INT,
+    member_user_id INT,
+    group_id       INT,
+    loaned_at      TIMESTAMP    NOT NULL,
+    returned_at    TIMESTAMP,
 
     FOREIGN KEY (user_created) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE SET NULL,
     FOREIGN KEY (stock_id) REFERENCES book_stocks (id) ON DELETE SET NULL,
-    FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE SET NULL,
-    FOREIGN KEY (group_id) REFERENCES customer_groups (id) ON DELETE SET NULL
+    FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE CASCADE,
+    FOREIGN KEY (member_user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES customer_groups (id) ON DELETE SET NULL,
+    CHECK (
+        (customer_id IS NOT NULL AND member_user_id IS NULL) OR
+        (customer_id IS NULL AND member_user_id IS NOT NULL AND group_id IS NULL)
+        )
 );
 
 -- Reports/queries scope by vault, not by the individual who created the loan.
@@ -2112,6 +2147,10 @@ VALUES ('fr', 'ADD_BOOK', 'Ajouter un livre'),
        ('fr', 'DASHBOARD_LOANED_TO', 'Emprunté par'),
        ('fr', 'DASHBOARD_NO_LOANS', 'Rien d''emprunté pour le moment'),
        ('fr', 'LOANS', 'Prêts'),
+       ('fr', 'MY_LOANS', 'Mes emprunts'),
+       ('fr', 'LOAN_HISTORY', 'Historique des prêts'),
+       ('fr', 'MY_LOANS_EMPTY_DESC', 'Les livres que vous empruntez à cette bibliothèque apparaîtront ici.'),
+       ('fr', 'MY_LOAN_HISTORY_EMPTY', 'Vous n''avez encore emprunté aucun livre'),
        ('fr', 'LOANED_ON', 'Emprunté le'),
        ('fr', 'DATE_FROM', 'Du'),
        ('fr', 'DATE_TO', 'Au'),
@@ -2460,6 +2499,10 @@ VALUES ('de', 'ADD_BOOK', 'Buch hinzufügen'),
        ('de', 'DASHBOARD_LOANED_TO', 'Ausgeliehen an'),
        ('de', 'DASHBOARD_NO_LOANS', 'Derzeit nichts ausgeliehen'),
        ('de', 'LOANS', 'Ausleihen'),
+       ('de', 'MY_LOANS', 'Meine Ausleihen'),
+       ('de', 'LOAN_HISTORY', 'Ausleihverlauf'),
+       ('de', 'MY_LOANS_EMPTY_DESC', 'Bücher, die du aus dieser Bibliothek ausleihst, erscheinen hier.'),
+       ('de', 'MY_LOAN_HISTORY_EMPTY', 'Du hast noch keine Bücher ausgeliehen'),
        ('de', 'LOANED_ON', 'Ausgeliehen am'),
        ('de', 'DATE_FROM', 'Von'),
        ('de', 'DATE_TO', 'Bis'),

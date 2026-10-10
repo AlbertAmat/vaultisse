@@ -33,7 +33,7 @@ const getCustomerController = lazy(() => new CustomerController(appService.getDa
  *
  * Example response (200): [{ "id": 1, "name": "Class 4B", "description": "", "total_customers": 22 }]
  */
-router.get('/group', requireAuth, (req, res) => getCustomerController().listGroups(req, res));
+router.get('/group', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().listGroups(req, res));
 
 /**
  * POST /customer/group
@@ -109,7 +109,7 @@ router.delete('/:id/group', requireAuth, requireVaultPermission("canEditCatalog"
  *
  * Example response (200): { "customers": [{ "id": 7, "name": "Jane Doe", "group_id": 1, "group_name": "Class 4B", "total_books": 2 }] }
  */
-router.get('', requireAuth, (req, res) => getCustomerController().list(req, res));
+router.get('', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().list(req, res));
 
 /**
  * POST /customer
@@ -158,7 +158,7 @@ router.delete('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (re
  * Example response (200): [{ "id": 3, "name": "The Hobbit", "image_url": null, "isbn": "9780261102217", "code": "abc123" }]
  * Responses: 400 "No customer ID provided" | 200 the loaned books.
  */
-router.get('/:id/books', requireAuth, (req, res) => getCustomerController().getBooks(req, res));
+router.get('/:id/books', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().getBooks(req, res));
 
 /**
  * POST /customer/:id/add/books
@@ -170,7 +170,7 @@ router.get('/:id/books', requireAuth, (req, res) => getCustomerController().getB
  * Example response (200): [{ "id": 3, "name": "The Hobbit", "image_url": null, "isbn": "9780261102217", "code": "abc123" }]
  * Responses: 400 "No customer ID provided" / "No books provided" | 404 "Customer not found" | 200 the customer's loaned books after the change.
  */
-router.post('/:id/add/books', requireAuth, requireVaultPermission("canBorrow"), (req, res) => getCustomerController().addBooks(req, res));
+router.post('/:id/add/books', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().addBooks(req, res));
 
 /**
  * DELETE /customer/:id/book/:bookStockCode
@@ -181,6 +181,6 @@ router.post('/:id/add/books', requireAuth, requireVaultPermission("canBorrow"), 
  *
  * Responses: 400 "No customer ID provided" / "No book stock code provided" | 200 empty body on success.
  */
-router.delete('/:id/book/:bookStockCode', requireAuth, requireVaultPermission("canBorrow"), (req, res) => getCustomerController().returnBook(req, res));
+router.delete('/:id/book/:bookStockCode', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCustomerController().returnBook(req, res));
 
 export default router;

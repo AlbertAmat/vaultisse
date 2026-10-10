@@ -19,7 +19,7 @@ export class DashboardController {
     public async get(req: Request, res: Response): Promise<void> {
         try {
             const vaultId = appService.getSessionVault(req);
-            const data = await new DashboardService(this.pool).getDashboard(vaultId);
+            const data = await new DashboardService(this.pool).getDashboard(vaultId, appService.getSessionUser(req), !!req.vaultPermissions?.canEditCatalog);
             res.json(data);
         } catch (err) {
             console.error(err);

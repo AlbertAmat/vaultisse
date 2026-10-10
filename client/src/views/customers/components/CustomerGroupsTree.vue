@@ -39,6 +39,7 @@
 						<td class="text-right">
 							<template v-if="!row.isUnassigned">
 								<v-icon
+									v-if="canEditCatalog"
 									@click="editGroup(row.id!)"
 									small
 									class="mx-1"
@@ -46,6 +47,7 @@
 									mdi-pencil
 								</v-icon>
 								<v-btn
+									v-if="canEditCatalog"
 									icon
 									variant="text"
 									density="compact"
@@ -171,6 +173,7 @@
  * parent view's toolbar "Add" button can open the create dialog for
  * whichever tab is active.
  */
+import {applicationService} from "@/service/ApplicationService";
 import {computed, reactive, Ref, ref, ShallowRef, shallowRef} from 'vue'
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -180,6 +183,9 @@ import CustomerGroup from "@/model/customer/CustomerGroup";
 import CustomerDetail from "@/model/customer/CustomerDetail";
 import CustomerGroupDialog from "@/views/customers/components/CustomerGroupDialog.vue";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 interface Props {
 	groupsController: CustomerGroupsController,

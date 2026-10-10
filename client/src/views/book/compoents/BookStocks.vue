@@ -6,6 +6,7 @@
 	>
 		<template v-slot:actions>
 			<v-btn
+				v-if="canEditCatalog"
 				@click="showAddStockDialog"
 				density="comfortable"
 				color="primary"
@@ -35,6 +36,7 @@
 
 				<template v-slot:item.actions="{ item }">
 					<v-icon
+						v-if="canEditCatalog"
 						@click="addToPrintQueue(item.id)"
 						small
 						class="mx-1"
@@ -42,6 +44,7 @@
 						mdi-printer-pos-plus-outline
 					</v-icon>
 					<v-icon
+						v-if="canEditCatalog"
 						@click="showEditStockDialog(item.id)"
 						small
 						class="mx-1"
@@ -49,6 +52,7 @@
 						mdi-pencil
 					</v-icon>
 					<v-btn
+						v-if="canEditCatalog"
 						icon
 						variant="text"
 						density="compact"
@@ -94,6 +98,9 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {printDialogController} from "@/components/printDialog/PrintDialogController";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {applicationService} from "@/service/ApplicationService";
+
+/** Hides add/edit/delete stock actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 interface Props {
 	book: Book

@@ -101,6 +101,17 @@ router.put('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, 
  * Example response (200): { "message": "Book deleted successfully" }
  * Responses: 200 success | 404 "Book not found".
  */
+/**
+ * PUT /book/:id/reading-status
+ * ----------------------------
+ * Sets (or clears, with null) the caller's own reading status for a book: 0 = want to read,
+ * 1 = currently reading, 2 = read. Personal to the caller and open to every vault member, whatever their role.
+ *
+ * Auth: required. Body: { "reading_status": 1 }
+ * Responses: 400 "Invalid reading status" | 404 "Book not found" | 200 { "message": "Reading status updated successfully" }.
+ */
+router.put('/:id/reading-status', requireAuth, (req, res) => getBookController().setReadingStatus(req, res));
+
 router.delete('/:id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().remove(req, res));
 
 /**
@@ -248,6 +259,6 @@ router.get('/:bookCode/add/md', requireAuth, (req, res) => getBookController().g
  *
  * Response (200): empty body on success.
  */
-router.post('/return', requireAuth, requireVaultPermission("canBorrow"), upload.single("image"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getBookController().bulkReturn(req, res));
+router.post('/return', requireAuth, requireVaultPermission("canEditCatalog"), upload.single("image"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getBookController().bulkReturn(req, res));
 
 export default router;

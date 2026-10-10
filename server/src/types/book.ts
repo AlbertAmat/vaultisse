@@ -43,6 +43,9 @@ export interface BookStockDetail {
     location_id: number | null;
     location_name: string | null;
     customer_id: number | null;
+    /** Set when booked to a vault member instead of a customer. */
+    member_user_id: number | null;
+    /** The customer's or member's name. */
     customer_name: string | null;
 }
 
@@ -88,7 +91,6 @@ export interface UpdateBookFields {
     published_date: string | null;
     pages: number | null;
     format_id: number | null;
-    reading_status: ReadingStatusEnum | null;
 }
 
 /** Metadata resolved from an ISBN lookup, shaped for BookRepository's find-or-create helpers. */

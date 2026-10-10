@@ -48,6 +48,7 @@
 						:description="t(AppLabels.EMPTY_LAST_BOOKS_DESC)"
 					>
 						<v-btn
+							v-if="canEditCatalog"
 							@click="goToLibrary()"
 							class="text-none"
 							color="primary"
@@ -142,7 +143,7 @@
 						<div class="dashboard-loans">
 							<router-link
 								v-for="loan in controller.getCurrentlyOnLoan()"
-								:key="`${loan.bookId}-${loan.customerId}`"
+								:key="`${loan.bookId}-${loan.customerId ?? 'm' + loan.memberUserId}`"
 								:to="getBookUrl(loan.bookId)"
 								class="dashboard-loan-row"
 							>
@@ -274,6 +275,9 @@ import {SearchFilter} from "@/types/search/SearchFilter";
 import {applicationService} from "@/service/ApplicationService";
 //@ts-ignore
 import notFound from "@/assets/images/notFound.jpg";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 const controller = new DashboardController();
 

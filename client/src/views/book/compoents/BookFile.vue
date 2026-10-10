@@ -6,6 +6,7 @@
 	>
 		<template v-slot:actions>
 			<v-btn
+				v-if="canEditCatalog"
 				@click="triggerFileSelect"
 				density="comfortable"
 				color="primary"
@@ -49,6 +50,7 @@
 						<v-icon size="21">mdi-download</v-icon>
 					</v-btn>
 					<v-btn
+						v-if="canEditCatalog"
 						icon
 						variant="text"
 						density="compact"
@@ -112,6 +114,7 @@
  * dropzone. The uploaded file's type is inferred server-side, so "add file"
  * always just uploads: it replaces any existing file of the same type.
  */
+import {applicationService} from "@/service/ApplicationService";
 import Book from "@/model/book/Book";
 import CardComponent from "@/components/card/CardComponent.vue";
 import BookFilePreviewDialog from "@/views/book/compoents/BookFilePreviewDialog.vue";
@@ -122,6 +125,9 @@ import {PATH_PREFIX} from "@/Constants";
 import {IBookFile} from "@/types/book/IBookFile";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 const {t} = useI18n();
 

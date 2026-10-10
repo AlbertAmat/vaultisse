@@ -22,8 +22,10 @@ export interface IBookStock extends IBookStockBase{
     /** Name of the location this stock is stored at. */
     location_name: string;
     /** Id of the customer this stock is loaned/booked to. */
-    customer_id: number;
-    /** Name of the customer this stock is loaned/booked to. */
+    customer_id: number | null;
+    /** Id of the vault member this stock is loaned/booked to (instead of a customer), or null. */
+    member_user_id: number | null;
+    /** Name of the customer or vault member this stock is loaned/booked to. */
     customer_name: string;
 }
 

@@ -461,14 +461,25 @@ describe("vault access control (security audit: role enforcement / stale active 
         expect((await bob.agent.post(`/api/rest/customer/1/add/books`).send({books: []})).status).toBe(403);
     });
 
-    it("a borrower can lend but not edit the catalog", async () => {
+    it("a borrower can read their own loans and track reading, but not edit the catalog, lend to customers or see everyone's loans", async () => {
         const {vaultId, bob, bobId} = await createSharedVaultWithPendingBob();
         await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 1, role: await roleCode("borrower")});
         await bob.agent.put(`/api/rest/vault/${vaultId}/active`);
 
         expect((await bob.agent.post("/api/rest/category").send({name: "Nope"})).status).toBe(403);
-        // Past the permission check - fails later on the (nonexistent) customer, not with a 403.
-        expect((await bob.agent.post(`/api/rest/customer/999999999/add/books`).send({books: []})).status).not.toBe(403);
+        expect((await bob.agent.post(`/api/rest/customer/999999999/add/books`).send({books: []})).status).toBe(403);
+        expect((await bob.agent.get("/api/rest/customer")).status).toBe(403);
+        expect((await bob.agent.get("/api/rest/loans")).status).toBe(403);
+
+        expect((await bob.agent.get("/api/rest/loans/mine")).status).toBe(200);
+        expect((await bob.agent.get("/api/rest/loans/mine/history")).status).toBe(200);
+
+        // Reading status is personal and open to a borrower; it must not leak to other members.
+        await admin.agent.put(`/api/rest/vault/${vaultId}/active`);
+        const bookId = (await admin.agent.post("/api/rest/book").field("name", "Shared Reading Book")).body;
+        expect((await bob.agent.put(`/api/rest/book/${bookId}/reading-status`).send({reading_status: 0})).status).toBe(200);
+        expect((await bob.agent.get(`/api/rest/book/${bookId}`)).body.reading_status).toBe(0);
+        expect((await admin.agent.get(`/api/rest/book/${bookId}`)).body.reading_status).toBeNull();
     });
 
     it("a normal member can edit the catalog", async () => {

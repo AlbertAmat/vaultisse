@@ -2,6 +2,7 @@ import {PATH_PREFIX} from "@/Constants";
 import axiosInstance from "@/plugins/axiosInstance";
 import ILoansResponse from "@/types/loans/ILoan";
 import ILoanHistoryEntry from "@/types/loans/ILoanHistory";
+import {IMyLoan, IMyLoanHistoryRow} from "@/types/loans/IMyLoan";
 
 /**
  * Thin HTTP client for the `/api/rest/loans` endpoint (see server/src/routes/LoansRoute.ts).
@@ -10,6 +11,24 @@ import ILoanHistoryEntry from "@/types/loans/ILoanHistory";
  * const {loans, total} = await loansService.getLoans(0, null, null, null);
  */
 class LoansService {
+
+    /**
+     * The copies currently on loan to the logged-in vault member.
+     * @returns Every copy booked to them.
+     */
+    public async getMyLoans(): Promise<IMyLoan[]> {
+        const {data} = await axiosInstance.get(`${PATH_PREFIX}/loans/mine`);
+        return data.loans;
+    }
+
+    /**
+     * The logged-in vault member's whole loan history, newest first.
+     * @returns Every loan to them, returned or still open.
+     */
+    public async getMyLoanHistory(): Promise<IMyLoanHistoryRow[]> {
+        const {data} = await axiosInstance.get(`${PATH_PREFIX}/loans/mine/history`);
+        return data.rows;
+    }
 
     /**
      * Paginated, filterable list of books currently on loan.

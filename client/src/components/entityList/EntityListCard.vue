@@ -12,6 +12,7 @@
 
 			<div class="entity-list-row-actions">
 				<v-icon
+					v-if="canEditCatalog"
 					@click="$emit('edit', item.id)"
 					size="small"
 					class="mx-1 entity-list-row-edit"
@@ -19,6 +20,7 @@
 					mdi-pencil
 				</v-icon>
 				<v-btn
+					v-if="canEditCatalog"
 					icon
 					variant="text"
 					density="compact"
@@ -35,6 +37,10 @@
 </template>
 
 <script setup lang="ts">
+import {applicationService} from "@/service/ApplicationService";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 /**
  * Row-list replacement for a plain "name + actions" data table: a single
  * `pb-card` shell holding one divided row per item (leading icon, name,

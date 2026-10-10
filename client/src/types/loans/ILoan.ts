@@ -31,9 +31,11 @@ export interface ILoan {
     bookName: string;
     /** Cover image URL/data-URI, or null if none. */
     imageUrl: string | null;
-    /** Customer id. */
-    customerId: number;
-    /** Customer name. */
+    /** Customer id, or null when loaned to a vault member. */
+    customerId: number | null;
+    /** Vault member's user id, or null when loaned to a customer. */
+    memberUserId: number | null;
+    /** Customer or vault member name. */
     customerName: string;
     /** Customer's group id, or null if ungrouped. */
     groupId: number | null;

@@ -17,24 +17,40 @@ export class LoanHistoryRepository {
     }
 
     /**
-     * Logs a new loan: snapshots the book/customer/group names as they are
-     * right now, so the report stays readable even if one of them is later
-     * renamed or deleted.
+     * Logs a new loan to a customer. The book name is snapshotted; the
+     * borrower and group are stored by id so renames show up in reports.
      * @param vaultId Vault id.
      * @param stockCode The loaned copy's book_stocks.code.
      * @param customerId The customer the copy was loaned to.
      */
     public async recordLoan(vaultId: number, stockCode: string, customerId: number): Promise<void> {
         await this.db.query(
-            `INSERT INTO loan_history (vault_id, book_id, book_name, stock_id, stock_code, customer_id, customer_name, group_id, group_name, loaned_at)
-             SELECT bs.vault_id, bs.book_id, b.name, bs.id, bs.code, c.id, c.name, cg.id, cg.name, NOW()
+            `INSERT INTO loan_history (vault_id, book_id, book_name, stock_id, stock_code, customer_id, group_id, loaned_at)
+             SELECT bs.vault_id, bs.book_id, b.name, bs.id, bs.code, c.id, c.group_id, NOW()
              FROM book_stocks bs
                       JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
                       JOIN customers c ON c.id = $2 AND c.vault_id = bs.vault_id
-                      LEFT JOIN customer_groups cg ON cg.id = c.group_id
              WHERE bs.code = $1
                AND bs.vault_id = $3`,
             [stockCode, customerId, vaultId]
+        );
+    }
+
+    /**
+     * Logs a new loan to a vault member (who has no group).
+     * @param vaultId Vault id.
+     * @param stockCode The loaned copy's book_stocks.code.
+     * @param memberUserId The vault member the copy was loaned to.
+     */
+    public async recordMemberLoan(vaultId: number, stockCode: string, memberUserId: number): Promise<void> {
+        await this.db.query(
+            `INSERT INTO loan_history (vault_id, book_id, book_name, stock_id, stock_code, member_user_id, loaned_at)
+             SELECT bs.vault_id, bs.book_id, b.name, bs.id, bs.code, $2, NOW()
+             FROM book_stocks bs
+                      JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
+             WHERE bs.code = $1
+               AND bs.vault_id = $3`,
+            [stockCode, memberUserId, vaultId]
         );
     }
 

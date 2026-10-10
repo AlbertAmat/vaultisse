@@ -166,6 +166,13 @@ export class UserRepository {
      * @param userId Owning user's id.
      */
     public async deleteAccount(userId: number): Promise<void> {
+        // Copies lent to this user go back to available first: a booked copy
+        // must keep a borrower (CHECK), so the FK can't just null it out.
+        // Their loan_history rows are removed by ON DELETE CASCADE.
+        await this.db.query(
+            `UPDATE book_stocks SET status = 0, member_user_id = NULL, loaned_at = NULL WHERE member_user_id = $1`,
+            [userId]
+        );
         await this.db.query(`DELETE FROM users WHERE id = $1`, [userId]);
     }
 

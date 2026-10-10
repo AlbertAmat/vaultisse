@@ -3,6 +3,7 @@ import {BookRepository} from "../repositories/BookRepository";
 import {AuthorRepository} from "../repositories/AuthorRepository";
 import {LocationRepository} from "../repositories/LocationRepository";
 import {CustomerRepository} from "../repositories/CustomerRepository";
+import {VaultRepository} from "../repositories/VaultRepository";
 import {BookMetadataRepository} from "../repositories/BookMetadataRepository";
 import {LoanHistoryRepository} from "../repositories/LoanHistoryRepository";
 import {withTransaction} from "../repositories/withTransaction";
@@ -46,9 +47,9 @@ export class BookService {
      * @param filter Search query, category/status filters, date range, sort and page.
      * @returns The total matching row count, the page size, and this page's books.
      */
-    public async searchBooks(vaultId: number, filter: BookSearchFilter): Promise<{total: number; limit: number; books: BookSearchResult[]}> {
+    public async searchBooks(vaultId: number, filter: BookSearchFilter, userId: number): Promise<{total: number; limit: number; books: BookSearchResult[]}> {
         const MAX_ROWS = 50;
-        const {total, books} = await new BookRepository(this.pool).search(vaultId, filter);
+        const {total, books} = await new BookRepository(this.pool).search(vaultId, filter, userId);
         return {total, limit: MAX_ROWS, books};
     }
 
@@ -57,8 +58,8 @@ export class BookService {
      * @param vaultId Vault id.
      * @returns Every counter.
      */
-    public async getCounters(vaultId: number): Promise<BookCounters> {
-        return new BookRepository(this.pool).getCounters(vaultId);
+    public async getCounters(vaultId: number, userId: number): Promise<BookCounters> {
+        return new BookRepository(this.pool).getCounters(vaultId, userId);
     }
 
     /* ---------- Single book CRUD ---------- */
@@ -69,8 +70,8 @@ export class BookService {
      * @param vaultId Vault id.
      * @returns The book detail.
      */
-    public async getBookDetail(id: number, vaultId: number): Promise<BookDetail> {
-        const book = await new BookRepository(this.pool).findDetailById(id, vaultId);
+    public async getBookDetail(id: number, vaultId: number, userId: number): Promise<BookDetail> {
+        const book = await new BookRepository(this.pool).findDetailById(id, vaultId, userId);
         if (!book) {
             throw new NotFoundError("Book not found");
         }
@@ -90,14 +91,11 @@ export class BookService {
             name: string; image_url: string | null; isbn: string | null; category_id: number | null;
             language_code: string | null; authors?: number[]; description: string | null;
             publisher: string | null; published_date: string | null; pages: number | null;
-            format_id: number | null; reading_status: ReadingStatusEnum | null;
+            format_id: number | null;
         }
     ): Promise<void> {
         if (fields.image_url && !BookService.isAllowedImageUrl(fields.image_url)) {
             throw new ValidationError("Invalid image URL");
-        }
-        if (fields.reading_status != null && ![ReadingStatusEnum.WANT_TO_READ, ReadingStatusEnum.CURRENTLY_READING, ReadingStatusEnum.READ].includes(fields.reading_status)) {
-            throw new ValidationError("Invalid reading status");
         }
 
         const repo = new BookRepository(this.pool);
@@ -126,6 +124,25 @@ export class BookService {
                 }
             }
         }
+    }
+
+    /**
+     * Sets (or clears, with null) the caller's own reading status for a book.
+     * Any vault member may do this, whatever their role - it's personal and doesn't touch the catalog.
+     * @param id Book id.
+     * @param vaultId Vault id.
+     * @param userId Caller's id.
+     * @param status New status, or null to stop tracking the book.
+     */
+    public async setReadingStatus(id: number, vaultId: number, userId: number, status: ReadingStatusEnum | null): Promise<void> {
+        if (status !== null && ![ReadingStatusEnum.WANT_TO_READ, ReadingStatusEnum.CURRENTLY_READING, ReadingStatusEnum.READ].includes(status)) {
+            throw new ValidationError("Invalid reading status");
+        }
+        const repo = new BookRepository(this.pool);
+        if (!(await repo.exists(id, vaultId))) {
+            throw new NotFoundError("Book not found");
+        }
+        await repo.setReadingStatus(id, userId, status);
     }
 
     /**
@@ -502,7 +519,7 @@ export class BookService {
     public async addBookStock(
         bookId: string,
         vaultId: number,
-        fields: {status: number; locationId: string; customerId: string | undefined}
+        fields: {status: number; locationId: string; customerId: string | undefined; memberUserId?: string | undefined}
     ): Promise<BookStockDetail> {
         const BOOKED_STATUS = 2;
         if (fields.status == BOOKED_STATUS) {
@@ -531,8 +548,13 @@ export class BookService {
             }
         }
 
+        const memberUserId = fields.memberUserId ? Number(fields.memberUserId) : undefined;
+        if (memberUserId && !(await new VaultRepository(this.pool).canBorrow(vaultId, memberUserId))) {
+            throw new NotFoundError("Member not found");
+        }
+
         const code = await repo.generateStockCode();
-        const stockId = await repo.insertStockWithId(bookId, code, fields.status, fields.locationId, fields.customerId, vaultId);
+        const stockId = await repo.insertStockWithId(bookId, code, fields.status, fields.locationId, fields.customerId, vaultId, memberUserId);
 
         const stock = await repo.findStockDetail(stockId, vaultId);
         return stock!;
@@ -561,7 +583,7 @@ export class BookService {
         bookId: string,
         stockId: string,
         vaultId: number,
-        fields: {status: number; location_id: number; customer_id: number | null | undefined}
+        fields: {status: number; location_id: number; customer_id: number | null | undefined; member_user_id?: number | null | undefined}
     ): Promise<BookStockDetail | undefined> {
         const locationOk = await new LocationRepository(this.pool).exists(fields.location_id, vaultId);
         if (!locationOk) {
@@ -575,10 +597,26 @@ export class BookService {
             }
         }
 
+        if (fields.member_user_id) {
+            const memberOk = await new VaultRepository(this.pool).canBorrow(vaultId, fields.member_user_id);
+            if (!memberOk) {
+                throw new NotFoundError("Member not found");
+            }
+        }
+
+        // A booked copy is on loan to exactly one of a customer or a vault member;
+        // any other status carries no borrower at all.
+        const isBooked = Number(fields.status) === 2;
+        const customerId = isBooked ? fields.customer_id || null : null;
+        const memberUserId = isBooked ? fields.member_user_id || null : null;
+        if (isBooked && !customerId === !memberUserId) {
+            throw new ValidationError("A booked stock needs exactly one borrower: a customer or a member");
+        }
+
         const repo = new BookRepository(this.pool);
         const previousStatus = await repo.getStockStatus(stockId, bookId, vaultId);
 
-        const rowsAffected = await repo.updateStock(bookId, stockId, vaultId, fields.status, fields.location_id, fields.customer_id);
+        const rowsAffected = await repo.updateStock(bookId, stockId, vaultId, fields.status, fields.location_id, customerId, memberUserId);
         if (rowsAffected !== 1) {
             // Original route sent a bare 500 here but (bug) never returned, so
             // execution continued into the same response - not faithfully
@@ -591,7 +629,12 @@ export class BookService {
 
         const newStatus = Number(fields.status);
         if (stock && Number(previousStatus) !== 2 && newStatus === 2) {
-            await new LoanHistoryRepository(this.pool).recordLoan(vaultId, stock.code, Number(fields.customer_id));
+            const loanHistory = new LoanHistoryRepository(this.pool);
+            if (memberUserId) {
+                await loanHistory.recordMemberLoan(vaultId, stock.code, memberUserId);
+            } else {
+                await loanHistory.recordLoan(vaultId, stock.code, Number(customerId));
+            }
         } else if (stock && Number(previousStatus) === 2 && newStatus !== 2) {
             await new LoanHistoryRepository(this.pool).recordReturn(vaultId, stock.code);
         }

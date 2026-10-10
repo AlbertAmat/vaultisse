@@ -7,6 +7,7 @@
 				variant="text"
 				@drop.prevent="handleDrop"
 				@dragover.prevent
+				:style="canEditCatalog ? undefined : 'cursor: default'"
 				@click="triggerFileSelect"
 			>
 				<v-img
@@ -18,7 +19,7 @@
 				>
 					<v-expand-transition>
 						<div
-							v-if="isHovering || loading"
+							v-if="canEditCatalog && (isHovering || loading)"
 							class="book-image-hover"
 						>
 							<v-progress-circular
@@ -40,7 +41,7 @@
 				<div
 					v-else
 					class="book-image-empty"
-					:class="{ 'book-image-empty-hover': isHovering }"
+					:class="{ 'book-image-empty-hover': canEditCatalog && isHovering, 'book-image-empty-readonly': !canEditCatalog }"
 				>
 					<v-progress-circular
 						v-if="loading || findingCover"
@@ -51,10 +52,10 @@
 
 					<template v-else>
 						<v-icon size="36" color="primary">mdi-book-outline</v-icon>
-						<span class="book-image-empty-label">{{t(AppLabels.IMAGE_DRAG_AND_DROP)}}</span>
+						<span v-if="canEditCatalog" class="book-image-empty-label">{{t(AppLabels.IMAGE_DRAG_AND_DROP)}}</span>
 
 						<v-btn
-							v-if="book.hasIsbn()"
+							v-if="canEditCatalog && book.hasIsbn()"
 							size="small"
 							variant="tonal"
 							color="primary"
@@ -76,7 +77,7 @@
 				/>
 			</v-card>
 		</v-hover>
-		<div style="text-align: center; width: 100%; color: var(--pb-text-muted); font-size: 14px">{{t(AppLabels.BOOK_HOVER_INFO)}}</div>
+		<div v-if="canEditCatalog" style="text-align: center; width: 100%; color: var(--pb-text-muted); font-size: 14px">{{t(AppLabels.BOOK_HOVER_INFO)}}</div>
 	</div>
 </template>
 
@@ -90,6 +91,10 @@ import Book from "@/model/book/Book";
 import {computed, ref, Ref} from "vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
+import {applicationService} from "@/service/ApplicationService";
+
+/** Cover upload is a catalog edit: readonly and borrower roles get a read-only cover. */
+const canEditCatalog = applicationService.canEditCatalog();
 
 const {t} = useI18n();
 
@@ -113,6 +118,7 @@ const fileInput = ref<HTMLInputElement | null>(null);
 
 // Trigger hidden file input
 const triggerFileSelect = () => {
+	if (!canEditCatalog) return;
 	fileInput.value?.click();
 };
 
@@ -126,6 +132,7 @@ const handleFileSelect = (event: Event) => {
 
 // Handle drag & drop
 const handleDrop = (event: DragEvent) => {
+	if (!canEditCatalog) return;
 	const files = event.dataTransfer?.files;
 	if (files && files[0]) {
 		loadImage(files[0]);
@@ -194,6 +201,11 @@ async function loadImage(file: File) {
 	border: 1px dashed var(--pb-border-strong);
 	border-radius: var(--pb-radius);
 	cursor: pointer;
+}
+
+.book-image-empty-readonly {
+	cursor: default;
+	border-style: solid;
 }
 
 .book-image-empty-hover {

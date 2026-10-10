@@ -1,7 +1,8 @@
 import {Pool} from "pg";
 import {AppRepository} from "../repositories/AppRepository";
 import {UserRepository} from "../repositories/UserRepository";
-import {AppPolicy, AppPolicyCategory, AppPolicyCustomer, AppPolicyFormat, AppPolicyLanguage, AppPolicyLocation} from "../types/app";
+import {VaultRepository} from "../repositories/VaultRepository";
+import {AppPolicy, AppPolicyBorrowingMember, AppPolicyCategory, AppPolicyCustomer, AppPolicyFormat, AppPolicyLanguage, AppPolicyLocation, AppPolicyVaultPermissions} from "../types/app";
 
 /**
  * Business logic for the Policy resource: builds the bootstrap payload
@@ -42,7 +43,26 @@ export class PolicyService {
         let formats: AppPolicyFormat[] = [];
         let locations: AppPolicyLocation[] = [];
         let customers: AppPolicyCustomer[] = [];
+        let borrowingMembers: AppPolicyBorrowingMember[] = [];
         let labels: Record<string, string> = {};
+        // Fail closed: no membership found means no permissions.
+        let vaultPermissions: AppPolicyVaultPermissions = {canBorrow: false, canEditCatalog: false, canManageMembers: false, canManageSettings: false};
+
+        try {
+            if (vaultId !== undefined) {
+                const membership = await new VaultRepository(this.pool).getMembership(vaultId, userId);
+                if (membership) {
+                    vaultPermissions = {
+                        canBorrow: membership.can_borrow,
+                        canEditCatalog: membership.can_edit_catalog,
+                        canManageMembers: membership.can_manage_members,
+                        canManageSettings: membership.can_manage_settings,
+                    };
+                }
+            }
+        } catch (e) {
+            console.error("Error when getting vault permissions. ", e);
+        }
 
         try {
             if (vaultId !== undefined) {
@@ -78,6 +98,21 @@ export class PolicyService {
             }
         } catch (e) {
             console.error("Error when getting customers. ", e);
+        }
+
+        try {
+            if (vaultId !== undefined) {
+                borrowingMembers = await new VaultRepository(this.pool).listBorrowingMembers(vaultId);
+            }
+        } catch (e) {
+            console.error("Error when getting borrowing members. ", e);
+        }
+
+        // Who else borrows what is for the people running the library; a plain
+        // borrower only ever sees their own loans, so they get no borrower lists.
+        if (!vaultPermissions.canEditCatalog) {
+            customers = [];
+            borrowingMembers = [];
         }
 
         try {
@@ -119,6 +154,8 @@ export class PolicyService {
             formats,
             locations,
             customers,
+            borrowingMembers,
+            vaultPermissions,
             labels,
             maxImportFileSizeMb,
         };

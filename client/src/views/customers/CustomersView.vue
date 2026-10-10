@@ -3,6 +3,7 @@
 		<template v-slot:append>
 			<template v-if="activeTab === 'customers'">
 				<v-btn
+					v-if="canEditCatalog"
 					@click="createCustomer()"
 					class="text-none ml-3"
 					color="primary"
@@ -14,7 +15,7 @@
 			</template>
 
 			<v-btn
-				v-else
+				v-else-if="canEditCatalog"
 				@click="groupsTree?.createGroup()"
 				class="text-none ml-3"
 				color="primary"
@@ -41,6 +42,7 @@
 						:description="t(AppLabels.EMPTY_CUSTOMERS_DESC)"
 					>
 						<v-btn
+							v-if="canEditCatalog"
 							@click="createCustomer()"
 							class="text-none"
 							color="primary"
@@ -71,6 +73,7 @@
 
 								<div class="entity-card-actions" @click.stop>
 									<v-icon
+										v-if="canEditCatalog"
 										@click="editCustomer(customer.id)"
 										size="small"
 										class="mx-1"
@@ -78,6 +81,7 @@
 										mdi-pencil
 									</v-icon>
 									<v-btn
+										v-if="canEditCatalog"
 										icon
 										variant="text"
 										density="compact"
@@ -135,6 +139,7 @@
  * `CustomersController` and `CustomerGroupsController` side by side since
  * both tabs share one page.
  */
+import {applicationService} from "@/service/ApplicationService";
 import PageComponent from "@/views/PageComponent.vue";
 import {computed, ref, Ref, ShallowRef, shallowRef} from "vue";
 import CustomerDialog from "@/views/customers/components/CustomerDialog.vue";
@@ -148,6 +153,9 @@ import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import CustomerGroupsTree from "@/views/customers/components/CustomerGroupsTree.vue";
 import CustomerDetail from "@/model/customer/CustomerDetail";
+
+/** Hides catalog-editing actions for roles that can't edit the catalog (readonly, borrower). */
+const canEditCatalog = applicationService.canEditCatalog();
 
 const controller = new CustomersController();
 const groupsController = new CustomerGroupsController();

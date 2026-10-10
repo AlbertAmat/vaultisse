@@ -119,7 +119,7 @@ const pendingFilters: Ref<SearchFilter[]> = ref([]);
 const filterOptions = computed(() => [
 	{title: t(AppLabels.NO_STOCK_FILTER), value: SearchFilter.NO_STOCK},
 	{title: t(AppLabels.HAS_STOCK_FILTER), value: SearchFilter.HAS_STOCK},
-	...(applicationService.getUser().isLeasingEnabled() ? [
+	...(applicationService.canEditCatalog() && applicationService.getUser().isLeasingEnabled() ? [
 		{title: t(AppLabels.ON_LOAN_FILTER), value: SearchFilter.ON_LOAN}
 	] : []),
 	{title: t(AppLabels.RECENT_FILTER), value: SearchFilter.RECENT},

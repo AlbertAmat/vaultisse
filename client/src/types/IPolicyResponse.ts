@@ -4,6 +4,7 @@ import {IFormat} from "@/types/format/IFormat";
 import ILocation from "@/types/location/ILocation";
 import {IUser} from "@/types/user/IUser";
 import ICustomer from "@/types/customer/ICustomer";
+import {IBorrowingMember} from "@/types/book/IBorrower";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 
 /**
@@ -18,6 +19,10 @@ export default interface IPolicyResponse {
     user: IUser;
     /** Every customer belonging to the user. */
     customers: ICustomer[];
+    /** Accepted vault members whose role can borrow (the member half of the borrower picker). */
+    borrowingMembers: IBorrowingMember[];
+    /** The caller's permissions in their active vault. */
+    vaultPermissions: {canBorrow: boolean; canEditCatalog: boolean; canManageMembers: boolean; canManageSettings: boolean};
     /** Every category belonging to the user. */
     categories: ICategory[];
     /** Every language option (global, not user-scoped). */

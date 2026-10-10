@@ -94,7 +94,7 @@
 				</v-list-item>
 
 				<v-list-item
-					v-if="leasingEnabled"
+					v-if="canEditCatalog && leasingEnabled"
 					:to="searchRoute.getPathForFilter(SearchFilter.ON_LOAN)"
 					:active="isLibraryOnLoanActive"
 					:title="t(AppLabels.ON_LOAN_FILTER)"
@@ -159,7 +159,7 @@
 		<div style="width: 100%;" class="pb-3">
 			<v-divider class="app-menu-divider mb-2"></v-divider>
 
-			<print-dialog/>
+			<print-dialog v-if="canEditCatalog"/>
 
 			<v-list-item
 				nav
@@ -197,6 +197,7 @@ import {categoriesRoute} from "@/router/routes/CategoriesRoute";
 import {customersRoute} from "@/router/routes/CustomersRoute";
 import {authorsRoute} from "@/router/routes/AuthorsRoute";
 import {loansRoute} from "@/router/routes/LoansRoute";
+import {myLoansRoute} from "@/router/routes/MyLoansRoute";
 import {SearchRoute} from "@/router/routes/SearchRoute";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -288,13 +289,16 @@ watch(railEnabled, (enabled) => {
 /** Whether the Loans and Customers pages are enabled - the user's saved Settings preference. Off by default. */
 const leasingEnabled = computed(() => applicationService.getUser().isLeasingEnabled());
 
+/** Roles that can't edit the catalog (borrower, readonly) only browse: no customers/loans management, no print queue. */
+const canEditCatalog = applicationService.canEditCatalog();
+
 const items = computed(() => [
 	{
 		name: t(AppLabels.LOCATIONS),
 		icon: "mdi-map-marker-radius",
 		path: locationsRoute.getPath()
 	},
-	...(leasingEnabled.value ? [
+	...(canEditCatalog && leasingEnabled.value ? [
 		{
 			name: t(AppLabels.CUSTOMERS),
 			icon: "mdi-account-school-outline",
@@ -304,6 +308,13 @@ const items = computed(() => [
 			name: t(AppLabels.LOANS),
 			icon: "mdi-book-arrow-right-outline",
 			path: loansRoute.getPath()
+		}
+	] : []),
+	...(applicationService.canBorrow() ? [
+		{
+			name: t(AppLabels.MY_LOANS),
+			icon: "mdi-book-arrow-left-outline",
+			path: myLoansRoute.getPath()
 		}
 	] : []),
 	{

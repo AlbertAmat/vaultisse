@@ -8,6 +8,7 @@ groups. This - along with [LOCATIONS.md](LOCATIONS.md) and
 ## Contents
 
 - [Mental model](#mental-model)
+- [Vault members as borrowers](#vault-members-as-borrowers)
 - [Customer groups](#customer-groups)
 - [Lending and returning books](#lending-and-returning-books)
 - [Leasing is opt-in](#leasing-is-opt-in)
@@ -27,6 +28,47 @@ from `book_stocks`: a stock is on loan to a customer exactly when its
 *current* state - `loan_history` (see [LOANS.md](LOANS.md)) is a parallel,
 append-only log of the same events, kept for reporting, not the source of
 truth for "who has what right now."
+
+## Vault members as borrowers
+
+A book can also be lent to a **vault member** instead of a customer: the
+borrower picker on a stock lists customers *and* accepted vault members whose
+role can borrow (`GET /app/policy` returns them as `borrowingMembers`, only to
+roles that can edit the catalog). Members are not copied into `customers`; a
+loan to one sets `book_stocks.member_user_id` (and
+`loan_history.member_user_id`) instead of `customer_id`. Members have no
+group. Lending to a member goes through the stock dialog on the book page; the
+Customers page only lends to customers.
+
+| Role | Borrow | Edit catalog | Manage members | Manage settings |
+|---|---|---|---|---|
+| `readonly` | no | no | no | no |
+| `borrower` | yes | no | no | no |
+| `normal` | yes | yes | no | no |
+| `admin` | yes | yes | yes | yes |
+
+What each role sees in the app:
+
+- **`borrower`** - browse-only. The library (books, locations, categories,
+  authors), their own reading status, **My loans** (`GET /loans/mine`, the
+  copies currently lent to them) and their loan history
+  (`GET /loans/mine/history`). No add/import/edit/delete buttons, no
+  Customers or Loans management pages, no print queue; the server rejects
+  those requests too (`403`), including lending/returning through the
+  Customers page and listing customers or everyone's loans.
+- **`readonly`** - the same browsing, without borrowing or "My loans".
+- **`normal` / `admin`** - everything above; both can also be lent books and
+  have a "My loans" page of their own.
+
+**Reading status** (want to read / currently reading / read) is personal: it
+lives in `book_reading_status (book_id, user_id, status)`, so every member of a
+shared vault has their own shelves, and any role - including `borrower` - can
+set it (`PUT /book/:id/reading-status`). The library filters, counters and the
+dashboard shelves only reflect the caller's own statuses.
+
+Removing a member from the vault only removes them from the picker; copies
+they already hold stay booked to them until returned. Deleting their account
+returns those copies to available and deletes their loan history.
 
 ## Customer groups
 

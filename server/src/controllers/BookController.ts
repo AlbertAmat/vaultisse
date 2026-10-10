@@ -77,7 +77,7 @@ export class BookController {
             const vaultId = appService.getSessionVault(req);
             const result = await new BookService(this.pool).searchBooks(vaultId, {
                 query, categoryId, filters, dateFrom, dateTo, sort, page,
-            });
+            }, appService.getSessionUser(req));
             res.status(200).json(result);
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -93,7 +93,7 @@ export class BookController {
     public async counters(req: Request, res: Response): Promise<void> {
         try {
             const vaultId = appService.getSessionVault(req);
-            const result = await new BookService(this.pool).getCounters(vaultId);
+            const result = await new BookService(this.pool).getCounters(vaultId, appService.getSessionUser(req));
             res.status(200).json(result);
         } catch (err: any) {
             console.error('Error executing query', err.stack);
@@ -111,7 +111,7 @@ export class BookController {
         appService.getLogger().debug(`Get book, id: ${id}`);
         try {
             const vaultId = appService.getSessionVault(req);
-            const book = await new BookService(this.pool).getBookDetail(id, vaultId);
+            const book = await new BookService(this.pool).getBookDetail(id, vaultId, appService.getSessionUser(req));
             res.status(200).json(book);
         } catch (err: any) {
             if (err instanceof DomainError) {
@@ -142,6 +142,28 @@ export class BookController {
                 return;
             }
             console.error("Error while updating book", e);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    /**
+     * PUT /book/:id/reading-status - sets or clears the caller's own reading status for a book.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public async setReadingStatus(req: Request, res: Response): Promise<void> {
+        const id = Number(req.params.id);
+        try {
+            const vaultId = appService.getSessionVault(req);
+            const status = req.body.reading_status ?? null;
+            await new BookService(this.pool).setReadingStatus(id, vaultId, appService.getSessionUser(req), status === null ? null : Number(status));
+            res.send({message: "Reading status updated successfully"});
+        } catch (e) {
+            if (e instanceof DomainError) {
+                res.status(e.httpStatus).send({error: e.message});
+                return;
+            }
+            console.error("Error while updating reading status", e);
             res.status(500).send('Internal Server Error');
         }
     }
@@ -346,6 +368,7 @@ export class BookController {
                 status: req.body.status,
                 locationId: req.body.location_id,
                 customerId: req.body.customer_id,
+                memberUserId: req.body.member_user_id,
             });
             res.status(200).json(stock);
         } catch (error) {
@@ -402,6 +425,7 @@ export class BookController {
                 status: req.body.status,
                 location_id: req.body.location_id,
                 customer_id: req.body.customer_id,
+                member_user_id: req.body.member_user_id,
             });
             res.status(200).json(stock);
         } catch (error) {

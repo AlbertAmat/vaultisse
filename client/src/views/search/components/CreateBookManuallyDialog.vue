@@ -229,7 +229,7 @@ async function addBook() {
 		loading.value = true;
 		const id = await bookService.createBook(name.value, description.value, isbn.value, image.value || null);
 		if (selectedLocation.value != null) {
-			await bookService.addBookStock(id, selectedLocation.value, BookStockStatusEnum.AVAILABLE, null);
+			await bookService.addBookStock(id, selectedLocation.value, BookStockStatusEnum.AVAILABLE, {customerId: null, memberUserId: null});
 		}
 		await router.push(bookRoute.getPath(id));
 		appSnackbarController.show({message: t(AppLabels.BOOK_HAS_BEEN_ADDED, {name: name.value}) })
