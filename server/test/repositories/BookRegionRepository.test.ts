@@ -1,8 +1,14 @@
 import axios from "axios";
+import {EventEmitter} from "node:events";
+import {spawn} from "node:child_process";
 import {BookRegionRepository} from "../../src/repositories/BookRegionRepository";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+// Italy talks to SBN through the `yaz-client` binary; never spawn the real one in unit tests.
+jest.mock("node:child_process");
+const mockedSpawn = spawn as unknown as jest.Mock;
 
 /* -------------------------------------------------------------------------- */
 /*  Fixtures (fake bibliographic data, real ISBN check digits)                */
@@ -59,6 +65,7 @@ describe("BookRegionRepository", () => {
 
 	beforeEach(() => {
 		mockedAxios.get.mockReset();
+		mockedSpawn.mockReset();
 		logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 		repo = new BookRegionRepository();
 	});
@@ -219,16 +226,51 @@ describe("BookRegionRepository", () => {
 	});
 
 	describe("region IT (SBN)", () => {
-		it("returns null when no Z39.50 client was injected", async () => {
+		/** Fake `yaz-client` process: collects what's written to stdin, then emits `stdout` and exits with `code` once stdin ends. */
+		function fakeYaz(stdout: string, code = 0) {
+			const proc: any = new EventEmitter();
+			proc.stdout = Object.assign(new EventEmitter(), {setEncoding: jest.fn()});
+			proc.stderr = Object.assign(new EventEmitter(), {setEncoding: jest.fn()});
+			proc.kill = jest.fn();
+			proc.written = "";
+			proc.stdin = {
+				write: (chunk: string) => { proc.written += chunk; },
+				end: () => setImmediate(() => {
+					proc.stdout.emit("data", stdout);
+					proc.emit("close", code);
+				}),
+			};
+			return proc;
+		}
+
+		const sbnOutput = [
+			"Connecting...OK.",
+			"Sent initrequest.",
+			"Records: 1",
+			"Record type: USmarc",
+			"001 SBN0000001",
+			"041    $a ita",
+			"100 1  $a Rossi, Mario",
+			"245 10 $a Libro di prova / $b un sottotitolo",
+			"260    $a Roma : $b Editore Prova, $c 2021.",
+		].join("\n");
+
+		it("does not use the HTTP client for Italy", async () => {
+			mockedSpawn.mockReturnValue(fakeYaz(""));
+
 			expect(await repo.addBook(IT_ISBN, "IT")).toBeNull();
 			expect(mockedAxios.get).not.toHaveBeenCalled();
 		});
 
-		it("parses the UNIMARC record returned by the injected client", async () => {
-			const italyRepo = new BookRegionRepository();
+		it("asks yaz-client for the ISBN and parses the record it returns", async () => {
+			const yaz = fakeYaz(sbnOutput);
+			mockedSpawn.mockReturnValue(yaz);
 
-			const book = await italyRepo.addBook(IT_ISBN, "IT");
+			const book = await repo.addBook(IT_ISBN, "IT");
 
+			expect(mockedSpawn).toHaveBeenCalledWith("yaz-client", [], expect.anything());
+			expect(yaz.written).toContain("open opac.sbn.it:2100/nopac");
+			expect(yaz.written).toContain(`find @attr 1=7 ${IT_ISBN}`);
 			expect(book).toMatchObject({
 				isbn: IT_ISBN,
 				title: "Libro di prova",
@@ -240,11 +282,21 @@ describe("BookRegionRepository", () => {
 		});
 
 		it("returns null when the client finds nothing", async () => {
-			expect(await new BookRegionRepository().addBook(IT_ISBN, "IT")).toBeNull();
+			mockedSpawn.mockReturnValue(fakeYaz("Connecting...OK.\nRecords: 0\n"));
+			expect(await repo.addBook(IT_ISBN, "IT")).toBeNull();
 		});
 
 		it("returns null instead of throwing when the client fails", async () => {
-			await expect(new BookRegionRepository().addBook(IT_ISBN, "IT")).resolves.toBeNull();
+			mockedSpawn.mockReturnValue(fakeYaz("", 1));
+			await expect(repo.addBook(IT_ISBN, "IT")).resolves.toBeNull();
+		});
+
+		it("returns null instead of throwing when yaz-client isn't installed", async () => {
+			const yaz = fakeYaz("");
+			yaz.stdin.end = () => setImmediate(() => yaz.emit("error", new Error("spawn yaz-client ENOENT")));
+			mockedSpawn.mockReturnValue(yaz);
+
+			await expect(repo.addBook(IT_ISBN, "IT")).resolves.toBeNull();
 		});
 	});
 });

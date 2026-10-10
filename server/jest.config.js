@@ -10,6 +10,10 @@ module.exports = {
     testEnvironment: "node",
     rootDir: ".",
     testMatch: ["<rootDir>/test/**/*.test.ts"],
+    // The *Real.test.ts files call live external services (DNB, BNE, SBN), so
+    // they're opt-in (`npm run test:real`) - otherwise CI fails whenever one of
+    // those services is slow, down, or unreachable from the runner.
+    testPathIgnorePatterns: process.env.RUN_REAL_TESTS ? ["/node_modules/"] : ["/node_modules/", "Real\\.test\\.ts$"],
     setupFiles: ["<rootDir>/test/setup/testEnv.js"],
     globalSetup: "<rootDir>/test/setup/globalSetup.js",
     maxWorkers: 1,

@@ -436,9 +436,12 @@ export class BookRegionRepository {
 		return value.replace(/\s*[\/:;,.]+\s*$/, "").replace(/\s+/g, " ").trim();
 	}
 
-	/** Accepts ISBN-10 or ISBN-13 (hyphens/spaces allowed). Returns a valid ISBN-13 or null. */
+	/**
+	 * Accepts ISBN-10 or ISBN-13 (hyphens/spaces allowed). Returns a valid ISBN-13 or null.
+	 * Also drops the invisible zero-width/direction marks (e.g. U+200E) that get copied along with an ISBN from some web pages.
+	 */
 	private __normalizeIsbn(raw: string): string | null {
-		const s = raw.replace(/[\s-]/g, "").toUpperCase();
+		const s = raw.replace(/[\s\-\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, "").toUpperCase();
 
 		if (/^\d{9}[\dX]$/.test(s)) {
 			const sum = [...s].reduce((acc, c, i) => acc + (c === "X" ? 10 : Number(c)) * (10 - i), 0);

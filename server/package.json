@@ -8,6 +8,7 @@
     "build": "tsc -p .",
     "lint": "tslint -c tslint.json -p tsconfig.json --fix",
     "test": "jest --silent",
+    "test:real": "RUN_REAL_TESTS=1 jest --testPathPattern Real.test",
     "test:watch": "jest --watch"
   },
   "author": "",
