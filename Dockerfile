@@ -31,6 +31,20 @@ COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev
 
 # ---------------------------------------------------------------------------
+# 3b) YAZ Z39.50 client, built from source: Alpine has no `yaz` package (only
+# the unrelated `yazi` file manager), and the server shells out to
+# `yaz-client` for the Italian (SBN) metadata lookup.
+# ---------------------------------------------------------------------------
+FROM node:${NODE_VERSION} AS yaz-build
+ARG YAZ_VERSION=5.38.0
+RUN apk add --no-cache build-base curl libxml2-dev libxslt-dev icu-dev openssl-dev readline-dev \
+    && curl -fsSL "https://ftp.indexdata.com/pub/yaz/yaz-${YAZ_VERSION}.tar.gz" | tar -xz -C /tmp \
+    && cd "/tmp/yaz-${YAZ_VERSION}" \
+    && ./configure --prefix=/usr/local \
+    && make -j"$(nproc)" \
+    && make install DESTDIR=/yaz-install
+
+# ---------------------------------------------------------------------------
 # 4) Runtime image: just Node + compiled output, no build toolchain
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS runtime
@@ -56,10 +70,12 @@ COPY --from=server-build /app/server/package.json  ./server/package.json
 COPY --from=server-build /app/server/dist          ./server/dist
 COPY --from=server-build /app/server/src/assets    ./server/dist/assets
 
-# Install and verify YAZ Z39.50 client
-RUN apk add --no-cache yaz \
+# YAZ Z39.50 client (built in the yaz-build stage) plus the shared libraries it
+# links against; verified here so a broken build fails the image, not a lookup.
+COPY --from=yaz-build /yaz-install/usr/local/ /usr/local/
+RUN apk add --no-cache libxml2 libxslt icu-libs readline openssl \
     && which yaz-client \
-    && yaz-client --version
+    && yaz-client -V
 
 # The upgrade SQL files applied automatically on startup (see
 # server/src/migrate/index.ts and GitHub issue #26) - not built by either
