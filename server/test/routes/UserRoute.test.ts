@@ -97,14 +97,6 @@ describe("PATCH /user/sidebar-rail", () => {
     });
 });
 
-describe("PATCH /user/leasing", () => {
-    it("accepts a boolean", async () => {
-        const user = await createAuthenticatedUser(app);
-        const res = await user.agent.patch("/api/rest/user/leasing").send({leasingEnabled: true});
-        expect(res.status).toBe(200);
-    });
-});
-
 describe("POST /user/password", () => {
     it("changes the password and keeps the current session valid", async () => {
         const user = await createAuthenticatedUser(app);

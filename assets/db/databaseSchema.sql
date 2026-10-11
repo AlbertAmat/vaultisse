@@ -30,7 +30,9 @@ VALUES ('1.0.0/1.sql'),
        ('1.1.8.sql'),
        ('1.2.2.sql'),
        ('1.3.0.sql'),
-       ('1.3.2.sql');
+       ('1.3.2.sql'),
+       ('1.3.4.sql'),
+       ('1.3.5.sql');
 
 CREATE TABLE app_languages
 (
@@ -257,9 +259,8 @@ VALUES ('en', 'ADD_BOOK', 'Add book'),
        ('en', 'USERCONF_COMPACT_MENU_DESC', 'Collapse the sidebar to icons only, expanding it when you hover over it.'),
        ('en', 'SNACKBAR_APPEARANCE_UPDATED', 'Appearance updated'),
        ('en', 'USERCONF_FEATURES', 'Features'),
-       ('en', 'USERCONF_LEASING', 'Leasing'),
-       ('en', 'USERCONF_LEASING_DESC', 'Track who''s borrowing what. Turns on the Loans and Customers pages in the sidebar.'),
-       ('en', 'SNACKBAR_LEASING_UPDATED', 'Leasing preference updated'),
+       ('en', 'VAULT_LOANS', 'Loans'),
+       ('en', 'VAULT_LOANS_DESC', 'Track who''s borrowing what. Turns on the Loans and Customers pages and the borrower role for this vault.'),
        ('en', 'USERCONF_SESSIONS', 'Active sessions'),
        ('en', 'USERCONF_SESSIONS_DESC', 'Devices currently signed in to your account.'),
        ('en', 'USERCONF_SESSIONS_EMPTY', 'No active sessions'),
@@ -572,9 +573,8 @@ VALUES ('ca', 'ADD_BOOK', 'Afegir llibre'),
        ('ca', 'USERCONF_COMPACT_MENU_DESC', 'Redueix la barra lateral a només icones, expandint-la en passar-hi el ratolí per sobre.'),
        ('ca', 'SNACKBAR_APPEARANCE_UPDATED', 'Aparença actualitzada'),
        ('ca', 'USERCONF_FEATURES', 'Funcionalitats'),
-       ('ca', 'USERCONF_LEASING', 'Préstecs'),
-       ('ca', 'USERCONF_LEASING_DESC', 'Fes un seguiment de qui té cada llibre. Activa les pàgines de Préstecs i Clients al menú lateral.'),
-       ('ca', 'SNACKBAR_LEASING_UPDATED', 'Preferència de préstecs actualitzada'),
+       ('ca', 'VAULT_LOANS', 'Préstecs'),
+       ('ca', 'VAULT_LOANS_DESC', 'Fes un seguiment de qui té cada llibre. Activa les pàgines de Préstecs i Clients al menú lateral.'),
        ('ca', 'USERCONF_SESSIONS', 'Sessions actives'),
        ('ca', 'USERCONF_SESSIONS_DESC', 'Dispositius que tenen la sessió iniciada al teu compte actualment.'),
        ('ca', 'USERCONF_SESSIONS_EMPTY', 'Cap sessió activa'),
@@ -887,9 +887,8 @@ VALUES ('es', 'ADD_BOOK', 'Agregar libro'),
        ('es', 'USERCONF_COMPACT_MENU_DESC', 'Reduce la barra lateral a solo iconos, expandiéndola al pasar el ratón por encima.'),
        ('es', 'SNACKBAR_APPEARANCE_UPDATED', 'Apariencia actualizada'),
        ('es', 'USERCONF_FEATURES', 'Funciones'),
-       ('es', 'USERCONF_LEASING', 'Préstamos'),
-       ('es', 'USERCONF_LEASING_DESC', 'Haz un seguimiento de quién tiene cada libro. Activa las páginas de Préstamos y Clientes en el menú lateral.'),
-       ('es', 'SNACKBAR_LEASING_UPDATED', 'Preferencia de préstamos actualizada'),
+       ('es', 'VAULT_LOANS', 'Préstamos'),
+       ('es', 'VAULT_LOANS_DESC', 'Haz un seguimiento de quién tiene cada libro. Activa las páginas de Préstamos y Clientes en el menú lateral.'),
        ('es', 'USERCONF_SESSIONS', 'Sesiones activas'),
        ('es', 'USERCONF_SESSIONS_DESC', 'Dispositivos con la sesión iniciada actualmente en tu cuenta.'),
        ('es', 'USERCONF_SESSIONS_EMPTY', 'No hay sesiones activas'),
@@ -1200,9 +1199,8 @@ VALUES ('it', 'ADD_BOOK', 'Aggiungi libro'),
        ('it', 'USERCONF_COMPACT_MENU_DESC', 'Riduci la barra laterale alle sole icone, espandendola al passaggio del mouse.'),
        ('it', 'SNACKBAR_APPEARANCE_UPDATED', 'Aspetto aggiornato'),
        ('it', 'USERCONF_FEATURES', 'Funzionalità'),
-       ('it', 'USERCONF_LEASING', 'Prestiti'),
-       ('it', 'USERCONF_LEASING_DESC', 'Tieni traccia di chi ha ogni libro. Attiva le pagine Prestiti e Clienti nel menu laterale.'),
-       ('it', 'SNACKBAR_LEASING_UPDATED', 'Preferenza sui prestiti aggiornata'),
+       ('it', 'VAULT_LOANS', 'Prestiti'),
+       ('it', 'VAULT_LOANS_DESC', 'Tieni traccia di chi ha ogni libro. Attiva le pagine Prestiti e Clienti nel menu laterale.'),
        ('it', 'USERCONF_SESSIONS', 'Sessioni attive'),
        ('it', 'USERCONF_SESSIONS_DESC', 'Dispositivi attualmente connessi al tuo account.'),
        ('it', 'USERCONF_SESSIONS_EMPTY', 'Nessuna sessione attiva'),
@@ -1490,7 +1488,9 @@ CREATE TABLE vault
     name             VARCHAR(65) NOT NULL,
     description      VARCHAR(255),
     invitation_uuid  UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-    leasing_enabled  BOOLEAN NOT NULL DEFAULT FALSE,
+    -- Whether the vault uses loans: the Loans and Customers pages, the
+    -- "booked" stock status and the borrower role. Off by default.
+    loans_enabled    BOOLEAN NOT NULL DEFAULT FALSE,
     date_created     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1553,14 +1553,6 @@ CREATE TABLE users
     -- the Settings page (see PATCH /user/sidebar-rail in UserRoute.ts and
     -- AppMenu.vue client-side).
     sidebar_rail    BOOLEAN NOT NULL DEFAULT FALSE,
-    -- Whether the Loans and Customers pages (and their nav items) are shown.
-    -- Off by default - most accounts just track a personal collection and
-    -- don't lend books out. Set from the Settings page (see PATCH
-    -- /user/leasing in UserRoute.ts, AppMenu.vue and Router.ts client-side).
-    -- Superseded by vault.leasing_enabled (issue #7) - kept until app code
-    -- reads vault.leasing_enabled exclusively, then drop in a follow-up
-    -- migration.
-    leasing_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     -- Optional OIDC link (issuer URL + subject from the IdP). Password-only
     -- accounts leave these NULL. UNIQUE allows several NULLs, so existing
     -- local accounts are unaffected. See server/src/utils/OidcUsers.ts.
@@ -2210,9 +2202,8 @@ VALUES ('fr', 'ADD_BOOK', 'Ajouter un livre'),
        ('fr', 'USERCONF_COMPACT_MENU_DESC', 'Réduit la barre latérale à de simples icônes, qui se déplie quand tu la survoles.'),
        ('fr', 'SNACKBAR_APPEARANCE_UPDATED', 'Apparence mise à jour'),
        ('fr', 'USERCONF_FEATURES', 'Fonctionnalités'),
-       ('fr', 'USERCONF_LEASING', 'Prêts'),
-       ('fr', 'USERCONF_LEASING_DESC', 'Suis qui emprunte quoi. Active les pages Prêts et Clients dans la barre latérale.'),
-       ('fr', 'SNACKBAR_LEASING_UPDATED', 'Préférence de prêt mise à jour'),
+       ('fr', 'VAULT_LOANS', 'Prêts'),
+       ('fr', 'VAULT_LOANS_DESC', 'Suis qui emprunte quoi. Active les pages Prêts et Clients dans la barre latérale.'),
        ('fr', 'USERCONF_SESSIONS', 'Sessions actives'),
        ('fr', 'USERCONF_SESSIONS_DESC', 'Appareils actuellement connectés à ton compte.'),
        ('fr', 'USERCONF_SESSIONS_EMPTY', 'Aucune session active'),
@@ -2562,9 +2553,8 @@ VALUES ('de', 'ADD_BOOK', 'Buch hinzufügen'),
        ('de', 'USERCONF_COMPACT_MENU_DESC', 'Reduziert die Seitenleiste auf reine Symbole und klappt sie beim Darüberfahren wieder aus.'),
        ('de', 'SNACKBAR_APPEARANCE_UPDATED', 'Erscheinungsbild aktualisiert'),
        ('de', 'USERCONF_FEATURES', 'Funktionen'),
-       ('de', 'USERCONF_LEASING', 'Verleih'),
-       ('de', 'USERCONF_LEASING_DESC', 'Behalte im Blick, wer was ausleiht. Aktiviert die Seiten Ausleihen und Kunden in der Seitenleiste.'),
-       ('de', 'SNACKBAR_LEASING_UPDATED', 'Verleiheinstellung aktualisiert'),
+       ('de', 'VAULT_LOANS', 'Verleih'),
+       ('de', 'VAULT_LOANS_DESC', 'Behalte im Blick, wer was ausleiht. Aktiviert die Seiten Ausleihen und Kunden in der Seitenleiste.'),
        ('de', 'USERCONF_SESSIONS', 'Aktive Sitzungen'),
        ('de', 'USERCONF_SESSIONS_DESC', 'Geräte, die derzeit bei deinem Konto angemeldet sind.'),
        ('de', 'USERCONF_SESSIONS_EMPTY', 'Keine aktiven Sitzungen'),

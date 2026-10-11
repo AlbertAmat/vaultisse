@@ -40,7 +40,7 @@ router.get('/version', (req, res) => getAppController().getVersion(req, res));
  *
  * Example response (200):
  *  { "user": { "code": "jdoe", "name": "Jane Doe", "email": "jane@example.com", "language": "en", "region": "US",
- *    "image": null, "theme": "beige", "sidebarRail": false, "leasingEnabled": false, "isPublicInstitution": false,
+ *    "image": null, "theme": "beige", "sidebarRail": false, "isPublicInstitution": false,
  *    "totpEnabled": false, "securityNoticeAccepted": true, "termsOfServiceAccepted": true },
  *    "categories": [{ "id": 1, "name": "Fiction" }], "languages": [{ "code": "en", "name": "English" }],
  *    "formats": [{ "id": 1, "name": "Paperback" }], "locations": [{ "id": 1, "name": "Shelf", "description": "", "default": true }],

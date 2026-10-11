@@ -87,6 +87,12 @@ export class ApplicationService {
     private m_canBorrow = false;
 
     /**
+     * Whether the active vault uses loans. Reactive so the menu and pages follow a change made in the vault settings.
+     * @private
+     */
+    private m_loansEnabled = ref(false);
+
+    /**
      * List of available languages in the application.
      * @private
      */
@@ -147,6 +153,7 @@ export class ApplicationService {
             this.m_borrowingMembers = data.borrowingMembers ?? [];
             this.m_canEditCatalog = data.vaultPermissions?.canEditCatalog ?? false;
             this.m_canBorrow = data.vaultPermissions?.canBorrow ?? false;
+            this.m_loansEnabled.value = data.loansEnabled ?? false;
             this.m_categories = data.categories.map((category) => new Category(category));
             this.m_languages = data.languages.map((lang) => new Language(lang));
             this.m_formats = data.formats.map((format) => new Format(format));
@@ -221,6 +228,21 @@ export class ApplicationService {
      */
     public canBorrow(): boolean {
         return this.m_canBorrow;
+    }
+
+    /**
+     * Whether the active vault uses loans: the Loans and Customers pages, the booked stock status and the borrower role.
+     */
+    public isLoansEnabled(): boolean {
+        return this.m_loansEnabled.value;
+    }
+
+    /**
+     * Applies a loans setting changed in the vault settings without refetching the whole policy.
+     * @param loansEnabled New value for the active vault.
+     */
+    public setLoansEnabled(loansEnabled: boolean): void {
+        this.m_loansEnabled.value = loansEnabled;
     }
 
     /**

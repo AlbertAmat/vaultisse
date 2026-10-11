@@ -75,7 +75,7 @@ router.post('/join/:uuid', requireAuth, (req, res) => getVaultController().join(
  * Auth: required. Caller must be an accepted member.
  *
  * Example response (200):
- *  { "id": 1, "name": "Jane's library", "description": null, "invitationUuid": "...", "leasingEnabled": false,
+ *  { "id": 1, "name": "Jane's library", "description": null, "invitationUuid": "...", "loansEnabled": false,
  *    "dateCreated": "...", "users": [...], "roles": [...] }
  * Responses: 200 success | 404 { "error": "Vault not found" }.
  */
@@ -96,10 +96,10 @@ router.post('', requireAuth, (req, res) => getVaultController().create(req, res)
 /**
  * PUT /vault/:id
  * ---------------
- * Updates a vault's name/description/leasing preference.
+ * Updates a vault's name/description/loans setting.
  *
  * Auth: required. Caller must have `can_manage_settings` (admin role). Body: { "name": "New name",
- * "description": "New description", "leasingEnabled": true }
+ * "description": "New description", "loansEnabled": true }
  *
  * Example response (200): { "id": 1, "name": "New name", "description": "New description" }
  * Responses: 200 success | 400 { "error": "Vault name is required" } | 403 { "error": "..." } | 404 { "error": "Vault not found" }.

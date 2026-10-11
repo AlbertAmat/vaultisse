@@ -67,7 +67,7 @@ describe("vault CRUD", () => {
         const createRes = await admin.agent.post("/api/rest/vault").send({name: "Original"});
         const vaultId = createRes.body.id;
 
-        const updateRes = await admin.agent.put(`/api/rest/vault/${vaultId}`).send({name: "Renamed", description: "New desc", leasingEnabled: true});
+        const updateRes = await admin.agent.put(`/api/rest/vault/${vaultId}`).send({name: "Renamed", description: "New desc", loansEnabled: true});
         expect(updateRes.status).toBe(200);
         expect(updateRes.body.name).toBe("Renamed");
 
@@ -461,8 +461,28 @@ describe("vault access control (security audit: role enforcement / stale active 
         expect((await bob.agent.post(`/api/rest/customer/1/add/books`).send({books: []})).status).toBe(403);
     });
 
+    it("the borrower role needs loans enabled, and loans can't be disabled while a borrower exists", async () => {
+        const {vaultId, bobId} = await createSharedVaultWithPendingBob();
+        const borrower = await roleCode("borrower");
+        const settings = (loansEnabled: boolean) => admin.agent.put(`/api/rest/vault/${vaultId}`).send({name: "Shared Library", loansEnabled});
+
+        // Loans are off by default, so nobody can be made a borrower yet.
+        expect((await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 1, role: borrower})).status).toBe(400);
+
+        expect((await settings(true)).status).toBe(200);
+        expect((await admin.agent.get(`/api/rest/vault/${vaultId}`)).body.loansEnabled).toBe(true);
+        expect((await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 1, role: borrower})).status).toBe(200);
+
+        // Disabling is refused until the borrower is moved to another role.
+        expect((await settings(false)).status).toBe(409);
+        await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({role: await roleCode("readonly")});
+        expect((await settings(false)).status).toBe(200);
+        expect((await admin.agent.get(`/api/rest/vault/${vaultId}`)).body.loansEnabled).toBe(false);
+    });
+
     it("a borrower can read their own loans and track reading, but not edit the catalog, lend to customers or see everyone's loans", async () => {
         const {vaultId, bob, bobId} = await createSharedVaultWithPendingBob();
+        await admin.agent.put(`/api/rest/vault/${vaultId}`).send({name: "Shared Library", loansEnabled: true});
         await admin.agent.put(`/api/rest/vault/${vaultId}/members/${bobId}`).send({status: 1, role: await roleCode("borrower")});
         await bob.agent.put(`/api/rest/vault/${vaultId}/active`);
 

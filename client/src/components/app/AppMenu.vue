@@ -94,7 +94,7 @@
 				</v-list-item>
 
 				<v-list-item
-					v-if="canEditCatalog && leasingEnabled"
+					v-if="canEditCatalog && loansEnabled"
 					:to="searchRoute.getPathForFilter(SearchFilter.ON_LOAN)"
 					:active="isLibraryOnLoanActive"
 					:title="t(AppLabels.ON_LOAN_FILTER)"
@@ -287,7 +287,7 @@ watch(railEnabled, (enabled) => {
  *
  */
 /** Whether the Loans and Customers pages are enabled - the user's saved Settings preference. Off by default. */
-const leasingEnabled = computed(() => applicationService.getUser().isLeasingEnabled());
+const loansEnabled = computed(() => applicationService.isLoansEnabled());
 
 /** Roles that can't edit the catalog (borrower, readonly) only browse: no customers/loans management, no print queue. */
 const canEditCatalog = applicationService.canEditCatalog();
@@ -298,7 +298,7 @@ const items = computed(() => [
 		icon: "mdi-map-marker-radius",
 		path: locationsRoute.getPath()
 	},
-	...(canEditCatalog && leasingEnabled.value ? [
+	...(canEditCatalog && loansEnabled.value ? [
 		{
 			name: t(AppLabels.CUSTOMERS),
 			icon: "mdi-account-school-outline",
@@ -310,7 +310,7 @@ const items = computed(() => [
 			path: loansRoute.getPath()
 		}
 	] : []),
-	...(applicationService.canBorrow() ? [
+	...(applicationService.canBorrow() && loansEnabled.value ? [
 		{
 			name: t(AppLabels.MY_LOANS),
 			icon: "mdi-book-arrow-left-outline",

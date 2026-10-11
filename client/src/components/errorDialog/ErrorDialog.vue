@@ -32,14 +32,7 @@
 			<v-divider/>
 
 			<v-card-text style="min-height: 60px; padding-top: 20px">
-				<template
-					v-if="controller.getError()!.response"
-				>
-					{{ controller.getError()!.response!.data }}
-				</template>
-				<template v-else>
-					{{ controller.getError()!.message }}
-				</template>
+				{{ errorText }}
 			</v-card-text>
 
 			<v-divider></v-divider>
@@ -73,6 +66,22 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
 const {t} = useI18n();
 
 const controller = errorDialogController;
+
+/**
+ * The text to show: the server's `{ "error": "..." }` message when it sent one,
+ * otherwise its raw response body, otherwise the client-side error message.
+ */
+const errorText = computed(() => {
+	const error = controller.getError();
+	const data: unknown = error?.response?.data;
+	if (data === undefined || data === null || data === "") {
+		return error?.message ?? "";
+	}
+	if (typeof data === "object" && typeof (data as {error?: unknown}).error === "string") {
+		return (data as {error: string}).error;
+	}
+	return typeof data === "string" ? data : JSON.stringify(data);
+});
 
 const model = computed({
 	get() {

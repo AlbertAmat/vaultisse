@@ -119,19 +119,6 @@ router.patch("/theme", requireAuth, (req, res) => getUserController().updateThem
 router.patch("/sidebar-rail", requireAuth, (req, res) => getUserController().updateSidebarRail(req, res));
 
 /**
- * PATCH /user/leasing
- * ----------------------
- * Update whether the current user's Loans and Customers pages (and their nav items) are shown - off
- * by default, since most accounts just track a personal collection and don't lend books out.
- *
- * Auth: required. Body: { "leasingEnabled": true | false }
- *
- * Example response (200): { "message": "Leasing preference updated successfully" }
- * Responses: 200 success | 400 { "error": "Invalid leasingEnabled" }.
- */
-router.patch("/leasing", requireAuth, (req, res) => getUserController().updateLeasing(req, res));
-
-/**
  * DELETE /user
  * -------------
  * Permanently delete the current user's account (and, via DB foreign keys, all of their

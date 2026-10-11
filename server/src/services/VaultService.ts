@@ -46,7 +46,7 @@ export class VaultService {
             name: details.name,
             description: details.description,
             invitationUuid: details.invitation_uuid,
-            leasingEnabled: details.leasing_enabled,
+            loansEnabled: details.loans_enabled,
             dateCreated: details.date_created,
             users,
             roles,
@@ -83,10 +83,11 @@ export class VaultService {
      * @param userId Caller's id.
      * @param name New name.
      * @param description New description.
-     * @param leasingEnabled New leasing preference.
+     * @param loansEnabled Whether the vault uses loans. Turning it off is refused with ConflictError while the
+     * vault still has borrower members or books on loan.
      * @returns The updated vault.
      */
-    public async updateVault(vaultId: number, userId: number, name: string, description: string | undefined, leasingEnabled: boolean): Promise<Vault> {
+    public async updateVault(vaultId: number, userId: number, name: string, description: string | undefined, loansEnabled: boolean): Promise<Vault> {
         if (!name || !name.trim()) {
             throw new ValidationError("Vault name is required");
         }
@@ -94,7 +95,16 @@ export class VaultService {
         const repo = new VaultRepository(this.pool);
         await this.requireMembership(repo, vaultId, userId, (m) => m.can_manage_settings);
 
-        const rowsAffected = await repo.updateVault(vaultId, {name: name.trim(), description: description?.trim() || "", leasingEnabled});
+        if (!loansEnabled && await repo.isLoansEnabled(vaultId)) {
+            if (await repo.countMembersWithRole(vaultId, VaultRoleCode.BORROWER) > 0) {
+                throw new ConflictError("Loans can't be disabled while the vault has borrower members - change their role first");
+            }
+            if (await repo.countCopiesOnLoan(vaultId) > 0) {
+                throw new ConflictError("Loans can't be disabled while books are on loan - return them first");
+            }
+        }
+
+        const rowsAffected = await repo.updateVault(vaultId, {name: name.trim(), description: description?.trim() || "", loansEnabled});
         if (rowsAffected !== 1) {
             throw new NotFoundError("Vault not found");
         }
@@ -227,6 +237,10 @@ export class VaultService {
     public async updateMember(vaultId: number, callerId: number, targetUserId: number, fields: { role?: number; status?: VaultUserStatus }): Promise<void> {
         const repo = new VaultRepository(this.pool);
         await this.requireMembership(repo, vaultId, callerId, (m) => m.can_manage_members);
+
+        if (fields.role === VaultRoleCode.BORROWER && !(await repo.isLoansEnabled(vaultId))) {
+            throw new ValidationError("The borrower role needs loans enabled in this vault");
+        }
 
         try {
             const rowsAffected = await repo.updateMember(vaultId, targetUserId, fields);

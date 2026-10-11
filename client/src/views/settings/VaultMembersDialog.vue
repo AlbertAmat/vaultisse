@@ -45,10 +45,16 @@
 					></v-textarea>
 					<div class="settings-row" style="margin-bottom: 8px">
 						<div class="settings-row-text">
-							<p style="font-size: 14px; font-weight: 530">{{t(AppLabels.USERCONF_LEASING)}}</p>
+							<p style="font-size: 14px; font-weight: 530">{{t(AppLabels.VAULT_LOANS)}}</p>
+							<p
+								class="v-card-subtitle pl-0"
+								style="white-space: normal"
+							>
+								{{t(AppLabels.VAULT_LOANS_DESC)}}
+							</p>
 						</div>
 						<v-switch
-							v-model="leasingEnabled"
+							v-model="loansEnabled"
 							:disabled="!canManageSettings"
 							color="primary"
 							density="compact"
@@ -232,7 +238,7 @@
 <script setup lang="ts">
 /**
  * Settings > Vaults > "Manage": one vault's full detail - editable
- * name/description/leasing preference (if `can_manage_settings`), its
+ * name/description/loans setting (if `can_manage_settings`), its
  * shareable invite link (if `can_manage_members` - the only way anyone
  * joins a vault, see VaultJoinView.vue), and its member list with
  * approve/reject for pending join requests, a role picker, and
@@ -277,7 +283,7 @@ const vault: Ref<IVaultInfo | null> = ref(null);
 
 const name: Ref<string> = ref("");
 const description: Ref<string> = ref("");
-const leasingEnabled: Ref<boolean> = ref(false);
+const loansEnabled: Ref<boolean> = ref(false);
 const savingSettings: Ref<boolean> = ref(false);
 
 const actingOnId: Ref<number | null> = ref(null);
@@ -294,13 +300,16 @@ const myRoleDefinition = computed(() => vault.value?.roles.find((r) => r.name ==
 const canManageSettings = computed(() => myRoleDefinition.value?.can_manage_settings ?? false);
 const canManageMembers = computed(() => myRoleDefinition.value?.can_manage_members ?? false);
 
-const roleItems = computed(() => (vault.value?.roles ?? []).map((r) => ({title: capitalize(r.name), value: r.code})));
+const roleItems = computed(() => (vault.value?.roles ?? [])
+	// The borrower role only exists in vaults that have loans turned on.
+	.filter((r) => r.name !== 'borrower' || vault.value?.loansEnabled)
+	.map((r) => ({title: capitalize(r.name), value: r.code})));
 
 const settingsDirty = computed(() => {
 	if (!vault.value) return false;
 	return name.value !== vault.value.name
 		|| description.value !== (vault.value.description ?? "")
-		|| leasingEnabled.value !== vault.value.leasingEnabled;
+		|| loansEnabled.value !== vault.value.loansEnabled;
 });
 
 const inviteLink = computed(() => vault.value ? `${window.location.origin}/app${vaultJoinRoute.getPath(vault.value.invitationUuid)}` : "");
@@ -325,7 +334,7 @@ async function load() {
 		vault.value = await vaultService.get(props.vaultId);
 		name.value = vault.value.name;
 		description.value = vault.value.description ?? "";
-		leasingEnabled.value = vault.value.leasingEnabled;
+		loansEnabled.value = vault.value.loansEnabled;
 	} finally {
 		loading.value = false;
 	}
@@ -354,7 +363,10 @@ async function saveSettings() {
 	if (!vault.value) return;
 	try {
 		savingSettings.value = true;
-		await vaultService.update(vault.value.id, name.value.trim(), description.value.trim() || undefined, leasingEnabled.value);
+		await vaultService.update(vault.value.id, name.value.trim(), description.value.trim() || undefined, loansEnabled.value);
+		if (vault.value.id === applicationService.getUser().getActiveVaultId()) {
+			applicationService.setLoansEnabled(loansEnabled.value);
+		}
 		appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_VAULT_UPDATED)});
 		emit('changed');
 		await load();

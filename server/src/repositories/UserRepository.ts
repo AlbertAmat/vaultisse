@@ -27,7 +27,6 @@ export class UserRepository {
                     u.image,
                     u.theme,
                     u.sidebar_rail          AS "sidebarRail",
-                    u.leasing_enabled       AS "leasingEnabled",
                     u.is_public_institution AS "isPublicInstitution",
                     u.totp_enabled          AS "totpEnabled",
                     u.last_used_vault_id    as "activeVault",
@@ -128,15 +127,6 @@ export class UserRepository {
      */
     public async updateSidebarRail(userId: number, sidebarRail: boolean): Promise<void> {
         await this.db.query(`UPDATE users SET sidebar_rail = $1 WHERE id = $2`, [sidebarRail, userId]);
-    }
-
-    /**
-     * Updates whether the caller's Loans/Customers pages are shown.
-     * @param userId Owning user's id.
-     * @param leasingEnabled New preference.
-     */
-    public async updateLeasing(userId: number, leasingEnabled: boolean): Promise<void> {
-        await this.db.query(`UPDATE users SET leasing_enabled = $1 WHERE id = $2`, [leasingEnabled, userId]);
     }
 
     /**

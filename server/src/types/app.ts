@@ -50,6 +50,8 @@ export interface AppPolicy {
     customers: AppPolicyCustomer[];
     borrowingMembers: AppPolicyBorrowingMember[];
     vaultPermissions: AppPolicyVaultPermissions;
+    /** Whether the caller's active vault uses loans (Loans/Customers pages, booked stock status, borrower role). */
+    loansEnabled: boolean;
     labels: Record<string, string>;
     maxImportFileSizeMb: number;
 }

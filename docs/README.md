@@ -37,8 +37,8 @@ endpoints and the matching `client/src/{controller,service,views}/` code:
   and the `GET /app/policy` bootstrap that delivers them to the client.
 - **[DASHBOARD.md](DASHBOARD.md)** - the single aggregate endpoint behind
   the dashboard's KPIs and charts.
-- **[SETTINGS.md](SETTINGS.md)** - profile, UI preferences, and the leasing
-  feature toggle (session/password/2FA live in AUTHENTICATION.md instead).
+- **[SETTINGS.md](SETTINGS.md)** - profile and UI preferences
+  (session/password/2FA live in AUTHENTICATION.md instead).
 - **[CLIENT-ARCHITECTURE.md](CLIENT-ARCHITECTURE.md)** - the
   controller/service/model pattern shared by every client feature, the
   shared axios instance, routing, and i18n.

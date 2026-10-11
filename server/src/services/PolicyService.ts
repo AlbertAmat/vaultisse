@@ -45,6 +45,7 @@ export class PolicyService {
         let customers: AppPolicyCustomer[] = [];
         let borrowingMembers: AppPolicyBorrowingMember[] = [];
         let labels: Record<string, string> = {};
+        let loansEnabled = false;
         // Fail closed: no membership found means no permissions.
         let vaultPermissions: AppPolicyVaultPermissions = {canBorrow: false, canEditCatalog: false, canManageMembers: false, canManageSettings: false};
 
@@ -62,6 +63,14 @@ export class PolicyService {
             }
         } catch (e) {
             console.error("Error when getting vault permissions. ", e);
+        }
+
+        try {
+            if (vaultId !== undefined) {
+                loansEnabled = await new VaultRepository(this.pool).isLoansEnabled(vaultId);
+            }
+        } catch (e) {
+            console.error("Error when getting vault loans setting. ", e);
         }
 
         try {
@@ -156,6 +165,7 @@ export class PolicyService {
             customers,
             borrowingMembers,
             vaultPermissions,
+            loansEnabled,
             labels,
             maxImportFileSizeMb,
         };

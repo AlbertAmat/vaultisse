@@ -171,7 +171,7 @@ pages, which are static per-language files rather than DB-backed labels.
 | Page lifecycle base class | `client/src/controller/BaseController.ts` |
 | Shared axios instance + error handling | `client/src/plugins/axiosInstance.ts` |
 | Global app state (user, reference lists, locale) | `client/src/service/ApplicationService.ts` |
-| Router setup + auth/leasing guard | `client/src/router/Router.ts` |
+| Router setup + auth/loans guard | `client/src/router/Router.ts` |
 | Per-feature route definitions | `client/src/router/routes/*.ts` |
 | i18n instance | `client/src/plugins/i18n/i18n.ts` |
 | Message key enum | `client/src/plugins/i18n/AppLabels.ts` |

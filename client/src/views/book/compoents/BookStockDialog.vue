@@ -137,10 +137,10 @@ const loading: Ref<boolean> = ref(false);
 
 /**
  * The list of selectable book statuses. The BOOKED status is only offered
- * when leasing is enabled, unless the stock being edited is already booked.
+ * when loans are enabled, unless the stock being edited is already booked.
  */
 const status = computed(() => {
-	if (applicationService.getUser().isLeasingEnabled() || selectedStatus.value === BookStockStatusEnum.BOOKED) {
+	if (applicationService.isLoansEnabled() || selectedStatus.value === BookStockStatusEnum.BOOKED) {
 		return BookStock.BookStockStatus;
 	}
 

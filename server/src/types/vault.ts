@@ -6,7 +6,7 @@ export interface Vault {
 
 export interface VaultInfo extends Vault {
     invitationUuid: string;
-    leasingEnabled: boolean;
+    loansEnabled: boolean;
     dateCreated: string;
     users: VaultUser[];
     roles: VaultRole[];
@@ -69,7 +69,7 @@ export interface VaultPermissions {
 export interface VaultUpdateFields {
     name: string;
     description: string;
-    leasingEnabled: boolean;
+    loansEnabled: boolean;
 }
 
 /** Preview of a vault reachable via its `invitation_uuid`, shown before the caller decides to request to join. */

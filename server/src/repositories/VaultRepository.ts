@@ -53,11 +53,11 @@ export class VaultRepository {
         name: string;
         description: string;
         invitation_uuid: string;
-        leasing_enabled: boolean;
+        loans_enabled: boolean;
         date_created: string;
     } | null> {
         const result = await this.db.query(
-            `SELECT vault.id, vault.name, vault.description, vault.invitation_uuid, vault.leasing_enabled, vault.date_created
+            `SELECT vault.id, vault.name, vault.description, vault.invitation_uuid, vault.loans_enabled, vault.date_created
                FROM vault
                JOIN vault_users vu ON vu.vault_id = vault.id
               WHERE vault.id = $1
@@ -104,8 +104,8 @@ export class VaultRepository {
      */
     public async updateVault(vaultId: number, fields: VaultUpdateFields): Promise<number> {
         const result = await this.db.query(
-            "UPDATE vault SET name = $1, description = $2, leasing_enabled = $3 WHERE id = $4",
-            [fields.name, fields.description, fields.leasingEnabled, vaultId]
+            "UPDATE vault SET name = $1, description = $2, loans_enabled = $3 WHERE id = $4",
+            [fields.name, fields.description, fields.loansEnabled, vaultId]
         );
         return result.rowCount ?? 0;
     }
@@ -306,6 +306,41 @@ export class VaultRepository {
         await this.db.query("DELETE FROM vault_users WHERE vault_id = $1", [sourceVaultId]);
         await this.db.query("DELETE FROM vault WHERE id = $1", [sourceVaultId]);
         await this.db.query("ALTER TABLE vault_users ENABLE TRIGGER trg_vault_min_one_admin");
+    }
+
+    /**
+     * Whether a vault uses loans.
+     * @param vaultId Vault id.
+     * @returns True if loans are enabled; false if disabled or the vault doesn't exist.
+     */
+    public async isLoansEnabled(vaultId: number): Promise<boolean> {
+        const result = await this.db.query("SELECT loans_enabled FROM vault WHERE id = $1", [vaultId]);
+        return result.rows[0]?.loans_enabled === true;
+    }
+
+    /**
+     * Counts a vault's members (any status) holding a given role.
+     * @param vaultId Vault id.
+     * @param role Role code (references vault_roles.code).
+     */
+    public async countMembersWithRole(vaultId: number, role: number): Promise<number> {
+        const result = await this.db.query(
+            "SELECT COUNT(*)::int AS count FROM vault_users WHERE vault_id = $1 AND role = $2",
+            [vaultId, role]
+        );
+        return result.rows[0].count;
+    }
+
+    /**
+     * Counts the book copies of a vault that are currently on loan (stock status 2, booked).
+     * @param vaultId Vault id.
+     */
+    public async countCopiesOnLoan(vaultId: number): Promise<number> {
+        const result = await this.db.query(
+            "SELECT COUNT(*)::int AS count FROM book_stocks WHERE vault_id = $1 AND status = 2",
+            [vaultId]
+        );
+        return result.rows[0].count;
     }
 
     /**

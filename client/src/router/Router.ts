@@ -69,11 +69,11 @@ router.beforeEach(async (to, from, next) => {
         return;
     }
 
-    // The Loans and Customers pages are opt-in (see Settings > Features).
+    // The Loans and Customers pages are opt-in per vault (see the vault settings).
     // Their nav items are already hidden when disabled (see AppMenu.vue) -
     // this stops a direct/bookmarked link from reaching them regardless.
-    const leasingPaths: string[] = [customersRoute.getPath(), loansRoute.getPath()];
-    if (leasingPaths.includes(to.path) && !applicationService.getUser().isLeasingEnabled()) {
+    const loansPaths: string[] = [customersRoute.getPath(), loansRoute.getPath()];
+    if (loansPaths.includes(to.path) && !applicationService.isLoansEnabled()) {
         next(DashboardRoute.PATH);
         return;
     }
@@ -81,11 +81,11 @@ router.beforeEach(async (to, from, next) => {
     // Roles that can't edit the catalog (borrower, readonly) only browse the
     // library, so the lending-management pages are off limits - the server
     // rejects them too. "My loans" is the other way round: for members who borrow.
-    if (leasingPaths.includes(to.path) && !applicationService.canEditCatalog()) {
+    if (loansPaths.includes(to.path) && !applicationService.canEditCatalog()) {
         next(DashboardRoute.PATH);
         return;
     }
-    if (to.path === myLoansRoute.getPath() && !applicationService.canBorrow()) {
+    if (to.path === myLoansRoute.getPath() && (!applicationService.canBorrow() || !applicationService.isLoansEnabled())) {
         next(DashboardRoute.PATH);
         return;
     }

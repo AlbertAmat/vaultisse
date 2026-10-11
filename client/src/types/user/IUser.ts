@@ -27,7 +27,6 @@ export interface IUser {
     /** Whether the left nav collapses to icon-only "rail" mode (expanding on hover). Off by default. */
     sidebarRail: boolean;
     /** Whether the Loans and Customers pages (and their nav items) are shown. Off by default. */
-    leasingEnabled: boolean;
     /** Base64 data-URI of the profile picture, or null if unset. */
     image: string | null;
     /** Whether this account belongs to a public institution (e.g. a school). */

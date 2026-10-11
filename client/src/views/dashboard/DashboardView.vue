@@ -109,7 +109,7 @@
 				</div>
 			</div>
 
-			<div v-if="leasingEnabled" class="mt-3">
+			<div v-if="loansEnabled" class="mt-3">
 				<dashboard-card
 					:title="t(AppLabels.DASHBOARD_ON_LOAN)"
 					:counter="controller.getTotalBookedBooks()"
@@ -299,7 +299,7 @@ function onCoverError(event: Event) {
 
 const upBooksTrend = computed(() => controller.getTotalThisMonth() > controller.getTotalLastMonth())
 
-const leasingEnabled = computed(() => applicationService.getUser().isLeasingEnabled());
+const loansEnabled = computed(() => applicationService.isLoansEnabled());
 
 const categoryShelvesWithBooks = computed(() => controller.getCategoryShelves().filter(shelf => shelf.books.length > 1))
 </script>

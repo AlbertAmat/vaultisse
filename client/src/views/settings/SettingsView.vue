@@ -148,28 +148,6 @@
 					</div>
 				</settings-card>
 
-				<settings-card :title="t(AppLabels.USERCONF_FEATURES)">
-					<div class="settings-row">
-						<div class="settings-row-text">
-							<p style="font-size: 14px; font-weight: 530">{{t(AppLabels.USERCONF_LEASING)}}</p>
-							<p
-								class="v-card-subtitle pl-0"
-								style="white-space: normal"
-							>
-								{{t(AppLabels.USERCONF_LEASING_DESC)}}
-							</p>
-						</div>
-						<v-switch
-							:model-value="controller.getUser().isLeasingEnabled()"
-							color="primary"
-							hide-details
-							:loading="switchingLeasingEnabled"
-							:disabled="switchingLeasingEnabled"
-							@update:model-value="toggleLeasingEnabled"
-						/>
-					</div>
-				</settings-card>
-
 				<settings-card :title="t(AppLabels.USERCONF_LANGUAGE_REGION)">
 					<div class="settings-fields-row" style="width: 100%; display: flex">
 						<v-select
@@ -354,7 +332,6 @@ const switchingSidebarRail: Ref<boolean> = ref(false);
 /**
  *
  */
-const switchingLeasingEnabled: Ref<boolean> = ref(false);
 
 const name: Ref<string> = ref(controller.getUser().getName());
 const email: Ref<string> = ref(controller.getUser().getEmail());
@@ -449,22 +426,6 @@ async function toggleSidebarRail(checked: boolean | null) {
 		await controller.getUser().setSidebarRail(value);
 	} finally {
 		switchingSidebarRail.value = false;
-	}
-}
-
-/** Persists the leasing preference; AppMenu.vue and Router.ts pick up the change reactively. */
-async function toggleLeasingEnabled(checked: boolean | null) {
-	const value = !!checked;
-
-	if (value === controller.getUser().isLeasingEnabled() || switchingLeasingEnabled.value) {
-		return;
-	}
-
-	try {
-		switchingLeasingEnabled.value = true;
-		await controller.getUser().setLeasingEnabled(value);
-	} finally {
-		switchingLeasingEnabled.value = false;
 	}
 }
 

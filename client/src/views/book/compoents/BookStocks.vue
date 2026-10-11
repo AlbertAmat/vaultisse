@@ -122,7 +122,7 @@ const headers = computed(() => {
 		{title: t(AppLabels.BOOK_STOCK_STATUS), value: 'status'},
 	];
 
-	if (applicationService.getUser().isLeasingEnabled()) {
+	if (applicationService.isLoansEnabled()) {
 		cols.push({title: t(AppLabels.BOOKED_BY), value: 'booked_user'});
 	}
 

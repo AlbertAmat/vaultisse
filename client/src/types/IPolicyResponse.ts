@@ -23,6 +23,8 @@ export default interface IPolicyResponse {
     borrowingMembers: IBorrowingMember[];
     /** The caller's permissions in their active vault. */
     vaultPermissions: {canBorrow: boolean; canEditCatalog: boolean; canManageMembers: boolean; canManageSettings: boolean};
+    /** Whether the caller's active vault uses loans (Loans/Customers pages, booked stock status, borrower role). */
+    loansEnabled: boolean;
     /** Every category belonging to the user. */
     categories: ICategory[];
     /** Every language option (global, not user-scoped). */

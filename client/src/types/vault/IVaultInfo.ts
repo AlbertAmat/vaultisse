@@ -11,7 +11,7 @@ export default interface IVaultInfo extends IVault {
     /** Shareable UUID for the "join this vault" invite link. */
     invitationUuid: string;
     /** Whether the Loans/Customers pages are offered to this vault's members. */
-    leasingEnabled: boolean;
+    loansEnabled: boolean;
     /** ISO date the vault was created. */
     dateCreated: string;
     /** Every member, any status. */

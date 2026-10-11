@@ -488,7 +488,29 @@ describe("book stock lifecycle", () => {
         expect(res.status).toBe(404);
     });
 
+    /**
+     * Turns loans on for the user's (only) vault.
+     */
+    async function enableLoans(): Promise<void> {
+        const vaults = await user.agent.get("/api/rest/vault");
+        const res = await user.agent.put(`/api/rest/vault/${vaults.body[0].id}`).send({name: vaults.body[0].name, loansEnabled: true});
+        expect(res.status).toBe(200);
+    }
+
+    it("refuses to put a stock on loan while the vault has loans disabled", async () => {
+        const bookId = (await user.agent.post("/api/rest/book").field("name", "Unloanable Book")).body;
+        const locationId = await createLocation(user.agent, "No Loan Shelf");
+        const customerId = (await user.agent.post("/api/rest/customer").send({name: "Jane"})).body.id;
+        const stockId = (await user.agent.post(`/api/rest/book/${bookId}/stock`).send({status: 0, location_id: locationId})).body.id;
+
+        const res = await user.agent
+            .put(`/api/rest/book/${bookId}/stock/${stockId}`)
+            .send({status: 2, location_id: locationId, customer_id: customerId});
+        expect(res.status).toBe(400);
+    });
+
     it("loans a stock to a customer and returns it, recording loan history both times", async () => {
+        await enableLoans();
         const bookRes = await user.agent.post("/api/rest/book").field("name", "Loanable Book");
         const bookId = bookRes.body;
         const locationId = await createLocation(user.agent, "Loan Shelf");

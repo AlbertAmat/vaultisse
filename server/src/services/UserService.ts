@@ -110,18 +110,6 @@ export class UserService {
     }
 
     /**
-     * Updates the caller's leasing-enabled preference, throwing ValidationError if it isn't a boolean.
-     * @param userId Owning user's id.
-     * @param leasingEnabled New preference.
-     */
-    public async updateLeasing(userId: number, leasingEnabled: unknown): Promise<void> {
-        if (typeof leasingEnabled !== "boolean") {
-            throw new ValidationError("Invalid leasingEnabled");
-        }
-        await new UserRepository(this.pool).updateLeasing(userId, leasingEnabled);
-    }
-
-    /**
      * Deletes the caller's account after re-verifying their password.
      *
      * Any vault this account is the *sole* member of (its personal library,

@@ -61,7 +61,7 @@ const filters = computed(() => [
 		title: t(AppLabels.HAS_STOCK_FILTER),
 		value: SearchFilter.HAS_STOCK
 	},
-	...(applicationService.getUser().isLeasingEnabled() ? [
+	...(applicationService.isLoansEnabled() ? [
 		{
 			title: t(AppLabels.ON_LOAN_FILTER),
 			value: SearchFilter.ON_LOAN

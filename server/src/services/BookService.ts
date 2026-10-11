@@ -616,6 +616,11 @@ export class BookService {
         const repo = new BookRepository(this.pool);
         const previousStatus = await repo.getStockStatus(stockId, bookId, vaultId);
 
+        // Already-booked copies stay editable, but nothing new can go on loan in a vault that has loans off.
+        if (isBooked && Number(previousStatus) !== 2 && !(await new VaultRepository(this.pool).isLoansEnabled(vaultId))) {
+            throw new ValidationError("Loans are not enabled in this vault");
+        }
+
         const rowsAffected = await repo.updateStock(bookId, stockId, vaultId, fields.status, fields.location_id, customerId, memberUserId);
         if (rowsAffected !== 1) {
             // Original route sent a bare 500 here but (bug) never returned, so

@@ -49,14 +49,14 @@ class VaultService {
     }
 
     /**
-     * Updates a vault's name/description/leasing preference. Requires `can_manage_settings`.
+     * Updates a vault's name/description/loans setting. Requires `can_manage_settings`.
      * @param id Vault id.
      * @param name New name.
      * @param description New description.
-     * @param leasingEnabled New leasing preference.
+     * @param loansEnabled Whether the vault uses loans.
      */
-    public async update(id: number, name: string, description: string | undefined, leasingEnabled: boolean): Promise<IVault> {
-        const {data} = await axiosInstance.put(`${PATH_PREFIX}/vault/${id}`, {name, description, leasingEnabled});
+    public async update(id: number, name: string, description: string | undefined, loansEnabled: boolean): Promise<IVault> {
+        const {data} = await axiosInstance.put(`${PATH_PREFIX}/vault/${id}`, {name, description, loansEnabled});
         return data;
     }
 

@@ -2,8 +2,8 @@
 
 Who a book is currently lent to, and how customers are organized into
 groups. This - along with [LOCATIONS.md](LOCATIONS.md) and
-[LOANS.md](LOANS.md) - is part of the opt-in "leasing" feature set (see
-[below](#leasing-is-opt-in)); most solo collectors never turn it on.
+[LOANS.md](LOANS.md) - is part of the opt-in "loans" feature set (see
+[below](#loans-are-opt-in)); most solo collectors never turn it on.
 
 ## Contents
 
@@ -11,7 +11,7 @@ groups. This - along with [LOCATIONS.md](LOCATIONS.md) and
 - [Vault members as borrowers](#vault-members-as-borrowers)
 - [Customer groups](#customer-groups)
 - [Lending and returning books](#lending-and-returning-books)
-- [Leasing is opt-in](#leasing-is-opt-in)
+- [Loans are opt-in](#loans-are-opt-in)
 - [Where this lives in code](#where-this-lives-in-code)
 
 ## Mental model
@@ -117,19 +117,23 @@ Every lend/return here writes to `loan_history` via the shared
 see [LOANS.md](LOANS.md) for why that table exists separately from
 `book_stocks` and what reads it.
 
-## Leasing is opt-in
+## Loans are opt-in
 
 The Customers and Loans pages (and their nav items) are hidden by default -
 most accounts just track a personal collection and never lend anything out.
-A user turns this on in **Settings > Features** (`users.leasing_enabled`,
-see [SETTINGS.md](SETTINGS.md)), which:
+It is a setting of the **vault** (`vault.loans_enabled`, switched by a vault admin in
+the vault's settings, Settings > Vaults), so it applies to every member. It can't be
+turned off while the vault has borrower members or books on loan. Turning it on:
 
-- adds "Customers" and "Loans" to the left nav (`AppMenu.vue`), and
+- adds "Customers" and "Loans" to the left nav (`AppMenu.vue`),
+- allows the "booked" stock status and the borrower role (the server rejects both while
+  loans are off), and
 - lifts a client-side route guard in [`Router.ts`](../client/src/router/Router.ts)
   that otherwise redirects those paths back to the dashboard even if
   bookmarked/typed directly - defense in depth, not the actual authorization
   boundary (every request is still scoped by `user_id` server-side
-  regardless of this flag).
+  regardless of this flag; the booked status and borrower role are enforced server-side).
+  `GET /app/policy` returns the active vault's value as `loansEnabled`.
 
 ## Where this lives in code
 
@@ -141,4 +145,4 @@ see [SETTINGS.md](SETTINGS.md)), which:
 | Client: `/customer` HTTP client | `client/src/service/customers/CustomersService.ts`, `CustomerGroupService.ts` |
 | Client: page controllers | `client/src/controller/customers/CustomersController.ts`, `CustomerGroupsController.ts` |
 | Client: customers page UI | `client/src/views/customers/CustomersView.vue`, `client/src/views/customers/components/` |
-| Client: leasing feature toggle | `client/src/views/settings/SettingsView.vue`, `client/src/router/Router.ts` |
+| Client: loans feature toggle | `client/src/views/settings/VaultMembersDialog.vue`, `client/src/router/Router.ts` |

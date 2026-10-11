@@ -92,7 +92,7 @@ export class VaultController {
     }
 
     /**
-     * PUT /vault/:id - updates a vault's name/description/leasing preference.
+     * PUT /vault/:id - updates a vault's name/description/loans setting.
      * @param req Express request.
      * @param res Express response.
      */
@@ -105,7 +105,7 @@ export class VaultController {
 
         try {
             const userId = appService.getSessionUser(req);
-            const vault = await new VaultService(this.pool).updateVault(vaultId, userId, req.body.name, req.body.description, !!req.body.leasingEnabled);
+            const vault = await new VaultService(this.pool).updateVault(vaultId, userId, req.body.name, req.body.description, !!req.body.loansEnabled);
             res.status(200).json(vault);
         } catch (e) {
             if (e instanceof DomainError) {

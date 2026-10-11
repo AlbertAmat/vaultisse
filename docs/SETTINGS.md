@@ -11,7 +11,6 @@ write-up in [AUTHENTICATION.md](AUTHENTICATION.md); this one is the rest of
 
 - [Profile](#profile)
 - [UI preferences](#ui-preferences)
-- [The leasing toggle](#the-leasing-toggle)
 - [Deleting an account](#deleting-an-account)
 - [Security notice acknowledgement](#security-notice-acknowledgement)
 - [Where this lives in code](#where-this-lives-in-code)
@@ -51,17 +50,6 @@ Both are applied client-side immediately for instant feedback, then
 persisted in the background purely so they're restored on the next login -
 neither blocks on the request completing.
 
-## The leasing toggle
-
-**`PATCH /user/leasing`** - `{ "leasingEnabled": true | false }`, persisted
-as `users.leasing_enabled`. Off by default: most accounts just track a
-personal collection and never lend books to anyone.
-
-Flipping this on/off changes what the rest of the app shows, not just a
-Settings checkbox - see
-[CUSTOMERS.md](CUSTOMERS.md#leasing-is-opt-in) for the nav-item and
-route-guard behavior this controls.
-
 ## Deleting an account
 
 **`DELETE /user`** removes the `users` row outright and redirects to
@@ -84,7 +72,7 @@ recorded (once, via `ON CONFLICT DO NOTHING`).
 
 | Concern | File |
 |---|---|
-| Profile, preferences, leasing toggle, account deletion, security notice | `server/src/routes/UserRoute.ts` |
+| Profile, preferences, account deletion, security notice | `server/src/routes/UserRoute.ts` |
 | Session list/revoke, password change, 2FA | `server/src/routes/UserRoute.ts` - see [AUTHENTICATION.md](AUTHENTICATION.md) instead |
 | `users` schema | `assets/db/databaseSchema.sql` |
 | Client: `/user` HTTP client | `client/src/service/user/UserService.ts` |

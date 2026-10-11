@@ -10,7 +10,6 @@ export interface UserProfile {
     image: string | null;
     theme: string;
     sidebarRail: boolean;
-    leasingEnabled: boolean;
     isPublicInstitution: boolean;
     totpEnabled: boolean;
     securityNoticeAccepted: boolean;

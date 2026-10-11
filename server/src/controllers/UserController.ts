@@ -108,25 +108,6 @@ export class UserController {
     }
 
     /**
-     * PATCH /user/leasing - updates the caller's leasing-enabled preference.
-     * @param req Express request.
-     * @param res Express response.
-     */
-    public async updateLeasing(req: Request, res: Response): Promise<void> {
-        try {
-            await new UserService(this.pool).updateLeasing(appService.getSessionUser(req), req.body.leasingEnabled);
-            res.status(200).json({message: "Leasing preference updated successfully"});
-        } catch (err: any) {
-            if (err instanceof ValidationError) {
-                res.status(err.httpStatus).json({error: err.message});
-                return;
-            }
-            console.error("Error executing query", err.stack);
-            res.status(500).send("Internal Server Error");
-        }
-    }
-
-    /**
      * DELETE /user - deletes the caller's account after re-verifying their password.
      * @param req Express request.
      * @param res Express response.

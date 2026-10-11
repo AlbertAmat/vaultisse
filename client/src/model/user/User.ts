@@ -84,7 +84,6 @@ export default class User {
      * (AppMenu.vue) and router (Router.ts) reflect a change immediately.
      * @private
      */
-    private m_leasingEnabled: Ref<boolean>;
 
     /**
      * Whether this account belongs to a public institution (e.g. a school).
@@ -140,7 +139,6 @@ export default class User {
         this.m_image = ref(data.image);
         this.m_theme = ref(data.theme);
         this.m_sidebarRail = ref(data.sidebarRail);
-        this.m_leasingEnabled = ref(data.leasingEnabled);
         this.m_isPublicInstitution = data.isPublicInstitution;
         this.m_securityNoticeAccepted = ref(data.securityNoticeAccepted);
         this.m_termsOfServiceAccepted = ref(data.termsOfServiceAccepted);
@@ -248,30 +246,6 @@ export default class User {
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_APPEARANCE_UPDATED)});
         } catch (e) {
             console.error("Error while updating sidebar rail preference: ", e);
-        }
-    }
-
-    /**
-     * Returns whether the Loans and Customers pages (and their nav items)
-     * are shown.
-     */
-    public isLeasingEnabled(): boolean {
-        return this.m_leasingEnabled.value;
-    }
-
-    /**
-     * Persists a new leasing preference and updates the local reactive
-     * value on success. The caller (SettingsView) applies it immediately
-     * client-side rather than waiting on this to resolve.
-     * @param leasingEnabled Whether leasing is enabled.
-     */
-    public async setLeasingEnabled(leasingEnabled: boolean) {
-        try {
-            await userService.updateLeasingEnabled(leasingEnabled);
-            this.m_leasingEnabled.value = leasingEnabled;
-            appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_LEASING_UPDATED)});
-        } catch (e) {
-            console.error("Error while updating leasing preference: ", e);
         }
     }
 

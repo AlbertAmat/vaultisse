@@ -90,15 +90,6 @@ class UserService {
         await axiosInstance.patch(`${PATH_PREFIX}/user/sidebar-rail`, {sidebarRail});
     }
 
-    /**
-     * Update whether the current user's Loans and Customers pages (and
-     * their nav items) are shown.
-     * @param leasingEnabled Whether leasing is enabled.
-     */
-    public async updateLeasingEnabled(leasingEnabled: boolean) {
-        await axiosInstance.patch(`${PATH_PREFIX}/user/leasing`, {leasingEnabled});
-    }
-
     /** List the current user's active login sessions (Settings > Active sessions). */
     public async getSessions(): Promise<IUserSession[]> {
         const response = await axiosInstance.get(`${PATH_PREFIX}/user/sessions`);
