@@ -1,0 +1,62 @@
+/**
+ * Keeps the app looking the way it did on Vuetify 3 after the move to
+ * Vuetify 4 (see the "Multi-step migration" notes in Vuetify's upgrade guide).
+ * Imported right after `vuetify/styles` in plugins/vuetify.ts, so these rules
+ * join Vuetify's own cascade layers. Trim them as the screens get reviewed.
+ */
+
+/* Vuetify 4 dropped its global CSS reset (the `* { margin: 0; padding: 0 }` and friends). This restores it. */
+@layer vuetify-core.reset {
+  * { padding: 0; margin: 0; }
+  a:active, a:hover { outline-width: 0; }
+  code, kbd, pre, samp { font-family: monospace; }
+  pre { font-size: 1em; }
+  small { font-size: 80%; }
+  sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  sub { bottom: -0.25em; }
+  sup { top: -0.5em; }
+  textarea { resize: vertical; }
+  button,
+  input,
+  select,
+  textarea {
+    background-color: transparent;
+    border-style: none;
+  }
+  select {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+  }
+  legend {
+    display: table;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+/*
+ * Vuetify 4 lowered the default breakpoints (md 960 -> 840, lg 1280 -> 1145, ...) and
+ * shrank the container widths with them. These are the Vuetify 3 container widths at
+ * the Vuetify 3 breakpoints, so pages keep the same content width. Unlayered, so they
+ * win over Vuetify's layered rules.
+ */
+@media (min-width: 840px) and (max-width: 959.98px) {
+  .v-container { max-width: none; }
+}
+@media (min-width: 960px) {
+  .v-container { max-width: 900px; }
+}
+@media (min-width: 1280px) {
+  .v-container { max-width: 1200px; }
+}
+@media (min-width: 1920px) {
+  .v-container { max-width: 1800px; }
+}
+@media (min-width: 2560px) {
+  .v-container { max-width: 2400px; }
+}
