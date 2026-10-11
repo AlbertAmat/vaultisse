@@ -1,3 +1,4 @@
+import {format} from "util";
 import express, {Express, Request} from "express"; // Express framework for building APIs
 import bodyParser from "body-parser"; // Middleware to parse incoming request bodies
 import http, {Server} from "http"; // Node HTTP module to create server
@@ -14,6 +15,7 @@ import helmet from "helmet"; // Middleware to set secure HTTP headers
 import rateLimit from "express-rate-limit";
 import path from "path"; // Middleware to limit repeated requests
 import {blockWritesInDemo} from "./middlewares/DemoModeMiddleware"; // Rejects writes when DEMO_MODE=true
+import {logFailedRequests} from "./middlewares/RequestLogMiddleware"; // Logs every 4xx/5xx response
 import {BookMetadataRepository} from "./repositories/BookMetadataRepository";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 import {runMigrations} from "./migrate";
@@ -189,6 +191,10 @@ export class AppService {
 
         this.m_app.use(cookieParser()); // Parse cookies
 
+        // Log every error response (4xx/5xx) to the server log. Registered before
+        // the demo-mode block and the routes so it sees their responses too.
+        this.m_app.use(logFailedRequests);
+
         // Reject state-changing requests when DEMO_MODE=true - must run
         // before routes are mounted so it covers AuthRoute (at "/") too.
         this.m_app.use(blockWritesInDemo);
@@ -286,6 +292,10 @@ export class AppService {
 
         // Initialize logger
         this.m_logger       = new Logger(String(process.env.LOGGER_PATH));
+
+        // Route console.error (used by the controllers' catch blocks, stack traces
+        // included) into the log file too; it used to reach stderr only.
+        console.error = (...args: unknown[]) => this.m_logger.error(format(...args));
     }
 
     /**

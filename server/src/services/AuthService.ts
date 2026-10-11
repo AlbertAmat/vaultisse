@@ -85,6 +85,7 @@ export class AuthService {
             // real wrong-password check would below, so response time
             // doesn't leak whether this username/email is registered.
             await appService.comparePassword(password, DUMMY_PASSWORD_HASH);
+            appService.getLogger().warn(`Login failed: stage=password reason=unknown account user=- ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(null, ActivityAction.LOGIN_FAILED, {metadata: {attemptedUsername: usernameOrEmail, ip}});
             throw new UnauthorizedError("Invalid username or password.");
         }
@@ -95,6 +96,7 @@ export class AuthService {
         // a locked-out account doesn't keep paying bcrypt's cost either.
         if (candidate.lockoutUntil && candidate.lockoutUntil.getTime() > Date.now()) {
             appService.getLogger().debug("Account locked out, rejecting login for:" + usernameOrEmail);
+            appService.getLogger().warn(`Login failed: stage=password reason=locked user=${candidate.id} ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(candidate.id, ActivityAction.LOGIN_FAILED, {metadata: {ip, reason: "locked"}});
             throw new UnauthorizedError("Too many failed attempts. Please try again later.");
         }
@@ -102,6 +104,7 @@ export class AuthService {
         if (!(await appService.comparePassword(password, candidate.password))) {
             appService.getLogger().debug("invalid password for user:" + usernameOrEmail);
             await authRepo.recordFailedLoginAttempt(candidate.id, MAX_FAILED_LOGIN_ATTEMPTS, new Date(Date.now() + LOCKOUT_DURATION_MS));
+            appService.getLogger().warn(`Login failed: stage=password reason=bad password user=${candidate.id} ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(candidate.id, ActivityAction.LOGIN_FAILED, {metadata: {ip}});
             throw new UnauthorizedError("Invalid username or password.");
         }
@@ -183,6 +186,7 @@ export class AuthService {
         // password from just switching IPs. Forcing a fresh /login here
         // (rather than just a 401) also means a fresh password check.
         if (user.totpLockoutUntil && user.totpLockoutUntil.getTime() > Date.now()) {
+            appService.getLogger().warn(`Login failed: stage=2fa reason=locked user=${user.id} ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(user.id, ActivityAction.LOGIN_FAILED, {metadata: {stage: "2fa", ip, reason: "locked"}});
             throw new PendingLoginExpiredError("Too many failed attempts. Please log in again.");
         }
@@ -202,6 +206,7 @@ export class AuthService {
 
         if (!verified) {
             await authRepo.recordFailedTwoFactorAttempt(user.id, MAX_FAILED_TOTP_ATTEMPTS, new Date(Date.now() + LOCKOUT_DURATION_MS));
+            appService.getLogger().warn(`Login failed: stage=2fa reason=bad code user=${user.id} ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(user.id, ActivityAction.LOGIN_FAILED, {metadata: {stage: "2fa", ip}});
             throw new UnauthorizedError("Invalid verification code.");
         }
