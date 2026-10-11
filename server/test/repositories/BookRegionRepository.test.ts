@@ -119,12 +119,10 @@ describe("BookRegionRepository", () => {
 			const book = await repo.addBook(DE_ISBN, "DE");
 
 			expect(book).toMatchObject({
-				isbn: DE_ISBN,
 				title: "Testbuch",
-				subtitle: "ein Roman",
-				authors: ["Mustermann, Max", "Musterfrau, Erika"],
+				authors: ["Max Mustermann", "Erika Musterfrau"],
 				publisher: "Beispielverlag",
-				publishedYear: "2023",
+				publishedDate: "2023",
 			});
 		});
 
@@ -150,7 +148,7 @@ describe("BookRegionRepository", () => {
 
 			const book = await repo.addBook("978-3864932496", "DE");
 
-			expect(book?.isbn).toBe(DE_ISBN);
+			expect(book?.title).toBe("Testbuch");
 			expect((mockedAxios.get.mock.calls[0][1] as any).params.query).toBe(`isbn=${DE_ISBN}`);
 		});
 
@@ -159,7 +157,7 @@ describe("BookRegionRepository", () => {
 
 			const book = await repo.addBook("\u200E 978-3864932496", "DE");
 
-			expect(book?.isbn).toBe(DE_ISBN);
+			expect(book?.title).toBe("Testbuch");
 		});
 
 		it("converts an ISBN-10 to ISBN-13 before querying", async () => {
@@ -199,11 +197,10 @@ describe("BookRegionRepository", () => {
 			const book = await repo.addBook(ES_ISBN, "ES");
 
 			expect(book).toEqual({
-				isbn: ES_ISBN,
 				title: "Título de prueba",
-				authors: ["Autor, Ejemplo"],
+				authors: ["Ejemplo Autor"],
 				publisher: "Editorial Prueba",
-				publishedYear: "1999",
+				publishedDate: "1999",
 			});
 		});
 
@@ -272,12 +269,10 @@ describe("BookRegionRepository", () => {
 			expect(yaz.written).toContain("open opac.sbn.it:2100/nopac");
 			expect(yaz.written).toContain(`find @attr 1=7 ${IT_ISBN}`);
 			expect(book).toMatchObject({
-				isbn: IT_ISBN,
 				title: "Libro di prova",
-				subtitle: "un sottotitolo",
-				authors: ["Rossi, Mario"],
+				authors: ["Mario Rossi"],
 				publisher: "Editore Prova",
-				publishedYear: "2021",
+				publishedDate: "2021",
 			});
 		});
 

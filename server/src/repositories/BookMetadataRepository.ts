@@ -1,8 +1,11 @@
 /**
  * ISBN metadata lookup used by `POST /book/isbn/:isbn`.
  *
+ * All sources are combined, not tried one-by-one: the ISBN's regional national
+ * library (ES/IT/DE, see BookRegionRepository) first, then Open Library, then
+ * Google Books, each filling only the fields the earlier ones left empty.
  * Google Books is optional (only called when a real API key is configured).
- * Open Library is the default source: edition (`/isbn/{isbn}.json` and
+ * Open Library: edition (`/isbn/{isbn}.json` and
  * `/api/books`), the linked work (description / subjects / cover), then
  * `search.json`. A short Wikipedia extract fills an empty synopsis. Brand-new
  * regional ISBNs that aren't in those catalogs yet can still resolve from a
@@ -19,6 +22,7 @@
  * (same treatment as server/src/utils/FileSignature.ts/IsbnVerification.ts).
  */
 import axios from "axios";
+import {BookRegionRepository} from "./BookRegionRepository";
 
 const USER_AGENT = "vaultisse-server/1.0 (homelab catalog)";
 const JSON_HEADERS = {
@@ -146,6 +150,9 @@ export interface BookVolumeInfo {
  * fallback chain, plus every small parsing/normalizing helper it relies on.
  */
 export class BookMetadataRepository {
+    /** Stateless national-library client shared by all lookups. */
+    private static readonly regionRepository = new BookRegionRepository();
+
     /** Static-only utility class, never instantiated. */
     private constructor() {
     }
@@ -207,17 +214,22 @@ export class BookMetadataRepository {
         let resolvedFromCatalog = false;
 
 
-        const openLibrary = await BookMetadataRepository.fetchOpenLibraryByIsbn(isbn);
-        if (openLibrary?.title) {
-            BookMetadataRepository.mergeVolume(merged, openLibrary);
-            resolvedFromCatalog = true;
-        }
-
+        // Every catalog is queried (in parallel) and merged in priority order:
+        // national library of the ISBN's region first, then Open Library, then
+        // Google Books. Each fills only what the previous ones left empty, so
+        // e.g. a description missing in one source can come from another.
         const key = BookMetadataRepository.normalizeGoogleApiKey(googleApiKey);
+        const lookups: Array<Promise<BookVolumeInfo | null>> = [
+            BookMetadataRepository.fetchRegional(isbn),
+            BookMetadataRepository.fetchOpenLibraryByIsbn(isbn),
+        ];
         if (key) {
-            const google = await BookMetadataRepository.fetchGoogleBooks(isbn, key);
-            if (google?.title) {
-                BookMetadataRepository.mergeVolume(merged, google);
+            lookups.push(BookMetadataRepository.fetchGoogleBooks(isbn, key));
+        }
+        // allSettled (not all): one source throwing must not discard the others.
+        for (const result of await Promise.allSettled(lookups)) {
+            if (result.status === "fulfilled" && result.value?.title) {
+                BookMetadataRepository.mergeVolume(merged, result.value);
                 resolvedFromCatalog = true;
             }
         }
@@ -570,6 +582,47 @@ export class BookMetadataRepository {
             BookMetadataRepository.applyOpenLibraryWork(merged, await BookMetadataRepository.getJson(`https://openlibrary.org${workKey}.json`));
         }
         return merged.title ? merged : null;
+    }
+
+    /**
+     * Maps an ISBN to the region (ES, IT, DE) whose national library should know it,
+     * from the registration-group prefix (978-84/979-13 Spain, 978-88/979-12 Italy,
+     * 978-3 Germany).
+     * @param isbn Validated ISBN-10/13.
+     * @returns The region code, or null if the ISBN isn't from a supported region.
+     */
+    public static regionForIsbn(isbn: string): string | null {
+        const digits = isbn.replace(/[^0-9X]/gi, "");
+        const body = digits.length === 10 ? `978${digits}` : digits;
+        if (/^978(84|88|3)/.test(body)) {
+            return body.startsWith("97884") ? "ES" : body.startsWith("97888") ? "IT" : "DE";
+        }
+        if (/^97913/.test(body)) {
+            return "ES";
+        }
+        if (/^97912/.test(body)) {
+            return "IT";
+        }
+        return null;
+    }
+
+    /**
+     * Looks the ISBN up in its region's national library (BNE, SBN or DNB).
+     * Never throws: a failure just means this source contributes nothing.
+     * @param isbn Validated ISBN-10/13.
+     * @returns The volume, or null.
+     */
+    private static async fetchRegional(isbn: string): Promise<BookVolumeInfo | null> {
+        const region = BookMetadataRepository.regionForIsbn(isbn);
+        if (!region) {
+            return null;
+        }
+        try {
+            const meta = await BookMetadataRepository.regionRepository.addBook(isbn, region);
+            return meta?.title ? meta : null;
+        } catch {
+            return null;
+        }
     }
 
     /**

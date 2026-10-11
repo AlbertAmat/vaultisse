@@ -1,20 +1,7 @@
 import axios from "axios";
 import {XMLParser} from "fast-xml-parser";
 import {spawn} from "node:child_process";
-
-/* -------------------------------------------------------------------------- */
-/*  Types                                                                     */
-
-/* -------------------------------------------------------------------------- */
-export interface BookMetadata {
-	isbn: string;                 // ISBN-13, digits only
-	title: string;
-	subtitle?: string;
-	authors: string[];
-	publisher?: string;
-	publishedYear?: string;
-	language?: string;
-}
+import type {BookVolumeInfo} from "./BookMetadataRepository";
 
 /* -------------------------------------------------------------------------- */
 /*  Repository                                                                */
@@ -70,7 +57,7 @@ export class BookRegionRepository {
 	 * @param isbn
 	 * @param region
 	 */
-	public async addBook(isbn: string, region: string): Promise<BookMetadata | null> {
+	public async addBook(isbn: string, region: string): Promise<BookVolumeInfo | null> {
 
 		region = region.trim().toUpperCase();
 
@@ -110,7 +97,7 @@ export class BookRegionRepository {
 	 * @param isbn
 	 * @private
 	 */
-	private async __fetchDNB(isbn: string): Promise<BookMetadata | null> {
+	private async __fetchDNB(isbn: string): Promise<BookVolumeInfo | null> {
 
 		const xml = await this.__get<string>(BookRegionRepository.DNB_SRU, {
 			version: "1.1",
@@ -120,7 +107,7 @@ export class BookRegionRepository {
 			maximumRecords: 1,
 		});
 
-		return this.__parseMarc(xml, isbn);
+		return this.__parseMarc(xml);
 	}
 
 	/**
@@ -128,7 +115,7 @@ export class BookRegionRepository {
 	 * @param isbn
 	 * @private
 	 */
-	private async __fetchBNE(isbn: string): Promise<BookMetadata | null> {
+	private async __fetchBNE(isbn: string): Promise<BookVolumeInfo | null> {
 
 		const p = BookRegionRepository.BNE_PROPS;
 		const isbn10 = this.__toIsbn10(isbn);
@@ -154,11 +141,10 @@ export class BookRegionRepository {
 		if (!row) return null;
 
 		return {
-			isbn,
 			title: this.__cleanIsbd(row.title?.value ?? ""),
-			authors: row.author?.value ? [this.__cleanIsbd(row.author.value)] : [],
+			authors: row.author?.value ? [this.__authorName(row.author.value)] : undefined,
 			publisher: row.publisher?.value ? this.__cleanIsbd(row.publisher.value) : undefined,
-			publishedYear: row.date?.value?.match(/\d{4}/)?.[0],
+			publishedDate: row.date?.value?.match(/\d{4}/)?.[0],
 		};
 	}
 
@@ -167,7 +153,7 @@ export class BookRegionRepository {
 
 	/* ---------------------------------------------------------------------- */
 
-	private async __fetchSBN(isbn: string): Promise<BookMetadata | null> {
+	private async __fetchSBN(isbn: string): Promise<BookVolumeInfo | null> {
 		const {host, database} = BookRegionRepository.SBN_Z3950;
 
 		const marc = await new Promise<string | null>((resolve, reject) => {
@@ -253,7 +239,7 @@ export class BookRegionRepository {
 		}
 
 		// SBN's native format is UNIMARC; switch to "marc21" if your client converts it.
-		return this.__parseSbnMarc21(marc, isbn);
+		return this.__parseSbnMarc21(marc);
 	}
 
 	/* ---------------------------------------------------------------------- */
@@ -267,10 +253,7 @@ export class BookRegionRepository {
 	 * @param isbn
 	 * @private
 	 */
-	private __parseMarc(
-		xml: string,
-		isbn: string,
-	): BookMetadata | null {
+	private __parseMarc(xml: string): BookVolumeInfo | null {
 
 		const doc = this.xml.parse(xml);
 
@@ -287,35 +270,40 @@ export class BookRegionRepository {
 				.map((s: any) => String(s["#text"] ?? "").trim())
 				.filter(Boolean);
 
-		let title: string | undefined, subtitle: string | undefined;
+		let title: string | undefined;
 		let authors: string[] = [];
 		let publisher: string | undefined, date: string | undefined, language: string | undefined;
 
 
 		title = sub("245", "a")[0];
-		subtitle = sub("245", "b")[0];
 		authors = [...sub("100", "a"), ...sub("700", "a")];
 		publisher = sub("264", "b")[0] ?? sub("260", "b")[0];
 		date = sub("264", "c")[0] ?? sub("260", "c")[0];
 		language = sub("041", "a")[0];
+		const description = sub("520", "a")[0];
+		const pageCount = sub("300", "a")[0]?.match(/\d+/)?.[0];
+		const categories = [...new Set(sub("650", "a").map(c => this.__cleanIsbd(c)))];
 
 		if (!title) return null;
 
 		return {
-			isbn,
 			title: this.__cleanIsbd(title),
-			subtitle: subtitle ? this.__cleanIsbd(subtitle) : undefined,
-			authors: [...new Set(authors.map(a => this.__cleanIsbd(a)))],
+			authors: authors.length ? [...new Set(authors.map(a => this.__authorName(a)))] : undefined,
 			publisher: publisher ? this.__cleanIsbd(publisher) : undefined,
-			publishedYear: date?.match(/\d{4}/)?.[0],
-			language
+			publishedDate: date?.match(/\d{4}/)?.[0],
+			language,
+			description: description || undefined,
+			pageCount: pageCount ? Number(pageCount) : undefined,
+			categories: categories.length ? categories : undefined,
 		};
 	}
 
-	private __parseSbnMarc21(
-		output: string,
-		isbn: string
-	): BookMetadata | null {
+	/**
+	 *
+	 * @param output
+	 * @private
+	 */
+	private __parseSbnMarc21(output: string): BookVolumeInfo | null {
 		// Find the actual MARC record.
 		// YAZ prints a lot of protocol/debug information around it.
 		const recordStart = output.indexOf("Record type: USmarc");
@@ -375,7 +363,6 @@ export class BookRegionRepository {
 		};
 
 		const marcTitle = getSubfield("245", "a")[0];
-		const subtitle = getSubfield("245", "b")[0];
 
 		const marcAuthors = [
 			...getSubfield("100", "a"),
@@ -387,25 +374,19 @@ export class BookRegionRepository {
 		const date = getSubfield("260", "c")[0];
 
 		const language = getSubfield("041", "a")[0];
+		const description = getSubfield("520", "a")[0];
+		const pageCount = getSubfield("300", "a")[0]?.match(/\d+/)?.[0];
+		const categories = [...new Set(getSubfield("650", "a").map(c => this.__cleanIsbd(c)))];
 
 		return {
-			isbn,
 			title: this.__cleanIsbd(marcTitle ?? title),
-			subtitle: subtitle
-				? this.__cleanIsbd(subtitle)
-				: undefined,
-			authors: [
-				...new Set(
-					marcAuthors.map(author =>
-						this.__cleanIsbd(author)
-					)
-				),
-			],
-			publisher: publisher
-				? this.__cleanIsbd(publisher)
-				: undefined,
-			publishedYear: date?.match(/\d{4}/)?.[0],
-			language
+			authors: marcAuthors.length ? [...new Set(marcAuthors.map(author => this.__authorName(author)))] : undefined,
+			publisher: publisher ? this.__cleanIsbd(publisher) : undefined,
+			publishedDate: date?.match(/\d{4}/)?.[0],
+			language,
+			description: description || undefined,
+			pageCount: pageCount ? Number(pageCount) : undefined,
+			categories: categories.length ? categories : undefined,
 		};
 	}
 
@@ -429,6 +410,12 @@ export class BookRegionRepository {
 			responseType,
 		});
 		return res.data;
+	}
+
+	/** Cleans a MARC personal name and turns "Surname, Name" into "Name Surname". */
+	private __authorName(value: string): string {
+		const [last, first] = this.__cleanIsbd(value).split(/,\s*(.+)/);
+		return first ? `${first} ${last}` : last;
 	}
 
 	/** Removes trailing ISBD punctuation (" /", " :", ",", ".") that MARC data carries. */

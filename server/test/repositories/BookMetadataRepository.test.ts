@@ -321,3 +321,16 @@ describe("resolveBookCover", () => {
         expect(cover).toContain("14856954");
     });
 });
+
+describe("regionForIsbn", () => {
+    it("maps registration groups to ES, IT and DE", () => {
+        expect(BookMetadataRepository.regionForIsbn("9788437604947")).toBe("ES");
+        expect(BookMetadataRepository.regionForIsbn("9791387800000")).toBe("ES");
+        expect(BookMetadataRepository.regionForIsbn("9788804668237")).toBe("IT");
+        expect(BookMetadataRepository.regionForIsbn("9783161484100")).toBe("DE");
+    });
+
+    it("returns null for other regions", () => {
+        expect(BookMetadataRepository.regionForIsbn("9780261102217")).toBeNull();
+    });
+});
