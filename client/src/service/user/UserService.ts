@@ -90,6 +90,26 @@ class UserService {
         await axiosInstance.patch(`${PATH_PREFIX}/user/sidebar-rail`, {sidebarRail});
     }
 
+    /** Whether the current user has an OPDS feed token (Settings > OPDS feed). */
+    public async getOpdsEnabled(): Promise<boolean> {
+        const response = await axiosInstance.get(`${PATH_PREFIX}/user/opds`);
+        return response.data.enabled;
+    }
+
+    /**
+     * Create (or rotate) the current user's OPDS feed token.
+     * @returns The server-relative feed path (`/opds/<token>`) - the only time it is available.
+     */
+    public async createOpdsToken(): Promise<string> {
+        const response = await axiosInstance.post(`${PATH_PREFIX}/user/opds`);
+        return response.data.path;
+    }
+
+    /** Disable the current user's OPDS feed. */
+    public async revokeOpdsToken(): Promise<void> {
+        await axiosInstance.delete(`${PATH_PREFIX}/user/opds`);
+    }
+
     /** List the current user's active login sessions (Settings > Active sessions). */
     public async getSessions(): Promise<IUserSession[]> {
         const response = await axiosInstance.get(`${PATH_PREFIX}/user/sessions`);

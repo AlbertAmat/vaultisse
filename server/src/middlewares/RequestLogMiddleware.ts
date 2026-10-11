@@ -8,7 +8,7 @@
  * requests are not logged (that would be an access log; see DEBUG_LOGGING).
  *
  * Each line carries the method, path (query string dropped - it can hold
- * OIDC codes or search terms), status, duration, client IP, the user id when
+ * OIDC codes or search terms; the OPDS feed's secret URL token is masked too), status, duration, client IP, the user id when
  * the request had a valid session, the active vault, and the error message
  * the server sent back. Request bodies are never logged (passwords, 2FA codes).
  */
@@ -84,7 +84,7 @@ export function logFailedRequests(req: Request, res: Response, next: NextFunctio
         }
         const userId = sessionUserId(req);
         const parts = [
-            `${req.method} ${req.originalUrl.split("?")[0]}`,
+            `${req.method} ${req.originalUrl.split("?")[0].replace(/^\/opds\/[^/]+/, "/opds/:token")}`,
             `-> ${res.statusCode}`,
             `(${Date.now() - startedAt}ms)`,
             `ip=${req.ip}`,

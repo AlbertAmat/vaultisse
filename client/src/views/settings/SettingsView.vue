@@ -270,6 +270,8 @@
 					</div>
 				</settings-card>
 
+				<opds-card/>
+
 				<div class="settings-security-row">
 					<sessions-card/>
 					<login-activity-card/>
@@ -293,6 +295,7 @@ import ChangePasswordDialog from "@/views/settings/ChangePasswordDialog.vue";
 import TwoFactorSetupDialog from "@/views/settings/TwoFactorSetupDialog.vue";
 import TwoFactorDisableDialog from "@/views/settings/TwoFactorDisableDialog.vue";
 import DeleteAccountDialog from "@/views/settings/DeleteAccountDialog.vue";
+import OpdsCard from "@/views/settings/OpdsCard.vue";
 import SessionsCard from "@/views/settings/SessionsCard.vue";
 import LoginActivityCard from "@/views/settings/LoginActivityCard.vue";
 import VaultsCard from "@/views/settings/VaultsCard.vue";

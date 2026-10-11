@@ -6,6 +6,7 @@ import pg from 'pg'; // PostgreSQL client
 import {routes} from "./routes/Routes"; // Import all application routes
 import {Logger} from "./utils/Logger"; // Custom logger utility
 import AuthRoute from "./routes/auth/AuthRoute"; // Auth-related routes
+import OpdsRoute from "./routes/OpdsRoute"; // Token-authenticated OPDS feed
 import cors from "cors"; // Cross-Origin Resource Sharing middleware
 import cookieParser from "cookie-parser"; // Middleware to parse cookies
 import jwt from "jsonwebtoken"; // JSON Web Token library for authentication
@@ -447,6 +448,10 @@ export class AppService {
 
         // Root route for authentication/session handling
         this.m_app.use("/", AuthRoute);
+
+        // OPDS feed for third-party reader apps; authenticated by a secret token in the URL
+        this.m_app.use("/opds", OpdsRoute);
+        consoleRoutesArr.push("/opds");
 
         // Register all routes with API prefix
         for (const route in routes) {

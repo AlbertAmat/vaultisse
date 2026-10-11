@@ -17,10 +17,12 @@ import multer from "multer";
 import rateLimit from "express-rate-limit";
 import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
 import {UserController} from "../controllers/UserController";
+import {OpdsController} from "../controllers/OpdsController";
 import {lazy} from "./lazySingleton";
 
 const router = Router();
 const getUserController = lazy(() => new UserController(appService.getDatabasePool()));
+const getOpdsController = lazy(() => new OpdsController(appService.getDatabasePool()));
 
 // Strict limiter for the current-password check, same shape as the
 // login/register limiter - without it, a stolen/short-lived session token
@@ -53,6 +55,30 @@ const upload = multer({
         cb(null, true);
     }
 });
+
+/**
+ * GET /user/opds
+ * ------------------
+ * Whether the caller has an OPDS feed token. Auth: required.
+ * Example response (200): { "enabled": true }
+ */
+router.get("/opds", requireAuth, (req, res) => getOpdsController().status(req, res));
+
+/**
+ * POST /user/opds
+ * ------------------
+ * Creates (or rotates, invalidating the old one) the caller's OPDS feed token. Auth: required.
+ * The token is returned only here and never stored in clear.
+ * Example response (200): { "token": "<64 hex chars>", "path": "/opds/<64 hex chars>" }
+ */
+router.post("/opds", requireAuth, (req, res) => getOpdsController().createToken(req, res));
+
+/**
+ * DELETE /user/opds
+ * ------------------
+ * Disables the caller's OPDS feed. Auth: required. Example response (200): { "enabled": false }
+ */
+router.delete("/opds", requireAuth, (req, res) => getOpdsController().revokeToken(req, res));
 
 /**
  * POST /user/image
