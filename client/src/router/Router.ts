@@ -59,7 +59,11 @@ const router = createRouter({
  * failed (see ApplicationService.fetchPolicy), send the user to the
  * server-rendered /login page instead of letting the SPA render further.
  */
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+    // On a cold page load (refresh, bookmark) navigation starts before the policy has arrived,
+    // and the checks below need the user and their permissions.
+    await applicationService.whenReady();
+
     if (applicationService.hasError()) {
         window.location.href = "/login";
         return;

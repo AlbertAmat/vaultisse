@@ -41,6 +41,16 @@ export class ApplicationService {
     private m_loading: Ref<boolean> = ref(true);
 
     /**
+     * Resolves once the first policy fetch has finished (successfully or not), so code that
+     * needs the user or their permissions - e.g. the router guard on a cold page load - can wait for it.
+     * @private
+     */
+    private m_ready: Promise<void>;
+
+    /** Resolves `m_ready`. @private */
+    private m_resolveReady!: () => void;
+
+    /**
      * Stores any error encountered during data fetching.
      * @private
      */
@@ -117,6 +127,7 @@ export class ApplicationService {
         this.m_categories = [];
         this.m_formats = [];
         this.m_maxImportFileSizeMb = 0;
+        this.m_ready = new Promise<void>((resolve) => this.m_resolveReady = resolve);
     }
 
     /**
@@ -152,7 +163,15 @@ export class ApplicationService {
             this.m_error = error;
         } finally {
             this.m_loading.value = false;
+            this.m_resolveReady();
         }
+    }
+
+    /**
+     * Resolves once the first policy fetch has finished. Check `hasError()` afterwards: the fetch may have failed.
+     */
+    public whenReady(): Promise<void> {
+        return this.m_ready;
     }
 
     /**

@@ -19,7 +19,7 @@
 			<v-card-actions>
 				<router-link
 					:to="legalRoute.getPath('security-measures')"
-					class="text-body-2 mr-auto"
+					class="text-body-medium mr-auto"
 				>
 					{{ uiLabels.securityNoticeLearnMore }}
 				</router-link>

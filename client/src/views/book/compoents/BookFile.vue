@@ -28,7 +28,7 @@
 					<v-icon size="28" class="mr-3" color="primary">{{ fileIcon(file) }}</v-icon>
 					<div class="flex-grow-1" style="min-width: 0">
 						<div class="text-truncate">{{ file.file_name }}</div>
-						<div class="text-caption" style="color: var(--pb-text-muted)">
+						<div class="text-body-small" style="color: var(--pb-text-muted)">
 							{{ formattedSize(file) }} &middot; {{ formattedDate(file) }}
 						</div>
 					</div>
@@ -77,11 +77,11 @@
 						<v-progress-circular v-if="loading" indeterminate color="primary" size="28"/>
 						<template v-else>
 							<v-icon size="28" color="primary">mdi-tray-arrow-up</v-icon>
-							<span class="text-caption text-center mt-1">{{ t(AppLabels.EBOOK_FILE_DRAG_AND_DROP) }}</span>
+							<span class="text-body-small text-center mt-1">{{ t(AppLabels.EBOOK_FILE_DRAG_AND_DROP) }}</span>
 						</template>
 					</div>
 				</v-hover>
-				<div class="text-caption mt-1" style="text-align: center; width: 100%; color: var(--pb-text-muted)">
+				<div class="text-body-small mt-1" style="text-align: center; width: 100%; color: var(--pb-text-muted)">
 					{{ t(AppLabels.EBOOK_FILE_HOVER_INFO) }}
 				</div>
 			</template>

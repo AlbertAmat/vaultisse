@@ -26,7 +26,7 @@
 						{{error}}
 					</v-alert>
 
-					<p class="text-caption mb-3">{{t(AppLabels.TWOFA_DISABLE_DESC)}}</p>
+					<p class="text-body-small mb-3">{{t(AppLabels.TWOFA_DISABLE_DESC)}}</p>
 
 					<v-text-field
 						v-model="password"

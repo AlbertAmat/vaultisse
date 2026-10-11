@@ -8,7 +8,7 @@
 			<v-icon size="28" :color="error ? 'error' : undefined" class="mb-1">
 				{{ error ? "mdi-alert-circle-outline" : "mdi-information-outline" }}
 			</v-icon>
-			<span class="text-caption" style="color: var(--pb-text-muted)">{{ t(AppLabels.PREVIEW_UNAVAILABLE) }}</span>
+			<span class="text-body-small" style="color: var(--pb-text-muted)">{{ t(AppLabels.PREVIEW_UNAVAILABLE) }}</span>
 		</div>
 
 		<iframe

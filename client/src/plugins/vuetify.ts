@@ -7,6 +7,7 @@
  * color sets mirror the CSS custom properties in assets/styles/theme.scss.
  */
 import 'vuetify/styles'
+import '@/assets/styles/vuetify-compat.css'
 import {aliases, mdi} from 'vuetify/iconsets/mdi'
 import {createVuetify} from "vuetify/framework";
 import * as components from "vuetify/components";

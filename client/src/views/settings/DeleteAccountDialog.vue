@@ -27,7 +27,7 @@
 						{{error}}
 					</v-alert>
 
-					<p class="text-caption mb-3">{{t(AppLabels.USERCONF_DELETE_USER_DESC)}}</p>
+					<p class="text-body-small mb-3">{{t(AppLabels.USERCONF_DELETE_USER_DESC)}}</p>
 
 					<v-text-field
 						v-model="password"

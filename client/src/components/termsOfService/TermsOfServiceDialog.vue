@@ -19,7 +19,7 @@
 			<v-card-actions>
 				<router-link
 					:to="legalRoute.getPath('terms-of-service')"
-					class="text-body-2 mr-auto"
+					class="text-body-medium mr-auto"
 				>
 					{{ uiLabels.termsOfServiceNoticeLearnMore }}
 				</router-link>

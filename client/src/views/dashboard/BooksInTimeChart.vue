@@ -38,6 +38,9 @@ ChartJS.register(
 const {t} = useI18n();
 const theme = useTheme();
 
+/** Vuetify 4 types theme colors as string | number | color objects; ours (plugins/vuetify.ts) are hex strings. */
+const primaryColor = () => theme.current.value.colors.primary as string;
+
 interface Props {
 	data: IBooksInTime[];
 }
@@ -55,8 +58,8 @@ const chartData = computed(() => ({
 		{
 			label: t(AppLabels.DASHBOARD_BOOKS_ADDED_TIME_OVER_TIME),
 			data: props.data.map(item => item.total_books),
-			borderColor: theme.current.value.colors.primary,
-			backgroundColor: theme.current.value.colors.primary,
+			borderColor: primaryColor(),
+			backgroundColor: primaryColor(),
 			fill: false,
 			tension: 0.3
 		}

@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<p class="text-caption text-medium-emphasis mb-3">
+		<p class="text-body-small text-medium-emphasis mb-3">
 			{{ t(AppLabels.GROUPS_DRAG_DROP_HINT) }}
 		</p>
 

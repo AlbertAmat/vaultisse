@@ -33,11 +33,11 @@
 							<v-progress-circular indeterminate color="primary" />
 						</div>
 						<template v-else>
-							<p class="text-caption mb-3">{{t(AppLabels.TWOFA_SETUP_SCAN_DESC)}}</p>
+							<p class="text-body-small mb-3">{{t(AppLabels.TWOFA_SETUP_SCAN_DESC)}}</p>
 							<div class="d-flex justify-center mb-4">
 								<img :src="qrCodeDataUrl" alt="QR code" style="width: 180px; height: 180px" />
 							</div>
-							<p class="text-caption mb-1">{{t(AppLabels.TWOFA_SETUP_MANUAL_KEY)}}</p>
+							<p class="text-body-small mb-1">{{t(AppLabels.TWOFA_SETUP_MANUAL_KEY)}}</p>
 							<code class="d-block mb-4" style="word-break: break-all; font-size: 13px;">{{secret}}</code>
 
 							<v-text-field
@@ -54,7 +54,7 @@
 					</template>
 
 					<template v-else>
-						<p class="text-caption mb-3">{{t(AppLabels.TWOFA_BACKUP_CODES_DESC)}}</p>
+						<p class="text-body-small mb-3">{{t(AppLabels.TWOFA_BACKUP_CODES_DESC)}}</p>
 						<div class="mb-2 pa-3" style="font-family: var(--pb-font-mono); font-size: 14px; line-height: 1.9; background: var(--pb-surface-alt); border-radius: var(--pb-radius-sm);">
 							<div v-for="c in backupCodes" :key="c">{{c}}</div>
 						</div>

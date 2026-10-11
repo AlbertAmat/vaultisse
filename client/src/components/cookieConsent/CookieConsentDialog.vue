@@ -3,7 +3,7 @@
 		v-model="isVisible"
 		:timeout="-1"
 		location="bottom"
-		multi-line
+		min-height="68"
 		:elevation="4"
 		class="cookie-consent"
 	>

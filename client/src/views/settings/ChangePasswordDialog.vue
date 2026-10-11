@@ -53,12 +53,12 @@
 
 					<!-- Password requirements list -->
 					<span
-						class="text-caption"
+						class="text-body-small"
 						:style="{ color: !allRulesMet ? 'red' : '' }"
 					>
 						{{t(AppLabels.USERCONF_PASSWORD_SECURITY)}}
 					</span>
-					<ul class="text-caption mb-4" style="list-style: none; padding: 0;">
+					<ul class="text-body-small mb-4" style="list-style: none; padding: 0;">
 						<li :style="{ color: hasMinLength ? 'green' : 'red' }">
 							{{t(AppLabels.USERCONF_PASSWORD_MINIMUM_CHAR)}}
 						</li>

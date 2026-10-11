@@ -16,7 +16,7 @@
 		</template>
 
 		<v-card min-width="260" class="pa-2">
-			<div class="text-caption text-medium-emphasis px-2 pt-1">{{ t(AppLabels.ADD_FILTER) }}</div>
+			<div class="text-body-small text-medium-emphasis px-2 pt-1">{{ t(AppLabels.ADD_FILTER) }}</div>
 			<v-list density="compact">
 				<v-list-item
 					v-for="f in filterOptions"
@@ -33,7 +33,7 @@
 			<v-divider class="my-2"/>
 
 			<div class="px-2 pb-2">
-				<div class="text-caption text-medium-emphasis mb-2">{{ t(AppLabels.CATEGORY_FILTER) }}</div>
+				<div class="text-body-small text-medium-emphasis mb-2">{{ t(AppLabels.CATEGORY_FILTER) }}</div>
 				<v-select
 					v-model="categoryInput"
 					:items="categoryOptions"
@@ -49,7 +49,7 @@
 			<v-divider class="my-2"/>
 
 			<div class="px-2 pb-2">
-				<div class="text-caption text-medium-emphasis mb-2">{{ t(AppLabels.UPLOAD_DATE_FILTER) }}</div>
+				<div class="text-body-small text-medium-emphasis mb-2">{{ t(AppLabels.UPLOAD_DATE_FILTER) }}</div>
 				<v-text-field
 					v-model="dateFromInput"
 					:label="t(AppLabels.DATE_FROM)"

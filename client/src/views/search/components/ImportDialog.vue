@@ -110,7 +110,7 @@
  * success here and just surfaces the imported count.
  */
 import {computed, ref, Ref, watch} from "vue";
-import { VFileUpload } from 'vuetify/labs/VFileUpload'
+import { VFileUpload } from 'vuetify/components'
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {applicationService} from "@/service/ApplicationService";

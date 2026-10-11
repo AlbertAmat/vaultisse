@@ -103,7 +103,7 @@
  */
 import {computed, ref, Ref, watch} from "vue";
 import {validateIsbn10, validateIsbn13} from "@/utils/IsbnVerification";
-import { VFileUpload } from 'vuetify/labs/VFileUpload'
+import { VFileUpload } from 'vuetify/components'
 import {bookService} from "@/service/book/BookService";
 import {bookRoute} from "@/router/routes/BookRoute";
 import router from "@/router/Router";
