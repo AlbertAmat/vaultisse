@@ -99,15 +99,63 @@ export class BookRegionRepository {
 	 */
 	private async __fetchDNB(isbn: string): Promise<BookVolumeInfo | null> {
 
-		const xml = await this.__get<string>(BookRegionRepository.DNB_SRU, {
+		const search = (recordSchema: string) => this.__get<string>(BookRegionRepository.DNB_SRU, {
 			version: "1.1",
 			operation: "searchRetrieve",
 			query: `isbn=${isbn}`,
-			recordSchema: "MARC21-xml",
+			recordSchema,
 			maximumRecords: 1,
 		});
 
-		return this.__parseMarc(xml);
+		const marcXml = await search("MARC21-xml");
+		const marc = this.__parseMarc(marcXml);
+		if (marc) {
+			return marc;
+		}
+
+		// DNB's MARC21 converter sometimes fails on their side ("General System Error")
+		// while the record itself is fine; Dublin Core is served by a different path.
+		if (marcXml.includes("<diagnostics>")) {
+			console.log(`DNB MARC21 lookup failed for ${isbn}, falling back to Dublin Core`);
+			return this.__parseDnbDublinCore(await search("oai_dc"));
+		}
+		return null;
+	}
+
+	/**
+	 * Parses a DNB `oai_dc` (Dublin Core) record, the fallback when the MARC21 converter is down.
+	 * @param xml SRU response in the oai_dc record schema.
+	 * @private
+	 */
+	private __parseDnbDublinCore(xml: string): BookVolumeInfo | null {
+		const dc = this.xml.parse(xml)?.searchRetrieveResponse?.records?.record?.[0]?.recordData?.dc;
+		if (!dc) return null;
+
+		// A repeated element parses to an array, a single one to a bare value.
+		const values = (key: string): string[] =>
+			[dc[key]].flat().filter(v => v !== undefined && v !== null).map(v => String(typeof v === "object" ? v["#text"] ?? "" : v).trim()).filter(Boolean);
+
+		// "Title : subtitle / statement of responsibility"
+		const title = values("title")[0]?.split(" / ")[0].split(" : ")[0];
+		if (!title) return null;
+
+		const authors = values("creator")
+			.filter(c => !/\[(?!Verfasser|Herausgeber)[^\]]+\]/.test(c))
+			.map(c => this.__authorName(c.replace(/\s*\[[^\]]*\]/g, "")));
+		// "Berlin : Ullstein extra" -> place : publisher
+		const publisher = values("publisher")[0]?.split(" : ").pop();
+		const pages = values("format")[0]?.match(/(\d+)\s+Seiten/)?.[1];
+		const categories = [...new Set(values("subject").map(c => c.replace(/^\d+\s+/, "")))];
+
+		return {
+			title: this.__cleanIsbd(title),
+			authors: authors.length ? [...new Set(authors)] : undefined,
+			publisher: publisher ? this.__cleanIsbd(publisher) : undefined,
+			publishedDate: values("date")[0]?.match(/\d{4}/)?.[0],
+			language: values("language")[0],
+			pageCount: pages ? Number(pages) : undefined,
+			categories: categories.length ? categories : undefined,
+		};
 	}
 
 	/**

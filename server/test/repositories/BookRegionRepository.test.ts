@@ -143,6 +143,37 @@ describe("BookRegionRepository", () => {
 			expect(config.timeout).toBeGreaterThan(0);
 		});
 
+		it("falls back to Dublin Core when DNB's MARC21 converter reports a system error", async () => {
+			const diagnostic = `<?xml version="1.0"?><searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><diagnostics><diag:diagnostic xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/"><diag:message>Conversion unsuccessful</diag:message></diag:diagnostic></diagnostics></searchRetrieveResponse>`;
+			const dublinCore = `<?xml version="1.0"?><searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><numberOfRecords>1</numberOfRecords><records><record><recordData>
+				<dc xmlns="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+				<dc:title>MTViva liebt dich! : die Geschichte des Musikfernsehens / Markus Kavka/Elmar Giglinger</dc:title>
+				<dc:creator>Kavka, Markus [Verfasser]</dc:creator>
+				<dc:creator>Giglinger, Elmar [Verfasser]</dc:creator>
+				<dc:creator>Doe, Jane [Übersetzer]</dc:creator>
+				<dc:publisher>Berlin : Ullstein extra</dc:publisher>
+				<dc:date>2023</dc:date>
+				<dc:language>ger</dc:language>
+				<dc:identifier xsi:type="tel:ISBN">3-86493-249-1</dc:identifier>
+				<dc:subject>780 Musik</dc:subject>
+				<dc:format>527 Seiten, 8 ungezählte Seiten Tafeln</dc:format>
+				</dc></recordData></record></records></searchRetrieveResponse>`;
+			mockedAxios.get.mockResolvedValueOnce({status: 200, data: diagnostic}).mockResolvedValueOnce({status: 200, data: dublinCore});
+
+			const book = await repo.addBook(DE_ISBN, "DE");
+
+			expect((mockedAxios.get.mock.calls[1][1] as any).params.recordSchema).toBe("oai_dc");
+			expect(book).toEqual({
+				title: "MTViva liebt dich!",
+				authors: ["Markus Kavka", "Elmar Giglinger"],
+				publisher: "Ullstein extra",
+				publishedDate: "2023",
+				language: "ger",
+				pageCount: 527,
+				categories: ["Musik"],
+			});
+		});
+
 		it("accepts the hyphenated form 978-3864932496", async () => {
 			mockedAxios.get.mockResolvedValue({status: 200, data: dnbXml(DE_ISBN)});
 
