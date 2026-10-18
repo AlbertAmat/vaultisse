@@ -12,7 +12,7 @@ import {ResolvedAuthUser} from "../types/auth";
 import {UserRepository} from "../repositories/UserRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {withTransaction} from "../repositories/withTransaction";
-import {VaultRole, VaultRoleCode, VaultUserStatus} from "../types/vault";
+import {VaultRole, VaultRoleCode, VaultRoleSource, VaultUserStatus} from "../types/vault";
 
 export class OidcUserError extends Error {
     public constructor(message: string) {
@@ -164,10 +164,11 @@ export class OidcUserService {
     }
 
     /**
-     * Applies the IdP-group -> shared-vault role mapping (issue #29) for one login. The highest-ranked
-     * role among the user's mapped groups is granted (accepted immediately); with no mapped group, any
-     * membership in that vault is removed. Does nothing unless group sync is configured. Never throws:
-     * a failure (e.g. demoting the vault's last admin, rejected by a DB trigger) is logged and the login proceeds.
+     * Applies the IdP-group -> vault role mapping (issue #29) for one login, in every vault where this user's
+     * role is set to follow SSO groups. The highest-ranked role among the user's mapped groups is granted
+     * (accepted immediately). With no mapped group the membership is left as it is. Does nothing unless group
+     * mapping is configured. Never throws: a failure in one vault (e.g. demoting its last admin, rejected by a
+     * DB trigger) is logged and the other vaults and the login proceed.
      * @param userId Vaultisse user id.
      * @param groups Group names from the IdP claim.
      */
@@ -179,8 +180,8 @@ export class OidcUserService {
 
         try {
             const vaultRepo = new VaultRepository(this.pool);
-            if (!(await vaultRepo.vaultExists(sync.vaultId))) {
-                console.error(`OIDC group sync: vault ${sync.vaultId} does not exist`);
+            const vaultIds = await vaultRepo.listSsoRoleVaultIds(userId);
+            if (vaultIds.length === 0) {
                 return;
             }
 
@@ -193,16 +194,24 @@ export class OidcUserService {
                     target = role;
                 }
             }
-
-            const membership = await vaultRepo.getMembership(sync.vaultId, userId);
             if (!target) {
-                if (membership) {
-                    await vaultRepo.removeMember(sync.vaultId, userId);
+                return;
+            }
+
+            for (const vaultId of vaultIds) {
+                try {
+                    if (target.code === VaultRoleCode.BORROWER && !(await vaultRepo.isLoansEnabled(vaultId))) {
+                        console.error(`OIDC group sync: vault ${vaultId} has loans disabled, can't make user ${userId} a borrower`);
+                        continue;
+                    }
+                    const membership = await vaultRepo.getMembership(vaultId, userId);
+                    if (membership && (membership.role !== target.code || membership.status !== VaultUserStatus.ACCEPTED)) {
+                        // Keep role_source = oidc: this is the sync itself, not a manual edit.
+                        await vaultRepo.updateMember(vaultId, userId, {role: target.code, status: VaultUserStatus.ACCEPTED, roleSource: VaultRoleSource.OIDC});
+                    }
+                } catch (err) {
+                    console.error(`OIDC group sync failed for user ${userId} in vault ${vaultId}:`, err);
                 }
-            } else if (!membership) {
-                await vaultRepo.addMember(sync.vaultId, userId, target.code, VaultUserStatus.ACCEPTED);
-            } else if (membership.role !== target.code || membership.status !== VaultUserStatus.ACCEPTED) {
-                await vaultRepo.updateMember(sync.vaultId, userId, {role: target.code, status: VaultUserStatus.ACCEPTED});
             }
         } catch (err) {
             console.error(`OIDC group sync failed for user ${userId}:`, err);

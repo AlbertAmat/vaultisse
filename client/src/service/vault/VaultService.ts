@@ -4,7 +4,7 @@ import IVault from "@/types/vault/IVault";
 import IVaultInfo from "@/types/vault/IVaultInfo";
 import IVaultInvitePreview from "@/types/vault/IVaultInvitePreview";
 import {IVaultRole} from "@/types/vault/IVaultRole";
-import {VaultUserStatus} from "@/types/vault/IVaultUser";
+import {VaultRoleSource, VaultUserStatus} from "@/types/vault/IVaultUser";
 
 /**
  * Thin HTTP client for the `/api/rest/vault` endpoints (see
@@ -90,7 +90,7 @@ class VaultService {
      * @param userId Member's id.
      * @param fields Fields to change - either, or both.
      */
-    public async updateMember(vaultId: number, userId: number, fields: {role?: number; status?: VaultUserStatus}): Promise<void> {
+    public async updateMember(vaultId: number, userId: number, fields: {role?: number; status?: VaultUserStatus; roleSource?: VaultRoleSource}): Promise<void> {
         await axiosInstance.put(`${PATH_PREFIX}/vault/${vaultId}/members/${userId}`, fields);
     }
 

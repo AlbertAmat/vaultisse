@@ -154,16 +154,20 @@ if the operator configured it. Password login is unchanged. Logout is still
 local (`GET /logout`); there is no IdP `end_session` redirect.
 
 **Group → role mapping** (optional). Set `OIDC_GROUP_ROLES` (comma-separated
-`idp-group=role`, role one of `readonly`, `borrower`, `normal`, `admin`) and
-`OIDC_GROUP_VAULT_ID` (the shared vault to manage); `OIDC_GROUPS_CLAIM`
-defaults to `groups`. On every SSO login the user's highest-ranked mapped
-role is applied to that vault with `status = accepted` (added if absent,
-updated if different). A user with no mapped group is removed from the
-vault; their personal vault is untouched. The IdP is authoritative, so a
-manual role change in Vaultisse is overwritten at the next SSO login. If the
-change would leave the vault without an admin, it is skipped and logged;
-login still succeeds. The IdP must emit the groups claim (Authentik: the
-`profile` scope).
+`idp-group=role`, role one of `readonly`, `borrower`, `normal`, `admin`);
+`OIDC_GROUPS_CLAIM` defaults to `groups`. Nothing changes until a vault admin
+opts a member in: in the vault's member list, a member who has signed in with
+SSO gets an extra role option, "Based on SSO groups". On every SSO login, in
+each vault where that user is set this way, their highest-ranked mapped role
+is applied with `status = accepted`. A user with no mapped group keeps the
+role they have. Choosing a role by hand switches the member back to manual.
+Personal vaults and manually managed members are never touched. The IdP is
+authoritative for opted-in members, so a role change in the IdP overwrites the
+role at their next login (removing someone from a group does not demote them
+by itself). A change that would leave a vault without an admin, or make
+someone a borrower in a vault without loans, is skipped and logged; login
+still succeeds. The IdP must emit the groups claim (Authentik: the `profile`
+scope).
 
 Failed SSO attempts redirect to `/login?error=sso` with a generic message.
 Successful ones write `activity_log` with `action: login` and

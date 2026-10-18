@@ -3,7 +3,7 @@ import {Request, Response} from "express";
 import {appService} from "../AppService";
 import {VaultService} from "../services/VaultService";
 import {DomainError} from "../errors/DomainError";
-import {VaultUserStatus} from "../types/vault";
+import {VaultRoleSource, VaultUserStatus} from "../types/vault";
 
 /** Thin HTTP<->service glue for the Vault resource. Constructed once per process (see VaultRoute.ts) and reused across requests. */
 export class VaultController {
@@ -228,8 +228,8 @@ export class VaultController {
             return;
         }
 
-        const {role, status} = req.body;
-        if (role === undefined && status === undefined) {
+        const {role, status, roleSource} = req.body;
+        if (role === undefined && status === undefined && roleSource === undefined) {
             res.status(400).json({error: 'Nothing to update'});
             return;
         }
@@ -237,10 +237,14 @@ export class VaultController {
             res.status(400).json({error: 'Invalid status'});
             return;
         }
+        if (roleSource !== undefined && !Object.values(VaultRoleSource).includes(roleSource)) {
+            res.status(400).json({error: 'Invalid role source'});
+            return;
+        }
 
         try {
             const callerId = appService.getSessionUser(req);
-            await new VaultService(this.pool).updateMember(vaultId, callerId, targetUserId, {role, status});
+            await new VaultService(this.pool).updateMember(vaultId, callerId, targetUserId, {role, status, roleSource});
             res.status(200).json({message: "Member updated successfully"});
         } catch (e) {
             if (e instanceof DomainError) {

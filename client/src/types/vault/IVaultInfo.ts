@@ -12,6 +12,8 @@ export default interface IVaultInfo extends IVault {
     invitationUuid: string;
     /** Whether the Loans/Customers pages are offered to this vault's members. */
     loansEnabled: boolean;
+    /** Whether the server maps SSO groups to roles, so members can be set to follow them. */
+    oidcGroupSync: boolean;
     /** ISO date the vault was created. */
     dateCreated: string;
     /** Every member, any status. */

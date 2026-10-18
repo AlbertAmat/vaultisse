@@ -1,5 +1,5 @@
 import {Pool, PoolClient} from "pg";
-import {Vault, VaultInvitePreview, VaultMembership, VaultRole, VaultRoleCode, VaultUpdateFields, VaultUser, VaultUserStatus} from "../types/vault";
+import {Vault, VaultInvitePreview, VaultMembership, VaultRole, VaultRoleCode, VaultRoleSource, VaultUpdateFields, VaultUser, VaultUserStatus} from "../types/vault";
 
 /** Data access for the `vault`, `vault_users`, and `vault_roles` tables. See VaultService for the business rules built on top of this. */
 export class VaultRepository {
@@ -428,12 +428,25 @@ export class VaultRepository {
     }
 
     /**
+     * Lists the ids of the vaults where a user's role follows their SSO groups.
+     * @param userId User id.
+     */
+    public async listSsoRoleVaultIds(userId: number): Promise<number[]> {
+        const result = await this.db.query(
+            "SELECT vault_id FROM vault_users WHERE user_id = $1 AND role_source = $2 ORDER BY vault_id",
+            [userId, VaultRoleSource.OIDC]
+        );
+        return result.rows.map((r) => r.vault_id);
+    }
+
+    /**
      * Lists every member of a vault (any status), most recently joined last.
      * @param vaultId Vault id.
      */
     public async listMembers(vaultId: number): Promise<VaultUser[]> {
         const result = await this.db.query(
-            `SELECT vu.user_id, u.name, vr.name AS role, vu.status, vu.date_created
+            `SELECT vu.user_id, u.name, vr.name AS role, vu.status, vu.role_source,
+                    (u.oidc_sub IS NOT NULL) AS oidc_linked, vu.date_created
                FROM vault_users vu
                JOIN users u ON u.id = vu.user_id
                JOIN vault_roles vr ON vr.code = vu.role
@@ -483,14 +496,17 @@ export class VaultRepository {
      * @param fields Fields to change.
      * @returns Rows affected - 0 if that user isn't a member of that vault.
      */
-    public async updateMember(vaultId: number, userId: number, fields: { role?: number; status?: VaultUserStatus }): Promise<number> {
+    public async updateMember(vaultId: number, userId: number, fields: { role?: number; status?: VaultUserStatus; roleSource?: VaultRoleSource }): Promise<number> {
+        // Setting a role by hand takes the member off SSO-driven roles, unless the caller says otherwise.
+        const roleSource = fields.roleSource ?? (fields.role !== undefined ? VaultRoleSource.MANUAL : null);
         const result = await this.db.query(
             `UPDATE vault_users
                 SET role = COALESCE($1, role),
-                    status = COALESCE($2, status)
+                    status = COALESCE($2, status),
+                    role_source = COALESCE($5, role_source)
               WHERE vault_id = $3
                 AND user_id = $4`,
-            [fields.role ?? null, fields.status ?? null, vaultId, userId]
+            [fields.role ?? null, fields.status ?? null, vaultId, userId, roleSource]
         );
 
         // Moving a member out of ACCEPTED (rejecting them, or sending them

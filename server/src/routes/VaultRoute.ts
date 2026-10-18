@@ -76,7 +76,7 @@ router.post('/join/:uuid', requireAuth, (req, res) => getVaultController().join(
  *
  * Example response (200):
  *  { "id": 1, "name": "Jane's library", "description": null, "invitationUuid": "...", "loansEnabled": false,
- *    "dateCreated": "...", "users": [...], "roles": [...] }
+ *    "oidcGroupSync": false, "dateCreated": "...", "users": [...], "roles": [...] }
  * Responses: 200 success | 404 { "error": "Vault not found" }.
  */
 router.get('/:id', requireAuth, (req, res) => getVaultController().get(req, res));
@@ -156,7 +156,10 @@ router.get('/:id/members', requireAuth, (req, res) => getVaultController().membe
  * Updates a member's role and/or approval status. Approving/rejecting a pending join request is just
  * setting `status` here. Rejected as ValidationError if it would leave the vault without an admin.
  *
- * Auth: required. Caller must have `can_manage_members`. Body: { "role": 0, "status": 1 } (either field, or both)
+ * `roleSource: 1` makes the member's role follow their SSO groups (needs OIDC_GROUP_ROLES and an SSO-linked member);
+ * setting `role` by hand sets it back to 0 (manual).
+ *
+ * Auth: required. Caller must have `can_manage_members`. Body: { "role": 0, "status": 1, "roleSource": 0 } (any of the fields)
  *
  * Example response (200): { "message": "Member updated successfully" }
  * Responses: 200 success | 400 { "error": "..." } | 403 { "error": "..." } | 404 { "error": "..." }.

@@ -5,6 +5,12 @@ export enum VaultUserStatus {
     REJECTED = 2,
 }
 
+/** Matches `vault_users.role_source` / `VaultRoleSource` server-side. */
+export enum VaultRoleSource {
+    MANUAL = 0,
+    OIDC = 1,
+}
+
 /**
  * One member row of a vault (any status - pending/accepted/rejected), as
  * returned by `GET /vault/:id` and `GET /vault/:id/members` (see
@@ -18,6 +24,10 @@ export interface IVaultUser {
     /** Role name (e.g. "admin") - not the numeric code, see IVaultRole for the picker's own shape. */
     role: string;
     status: VaultUserStatus;
+    /** Who decides the role: set by hand, or following the member's SSO groups. */
+    role_source: VaultRoleSource;
+    /** Whether the member has an SSO identity, so their role can follow SSO groups. */
+    oidc_linked: boolean;
     /** ISO date the member row was created (join/invite request date). */
     date_created: string;
 }

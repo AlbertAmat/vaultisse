@@ -122,7 +122,9 @@
 										{{member.status === VaultUserStatus.PENDING ? t(AppLabels.VAULT_STATUS_PENDING) : t(AppLabels.VAULT_STATUS_REJECTED)}}
 									</v-chip>
 								</div>
-								<p class="v-card-subtitle pl-0 vault-member-subtitle">{{capitalize(member.role)}}</p>
+								<p class="v-card-subtitle pl-0 vault-member-subtitle">
+									{{capitalize(member.role)}}<template v-if="member.role_source === VaultRoleSource.OIDC"> · {{t(AppLabels.VAULT_ROLE_FROM_SSO)}}</template>
+								</p>
 							</div>
 
 							<template v-if="canManageMembers && member.status === VaultUserStatus.PENDING">
@@ -148,14 +150,14 @@
 							<template v-else>
 								<v-select
 									v-if="canManageMembers && member.user_id !== myUserId"
-									:model-value="roleCodeFor(member)"
-									:items="roleItems"
+									:model-value="roleValueFor(member)"
+									:items="roleItemsFor(member)"
 									density="compact"
 									variant="outlined"
 									hide-details
-									style="max-width: 150px"
+									style="max-width: 210px"
 									class="mr-2"
-									@update:model-value="(code: number) => changeRole(member, code)"
+									@update:model-value="(value: number | typeof SSO_ROLE) => changeRole(member, value)"
 								></v-select>
 
 								<v-btn
@@ -256,7 +258,7 @@ import {confirmationDialogController} from "@/components/confirmationDialog/Conf
 import {errorDialogController} from "@/components/errorDialog/ErrorDialogController";
 import IVaultInfo from "@/types/vault/IVaultInfo";
 import IVault from "@/types/vault/IVault";
-import {IVaultUser, VaultUserStatus} from "@/types/vault/IVaultUser";
+import {IVaultUser, VaultRoleSource, VaultUserStatus} from "@/types/vault/IVaultUser";
 
 interface Props {
 	modelValue: boolean;
@@ -305,6 +307,20 @@ const roleItems = computed(() => (vault.value?.roles ?? [])
 	.filter((r) => r.name !== 'borrower' || vault.value?.loansEnabled)
 	.map((r) => ({title: capitalize(r.name), value: r.code})));
 
+/** Picker value that hands a member's role to their SSO groups (the other values are role codes). */
+const SSO_ROLE = "sso";
+
+/**
+ * The role picker's items for one member - the roles, plus "based on SSO groups" when the server maps
+ * SSO groups to roles and the member has an SSO identity.
+ */
+function roleItemsFor(member: IVaultUser) {
+	if (!vault.value?.oidcGroupSync || !member.oidc_linked) {
+		return roleItems.value;
+	}
+	return [...roleItems.value, {title: t(AppLabels.VAULT_ROLE_FROM_SSO), value: SSO_ROLE}];
+}
+
 const settingsDirty = computed(() => {
 	if (!vault.value) return false;
 	return name.value !== vault.value.name
@@ -352,7 +368,10 @@ function capitalize(value: string): string {
  * (`IVaultUser.role`) against the fetched role definitions, since the
  * member row itself only carries the name, not the numeric code.
  */
-function roleCodeFor(member: IVaultUser): number | undefined {
+function roleValueFor(member: IVaultUser): number | typeof SSO_ROLE | undefined {
+	if (member.role_source === VaultRoleSource.OIDC) {
+		return SSO_ROLE;
+	}
 	return vault.value?.roles.find((r) => r.name === member.role)?.code;
 }
 
@@ -405,11 +424,15 @@ async function approveOrReject(member: IVaultUser, status: VaultUserStatus) {
 /**
  *
  */
-async function changeRole(member: IVaultUser, role: number) {
+async function changeRole(member: IVaultUser, role: number | typeof SSO_ROLE) {
 	if (!vault.value) return;
 	try {
 		actingOnId.value = member.user_id;
-		await vaultService.updateMember(vault.value.id, member.user_id, {role});
+		await vaultService.updateMember(
+			vault.value.id,
+			member.user_id,
+			role === SSO_ROLE ? {roleSource: VaultRoleSource.OIDC} : {role}
+		);
 		appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_MEMBER_UPDATED)});
 		await load();
 	} finally {

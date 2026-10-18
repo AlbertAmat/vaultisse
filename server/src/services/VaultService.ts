@@ -2,7 +2,8 @@ import {Pool} from "pg";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {UserRepository} from "../repositories/UserRepository";
 import {withTransaction} from "../repositories/withTransaction";
-import {Vault, VaultInfo, VaultInvitePreview, VaultRole, VaultRoleCode, VaultUser, VaultUserStatus} from "../types/vault";
+import {Vault, VaultInfo, VaultInvitePreview, VaultRole, VaultRoleCode, VaultRoleSource, VaultUser, VaultUserStatus} from "../types/vault";
+import {appService} from "../AppService";
 import {ConflictError, ForbiddenError, NotFoundError, ValidationError} from "../errors/DomainError";
 
 /** Business rules for the Vault resource (vault CRUD, membership, invitations). Calls VaultRepository/UserRepository; throws DomainError subclasses for expected failures. */
@@ -47,6 +48,7 @@ export class VaultService {
             description: details.description,
             invitationUuid: details.invitation_uuid,
             loansEnabled: details.loans_enabled,
+            oidcGroupSync: !!appService.getOidcConfig()?.groupSync,
             dateCreated: details.date_created,
             users,
             roles,
@@ -232,11 +234,26 @@ export class VaultService {
      * @param vaultId Vault id.
      * @param callerId Caller's id.
      * @param targetUserId Member being changed.
-     * @param fields New role and/or status - whichever is provided.
+     * @param fields New role, status and/or role source - whichever is provided. Setting a role by hand makes
+     * the role source manual; `roleSource: OIDC` hands the role to the member's SSO groups (applied at their next
+     * SSO login, until then they keep the role they have) and needs group mapping configured and an SSO-linked member.
      */
-    public async updateMember(vaultId: number, callerId: number, targetUserId: number, fields: { role?: number; status?: VaultUserStatus }): Promise<void> {
+    public async updateMember(vaultId: number, callerId: number, targetUserId: number, fields: { role?: number; status?: VaultUserStatus; roleSource?: VaultRoleSource }): Promise<void> {
         const repo = new VaultRepository(this.pool);
         await this.requireMembership(repo, vaultId, callerId, (m) => m.can_manage_members);
+
+        if (fields.roleSource === VaultRoleSource.OIDC) {
+            if (fields.role !== undefined) {
+                throw new ValidationError("A role can't be set by hand and from SSO groups at once");
+            }
+            if (!appService.getOidcConfig()?.groupSync) {
+                throw new ValidationError("SSO group roles are not configured on this server");
+            }
+            const target = (await repo.listMembers(vaultId)).find((m) => m.user_id === targetUserId);
+            if (target && !target.oidc_linked) {
+                throw new ValidationError("This member has no SSO identity, so their role can't follow SSO groups");
+            }
+        }
 
         if (fields.role === VaultRoleCode.BORROWER && !(await repo.isLoansEnabled(vaultId))) {
             throw new ValidationError("The borrower role needs loans enabled in this vault");

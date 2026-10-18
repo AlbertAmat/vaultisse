@@ -32,10 +32,9 @@ export interface OidcConfig {
     groupSync: OidcGroupSyncConfig | null;
 }
 
-/** IdP group -> shared-vault role mapping (issue #29). Present only when OIDC_GROUP_ROLES and OIDC_GROUP_VAULT_ID are both set. */
+/** IdP group -> vault role mapping (issue #29). Present only when OIDC_GROUP_ROLES is set. */
 export interface OidcGroupSyncConfig {
     claim: string;
-    vaultId: number;
     /** IdP group name -> `vault_roles.name` (lowercase). */
     groupRoles: Map<string, string>;
 }
@@ -414,14 +413,13 @@ export class AppService {
 
     /**
      * Read the IdP-group -> vault-role mapping from env vars. Returns null
-     * when OIDC_GROUP_ROLES or OIDC_GROUP_VAULT_ID is unset. Throws on a
+     * when OIDC_GROUP_ROLES is unset. Throws on a
      * malformed mapping so a typo fails at startup, not silently at login.
      * @private
      */
     private static __readOidcGroupSync(): OidcGroupSyncConfig | null {
         const raw = (process.env.OIDC_GROUP_ROLES ?? "").trim();
-        const vaultId = Number((process.env.OIDC_GROUP_VAULT_ID ?? "").trim());
-        if (!raw || !Number.isInteger(vaultId) || vaultId <= 0) {
+        if (!raw) {
             return null;
         }
 
@@ -438,7 +436,7 @@ export class AppService {
         }
 
         const claim = (process.env.OIDC_GROUPS_CLAIM ?? "").trim() || "groups";
-        return {claim, vaultId, groupRoles};
+        return {claim, groupRoles};
     }
 
     /**
