@@ -155,7 +155,7 @@
 									density="compact"
 									variant="outlined"
 									hide-details
-									style="max-width: 210px"
+									style="max-width: 260px"
 									class="mr-2"
 									@update:model-value="(value: number | typeof SSO_ROLE) => changeRole(member, value)"
 								></v-select>
