@@ -21,6 +21,8 @@ export interface OidcClaims {
     emailVerified: boolean;
     name?: string;
     preferredUsername?: string;
+    /** Values of the configured groups claim; empty when the claim is absent. */
+    groups: string[];
 }
 
 interface OidcPendingPayload {
@@ -152,8 +154,8 @@ export class OidcRepository {
      * @returns The normalized claims.
      */
     private static claimsFromIdTokenAndUserinfo(
-        idToken: {sub: string; iss: string; email?: string; email_verified?: boolean | string; name?: string; preferred_username?: string},
-        userinfo: {email?: string; email_verified?: boolean; name?: string; preferred_username?: string} | null
+        idToken: {sub: string; iss: string; email?: string; email_verified?: boolean | string; name?: string; preferred_username?: string; [claim: string]: unknown},
+        userinfo: {email?: string; email_verified?: boolean; name?: string; preferred_username?: string; [claim: string]: unknown} | null
     ): OidcClaims {
         const sub = (idToken.sub || "").trim();
         if (!sub) {
@@ -172,7 +174,24 @@ export class OidcRepository {
             emailVerified: OidcRepository.isEmailVerified(idToken.email_verified) || OidcRepository.isEmailVerified(userinfo?.email_verified),
             name: (idToken.name || userinfo?.name || "").trim() || undefined,
             preferredUsername: (idToken.preferred_username || userinfo?.preferred_username || "").trim() || undefined,
+            groups: OidcRepository.readGroups(idToken, userinfo),
         };
+    }
+
+    /**
+     * Reads the configured groups claim (ID token first, then userinfo). IdPs emit it as an array, or occasionally a single string.
+     * @param idToken Decoded ID token claims.
+     * @param userinfo Userinfo endpoint response, if it was fetched.
+     * @returns The group names, empty when group sync is off or the claim is absent.
+     */
+    private static readGroups(idToken: Record<string, unknown>, userinfo: Record<string, unknown> | null): string[] {
+        const claim = appService.getOidcConfig()?.groupSync?.claim;
+        if (!claim) {
+            return [];
+        }
+        const value = idToken[claim] ?? userinfo?.[claim];
+        const list = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+        return list.filter((g): g is string => typeof g === "string");
     }
 
     /**
@@ -210,8 +229,10 @@ export class OidcRepository {
         );
 
         const idToken = tokenSet.claims();
-        let userinfo: {email?: string; email_verified?: boolean; name?: string; preferred_username?: string} | null = null;
-        if (!idToken.email && tokenSet.access_token) {
+        let userinfo: {email?: string; email_verified?: boolean; name?: string; preferred_username?: string; [claim: string]: unknown} | null = null;
+        const groupClaim = config.groupSync?.claim;
+        const needsGroups = !!groupClaim && idToken[groupClaim] === undefined;
+        if ((!idToken.email || needsGroups) && tokenSet.access_token) {
             try {
                 userinfo = await client.userinfo(tokenSet.access_token);
             } catch {

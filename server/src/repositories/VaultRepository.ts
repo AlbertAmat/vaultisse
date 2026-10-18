@@ -83,6 +83,16 @@ export class VaultRepository {
     }
 
     /**
+     * Checks whether a vault exists.
+     * @param vaultId Vault id.
+     * @returns True if a vault with that id exists.
+     */
+    public async vaultExists(vaultId: number): Promise<boolean> {
+        const result = await this.db.query("SELECT 1 FROM vault WHERE id = $1", [vaultId]);
+        return (result.rowCount ?? 0) > 0;
+    }
+
+    /**
      * Adds a member to a vault.
      * @param vaultId Vault id.
      * @param userId Member's id.

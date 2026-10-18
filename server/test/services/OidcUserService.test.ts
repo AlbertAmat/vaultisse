@@ -3,6 +3,7 @@ import {appService} from "../../src/AppService";
 import {OidcUserService, OidcUserError} from "../../src/services/OidcUserService";
 import {OidcClaims} from "../../src/repositories/OidcRepository";
 import {nextFakeIp, TEST_PASSWORD} from "../helpers/auth";
+import {VaultRepository} from "../../src/repositories/VaultRepository";
 import {setupTestApp} from "../helpers/testApp";
 
 const app = setupTestApp();
@@ -16,6 +17,7 @@ function freshClaims(overrides: Partial<OidcClaims> = {}): OidcClaims {
         emailVerified: true,
         name: "OIDC User",
         preferredUsername: `oidcuser_${suffix}`.slice(0, 40),
+        groups: [],
         ...overrides,
     };
 }
@@ -121,5 +123,48 @@ describe("findOrCreateOidcUser", () => {
             sub: `${first.sub}-other`,
         });
         await expect(new OidcUserService(pool()).findOrCreateOidcUser(second)).rejects.toBeInstanceOf(OidcUserError);
+    });
+});
+
+describe("syncGroupRoles", () => {
+    const pool = () => appService.getDatabasePool();
+
+    /** Creates a shared vault and points the group-sync config at it. */
+    async function setupSharedVault() {
+        const vaultId = await new VaultRepository(pool()).createVault("Shared", null);
+        jest.spyOn(appService, "getOidcConfig").mockReturnValue({
+            issuer: "i", clientId: "c", clientSecret: "s", redirectUri: "r", scopes: "openid", buttonLabel: "SSO",
+            groupSync: {
+                claim: "groups",
+                vaultId,
+                groupRoles: new Map([["example-users", "borrower"], ["example-managers", "normal"], ["example-admins", "admin"]]),
+            },
+        });
+        return vaultId;
+    }
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it("grants the highest mapped role, updates it, and removes the member when no group matches", async () => {
+        const vaultId = await setupSharedVault();
+        const service = new OidcUserService(pool());
+        const vaults = new VaultRepository(pool());
+        const admin = await service.findOrCreateOidcUser(freshClaims());
+        await vaults.addMember(vaultId, admin.id, 1, 1); // keeps the vault's required admin
+        const user = await service.findOrCreateOidcUser(freshClaims());
+
+        await service.syncGroupRoles(user.id, ["example-users", "example-managers", "unmapped"]);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 0, status: 1});
+
+        await service.syncGroupRoles(user.id, ["example-users"]);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 2, status: 1});
+
+        await service.syncGroupRoles(user.id, []);
+        expect(await vaults.getMembership(vaultId, user.id)).toBeNull();
+    });
+
+    it("does nothing when group sync is not configured", async () => {
+        const user = await new OidcUserService(pool()).findOrCreateOidcUser(freshClaims());
+        await expect(new OidcUserService(pool()).syncGroupRoles(user.id, ["example-admins"])).resolves.toBeUndefined();
     });
 });

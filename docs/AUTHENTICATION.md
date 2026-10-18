@@ -153,6 +153,18 @@ SSO login does **not** prompt for Vaultisse TOTP — the IdP already did MFA
 if the operator configured it. Password login is unchanged. Logout is still
 local (`GET /logout`); there is no IdP `end_session` redirect.
 
+**Group → role mapping** (optional). Set `OIDC_GROUP_ROLES` (comma-separated
+`idp-group=role`, role one of `readonly`, `borrower`, `normal`, `admin`) and
+`OIDC_GROUP_VAULT_ID` (the shared vault to manage); `OIDC_GROUPS_CLAIM`
+defaults to `groups`. On every SSO login the user's highest-ranked mapped
+role is applied to that vault with `status = accepted` (added if absent,
+updated if different). A user with no mapped group is removed from the
+vault; their personal vault is untouched. The IdP is authoritative, so a
+manual role change in Vaultisse is overwritten at the next SSO login. If the
+change would leave the vault without an admin, it is skipped and logged;
+login still succeeds. The IdP must emit the groups claim (Authentik: the
+`profile` scope).
+
 Failed SSO attempts redirect to `/login?error=sso` with a generic message.
 Successful ones write `activity_log` with `action: login` and
 `metadata.method: oidc`.

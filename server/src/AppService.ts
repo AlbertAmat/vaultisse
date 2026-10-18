@@ -29,6 +29,15 @@ export interface OidcConfig {
     redirectUri: string;
     scopes: string;
     buttonLabel: string;
+    groupSync: OidcGroupSyncConfig | null;
+}
+
+/** IdP group -> shared-vault role mapping (issue #29). Present only when OIDC_GROUP_ROLES and OIDC_GROUP_VAULT_ID are both set. */
+export interface OidcGroupSyncConfig {
+    claim: string;
+    vaultId: number;
+    /** IdP group name -> `vault_roles.name` (lowercase). */
+    groupRoles: Map<string, string>;
 }
 
 export class AppService {
@@ -400,7 +409,36 @@ export class AppService {
         const scopes = (process.env.OIDC_SCOPES ?? "").trim() || "openid profile email";
         const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
 
-        return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel};
+        return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel, groupSync: AppService.__readOidcGroupSync()};
+    }
+
+    /**
+     * Read the IdP-group -> vault-role mapping from env vars. Returns null
+     * when OIDC_GROUP_ROLES or OIDC_GROUP_VAULT_ID is unset. Throws on a
+     * malformed mapping so a typo fails at startup, not silently at login.
+     * @private
+     */
+    private static __readOidcGroupSync(): OidcGroupSyncConfig | null {
+        const raw = (process.env.OIDC_GROUP_ROLES ?? "").trim();
+        const vaultId = Number((process.env.OIDC_GROUP_VAULT_ID ?? "").trim());
+        if (!raw || !Number.isInteger(vaultId) || vaultId <= 0) {
+            return null;
+        }
+
+        const validRoles = ["readonly", "borrower", "normal", "admin"];
+        const groupRoles = new Map<string, string>();
+        for (const entry of raw.split(",")) {
+            const idx = entry.lastIndexOf("=");
+            const group = entry.slice(0, idx).trim();
+            const role = entry.slice(idx + 1).trim().toLowerCase();
+            if (idx < 1 || !group || !validRoles.includes(role)) {
+                throw new Error(`Invalid OIDC_GROUP_ROLES entry "${entry.trim()}" (expected group=${validRoles.join("|")})`);
+            }
+            groupRoles.set(group, role);
+        }
+
+        const claim = (process.env.OIDC_GROUPS_CLAIM ?? "").trim() || "groups";
+        return {claim, vaultId, groupRoles};
     }
 
     /**

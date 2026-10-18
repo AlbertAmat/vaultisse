@@ -12,7 +12,7 @@ import {ResolvedAuthUser} from "../types/auth";
 import {UserRepository} from "../repositories/UserRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {withTransaction} from "../repositories/withTransaction";
-import {VaultRoleCode, VaultUserStatus} from "../types/vault";
+import {VaultRole, VaultRoleCode, VaultUserStatus} from "../types/vault";
 
 export class OidcUserError extends Error {
     public constructor(message: string) {
@@ -160,6 +160,52 @@ export class OidcUserService {
                 throw new OidcUserError("Unable to create an account for this SSO login");
             }
             throw err;
+        }
+    }
+
+    /**
+     * Applies the IdP-group -> shared-vault role mapping (issue #29) for one login. The highest-ranked
+     * role among the user's mapped groups is granted (accepted immediately); with no mapped group, any
+     * membership in that vault is removed. Does nothing unless group sync is configured. Never throws:
+     * a failure (e.g. demoting the vault's last admin, rejected by a DB trigger) is logged and the login proceeds.
+     * @param userId Vaultisse user id.
+     * @param groups Group names from the IdP claim.
+     */
+    public async syncGroupRoles(userId: number, groups: string[]): Promise<void> {
+        const sync = appService.getOidcConfig()?.groupSync;
+        if (!sync) {
+            return;
+        }
+
+        try {
+            const vaultRepo = new VaultRepository(this.pool);
+            if (!(await vaultRepo.vaultExists(sync.vaultId))) {
+                console.error(`OIDC group sync: vault ${sync.vaultId} does not exist`);
+                return;
+            }
+
+            const roles = await vaultRepo.listRoles();
+            let target: VaultRole | null = null;
+            for (const group of groups) {
+                const roleName = sync.groupRoles.get(group);
+                const role = roles.find((r) => r.name === roleName);
+                if (role && (!target || role.rank > target.rank)) {
+                    target = role;
+                }
+            }
+
+            const membership = await vaultRepo.getMembership(sync.vaultId, userId);
+            if (!target) {
+                if (membership) {
+                    await vaultRepo.removeMember(sync.vaultId, userId);
+                }
+            } else if (!membership) {
+                await vaultRepo.addMember(sync.vaultId, userId, target.code, VaultUserStatus.ACCEPTED);
+            } else if (membership.role !== target.code || membership.status !== VaultUserStatus.ACCEPTED) {
+                await vaultRepo.updateMember(sync.vaultId, userId, {role: target.code, status: VaultUserStatus.ACCEPTED});
+            }
+        } catch (err) {
+            console.error(`OIDC group sync failed for user ${userId}:`, err);
         }
     }
 }

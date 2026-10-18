@@ -342,7 +342,9 @@ export class AuthService {
         ip: string | undefined
     ): Promise<{token: string}> {
         const claims = await OidcRepository.completeOidcAuthorization(query, pendingCookieToken);
-        const user = await new OidcUserService(this.pool).findOrCreateOidcUser(claims);
+        const oidcUsers = new OidcUserService(this.pool);
+        const user = await oidcUsers.findOrCreateOidcUser(claims);
+        await oidcUsers.syncGroupRoles(user.id, claims.groups);
 
         const authRepo = new AuthRepository(this.pool);
         await authRepo.updateLastLogin(user.id);
