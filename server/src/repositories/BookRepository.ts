@@ -67,7 +67,12 @@ export class BookRepository {
             // Parenthesized: without it, `AND` binds tighter than `OR` and this
             // clause escapes the `books.vault_id = $1` condition above, leaking
             // every vault's books whose ISBN happens to match (security audit #1).
-            conditions.push(`(LOWER(books.name) ILIKE $${params.push(`%${filter.query.toLocaleLowerCase()}%`)} OR LOWER(books.isbn) ILIKE $${params.push(`%${filter.query.toLocaleLowerCase()}%`)})`);
+            // Author names are matched through EXISTS (not the outer join) so the
+            // aggregated author list of a matching book stays complete.
+            const pattern = `$${params.push(`%${filter.query.toLocaleLowerCase()}%`)}`;
+            conditions.push(`(LOWER(books.name) ILIKE ${pattern} OR LOWER(books.isbn) ILIKE ${pattern} OR EXISTS (
+                SELECT 1 FROM book_authors ba JOIN authors a ON a.id = ba.author_id
+                WHERE ba.book_id = books.id AND LOWER(a.name) ILIKE ${pattern}))`);
         }
 
         if (filter.categoryId && filter.categoryId.length > 0) {
