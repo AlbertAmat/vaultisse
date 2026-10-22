@@ -122,7 +122,7 @@ import {computed, ref, Ref} from "vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {PATH_PREFIX} from "@/Constants";
-import {IBookFile} from "@/types/book/IBookFile";
+import {IBookFile} from "@vaultisse/types/book/IBookFile";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
 

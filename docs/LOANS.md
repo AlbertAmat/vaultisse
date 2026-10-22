@@ -80,6 +80,6 @@ endpoint is meant for a bounded report, not a full-table dump.
 | `loan_history` read/write helpers | `server/src/utils/LoanHistory.ts` |
 | Lend/return actions (mutate `book_stocks` + call the helpers above) | `server/src/routes/CustomerRoute.ts`, `server/src/routes/BooksRoute.ts` |
 | `loan_history`/`book_stocks` schema | `assets/db/databaseSchema.sql` |
-| Client: `/loans` HTTP client | `client/src/service/loans/LoansService.ts` |
+| Client: `/loans` HTTP client | `packages/api-client/src/LoansService.ts` |
 | Client: page controller | `client/src/controller/loans/LoansController.ts` |
 | Client: loans page UI + Excel export | `client/src/views/loans/LoansView.vue`, `LoanReportDialog.vue`, `components/ReturnBooksDialog.vue` |

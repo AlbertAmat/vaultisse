@@ -1,8 +1,8 @@
 /**
  * Global controller backing the single `ErrorDialog.vue` instance mounted
- * in App.vue. `axiosInstance`'s response interceptor calls
+ * in App.vue. The API client's `onError` handler calls
  * `showDialog(error)` for any unhandled server/network error, so the app
- * doesn't need per-call error UI - see `plugins/axiosInstance.ts`.
+ * doesn't need per-call error UI - see `plugins/api.ts`.
  */
 import { ref, Ref } from "vue";
 import {AxiosError} from "axios";

@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import {IBorrower} from "@/types/book/IBorrower";
+import {IBorrower} from "@vaultisse/types/book/IBorrower";
 /**
  * Create/edit dialog for a book stock (physical copy): status, location,
  * and (only when status is BOOKED) the customer it's loaned to. Passing an
@@ -102,7 +102,7 @@ import {IBorrower} from "@/types/book/IBorrower";
  */
 import {computed, Ref, ref, watch} from 'vue'
 import Book from "@/model/book/Book";
-import {BookStockStatusEnum} from "@/types/book/IBookStock";
+import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
 import BookStock from "@/model/book/BookStock";
 import {applicationService} from "@/service/ApplicationService";
 import {useI18n} from "vue-i18n";

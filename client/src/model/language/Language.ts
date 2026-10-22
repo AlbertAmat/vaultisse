@@ -1,4 +1,4 @@
-import ILanguage from "@/types/language/ILanguage";
+import ILanguage from "@vaultisse/types/language/ILanguage";
 import {ref, Ref} from "vue";
 
 /** View model for a language option. Read-only - languages are managed globally, not per-user. */

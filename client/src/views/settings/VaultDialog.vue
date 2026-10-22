@@ -69,7 +69,7 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {vaultService} from "@/service/vault/VaultService";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
-import IVault from "@/types/vault/IVault";
+import IVault from "@vaultisse/types/vault/IVault";
 
 interface Props {
 	modelValue: boolean;

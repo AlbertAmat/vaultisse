@@ -3,9 +3,9 @@
  * on the customer detail view/dialog.
  */
 import {Ref, ref, ShallowRef, shallowRef} from "vue";
-import ICustomer, {ICustomerDetail} from "@/types/customer/ICustomer";
+import ICustomer, {ICustomerDetail} from "@vaultisse/types/customer/ICustomer";
 import {customersService} from "@/service/customers/CustomersService";
-import {ICustomerBook} from "@/types/customer/ICustomerBook";
+import {ICustomerBook} from "@vaultisse/types/customer/ICustomerBook";
 import {CustomerBook} from "@/model/customer/CustomerBook";
 import Customer from "@/model/customer/Customer";
 

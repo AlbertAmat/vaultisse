@@ -53,6 +53,6 @@ a successful move.
 |---|---|
 | Location CRUD, move-books endpoint | `server/src/routes/LocationRoute.ts` |
 | `locations` schema | `assets/db/databaseSchema.sql` |
-| Client: `/location` HTTP client | `client/src/service/locations/LocationsService.ts` |
+| Client: `/location` HTTP client | `packages/api-client/src/LocationsService.ts` |
 | Client: page controller | `client/src/controller/locations/LocationsController.ts` |
 | Client: locations page UI | `client/src/views/locations/LocationsView.vue`, `LocationDialog.vue`, `LocationBooksTable.vue`, `LocationAddBooksDialog.vue` |

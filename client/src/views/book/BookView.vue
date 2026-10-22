@@ -346,7 +346,7 @@ import BookImage from "@/views/book/compoents/BookImage.vue";
 import BookFile from "@/views/book/compoents/BookFile.vue";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {useI18n} from "vue-i18n";
-import {ReadingStatusEnum} from "@/types/book/IReadingStatus";
+import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
 
 const model = new BookController();
 

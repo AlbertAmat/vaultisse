@@ -1,4 +1,4 @@
-import {IFormat} from "@/types/format/IFormat";
+import {IFormat} from "@vaultisse/types/format/IFormat";
 
 /** View model for a book format (e.g. "Paperback"). Read-only - formats are managed globally, not per-user. */
 export default class Format {

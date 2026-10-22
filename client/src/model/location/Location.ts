@@ -1,5 +1,5 @@
 /** View model for a physical storage location, wrapping `ILocation` with reactive rename support. */
-import ILocation from "@/types/location/ILocation";
+import ILocation from "@vaultisse/types/location/ILocation";
 import {locationsService} from "@/service/locations/LocationsService";
 import {ref, Ref} from "vue";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";

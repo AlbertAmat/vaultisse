@@ -67,6 +67,6 @@ being sent to the client:
 | Concern | File |
 |---|---|
 | The aggregate endpoint | `server/src/routes/DashboardRoute.ts` |
-| Client: `/dashboard` HTTP client | `client/src/service/dashboard/DashboardService.ts` |
+| Client: `/dashboard` HTTP client | `packages/api-client/src/DashboardService.ts` |
 | Client: page controller | `client/src/controller/dashboard/DashboardController.ts` |
 | Client: dashboard page UI | `client/src/views/dashboard/DashboardView.vue`, `DashboardCard.vue`, `BooksInTimeChart.vue` |

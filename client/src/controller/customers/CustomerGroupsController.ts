@@ -4,7 +4,7 @@
  * `CustomersController` on the same page rather than as its own route.
  */
 import {Ref, ref, ShallowRef, shallowRef} from "vue";
-import {ICustomerGroup} from "@/types/customer/ICustomerGroup";
+import {ICustomerGroup} from "@vaultisse/types/customer/ICustomerGroup";
 import CustomerGroup from "@/model/customer/CustomerGroup";
 import {customerGroupService} from "@/service/customers/CustomerGroupService";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";

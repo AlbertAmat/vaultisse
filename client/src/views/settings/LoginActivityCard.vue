@@ -46,7 +46,7 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
 import SettingsCard from "@/views/settings/SettingsCard.vue";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
 import {userService} from "@/service/user/UserService";
-import IActivityLogEntry from "@/types/user/IActivityLogEntry";
+import IActivityLogEntry from "@vaultisse/types/user/IActivityLogEntry";
 
 const {t} = useI18n();
 

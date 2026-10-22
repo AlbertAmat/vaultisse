@@ -87,7 +87,7 @@
 import {computed, ref, Ref} from "vue";
 import BarcodeScanner from "@/components/barcodeScanner/BarcodeScanner.vue";
 import {bookService} from "@/service/book/BookService";
-import {IBookAddMd} from "@/types/book/IBookAddMd";
+import {IBookAddMd} from "@vaultisse/types/book/IBookAddMd";
 import BookStockItem from "@/components/addBookStocks/BookStockItem.vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "../../plugins/i18n/AppLabels";

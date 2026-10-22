@@ -55,7 +55,7 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
 import router from "@/router/Router";
 import {settingsRoute} from "@/router/routes/SettingsRoute";
 import {vaultService} from "@/service/vault/VaultService";
-import IVaultInvitePreview from "@/types/vault/IVaultInvitePreview";
+import IVaultInvitePreview from "@vaultisse/types/vault/IVaultInvitePreview";
 
 const route = useRoute();
 const {t} = useI18n();

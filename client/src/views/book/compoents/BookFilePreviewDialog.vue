@@ -31,7 +31,7 @@
  */
 import {computed, ref, Ref} from "vue";
 import Book from "@/model/book/Book";
-import {IBookFile} from "@/types/book/IBookFile";
+import {IBookFile} from "@vaultisse/types/book/IBookFile";
 import BookFilePreview from "@/views/book/compoents/BookFilePreview.vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";

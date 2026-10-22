@@ -202,8 +202,8 @@ import {SearchRoute} from "@/router/routes/SearchRoute";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import PrintDialog from "@/components/printDialog/PrintDialog.vue"
-import {SearchFilter} from "@/types/search/SearchFilter";
-import {IBookCounters} from "@/types/search/IBookCounters";
+import {SearchFilter} from "@vaultisse/types/search/SearchFilter";
+import {IBookCounters} from "@vaultisse/types/search/IBookCounters";
 import {searchService} from "@/service/search/SearchService";
 
 const route = useRoute()

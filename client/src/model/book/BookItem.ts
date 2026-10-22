@@ -1,5 +1,5 @@
 import ABook from "@/model/book/ABook";
-import IBookItem from "@/types/book/IBookItem";
+import IBookItem from "@vaultisse/types/book/IBookItem";
 
 /**
  * Lightweight book view model backing search results/lists, where the

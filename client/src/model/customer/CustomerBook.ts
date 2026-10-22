@@ -1,5 +1,5 @@
 import {bookRoute} from "@/router/routes/BookRoute";
-import {ICustomerBook} from "@/types/customer/ICustomerBook";
+import {ICustomerBook} from "@vaultisse/types/customer/ICustomerBook";
 
 /** Read-only view model for a book currently on loan to a customer. */
 export class CustomerBook {

@@ -52,7 +52,7 @@
  * (just the raw code) until `metadata` resolves, then the book's cover +
  * name; emits `remove` to drop this code from the pending list.
  */
-import {IBookAddMd} from "@/types/book/IBookAddMd";
+import {IBookAddMd} from "@vaultisse/types/book/IBookAddMd";
 
 interface Props {
 	metadata?: IBookAddMd,

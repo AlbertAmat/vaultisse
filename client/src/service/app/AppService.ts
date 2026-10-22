@@ -1,21 +1,9 @@
-import {PATH_PREFIX} from "@/Constants";
-import axiosInstance from "@/plugins/axiosInstance";
-import IAppVersion from "@/types/app/IAppVersion";
+import {api} from "@/plugins/api";
 
 /**
- * Thin HTTP client for the `/api/rest/app` endpoints (see server/src/routes/AppRoute.ts).
- *
- * @example
- * const {version} = await appService.getVersion();
+ * The `app` resource client from `@vaultisse/api-client`, bound to this app's
+ * axios instance (see `plugins/api.ts`). Kept as a module-level singleton so
+ * controllers and models import it the same way as before the HTTP layer
+ * moved into the shared package.
  */
-class AppService {
-
-    /** @returns The running server's version and uptime. */
-    public async getVersion(): Promise<IAppVersion> {
-        const {data} = await axiosInstance.get(`${PATH_PREFIX}/app/version`, {suppressErrorDialog: true} as any)
-        return data;
-    }
-}
-
-/** Singleton instance shared by every part of the app. */
-export const appService = new AppService();
+export const appService = api.app;

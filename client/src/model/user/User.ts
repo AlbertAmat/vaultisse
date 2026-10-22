@@ -1,5 +1,5 @@
 // Type definition for a User object coming from the backend
-import { IUser } from "@/types/user/IUser";
+import { IUser } from "@vaultisse/types/user/IUser";
 
 // Vue's reactive reference utilities
 import { ref, Ref } from "vue";

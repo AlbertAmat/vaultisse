@@ -4,11 +4,11 @@
  * fields common to both - identity, name, cover, isbn, category/language -
  * as Vue refs so views re-render when they change.
  */
-import IBookItem from "@/types/book/IBookItem";
+import IBookItem from "@vaultisse/types/book/IBookItem";
 import BookAuthor from "@/model/author/BookAuthor";
 import {bookRoute} from "@/router/routes/BookRoute";
 import {ref, Ref, shallowRef, ShallowRef} from "vue";
-import {ReadingStatusEnum} from "@/types/book/IReadingStatus";
+import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
 
 export default abstract class ABook {
 

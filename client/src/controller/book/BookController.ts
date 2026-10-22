@@ -3,7 +3,7 @@
  * book, and exposes it as a `Book` model instance.
  */
 import {BaseController} from "@/controller/BaseController";
-import IBook from "@/types/book/IBook";
+import IBook from "@vaultisse/types/book/IBook";
 import Book from "@/model/book/Book";
 import {bookService} from "@/service/book/BookService";
 import router from "@/router/Router";

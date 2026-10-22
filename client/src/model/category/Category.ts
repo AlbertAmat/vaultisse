@@ -1,5 +1,5 @@
 /** View model for a book category, wrapping `ICategory` with reactive rename support. */
-import ICategory from "@/types/category/ICategory";
+import ICategory from "@vaultisse/types/category/ICategory";
 import {categoriesService} from "@/service/categories/CategoriesService";
 import {Ref, ref} from "vue";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";

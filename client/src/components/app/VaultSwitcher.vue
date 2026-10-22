@@ -61,7 +61,7 @@ import {settingsRoute} from "@/router/routes/SettingsRoute";
 import {vaultService} from "@/service/vault/VaultService";
 import {applicationService} from "@/service/ApplicationService";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
-import IVault from "@/types/vault/IVault";
+import IVault from "@vaultisse/types/vault/IVault";
 
 const {t} = useI18n();
 

@@ -1,21 +1,9 @@
-import {PATH_PREFIX} from "@/Constants";
-import axiosInstance from "@/plugins/axiosInstance";
-import IDashboard from "@/types/dashboard/IDashboard";
+import {api} from "@/plugins/api";
 
 /**
- * Thin HTTP client for the `/api/rest/dashboard` endpoint (see server/src/routes/DashboardRoute.ts).
- *
- * @example
- * const stats = await dashboardService.getData();
+ * The `dashboard` resource client from `@vaultisse/api-client`, bound to this app's
+ * axios instance (see `plugins/api.ts`). Kept as a module-level singleton so
+ * controllers and models import it the same way as before the HTTP layer
+ * moved into the shared package.
  */
-class DashboardService {
-
-    /** @returns Every KPI/chart series the dashboard view needs, in one call. */
-    public async getData(): Promise<IDashboard> {
-        const {data} = await axiosInstance.get(`${PATH_PREFIX}/dashboard`)
-        return data;
-    }
-}
-
-/** Singleton instance shared by every part of the app. */
-export const dashboardService = new DashboardService();
+export const dashboardService = api.dashboard;

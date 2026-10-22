@@ -271,7 +271,7 @@ import EmptyState from "@/components/emptyState/EmptyState.vue";
 import router from "@/router/Router";
 import {searchRoute} from "@/router/routes/SearchRoute";
 import {loansRoute} from "@/router/routes/LoansRoute";
-import {SearchFilter} from "@/types/search/SearchFilter";
+import {SearchFilter} from "@vaultisse/types/search/SearchFilter";
 import {applicationService} from "@/service/ApplicationService";
 //@ts-ignore
 import notFound from "@/assets/images/notFound.jpg";

@@ -9,8 +9,8 @@
  * const canvas = stock.generateBarcodeImage();
  * await stock.update(BookStockStatusEnum.BOOKED, locationId, customerId);
  */
-import {BookStockStatusEnum, IBookStock} from "@/types/book/IBookStock";
-import {IBorrower} from "@/types/book/IBorrower";
+import {BookStockStatusEnum, IBookStock} from "@vaultisse/types/book/IBookStock";
+import {IBorrower} from "@vaultisse/types/book/IBorrower";
 import JsBarcode from "jsbarcode";
 import {bookService} from "@/service/book/BookService";
 import {ref, Ref} from "vue";

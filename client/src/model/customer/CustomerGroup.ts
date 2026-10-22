@@ -5,7 +5,7 @@
  * assigned/removed elsewhere, avoiding a full re-fetch).
  */
 import {Ref, ref} from "vue";
-import {ICustomerGroup} from "@/types/customer/ICustomerGroup";
+import {ICustomerGroup} from "@vaultisse/types/customer/ICustomerGroup";
 import {customerGroupService} from "@/service/customers/CustomerGroupService";
 
 export default class CustomerGroup {

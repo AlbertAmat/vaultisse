@@ -3,7 +3,7 @@ import {BaseController} from "@/controller/BaseController";
 import {locationsService} from "@/service/locations/LocationsService";
 import {ShallowRef, shallowRef} from "vue";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
-import ILocationExt from "@/types/location/ILocationExt";
+import ILocationExt from "@vaultisse/types/location/ILocationExt";
 import LocationExt from "@/model/location/LocationExt";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";

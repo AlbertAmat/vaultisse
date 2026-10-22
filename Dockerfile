@@ -2,12 +2,20 @@ ARG NODE_VERSION=22-alpine
 
 # ---------------------------------------------------------------------------
 # 1) Build the Vue client (Vite)
+#    The client is an npm workspace together with packages/* (shared types and
+#    API client), so the install runs from the repo root against the root
+#    lockfile; only the manifests are copied first to keep the layer cached.
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS client-build
-WORKDIR /app/client
-COPY client/package.json client/package-lock.json ./
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY client/package.json client/
+COPY packages/types/package.json packages/types/
+COPY packages/api-client/package.json packages/api-client/
 RUN npm ci
-COPY client/ ./
+COPY client/ client/
+COPY packages/ packages/
+WORKDIR /app/client
 RUN npm run build
 
 # ---------------------------------------------------------------------------

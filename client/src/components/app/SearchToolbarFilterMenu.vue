@@ -93,7 +93,7 @@ import {computed, ref, Ref, watch} from "vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {activeSearchController} from "@/controller/search/SearchController";
-import {SearchFilter} from "@/types/search/SearchFilter";
+import {SearchFilter} from "@vaultisse/types/search/SearchFilter";
 import router from "@/router/Router";
 import {searchRoute} from "@/router/routes/SearchRoute";
 import {applicationService} from "@/service/ApplicationService";

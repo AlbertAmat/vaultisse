@@ -3,11 +3,11 @@
  * stocked books, used on the locations list/detail views.
  */
 import Location from "@/model/location/Location";
-import ILocationExt from "@/types/location/ILocationExt";
+import ILocationExt from "@vaultisse/types/location/ILocationExt";
 import {locationsService} from "@/service/locations/LocationsService";
 import LocationBook from "@/model/location/LocationBook";
 import {shallowRef, ShallowRef} from "vue";
-import ILocationBook from "@/types/location/ILocationBook";
+import ILocationBook from "@vaultisse/types/location/ILocationBook";
 
 export default class LocationExt extends Location{
 

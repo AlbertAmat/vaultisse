@@ -1,7 +1,7 @@
 /** Backs the authors management view: loads all authors and exposes add/delete operations. */
 import {BaseController} from "@/controller/BaseController";
 import {ShallowRef, shallowRef} from "vue";
-import IBookAuthor from "@/types/book/IBookAuthor";
+import IBookAuthor from "@vaultisse/types/book/IBookAuthor";
 import BookAuthor from "@/model/author/BookAuthor";
 import {authorsService} from "@/service/author/AuthorsService";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";

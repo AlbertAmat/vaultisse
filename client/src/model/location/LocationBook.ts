@@ -1,8 +1,8 @@
 // Type definition for a book's data at a specific location
-import ILocationBook from "@/types/location/ILocationBook";
+import ILocationBook from "@vaultisse/types/location/ILocationBook";
 
 // Enum representing possible stock statuses for a book (e.g., available, reserved, etc.)
-import { BookStockStatusEnum } from "@/types/book/IBookStock";
+import { BookStockStatusEnum } from "@vaultisse/types/book/IBookStock";
 
 /**
  * Represents a specific copy of a book stored at a particular location.

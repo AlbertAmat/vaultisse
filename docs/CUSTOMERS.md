@@ -142,7 +142,7 @@ turned off while the vault has borrower members or books on loan. Turning it on:
 | Customer/group CRUD, lend/return endpoints | `server/src/routes/CustomerRoute.ts` |
 | `loan_history` bookkeeping | `server/src/utils/LoanHistory.ts` |
 | `customers`/`customer_groups` schema | `assets/db/databaseSchema.sql` |
-| Client: `/customer` HTTP client | `client/src/service/customers/CustomersService.ts`, `CustomerGroupService.ts` |
+| Client: `/customer` HTTP client | `packages/api-client/src/CustomersService.ts`, `CustomerGroupService.ts` |
 | Client: page controllers | `client/src/controller/customers/CustomersController.ts`, `CustomerGroupsController.ts` |
 | Client: customers page UI | `client/src/views/customers/CustomersView.vue`, `client/src/views/customers/components/` |
 | Client: loans feature toggle | `client/src/views/settings/VaultMembersDialog.vue`, `client/src/router/Router.ts` |

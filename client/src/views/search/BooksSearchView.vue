@@ -185,7 +185,7 @@
 import {Ref, ref, computed, onMounted, onUnmounted, watch, nextTick} from "vue";
 import PageComponent from "@/views/PageComponent.vue";
 import SearchController, {activeSearchController} from "@/controller/search/SearchController";
-import {SortType} from "@/types/search/SortType";
+import {SortType} from "@vaultisse/types/search/SortType";
 import BookItem from "@/views/search/components/BookItem.vue";
 import BookItemSkeleton from "@/views/search/components/BookItemSkeleton.vue";
 import CreateBookIsbnDialog from "@/views/search/components/CreateBookIsbnDialog.vue";

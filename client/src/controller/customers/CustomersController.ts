@@ -1,13 +1,13 @@
 /** Backs the customers management view: loads customers and exposes add/delete operations. */
 import {BaseController} from "@/controller/BaseController";
 import {ShallowRef, shallowRef} from "vue";
-import ICustomer from "@/types/customer/ICustomer";
+import ICustomer from "@vaultisse/types/customer/ICustomer";
 import Customer from "@/model/customer/Customer";
 import {customersService} from "@/service/customers/CustomersService";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
-import {ICustomersResponse} from "@/types/customer/ICustomersResponse";
+import {ICustomersResponse} from "@vaultisse/types/customer/ICustomersResponse";
 import CustomerDetail from "@/model/customer/CustomerDetail";
 import CustomerGroup from "@/model/customer/CustomerGroup";
 

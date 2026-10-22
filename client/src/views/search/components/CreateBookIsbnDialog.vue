@@ -180,9 +180,9 @@ import BookStock from "@/model/book/BookStock";
 import BarcodeScanner from "@/components/barcodeScanner/BarcodeScanner.vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
-import {AppError} from "@/types/AppError";
+import {AppError} from "@vaultisse/types/AppError";
 import {applicationService} from "@/service/ApplicationService";
-import {BookStockStatusEnum} from "@/types/book/IBookStock";
+import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
 
 interface Props {
 	modelValue: boolean

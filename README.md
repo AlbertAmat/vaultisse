@@ -97,9 +97,10 @@ Vite.
   services, keeping `.vue` files focused on markup (`BaseController.ts` is the shared
   base class).
 - **`src/service/`** – one service per resource (book, author, categories, customers,
-  locations, dashboard, search, user). Services wrap the HTTP calls to the backend
-  API (`ApplicationService.ts` is the shared Axios wrapper, configured in
-  `src/plugins/axiosInstance.ts`).
+  locations, dashboard, search, user). The HTTP calls themselves live in the shared
+  `packages/api-client` package; these files re-export the instances bound to the
+  client's Axios setup (`src/plugins/api.ts`). `ApplicationService.ts` is the
+  app-wide state holder.
 - **`src/model/`** – TypeScript classes/interfaces mirroring the domain entities
   (book, author, category, customer, location, format, language, user).
 - **`src/router/`** – Vue Router setup; each feature has its own route file under
@@ -198,11 +199,14 @@ vaultisse/
 │   └── src/
 │       ├── views/         # Page components, grouped by feature
 │       ├── controller/    # Page controllers (state + logic)
-│       ├── service/       # API clients, one per resource
+│       ├── service/       # Re-exports of the api-client services bound to this app
 │       ├── model/         # Domain TypeScript models
 │       ├── router/        # Vue Router configuration
 │       ├── components/    # Shared UI components
 │       └── plugins/       # i18n, Vuetify, Axios setup
+├── packages/              # Shared workspace packages (client + future browser extensions)
+│   ├── types/             # @vaultisse/types: API request/response types
+│   └── api-client/        # @vaultisse/api-client: axios client, one service per resource
 ├── server/                # Express + TypeScript REST API
 │   └── src/
 │       ├── routes/        # One Express router per resource
@@ -298,8 +302,8 @@ npm run dev      # starts the API with nodemon on API_PORT
 ### 5. Run the client
 
 ```bash
+npm install       # from the repo root: installs the client and the shared packages/ workspace
 cd client
-npm install
 npm run dev       # starts Vite; proxies /api/rest to the server
 ```
 

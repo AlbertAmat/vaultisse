@@ -1,5 +1,5 @@
 import {ARoute} from "@/router/ARoute";
-import {SearchFilter} from "@/types/search/SearchFilter";
+import {SearchFilter} from "@vaultisse/types/search/SearchFilter";
 
 /** Route to the book search/library view (`/app/library/search`), with an optional preset query string. */
 export class SearchRoute extends ARoute {

@@ -116,7 +116,7 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {applicationService} from "@/service/ApplicationService";
 import {importService} from "@/service/import/ImportService";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
-import {ImportOrigin} from "@/types/import/IImportResult";
+import {ImportOrigin} from "@vaultisse/types/import/IImportResult";
 import {PATH_PREFIX} from "@/Constants";
 
 interface Props {

@@ -55,8 +55,8 @@
 <script setup lang="ts">
 /**
  * Single app-wide error dialog, mounted once in App.vue. Displayed by
- * `axiosInstance`'s response interceptor for any unhandled API error (see
- * `plugins/axiosInstance.ts`), showing the server's response body if present.
+ * the API client's `onError` handler for any unhandled API error (see
+ * `plugins/api.ts`), showing the server's response body if present.
  */
 import {errorDialogController} from "@/components/errorDialog/ErrorDialogController";
 import {computed} from "vue";

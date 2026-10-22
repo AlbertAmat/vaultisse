@@ -7,7 +7,7 @@
  * const author = new BookAuthor({ id: 4, name: "J.R.R. Tolkien" });
  * await author.update("J. R. R. Tolkien");
  */
-import IBookAuthor from "@/types/book/IBookAuthor";
+import IBookAuthor from "@vaultisse/types/book/IBookAuthor";
 import {authorsService} from "@/service/author/AuthorsService";
 import {Ref, ref} from "vue";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";

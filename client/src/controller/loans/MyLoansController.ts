@@ -3,7 +3,7 @@
  * currently on loan to them, and their whole loan history.
  */
 import {BaseController} from "@/controller/BaseController";
-import {IMyLoan, IMyLoanHistoryRow, IMyLoansData} from "@/types/loans/IMyLoan";
+import {IMyLoan, IMyLoanHistoryRow, IMyLoansData} from "@vaultisse/types/loans/IMyLoan";
 import {loansService} from "@/service/loans/LoansService";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";

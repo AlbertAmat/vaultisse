@@ -4,13 +4,13 @@
  * `returnLoan` action that bulk-returns a single copy and refreshes the list.
  */
 import {BaseController} from "@/controller/BaseController";
-import ILoansResponse, {ILoan} from "@/types/loans/ILoan";
+import ILoansResponse, {ILoan} from "@vaultisse/types/loans/ILoan";
 import {loansService} from "@/service/loans/LoansService";
 import {bookService} from "@/service/book/BookService";
 import {customerGroupService} from "@/service/customers/CustomerGroupService";
 import {customersService} from "@/service/customers/CustomersService";
-import {ICustomerGroup} from "@/types/customer/ICustomerGroup";
-import {ICustomerDetail} from "@/types/customer/ICustomer";
+import {ICustomerGroup} from "@vaultisse/types/customer/ICustomerGroup";
+import {ICustomerDetail} from "@vaultisse/types/customer/ICustomer";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {ref, Ref} from "vue";

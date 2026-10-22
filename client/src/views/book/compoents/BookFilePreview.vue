@@ -53,7 +53,7 @@
 import {nextTick, onMounted, onUnmounted, ref, Ref, shallowRef, ShallowRef} from "vue";
 import ePub, {Rendition} from "epubjs";
 import Book from "@/model/book/Book";
-import {IBookFile} from "@/types/book/IBookFile";
+import {IBookFile} from "@vaultisse/types/book/IBookFile";
 import {bookService} from "@/service/book/BookService";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";

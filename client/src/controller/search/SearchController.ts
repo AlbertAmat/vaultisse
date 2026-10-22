@@ -8,13 +8,13 @@ import {BaseController} from "@/controller/BaseController";
 import {searchService} from "@/service/search/SearchService";
 import {ref, Ref, shallowRef, ShallowRef, watch} from "vue";
 import BookItem from "@/model/book/BookItem";
-import {ISearchResponse} from "@/types/search/ISearchResponse";
+import {ISearchResponse} from "@vaultisse/types/search/ISearchResponse";
 import router from "@/router/Router";
 import {SearchRoute} from "@/router/routes/SearchRoute";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
-import {SearchFilter} from "@/types/search/SearchFilter";
-import {SortType} from "@/types/search/SortType";
+import {SearchFilter} from "@vaultisse/types/search/SearchFilter";
+import {SortType} from "@vaultisse/types/search/SortType";
 
 export default class SearchController extends BaseController<ISearchResponse> {
 

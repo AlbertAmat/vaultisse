@@ -111,7 +111,7 @@ import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppS
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {applicationService} from "@/service/ApplicationService";
-import {BookStockStatusEnum} from "@/types/book/IBookStock";
+import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
 
 
 interface Props {

@@ -282,8 +282,10 @@ different kinds of 401 apart:
 
 `requireAuth`'s failure response is `401 {"message": "Unauthorized",
 "sessionExpired": true}` specifically for the first case; nothing else in
-the API sets that flag. The client's shared axios interceptor
-(`client/src/plugins/axiosInstance.ts`) checks for it and does a full
+the API sets that flag. The shared API client's response interceptor
+(`packages/api-client/src/http.ts`) checks for it and hands it to the host's
+`onSessionExpired` callback, which in the web client
+(`client/src/plugins/api.ts`) does a full
 `window.location.href = "/login"` - a real navigation, not a router push,
 since there's no SPA state worth preserving once the session is gone.
 
@@ -413,5 +415,5 @@ that need to exist already do (issue #36).
 | TOTP/backup-code helpers | `server/src/utils/TwoFactorAuth.ts` |
 | Demo-mode write blocking | `server/src/middlewares/DemoModeMiddleware.ts` |
 | `users`/`user_sessions`/`activity_log`/`user_backup_codes` schema | `assets/db/databaseSchema.sql` |
-| Client: redirect-on-`sessionExpired`, cookie transport | `client/src/plugins/axiosInstance.ts` |
+| Client: redirect-on-`sessionExpired`, cookie transport | `packages/api-client/src/http.ts`, `client/src/plugins/api.ts` |
 | Client: Active sessions / Recent logins UI | `client/src/views/settings/SessionsCard.vue`, `LoginActivityCard.vue` |

@@ -8,7 +8,7 @@ import IDashboard, {
     IDashboardCategoryShelf,
     IDashboardLoan,
     IDashboardStockSatuts
-} from "@/types/dashboard/IDashboard";
+} from "@vaultisse/types/dashboard/IDashboard";
 
 // Service to fetch dashboard-related data
 import { dashboardService } from "@/service/dashboard/DashboardService";

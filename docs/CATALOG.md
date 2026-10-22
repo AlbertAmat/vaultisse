@@ -92,7 +92,7 @@ for how that fits into app startup.
 | Author CRUD + search | `server/src/routes/AuthorRoute.ts` |
 | Policy bootstrap (languages, formats, locations, customers, labels, user) | `server/src/routes/AppRoute.ts` |
 | `categories`/`authors`/`book_authors`/`languages`/`formats` schema | `assets/db/databaseSchema.sql` |
-| Client: `/category`, `/author` HTTP clients | `client/src/service/categories/CategoriesService.ts`, `client/src/service/author/AuthorsService.ts` |
+| Client: `/category`, `/author` HTTP clients | `packages/api-client/src/CategoriesService.ts`, `packages/api-client/src/AuthorsService.ts` |
 | Client: page controllers | `client/src/controller/categories/CategoriesController.ts`, `client/src/controller/authors/AuthorsController.ts` |
 | Client: shared app-wide state | `client/src/service/ApplicationService.ts` |
 | Client: categories/authors page UI | `client/src/views/categories/`, `client/src/views/authors/` |

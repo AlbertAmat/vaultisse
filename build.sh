@@ -16,8 +16,11 @@ echo ""
 echo ""
 echo "============================================="
 echo "Building client..."
-cd "$ROOT_DIR/client"
+# The client is an npm workspace with packages/* (shared types + API client):
+# install from the repo root, build from the client folder.
+cd "$ROOT_DIR"
 npm install
+cd "$ROOT_DIR/client"
 npm run build
 
 # Move client build to root/dist/client

@@ -75,7 +75,7 @@ recorded (once, via `ON CONFLICT DO NOTHING`).
 | Profile, preferences, account deletion, security notice | `server/src/routes/UserRoute.ts` |
 | Session list/revoke, password change, 2FA | `server/src/routes/UserRoute.ts` - see [AUTHENTICATION.md](AUTHENTICATION.md) instead |
 | `users` schema | `assets/db/databaseSchema.sql` |
-| Client: `/user` HTTP client | `client/src/service/user/UserService.ts` |
+| Client: `/user` HTTP client | `packages/api-client/src/UserService.ts` |
 | Client: page controller | `client/src/controller/settings/SettingsController.ts` |
 | Client: settings page UI | `client/src/views/settings/SettingsView.vue`, `SettingsCard.vue` |
 | Client: theme definitions | `client/src/plugins/theme.ts` |

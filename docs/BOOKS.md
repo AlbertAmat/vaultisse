@@ -319,7 +319,7 @@ label sheet is generated client-side from data already on the page.
 | `loan_history` bookkeeping | `server/src/utils/LoanHistory.ts` |
 | `books`/`book_stocks`/`book_authors`/`book_files` schema | `assets/db/databaseSchema.sql` |
 | Client: book detail page state | `client/src/controller/book/BookController.ts` |
-| Client: `/book` HTTP client | `client/src/service/book/BookService.ts` |
+| Client: `/book` HTTP client | `packages/api-client/src/BookService.ts` |
 | Client: book/stock model classes | `client/src/model/book/Book.ts`, `BookItem.ts`, `BookStock.ts` |
 | Client: catalog search page | `client/src/views/search/BooksSearchView.vue`, `client/src/controller/search/SearchController.ts` |
 | Client: book detail + stock UI | `client/src/views/book/BookView.vue`, `client/src/views/book/compoents/` |

@@ -256,9 +256,9 @@ import {vaultJoinRoute} from "@/router/routes/VaultJoinRoute";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
 import {errorDialogController} from "@/components/errorDialog/ErrorDialogController";
-import IVaultInfo from "@/types/vault/IVaultInfo";
-import IVault from "@/types/vault/IVault";
-import {IVaultUser, VaultRoleSource, VaultUserStatus} from "@/types/vault/IVaultUser";
+import IVaultInfo from "@vaultisse/types/vault/IVaultInfo";
+import IVault from "@vaultisse/types/vault/IVault";
+import {IVaultUser, VaultRoleSource, VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 interface Props {
 	modelValue: boolean;

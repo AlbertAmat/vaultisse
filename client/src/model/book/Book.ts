@@ -9,16 +9,16 @@
  * const book = new Book(await bookService.getBook(12));
  * await book.addBookStock(BookStockStatusEnum.AVAILABLE, locationId, {customerId: null, memberUserId: null}, false);
  */
-import {ReadingStatusEnum} from "@/types/book/IReadingStatus";
-import {IBorrower} from "@/types/book/IBorrower";
+import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
+import {IBorrower} from "@vaultisse/types/book/IBorrower";
 import BookItem from "@/model/book/BookItem";
-import IBook from "@/types/book/IBook";
-import {IBookFile} from "@/types/book/IBookFile";
+import IBook from "@vaultisse/types/book/IBook";
+import {IBookFile} from "@vaultisse/types/book/IBookFile";
 import {applicationService} from "@/service/ApplicationService";
 import Format from "@/model/format/Format";
 import {bookService} from "@/service/book/BookService";
 import BookStock from "@/model/book/BookStock";
-import {BookStockStatusEnum} from "@/types/book/IBookStock";
+import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
 import {ref, Ref, shallowRef, ShallowRef} from "vue";
 import router from "@/router/Router";
 import {searchRoute} from "@/router/routes/SearchRoute";

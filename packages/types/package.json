@@ -1,0 +1,10 @@
+{
+  "name": "@vaultisse/types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Wire types (API request/response shapes and shared enums) for the Vaultisse REST API. Source-only: consumers' bundlers compile the TypeScript directly.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  }
+}

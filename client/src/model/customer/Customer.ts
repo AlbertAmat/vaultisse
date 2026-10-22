@@ -4,7 +4,7 @@
  * `CustomersService`/`CustomerGroupService`.
  */
 import {Ref, ref} from "vue";
-import ICustomer from "@/types/customer/ICustomer";
+import ICustomer from "@vaultisse/types/customer/ICustomer";
 import {customersService} from "@/service/customers/CustomersService";
 import {customerGroupService} from "@/service/customers/CustomerGroupService";
 

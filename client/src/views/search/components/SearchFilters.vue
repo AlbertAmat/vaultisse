@@ -38,7 +38,7 @@
  * view's toolbar area free.
  */
 import SearchController from "@/controller/search/SearchController";
-import {SearchFilter} from "@/types/search/SearchFilter";
+import {SearchFilter} from "@vaultisse/types/search/SearchFilter";
 import {computed} from "vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "../../../plugins/i18n/AppLabels";

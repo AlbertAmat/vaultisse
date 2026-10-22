@@ -19,7 +19,7 @@ import {
 	LinearScale
 } from 'chart.js';
 import {Line as LineChartComponent} from 'vue-chartjs';
-import {IBooksInTime} from "@/types/dashboard/IDashboard";
+import {IBooksInTime} from "@vaultisse/types/dashboard/IDashboard";
 import {useI18n} from "vue-i18n";
 import {useTheme} from "vuetify";
 import {AppLabels} from "@/plugins/i18n/AppLabels";

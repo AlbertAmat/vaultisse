@@ -1,12 +1,9 @@
 // Vue reactivity utilities
-import {IBorrowingMember} from "@/types/book/IBorrower";
+import {IBorrowingMember} from "@vaultisse/types/book/IBorrower";
 import { ref, Ref } from "vue";
 
-// Global application constants (e.g., API prefix)
-import { PATH_PREFIX } from "@/Constants";
-
 // API response type for the application policy endpoint
-import IPolicyResponse from "@/types/IPolicyResponse";
+import IPolicyResponse from "@vaultisse/types/IPolicyResponse";
 
 // Data models used throughout the app
 import Language from "@/model/language/Language";
@@ -17,7 +14,7 @@ import User from "@/model/user/User";
 import Customer from "@/model/customer/Customer";
 
 // Axios instance configured with interceptors and base URL
-import axiosInstance from "@/plugins/axiosInstance";
+import {api} from "@/plugins/api";
 import {i18n} from "@/plugins/i18n/i18n";
 
 /**
@@ -144,8 +141,7 @@ export class ApplicationService {
     public async fetchPolicy() {
         try {
             this.m_loading.value = true;
-            const response = await axiosInstance.get(`${PATH_PREFIX}/app/policy`);
-            const data = response.data as IPolicyResponse;
+            const data: IPolicyResponse = await api.app.getPolicy();
 
             // Populate local state with typed model instances
             this.m_user = new User(data.user);

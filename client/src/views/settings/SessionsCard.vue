@@ -62,7 +62,7 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
 import SettingsCard from "@/views/settings/SettingsCard.vue";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
 import {userService} from "@/service/user/UserService";
-import IUserSession from "@/types/user/IUserSession";
+import IUserSession from "@vaultisse/types/user/IUserSession";
 import {deviceIcon, parseUserAgent} from "@/utils/DeviceInfo";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
