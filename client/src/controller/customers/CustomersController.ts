@@ -3,7 +3,7 @@ import {BaseController} from "@/controller/BaseController";
 import {ShallowRef, shallowRef} from "vue";
 import ICustomer from "@vaultisse/types/customer/ICustomer";
 import Customer from "@/model/customer/Customer";
-import {customersService} from "@/service/customers/CustomersService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -22,7 +22,7 @@ export default class CustomersController extends BaseController<ICustomersRespon
 
     /** @returns The customers list view's data. */
     async fetchData(): Promise<ICustomersResponse> {
-        return await customersService.getPageData()
+        return await api.customers.getPageData()
     }
 
     /** Re-run `fetchData()`/`setData()` to refresh customers from the server. */
@@ -55,7 +55,7 @@ export default class CustomersController extends BaseController<ICustomersRespon
      */
     public async addCustomer(name: string, group?: CustomerGroup) {
         try {
-            const customer = await customersService.addCustomer(name);
+            const customer = await api.customers.addCustomer(name);
             const customerDetail = new CustomerDetail(customer);
             if (group) {
                 await customerDetail.assignToGroup(group.getId(), group.getName());
@@ -76,7 +76,7 @@ export default class CustomersController extends BaseController<ICustomersRespon
         const index = this.m_customers.value.findIndex(customer => customer.getCustomerId() === customerId);
         if(index != -1 ) {
             try {
-                await customersService.deleteCustomer(customerId);
+                await api.customers.deleteCustomer(customerId);
                 this.m_customers.value.splice(index, 1);
                 this.m_customers.value = [...this.m_customers.value];
                 appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_DELETED_CUSTOMER)})

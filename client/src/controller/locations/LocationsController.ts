@@ -1,6 +1,6 @@
 /** Backs the locations management view: loads all locations and exposes add/delete operations. */
 import {BaseController} from "@/controller/BaseController";
-import {locationsService} from "@/service/locations/LocationsService";
+import {api} from "@/plugins/api";
 import {ShallowRef, shallowRef} from "vue";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import ILocationExt from "@vaultisse/types/location/ILocationExt";
@@ -19,7 +19,7 @@ export default class LocationsController extends BaseController<ILocationExt[]> 
 
     /** @returns Every location belonging to the user, fetched from the server. */
     async fetchData(): Promise<ILocationExt[]> {
-        return await locationsService.getLocations()
+        return await api.locations.getLocations()
     }
 
     /** @param data Raw location list from the server. */
@@ -47,7 +47,7 @@ export default class LocationsController extends BaseController<ILocationExt[]> 
      */
     public async addLocation(name: string, description: string | null) {
         try {
-            const location = await locationsService.addLocation(name, description);
+            const location = await api.locations.addLocation(name, description);
             this.m_locations.value = [...this.m_locations.value, new LocationExt(location)];
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_NEW_LOCATION_ADDED)})
         } catch (e) {
@@ -61,7 +61,7 @@ export default class LocationsController extends BaseController<ILocationExt[]> 
      */
     public async setDefaultLocation(locationId: number) {
         try {
-            const locations = await locationsService.setDefaultLocation(locationId);
+            const locations = await api.locations.setDefaultLocation(locationId);
             this.m_locations.value = locations.map(location => new LocationExt(location));
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_LOCATION_SET_DEFAULT)})
         } catch (e) {
@@ -77,7 +77,7 @@ export default class LocationsController extends BaseController<ILocationExt[]> 
         const index = this.m_locations.value.findIndex(location => location.getId() === locationId);
         if(index != -1 ) {
             try {
-                await locationsService.deleteLocation(locationId);
+                await api.locations.deleteLocation(locationId);
                 this.m_locations.value.splice(index, 1);
                 this.m_locations.value = [...this.m_locations.value];
                 appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_DELETED_LOCATION)})

@@ -96,11 +96,10 @@ Vite.
 - **`src/controller/`** – view controllers that hold page state/logic and call
   services, keeping `.vue` files focused on markup (`BaseController.ts` is the shared
   base class).
-- **`src/service/`** – one service per resource (book, author, categories, customers,
-  locations, dashboard, search, user). The HTTP calls themselves live in the shared
-  `packages/api-client` package; these files re-export the instances bound to the
-  client's Axios setup (`src/plugins/api.ts`). `ApplicationService.ts` is the
-  app-wide state holder.
+- **`src/service/`** – `ApplicationService.ts`, the app-wide state holder. The HTTP
+  calls (one service per resource) live in the shared `packages/api-client` package
+  and are used through the `api` object from `src/plugins/api.ts`
+  (e.g. `api.books.getBook(12)`).
 - **`src/model/`** – TypeScript classes/interfaces mirroring the domain entities
   (book, author, category, customer, location, format, language, user).
 - **`src/router/`** – Vue Router setup; each feature has its own route file under
@@ -199,7 +198,7 @@ vaultisse/
 │   └── src/
 │       ├── views/         # Page components, grouped by feature
 │       ├── controller/    # Page controllers (state + logic)
-│       ├── service/       # Re-exports of the api-client services bound to this app
+│       ├── service/       # ApplicationService (app-wide state)
 │       ├── model/         # Domain TypeScript models
 │       ├── router/        # Vue Router configuration
 │       ├── components/    # Shared UI components

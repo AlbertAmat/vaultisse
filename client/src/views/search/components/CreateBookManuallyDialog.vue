@@ -98,13 +98,13 @@
 <script setup lang="ts">
 /**
  * "Add a book manually" dialog: name/description/ISBN fields plus a cover
- * image drop zone, submitted via `bookService.createBook`. Used as the
+ * image drop zone, submitted via `api.books.createBook`. Used as the
  * fallback when a book can't be found by ISBN lookup.
  */
 import {computed, ref, Ref, watch} from "vue";
 import {validateIsbn10, validateIsbn13} from "@/utils/IsbnVerification";
 import { VFileUpload } from 'vuetify/components'
-import {bookService} from "@/service/book/BookService";
+import {api} from "@/plugins/api";
 import {bookRoute} from "@/router/routes/BookRoute";
 import router from "@/router/Router";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
@@ -227,9 +227,9 @@ const disableButton = computed(() => {
 async function addBook() {
 	try {
 		loading.value = true;
-		const id = await bookService.createBook(name.value, description.value, isbn.value, image.value || null);
+		const id = await api.books.createBook(name.value, description.value, isbn.value, image.value || null);
 		if (selectedLocation.value != null) {
-			await bookService.addBookStock(id, selectedLocation.value, BookStockStatusEnum.AVAILABLE, {customerId: null, memberUserId: null});
+			await api.books.addBookStock(id, selectedLocation.value, BookStockStatusEnum.AVAILABLE, {customerId: null, memberUserId: null});
 		}
 		await router.push(bookRoute.getPath(id));
 		appSnackbarController.show({message: t(AppLabels.BOOK_HAS_BEEN_ADDED, {name: name.value}) })

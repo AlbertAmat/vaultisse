@@ -45,7 +45,7 @@ import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import SettingsCard from "@/views/settings/SettingsCard.vue";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
-import {userService} from "@/service/user/UserService";
+import {api} from "@/plugins/api";
 import IActivityLogEntry from "@vaultisse/types/user/IActivityLogEntry";
 
 const {t} = useI18n();
@@ -55,7 +55,7 @@ const entries: Ref<IActivityLogEntry[]> = ref([]);
 
 onMounted(async () => {
 	try {
-		entries.value = await userService.getActivity();
+		entries.value = await api.users.getActivity();
 	} catch (e) {
 		console.error("Error while fetching login activity", e);
 	} finally {

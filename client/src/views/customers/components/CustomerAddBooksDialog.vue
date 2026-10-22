@@ -11,7 +11,7 @@
 import {computed, ref, Ref} from "vue";
 import BookStockCodesDialog from "@/components/addBookStocks/BookStockCodesDialog.vue";
 import Customer from "@/model/customer/Customer";
-import {customersService} from "@/service/customers/CustomersService";
+import {api} from "@/plugins/api";
 
 interface Props {
 	customer: Customer,
@@ -40,7 +40,7 @@ const loading: Ref<boolean> = ref(false);
 async function addBooks(books: string[]) {
 	try {
 		loading.value = true;
-		const data = await customersService.addBooks(props.customer.getCustomerId(), books);
+		const data = await api.customers.addBooks(props.customer.getCustomerId(), books);
 		props.customer.setBooks(data);
 	} finally {
 		loading.value = false;

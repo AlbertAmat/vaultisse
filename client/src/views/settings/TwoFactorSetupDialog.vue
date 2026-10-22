@@ -101,14 +101,14 @@
 <script setup lang="ts">
 /**
  * "Enable" button + two-step setup dialog on the settings view:
- * 1. Fetches a fresh TOTP secret/QR on open (`userService.setupTwoFactor`)
- *    and verifies a 6-digit code against it (`userService.enableTwoFactor`).
+ * 1. Fetches a fresh TOTP secret/QR on open (`api.users.setupTwoFactor`)
+ *    and verifies a 6-digit code against it (`api.users.enableTwoFactor`).
  * 2. Shows the one-time backup codes returned on success - dismissible only
  *    by explicit confirmation (`persistent`), since they're never shown again.
  */
 import SettingsController from "@/controller/settings/SettingsController";
 import {ref} from "vue";
-import {userService} from "@/service/user/UserService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -146,7 +146,7 @@ async function onDialogToggle(open: boolean) {
 
 	try {
 		loadingSetup.value = true;
-		const setup = await userService.setupTwoFactor();
+		const setup = await api.users.setupTwoFactor();
 		secret.value = setup.secret;
 		qrCodeDataUrl.value = setup.qrCodeDataUrl;
 	} catch (e: any) {
@@ -160,7 +160,7 @@ async function enable() {
 	try {
 		enabling.value = true;
 		error.value = null;
-		backupCodes.value = await userService.enableTwoFactor(code.value.trim());
+		backupCodes.value = await api.users.enableTwoFactor(code.value.trim());
 		step.value = "backupCodes";
 	} catch (e: any) {
 		error.value = e.response?.data?.message ?? t(AppLabels.TWOFA_INVALID_CODE);

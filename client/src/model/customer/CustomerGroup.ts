@@ -6,7 +6,7 @@
  */
 import {Ref, ref} from "vue";
 import {ICustomerGroup} from "@vaultisse/types/customer/ICustomerGroup";
-import {customerGroupService} from "@/service/customers/CustomerGroupService";
+import {api} from "@/plugins/api";
 
 export default class CustomerGroup {
     /** Group id, immutable once loaded. */
@@ -55,7 +55,7 @@ export default class CustomerGroup {
      * @param description New group description, or undefined to clear it.
      */
     public async update(name: string, description?: string) {
-        await customerGroupService.updateGroup(this.m_id, name, description);
+        await api.customerGroups.updateGroup(this.m_id, name, description);
         this.m_name.value = name;
         this.m_description.value = description;
     }

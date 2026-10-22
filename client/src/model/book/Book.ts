@@ -6,7 +6,7 @@
  * and keep local reactive state in sync with the server.
  *
  * @example
- * const book = new Book(await bookService.getBook(12));
+ * const book = new Book(await api.books.getBook(12));
  * await book.addBookStock(BookStockStatusEnum.AVAILABLE, locationId, {customerId: null, memberUserId: null}, false);
  */
 import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
@@ -16,7 +16,7 @@ import IBook from "@vaultisse/types/book/IBook";
 import {IBookFile} from "@vaultisse/types/book/IBookFile";
 import {applicationService} from "@/service/ApplicationService";
 import Format from "@/model/format/Format";
-import {bookService} from "@/service/book/BookService";
+import {api} from "@/plugins/api";
 import BookStock from "@/model/book/BookStock";
 import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
 import {ref, Ref, shallowRef, ShallowRef} from "vue";
@@ -217,7 +217,7 @@ export default class Book extends BookItem {
      */
     public async addBookStock(status: BookStockStatusEnum, locationId: number, borrower: IBorrower, print: boolean) {
         try {
-            const data = await bookService.addBookStock(this.m_id, locationId, status, borrower);
+            const data = await api.books.addBookStock(this.m_id, locationId, status, borrower);
             const stock = new BookStock(this, data)
             this.m_stocks.value = [...this.m_stocks.value, stock];
 
@@ -237,7 +237,7 @@ export default class Book extends BookItem {
      */
     public async removeBookStock(stockId: number) {
         try {
-            const result = await bookService.removeBookStock(this.m_id, stockId);
+            const result = await api.books.removeBookStock(this.m_id, stockId);
 
             if(!result) {
                 throw "Unable to remove book stock";
@@ -267,7 +267,7 @@ export default class Book extends BookItem {
         const previous = this.getReadingStatus();
         this.setReadingStatus(status);
         try {
-            await bookService.setReadingStatus(this.m_id, status);
+            await api.books.setReadingStatus(this.m_id, status);
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_UPDATED)})
         } catch (e) {
             this.setReadingStatus(previous);
@@ -278,7 +278,7 @@ export default class Book extends BookItem {
     /** Persist all current field values (name, metadata, authors, ...) to the server. */
     public async updateBook() {
         try {
-            await bookService.updateBook(
+            await api.books.updateBook(
                 this.m_id,
                 this.m_name.value,
                 this.m_imageUrl.value,
@@ -306,7 +306,7 @@ export default class Book extends BookItem {
      */
     public async changeImage(image: File) {
         try {
-            await bookService.changeImage(this.m_id, image);
+            await api.books.changeImage(this.m_id, image);
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_IMAGE_UPDATED)})
 
             /** @param file Image file to encode. @returns A `data:` URL for the file's contents. */
@@ -339,7 +339,7 @@ export default class Book extends BookItem {
      */
     public async findCover() {
         try {
-            const imageUrl = await bookService.findCover(this.m_id);
+            const imageUrl = await api.books.findCover(this.m_id);
             this.m_imageUrl.value = imageUrl;
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_IMAGE_UPDATED)})
         } catch (e) {
@@ -360,7 +360,7 @@ export default class Book extends BookItem {
      */
     public async uploadFile(file: File) {
         try {
-            const uploaded = await bookService.uploadFile(this.m_id, file);
+            const uploaded = await api.books.uploadFile(this.m_id, file);
             const withoutSameType = this.m_files.value.filter((f) => f.file_type !== uploaded.file_type);
             this.m_files.value = [...withoutSameType, uploaded];
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_FILE_UPLOADED)})
@@ -375,7 +375,7 @@ export default class Book extends BookItem {
      */
     public async removeFile(fileId: number) {
         try {
-            const result = await bookService.deleteFile(this.m_id, fileId);
+            const result = await api.books.deleteFile(this.m_id, fileId);
 
             if (!result) {
                 throw "Unable to remove book file";
@@ -391,7 +391,7 @@ export default class Book extends BookItem {
     /** Delete this book on the server, then navigate back to the search/library view. */
     public async deleteBook() {
         try {
-            await bookService.deleteBook(this.m_id)
+            await api.books.deleteBook(this.m_id)
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_DELETED)})
             router.push(searchRoute.getPath())
         } catch (e) {

@@ -341,7 +341,7 @@ import {computed, ref, Ref, shallowRef, ShallowRef} from "vue";
 import BookAuthor from "@/model/author/BookAuthor";
 import {applicationService} from "@/service/ApplicationService";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
-import {authorsService} from "@/service/author/AuthorsService";
+import {api} from "@/plugins/api";
 import BookImage from "@/views/book/compoents/BookImage.vue";
 import BookFile from "@/views/book/compoents/BookFile.vue";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -711,7 +711,7 @@ async function searchAuthors(prompt: string) {
 
 	try {
 		loadingAuthors.value = true;
-		const data = await authorsService.searchAuthors(prompt)
+		const data = await api.authors.searchAuthors(prompt)
 		if (data) {
 			data.forEach((author) => {
 				const index = loadedAuthors.value.findIndex((item) => item.getAuthorId() === author.id)

@@ -81,12 +81,12 @@
  * Reusable "scan/type a list of book stock codes" dialog, used by both the
  * location "add books" flow and the customer "lend books" flow. As each
  * code is entered it's added to `bookCodes` and its metadata fetched via
- * `bookService.fetchBookAddMd` (rendered by `BookStockItem`); the parent
+ * `api.books.fetchBookAddMd` (rendered by `BookStockItem`); the parent
  * listens for `executeAction` with the final array of codes to submit.
  */
 import {computed, ref, Ref} from "vue";
 import BarcodeScanner from "@/components/barcodeScanner/BarcodeScanner.vue";
-import {bookService} from "@/service/book/BookService";
+import {api} from "@/plugins/api";
 import {IBookAddMd} from "@vaultisse/types/book/IBookAddMd";
 import BookStockItem from "@/components/addBookStocks/BookStockItem.vue";
 import {useI18n} from "vue-i18n";
@@ -170,7 +170,7 @@ function removeBook(code: string) {
 async function fetchBook(book: string) {
 	const loadingIndex = loadingBooks.value.push(book);
 	try {
-		const data = await bookService.fetchBookAddMd(book);
+		const data = await api.books.fetchBookAddMd(book);
 		books.value.set(book, data);
 	} finally {
 		loadingBooks.value.splice(loadingIndex, 1);

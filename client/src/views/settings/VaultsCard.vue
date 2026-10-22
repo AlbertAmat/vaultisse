@@ -89,7 +89,7 @@ import SettingsCard from "@/views/settings/SettingsCard.vue";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
 import VaultDialog from "@/views/settings/VaultDialog.vue";
 import VaultMembersDialog from "@/views/settings/VaultMembersDialog.vue";
-import {vaultService} from "@/service/vault/VaultService";
+import {api} from "@/plugins/api";
 import {applicationService} from "@/service/ApplicationService";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import IVault from "@vaultisse/types/vault/IVault";
@@ -111,7 +111,7 @@ onMounted(refresh);
 async function refresh() {
 	try {
 		loading.value = true;
-		vaults.value = await vaultService.list();
+		vaults.value = await api.vaults.list();
 	} catch (e) {
 		console.error("Error while fetching vaults", e);
 	} finally {

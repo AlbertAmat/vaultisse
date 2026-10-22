@@ -58,7 +58,7 @@ import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {i18n} from "@/plugins/i18n/i18n";
 import {settingsRoute} from "@/router/routes/SettingsRoute";
-import {vaultService} from "@/service/vault/VaultService";
+import {api} from "@/plugins/api";
 import {applicationService} from "@/service/ApplicationService";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import IVault from "@vaultisse/types/vault/IVault";
@@ -73,7 +73,7 @@ const activeVaultName = computed(() => vaults.value.find((v) => v.id === activeV
 
 onMounted(async () => {
 	try {
-		vaults.value = await vaultService.list();
+		vaults.value = await api.vaults.list();
 	} catch (e) {
 		console.error("Error while fetching vaults", e);
 	}

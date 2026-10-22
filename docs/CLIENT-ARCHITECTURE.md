@@ -38,9 +38,9 @@ flowchart LR
   method calls into axios requests against `/api/rest/<resource>`.
   Services hold no state - purely stateless HTTP clients. The classes live
   in the shared [`@vaultisse/api-client`](../packages/README.md) package (so a
-  browser extension can reuse them); the files under `client/src/service/`
-  just re-export the instance bound to this app's axios instance
-  (`export const bookService = api.books`).
+  browser extension can reuse them) and the web client reaches them through
+  the single `api` object from `client/src/plugins/api.ts`
+  (`api.books.getBook(12)`).
 - **`model/`** - domain classes (`Book`, `BookStock`, `Customer`, `Location`,
   ...) that wrap the raw `I*` interfaces returned by the API in Vue-reactive
   state plus behavior (e.g. `BookStock.update()` calls back into
@@ -49,7 +49,7 @@ flowchart LR
   interface (`IBook`, `ICustomer`, ...) is the wire shape; the `model/`
   class is what the rest of the app actually holds onto and renders from.
 
-This mirrors the server side one-for-one: a `*Service` in `client/src/service/`
+This mirrors the server side one-for-one: a `*Service` in `packages/api-client/src/`
 talks to exactly one `*Route.ts` in `server/src/routes/`, and the `I*` types
 in [`@vaultisse/types`](../packages/README.md) (`packages/types/`) are meant to match that route's JSON shapes (see each
 route's own JSDoc for the authoritative response shape - the `types/` files

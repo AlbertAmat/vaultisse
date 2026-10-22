@@ -1,6 +1,6 @@
 /** View model for a book category, wrapping `ICategory` with reactive rename support. */
 import ICategory from "@vaultisse/types/category/ICategory";
-import {categoriesService} from "@/service/categories/CategoriesService";
+import {api} from "@/plugins/api";
 import {Ref, ref} from "vue";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
@@ -34,7 +34,7 @@ export default class Category {
      * @param name New category name.
      */
     public async update(name: string) {
-        await categoriesService.updateCategory(this.m_categoryId, name)
+        await api.categories.updateCategory(this.m_categoryId, name)
         this.m_categoryName.value = name;
         appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_CATEGORY_UPDATED)})
     }

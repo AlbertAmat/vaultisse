@@ -11,7 +11,7 @@ import IDashboard, {
 } from "@vaultisse/types/dashboard/IDashboard";
 
 // Service to fetch dashboard-related data
-import { dashboardService } from "@/service/dashboard/DashboardService";
+import {api} from "@/plugins/api";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 
@@ -130,7 +130,7 @@ export default class DashboardController extends BaseController<IDashboard> {
      * @returns A promise resolving to the dashboard data.
      */
     async fetchData(): Promise<IDashboard> {
-        return await dashboardService.getData();
+        return await api.dashboard.getData();
     }
 
     /**

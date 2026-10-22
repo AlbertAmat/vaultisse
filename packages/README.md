@@ -44,7 +44,7 @@ The web client wires this up once in `client/src/plugins/api.ts`.
 1. Add/adjust the types in `packages/types/src/` (the shapes must match what the
    route in `server/src/routes/` returns).
 2. Add the method to the matching service in `packages/api-client/src/`.
-3. Use it from the client through `client/src/service/*` (or `api` directly).
+3. Call it from the client as `api.<resource>.<method>()` (`client/src/plugins/api.ts`).
 
 ## What is *not* shared (yet)
 

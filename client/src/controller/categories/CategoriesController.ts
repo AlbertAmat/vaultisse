@@ -3,7 +3,7 @@ import {BaseController} from "@/controller/BaseController";
 import {ShallowRef, shallowRef} from "vue";
 import ICategory from "@vaultisse/types/category/ICategory";
 import Category from "@/model/category/Category";
-import {categoriesService} from "@/service/categories/CategoriesService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -19,7 +19,7 @@ export default class CategoriesController extends BaseController<ICategory[]> {
 
     /** @returns Every category belonging to the user, fetched from the server. */
     async fetchData(): Promise<ICategory[]> {
-        return await categoriesService.getCategories()
+        return await api.categories.getCategories()
     }
 
     /** @param data Raw category list from the server. */
@@ -46,7 +46,7 @@ export default class CategoriesController extends BaseController<ICategory[]> {
      */
     public async addCategory(name: string) {
         try {
-            const category = await categoriesService.addCategory(name);
+            const category = await api.categories.addCategory(name);
             this.m_categories.value = [...this.m_categories.value, new Category(category)];
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_NEW_CATEGORY_ADDED)})
         } catch (e) {
@@ -62,7 +62,7 @@ export default class CategoriesController extends BaseController<ICategory[]> {
         const index = this.m_categories.value.findIndex(category => category.getCategoryId() === id);
         if(index != -1 ) {
             try {
-                await categoriesService.deleteCategory(id);
+                await api.categories.deleteCategory(id);
                 this.m_categories.value.splice(index, 1);
                 this.m_categories.value = [...this.m_categories.value];
                 appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_DELETED_CATEGORY)})

@@ -66,7 +66,7 @@
 import {computed, Ref, ref} from 'vue';
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
-import {vaultService} from "@/service/vault/VaultService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
 import IVault from "@vaultisse/types/vault/IVault";
@@ -113,7 +113,7 @@ const description: Ref<string> = ref("");
 async function save() {
 	try {
 		loading.value = true;
-		const vault = await vaultService.create(name.value.trim(), description.value.trim() || undefined);
+		const vault = await api.vaults.create(name.value.trim(), description.value.trim() || undefined);
 		appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_VAULT_CREATED)});
 		emit('created', vault);
 		closeDialog();

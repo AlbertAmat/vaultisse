@@ -21,14 +21,14 @@
 /**
  * "Return books" button + dialog (shown on the dashboard and loans
  * views): wraps `BookStockCodesDialog` to bulk-return a scanned/typed batch
- * of book stock codes via `bookService.returnBooks`, then emits `refresh`
+ * of book stock codes via `api.books.returnBooks`, then emits `refresh`
  * so the parent can reload its data.
  */
 import {ref, Ref} from "vue";
 import BookStockCodesDialog from "@/components/addBookStocks/BookStockCodesDialog.vue";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {useI18n} from "vue-i18n";
-import {bookService} from "@/service/book/BookService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 
 const {t} = useI18n();
@@ -52,7 +52,7 @@ const loading: Ref<boolean> = ref(false);
 async function returnBooks(books: string[]) {
 	try {
 		loading.value = true;
-		await bookService.returnBooks(books);
+		await api.books.returnBooks(books);
 		appSnackbarController.show({message: t(AppLabels.SNACKBAR_RETURN_BOOKS)})
 		emit('refresh')
 	} finally {

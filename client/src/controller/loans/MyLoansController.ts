@@ -4,7 +4,7 @@
  */
 import {BaseController} from "@/controller/BaseController";
 import {IMyLoan, IMyLoanHistoryRow, IMyLoansData} from "@vaultisse/types/loans/IMyLoan";
-import {loansService} from "@/service/loans/LoansService";
+import {api} from "@/plugins/api";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 
@@ -22,7 +22,7 @@ export default class MyLoansController extends BaseController<IMyLoansData> {
 
     /** @returns The caller's current loans and loan history. */
     async fetchData(): Promise<IMyLoansData> {
-        const [loans, history] = await Promise.all([loansService.getMyLoans(), loansService.getMyLoanHistory()]);
+        const [loans, history] = await Promise.all([api.loans.getMyLoans(), api.loans.getMyLoanHistory()]);
         return {loans, history};
     }
 

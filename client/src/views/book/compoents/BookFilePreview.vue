@@ -54,7 +54,7 @@ import {nextTick, onMounted, onUnmounted, ref, Ref, shallowRef, ShallowRef} from
 import ePub, {Rendition} from "epubjs";
 import Book from "@/model/book/Book";
 import {IBookFile} from "@vaultisse/types/book/IBookFile";
-import {bookService} from "@/service/book/BookService";
+import {api} from "@/plugins/api";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 
@@ -81,7 +81,7 @@ onMounted(async () => {
 	}
 
 	try {
-		const blob = await bookService.downloadFileBlob(props.book.getId(), props.file.id);
+		const blob = await api.books.downloadFileBlob(props.book.getId(), props.file.id);
 
 		if (fileType === "pdf") {
 			objectUrl.value = URL.createObjectURL(blob);

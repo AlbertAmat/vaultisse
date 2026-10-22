@@ -10,7 +10,7 @@
 /** Wraps `BookStockCodesDialog` to move a scanned/typed batch of book stock codes into this location. */
 import LocationExt from "@/model/location/LocationExt";
 import {computed, ref, Ref} from "vue";
-import {locationsService} from "@/service/locations/LocationsService";
+import {api} from "@/plugins/api";
 import BookStockCodesDialog from "@/components/addBookStocks/BookStockCodesDialog.vue";
 
 interface Props {
@@ -44,7 +44,7 @@ const loading: Ref<boolean> = ref(false);
 async function addBooks(books: string[]) {
 	try {
 		loading.value = true;
-		const data = await locationsService.addBooks(props.location.getId(), books);
+		const data = await api.locations.addBooks(props.location.getId(), books);
 		props.location.setBooks(data);
 	} finally {
 		loading.value = false;

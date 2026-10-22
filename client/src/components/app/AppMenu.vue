@@ -204,7 +204,7 @@ import {AppLabels} from "@/plugins/i18n/AppLabels";
 import PrintDialog from "@/components/printDialog/PrintDialog.vue"
 import {SearchFilter} from "@vaultisse/types/search/SearchFilter";
 import {IBookCounters} from "@vaultisse/types/search/IBookCounters";
-import {searchService} from "@/service/search/SearchService";
+import {api} from "@/plugins/api";
 
 const route = useRoute()
 
@@ -266,7 +266,7 @@ const isLibraryCurrentlyReadingActive = computed(() => currentLibraryFilter.valu
 
 onMounted(async () => {
 	try {
-		counters.value = await searchService.getCounters();
+		counters.value = await api.search.getCounters();
 	} catch (e) {
 		console.error("Error while fetching book counters", e);
 	}

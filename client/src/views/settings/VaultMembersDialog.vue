@@ -250,7 +250,7 @@ import {computed, Ref, ref, watch} from 'vue';
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {i18n} from "@/plugins/i18n/i18n";
-import {vaultService} from "@/service/vault/VaultService";
+import {api} from "@/plugins/api";
 import {applicationService} from "@/service/ApplicationService";
 import {vaultJoinRoute} from "@/router/routes/VaultJoinRoute";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
@@ -347,7 +347,7 @@ watch(() => props.modelValue, (open) => {
 async function load() {
 	try {
 		loading.value = true;
-		vault.value = await vaultService.get(props.vaultId);
+		vault.value = await api.vaults.get(props.vaultId);
 		name.value = vault.value.name;
 		description.value = vault.value.description ?? "";
 		loansEnabled.value = vault.value.loansEnabled;
@@ -382,7 +382,7 @@ async function saveSettings() {
 	if (!vault.value) return;
 	try {
 		savingSettings.value = true;
-		await vaultService.update(vault.value.id, name.value.trim(), description.value.trim() || undefined, loansEnabled.value);
+		await api.vaults.update(vault.value.id, name.value.trim(), description.value.trim() || undefined, loansEnabled.value);
 		if (vault.value.id === applicationService.getUser().getActiveVaultId()) {
 			applicationService.setLoansEnabled(loansEnabled.value);
 		}
@@ -413,7 +413,7 @@ async function approveOrReject(member: IVaultUser, status: VaultUserStatus) {
 	if (!vault.value) return;
 	try {
 		actingOnId.value = member.user_id;
-		await vaultService.updateMember(vault.value.id, member.user_id, {status});
+		await api.vaults.updateMember(vault.value.id, member.user_id, {status});
 		appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_MEMBER_UPDATED)});
 		await load();
 	} finally {
@@ -428,7 +428,7 @@ async function changeRole(member: IVaultUser, role: number | typeof SSO_ROLE) {
 	if (!vault.value) return;
 	try {
 		actingOnId.value = member.user_id;
-		await vaultService.updateMember(
+		await api.vaults.updateMember(
 			vault.value.id,
 			member.user_id,
 			role === SSO_ROLE ? {roleSource: VaultRoleSource.OIDC} : {role}
@@ -454,7 +454,7 @@ function removeOrLeave(member: IVaultUser) {
 	).then(async () => {
 		try {
 			actingOnId.value = member.user_id;
-			await vaultService.removeMember(vault.value!.id, member.user_id);
+			await api.vaults.removeMember(vault.value!.id, member.user_id);
 			appSnackbarController.show({message: i18n.global.t(isSelf ? AppLabels.SNACKBAR_VAULT_LEFT : AppLabels.SNACKBAR_MEMBER_REMOVED)});
 			if (isSelf) {
 				emit('changed');
@@ -485,14 +485,14 @@ function deleteVault() {
 		t(AppLabels.DELETE_VAULT_DESC),
 		t(AppLabels.DELETE)
 	).then(async () => {
-		otherVaults.value = (await vaultService.list()).filter((v) => v.id !== vault.value!.id);
+		otherVaults.value = (await api.vaults.list()).filter((v) => v.id !== vault.value!.id);
 		if (otherVaults.value.length === 0) {
 			appSnackbarController.show({message: i18n.global.t(AppLabels.VAULT_DELETE_ONLY_VAULT), type: SnackbarType.ERROR});
 			return;
 		}
 
 		try {
-			await vaultService.remove(vault.value!.id);
+			await api.vaults.remove(vault.value!.id);
 			finishDelete();
 		} catch (e: any) {
 			if (e.response?.status === 409) {
@@ -515,7 +515,7 @@ async function confirmTransferAndDelete() {
 	if (!vault.value || transferTargetId.value === null) return;
 	try {
 		transferring.value = true;
-		await vaultService.remove(vault.value.id, transferTargetId.value);
+		await api.vaults.remove(vault.value.id, transferTargetId.value);
 		transferDialogVisible.value = false;
 		finishDelete();
 	} catch (e: any) {

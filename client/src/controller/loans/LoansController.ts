@@ -5,10 +5,7 @@
  */
 import {BaseController} from "@/controller/BaseController";
 import ILoansResponse, {ILoan} from "@vaultisse/types/loans/ILoan";
-import {loansService} from "@/service/loans/LoansService";
-import {bookService} from "@/service/book/BookService";
-import {customerGroupService} from "@/service/customers/CustomerGroupService";
-import {customersService} from "@/service/customers/CustomersService";
+import {api} from "@/plugins/api";
 import {ICustomerGroup} from "@vaultisse/types/customer/ICustomerGroup";
 import {ICustomerDetail} from "@vaultisse/types/customer/ICustomer";
 import {i18n} from "@/plugins/i18n/i18n";
@@ -49,13 +46,13 @@ export default class LoansController extends BaseController<ILoansResponse> {
 
     public constructor() {
         super(i18n.global.t(AppLabels.LOANS));
-        customerGroupService.getGroups().then((groups) => this.m_groups.value = groups);
-        customersService.getPageData().then((data) => this.m_customers.value = data.customers);
+        api.customerGroups.getGroups().then((groups) => this.m_groups.value = groups);
+        api.customers.getPageData().then((data) => this.m_customers.value = data.customers);
     }
 
     /** @returns The first page of loans for the current filters. */
     async fetchData(): Promise<ILoansResponse> {
-        return await loansService.getLoans(this.m_page, this.m_groupId, this.m_dateFrom, this.m_dateTo);
+        return await api.loans.getLoans(this.m_page, this.m_groupId, this.m_dateFrom, this.m_dateTo);
     }
 
     /** @param data Raw loans response from the server, or null. */
@@ -158,7 +155,7 @@ export default class LoansController extends BaseController<ILoansResponse> {
     public async returnLoan(stockCode: string) {
         this.m_returning.value.push(stockCode);
         try {
-            await bookService.returnBooks([stockCode]);
+            await api.books.returnBooks([stockCode]);
             await this.refresh();
         } finally {
             this.m_returning.value.splice(this.m_returning.value.indexOf(stockCode), 1);

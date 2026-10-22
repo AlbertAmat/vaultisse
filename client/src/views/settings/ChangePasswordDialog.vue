@@ -116,12 +116,12 @@
  * "Change password" button + dialog on the settings view: live-checks the
  * new password against the same rules the server enforces (min length,
  * uppercase, digit, special char) and that both entries match before
- * enabling submit, via `userService.changePassword`.
+ * enabling submit, via `api.users.changePassword`.
  */
 import SettingsController from "@/controller/settings/SettingsController";
 import {ref, computed} from "vue";
 import {AxiosError} from "axios";
-import {userService} from "@/service/user/UserService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -177,7 +177,7 @@ async function changePassword() {
 
 	try {
 		loading.value = true;
-		await userService.changePassword(
+		await api.users.changePassword(
 			currentPassword.value,
 			newPassword1.value
 		);

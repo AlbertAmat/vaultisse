@@ -104,7 +104,7 @@
 /**
  * "Import library" dialog: pick which service the CSV was exported from
  * (Vaultisse's own template, or a Goodreads export), drop/browse the file,
- * then bulk-create books from it via `importService.importLibrary`. The
+ * then bulk-create books from it via `api.imports.importLibrary`. The
  * server reports per-row outcomes rather than failing the whole request, so
  * any 200 response (even with some rows skipped/failed) is treated as
  * success here and just surfaces the imported count.
@@ -114,7 +114,7 @@ import { VFileUpload } from 'vuetify/components'
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {applicationService} from "@/service/ApplicationService";
-import {importService} from "@/service/import/ImportService";
+import {api} from "@/plugins/api";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
 import {ImportOrigin} from "@vaultisse/types/import/IImportResult";
 import {PATH_PREFIX} from "@/Constants";
@@ -181,7 +181,7 @@ async function runImport() {
 
 	try {
 		loading.value = true;
-		const result = await importService.importLibrary(origin.value, file.value);
+		const result = await api.imports.importLibrary(origin.value, file.value);
 		appSnackbarController.show({message: t(AppLabels.SNACKBAR_IMPORT_SUCCESS, {count: result.imported})});
 		emit("imported");
 		dialog.value = false;

@@ -4,7 +4,7 @@
  */
 import Location from "@/model/location/Location";
 import ILocationExt from "@vaultisse/types/location/ILocationExt";
-import {locationsService} from "@/service/locations/LocationsService";
+import {api} from "@/plugins/api";
 import LocationBook from "@/model/location/LocationBook";
 import {shallowRef, ShallowRef} from "vue";
 import ILocationBook from "@vaultisse/types/location/ILocationBook";
@@ -43,7 +43,7 @@ export default class LocationExt extends Location{
 
     /** Fetch and cache this location's books from the server. */
     public async fetchBooks() {
-        const books = await locationsService.getLocationBooks(this.m_id);
+        const books = await api.locations.getLocationBooks(this.m_id);
         this.m_books.value = books.map((book) => new LocationBook(book));
     }
 }

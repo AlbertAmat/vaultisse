@@ -164,14 +164,14 @@
 /**
  * "Add book(s) by ISBN" dialog: scan/type one or more ISBNs (client-side
  * checksum-validated) into a queue, then create each sequentially via
- * `bookService.createBookFromIsbn` with a 1.5s delay between calls (rate-limit
+ * `api.books.createBookFromIsbn` with a 1.5s delay between calls (rate-limit
  * friendly toward the Google Books/Open Library lookups). Each row's icon
  * reflects its outcome: loading, not found, error, or created. Navigates
  * straight to the book detail page when adding exactly one.
  */
 import {computed, ref, Ref, watch} from "vue";
 import {validateIsbn10, validateIsbn13} from "@/utils/IsbnVerification";
-import {bookService} from "@/service/book/BookService";
+import {api} from "@/plugins/api";
 import router from "@/router/Router";
 import {AxiosError, AxiosResponse} from "axios";
 import {bookRoute} from "@/router/routes/BookRoute";
@@ -316,7 +316,7 @@ async function addBooks() {
 		try {
 			loadingIsbnCode.value.push(code);
 
-			const id = await bookService.createBookFromIsbn(code, selectedLocation.value);
+			const id = await api.books.createBookFromIsbn(code, selectedLocation.value);
 			createdBooks.value.push(code);
 
 			if (totalBooks === 1) {

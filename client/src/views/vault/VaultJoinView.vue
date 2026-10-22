@@ -54,7 +54,7 @@ import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import router from "@/router/Router";
 import {settingsRoute} from "@/router/routes/SettingsRoute";
-import {vaultService} from "@/service/vault/VaultService";
+import {api} from "@/plugins/api";
 import IVaultInvitePreview from "@vaultisse/types/vault/IVaultInvitePreview";
 
 const route = useRoute();
@@ -67,7 +67,7 @@ const vault = ref<IVaultInvitePreview | null>(null);
 
 onMounted(async () => {
 	try {
-		vault.value = await vaultService.previewInvite(String(route.params.uuid));
+		vault.value = await api.vaults.previewInvite(String(route.params.uuid));
 	} catch (e) {
 		console.error("Error while previewing vault invite", e);
 		vault.value = null;
@@ -82,7 +82,7 @@ onMounted(async () => {
 async function join() {
 	try {
 		joining.value = true;
-		await vaultService.join(String(route.params.uuid));
+		await api.vaults.join(String(route.params.uuid));
 		requested.value = true;
 	} catch (e) {
 		console.error("Error while requesting to join vault", e);

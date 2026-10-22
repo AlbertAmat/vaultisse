@@ -4,7 +4,7 @@
  */
 import {Ref, ref, ShallowRef, shallowRef} from "vue";
 import ICustomer, {ICustomerDetail} from "@vaultisse/types/customer/ICustomer";
-import {customersService} from "@/service/customers/CustomersService";
+import {api} from "@/plugins/api";
 import {ICustomerBook} from "@vaultisse/types/customer/ICustomerBook";
 import {CustomerBook} from "@/model/customer/CustomerBook";
 import Customer from "@/model/customer/Customer";
@@ -44,7 +44,7 @@ export default class CustomerDetail extends Customer {
 
     /** Fetch and cache this customer's currently loaned books from the server. */
     public async fetchBooks() {
-        const books = await customersService.getCustomerBooks(this.m_customerId);
+        const books = await api.customers.getCustomerBooks(this.m_customerId);
         this.m_books.value = books.map((book) => new CustomerBook(book));
         this.m_totalBooks.value =  this.m_books.value.length;
     }
@@ -54,7 +54,7 @@ export default class CustomerDetail extends Customer {
      * @param bookStockCode Stock code of the book being returned.
      */
     public async removeBook(bookStockCode: string) {
-        await customersService.removeCustomerBook(this.m_customerId, bookStockCode);
+        await api.customers.removeCustomerBook(this.m_customerId, bookStockCode);
 
         const index = this.m_books.value.findIndex((books) => books.getStockCode() === bookStockCode);
         if(index != -1) {

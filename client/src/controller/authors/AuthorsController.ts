@@ -3,7 +3,7 @@ import {BaseController} from "@/controller/BaseController";
 import {ShallowRef, shallowRef} from "vue";
 import IBookAuthor from "@vaultisse/types/book/IBookAuthor";
 import BookAuthor from "@/model/author/BookAuthor";
-import {authorsService} from "@/service/author/AuthorsService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -19,7 +19,7 @@ export default class AuthorsController extends BaseController<IBookAuthor[]> {
 
     /** @returns Every author belonging to the user, fetched from the server. */
     async fetchData(): Promise<IBookAuthor[]> {
-        return await authorsService.getAuthors()
+        return await api.authors.getAuthors()
     }
 
     /** @param data Raw author list from the server. */
@@ -46,7 +46,7 @@ export default class AuthorsController extends BaseController<IBookAuthor[]> {
      */
     public async addAuthor(name: string) {
         try {
-            const customer = await authorsService.addAuthor(name);
+            const customer = await api.authors.addAuthor(name);
             this.m_authors.value = [...this.m_authors.value, new BookAuthor(customer)];
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_NEW_AUTHOR_ADDED) + " " + name})
         } catch (e) {
@@ -62,7 +62,7 @@ export default class AuthorsController extends BaseController<IBookAuthor[]> {
         const index = this.m_authors.value.findIndex(author => author.getAuthorId() === id);
         if(index != -1 ) {
             try {
-                await authorsService.deleteAuthor(id);
+                await api.authors.deleteAuthor(id);
                 this.m_authors.value.splice(index, 1);
                 this.m_authors.value = [...this.m_authors.value];
                 appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_AUTHOR_DELETED)})

@@ -5,7 +5,7 @@
  * search text comes from the `query` route param (see `SearchRoute`).
  */
 import {BaseController} from "@/controller/BaseController";
-import {searchService} from "@/service/search/SearchService";
+import {api} from "@/plugins/api";
 import {ref, Ref, shallowRef, ShallowRef, watch} from "vue";
 import BookItem from "@/model/book/BookItem";
 import {ISearchResponse} from "@vaultisse/types/search/ISearchResponse";
@@ -112,7 +112,7 @@ export default class SearchController extends BaseController<ISearchResponse> {
         const dateFromParam = params[SearchRoute.DATE_FROM_QUERY_PARAM];
         const dateToParam = params[SearchRoute.DATE_TO_QUERY_PARAM];
 
-        return await searchService.searchBooks(
+        return await api.search.searchBooks(
             query,
             categoryId,
             0,
@@ -141,7 +141,7 @@ export default class SearchController extends BaseController<ISearchResponse> {
         try {
             const params = router.currentRoute.value.query;
             const query = params[SearchRoute.QUERY_PARAM] ? params[SearchRoute.QUERY_PARAM] as string : null;
-            const data = await searchService.searchBooks(
+            const data = await api.search.searchBooks(
                 query,
                 this.m_categoryId.value,
                 this.m_page.value,

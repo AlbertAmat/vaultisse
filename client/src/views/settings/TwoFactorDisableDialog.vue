@@ -71,7 +71,7 @@
 /** "Disable" button + password-confirmation dialog for turning two-factor auth off. */
 import SettingsController from "@/controller/settings/SettingsController";
 import {ref} from "vue";
-import {userService} from "@/service/user/UserService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -94,7 +94,7 @@ async function disable() {
 	try {
 		loading.value = true;
 		error.value = null;
-		await userService.disableTwoFactor(password.value);
+		await api.users.disableTwoFactor(password.value);
 		props.controller.getUser().setTotpEnabled(false);
 		appSnackbarController.show({message: t(AppLabels.TWOFA_DISABLED_SNACKBAR)});
 		dialog.value = false;

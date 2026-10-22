@@ -5,7 +5,7 @@
 import {BaseController} from "@/controller/BaseController";
 import IBook from "@vaultisse/types/book/IBook";
 import Book from "@/model/book/Book";
-import {bookService} from "@/service/book/BookService";
+import {api} from "@/plugins/api";
 import router from "@/router/Router";
 import {shallowRef, ShallowRef} from "vue";
 import {i18n} from "@/plugins/i18n/i18n";
@@ -23,7 +23,7 @@ export default class BookController extends BaseController<IBook>{
     /** @returns The book matching the current route's `book_id` param, fetched from the server. */
     async fetchData(): Promise<IBook> {
         const bookId = Number(router.currentRoute.value.params.book_id);
-        return await bookService.getBook(bookId);
+        return await api.books.getBook(bookId);
     }
 
     /** @param data Raw book detail data from the server. */

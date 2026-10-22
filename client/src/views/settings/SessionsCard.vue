@@ -61,7 +61,7 @@ import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import SettingsCard from "@/views/settings/SettingsCard.vue";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
-import {userService} from "@/service/user/UserService";
+import {api} from "@/plugins/api";
 import IUserSession from "@vaultisse/types/user/IUserSession";
 import {deviceIcon, parseUserAgent} from "@/utils/DeviceInfo";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
@@ -75,7 +75,7 @@ const revokingId: Ref<number | null> = ref(null);
 
 onMounted(async () => {
 	try {
-		sessions.value = await userService.getSessions();
+		sessions.value = await api.users.getSessions();
 	} catch (e) {
 		console.error("Error while fetching active sessions", e);
 	} finally {
@@ -104,7 +104,7 @@ function revoke(session: IUserSession) {
 	).then(async () => {
 		try {
 			revokingId.value = session.id;
-			await userService.revokeSession(session.id);
+			await api.users.revokeSession(session.id);
 
 			if (session.isCurrent) {
 				window.location.href = "/login";

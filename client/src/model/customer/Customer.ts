@@ -5,8 +5,7 @@
  */
 import {Ref, ref} from "vue";
 import ICustomer from "@vaultisse/types/customer/ICustomer";
-import {customersService} from "@/service/customers/CustomersService";
-import {customerGroupService} from "@/service/customers/CustomerGroupService";
+import {api} from "@/plugins/api";
 
 export default class Customer {
     /** Customer id, immutable once loaded. */
@@ -44,7 +43,7 @@ export default class Customer {
      * @param name New customer name.
      */
     public async update(name:string) {
-        await customersService.updateCustomer(this.m_customerId, name);
+        await api.customers.updateCustomer(this.m_customerId, name);
         this.m_customerName.value = name;
     }
 
@@ -64,14 +63,14 @@ export default class Customer {
      * @param groupName Name of the group to assign (stored locally to avoid a re-fetch).
      */
     public async assignToGroup(groupId: number, groupName: string) {
-        await customerGroupService.assignCustomerToGroup(this.m_customerId, groupId);
+        await api.customerGroups.assignCustomerToGroup(this.m_customerId, groupId);
         this.m_groupId.value = groupId;
         this.m_groupName.value = groupName;
     }
 
     /** Remove this customer from their current group, on the server and locally. */
     public async removeFromGroup() {
-        await customerGroupService.removeCustomerFromGroup(this.m_customerId);
+        await api.customerGroups.removeCustomerFromGroup(this.m_customerId);
         this.m_groupId.value = null;
         this.m_groupName.value = null;
     }

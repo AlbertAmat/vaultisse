@@ -92,7 +92,7 @@ import {computed, ref, Ref, watch} from 'vue';
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import LoansController from "@/controller/loans/LoansController";
-import {loansService} from "@/service/loans/LoansService";
+import {api} from "@/plugins/api";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
 
 interface Props {
@@ -151,7 +151,7 @@ async function generateReport() {
 
 	loading.value = true;
 	try {
-		const rows = await loansService.getLoanHistory(dateFrom.value, dateTo.value, groupId.value, customerId.value);
+		const rows = await api.loans.getLoanHistory(dateFrom.value, dateTo.value, groupId.value, customerId.value);
 
 		if (rows.length === 0) {
 			appSnackbarController.show({message: t(AppLabels.NO_LOANS_FOUND), type: SnackbarType.ERROR});

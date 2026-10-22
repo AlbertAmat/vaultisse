@@ -77,7 +77,7 @@
  */
 import SettingsController from "@/controller/settings/SettingsController";
 import {ref} from "vue";
-import {userService} from "@/service/user/UserService";
+import {api} from "@/plugins/api";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 
@@ -99,7 +99,7 @@ async function deleteAccount() {
 	try {
 		loading.value = true;
 		error.value = null;
-		await userService.delete(password.value);
+		await api.users.delete(password.value);
 		window.location.href = "/login";
 	} catch (e: any) {
 		error.value = e.response?.data?.message ?? "Something went wrong. Please try again.";

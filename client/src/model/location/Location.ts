@@ -1,6 +1,6 @@
 /** View model for a physical storage location, wrapping `ILocation` with reactive rename support. */
 import ILocation from "@vaultisse/types/location/ILocation";
-import {locationsService} from "@/service/locations/LocationsService";
+import {api} from "@/plugins/api";
 import {ref, Ref} from "vue";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
@@ -53,7 +53,7 @@ export default class Location {
      * @param description New location description, or null to clear it.
      */
     public async update(name: string, description: string | null) {
-        await locationsService.updateLocation(this.m_id, name, description)
+        await api.locations.updateLocation(this.m_id, name, description)
         this.m_name.value = name;
         this.m_description.value = description;
         appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_LOCATION_UPDATED)})

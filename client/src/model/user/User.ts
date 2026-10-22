@@ -5,8 +5,7 @@ import { IUser } from "@vaultisse/types/user/IUser";
 import { ref, Ref } from "vue";
 
 // Service for performing API calls related to the user
-import { userService } from "@/service/user/UserService";
-import { vaultService } from "@/service/vault/VaultService";
+import {api} from "@/plugins/api";
 
 // Controller for showing feedback messages (snackbars) to the user
 import { appSnackbarController } from "@/components/appSnackbar/AppSnackbarController";
@@ -217,7 +216,7 @@ export default class User {
      */
     public async setTheme(theme: string) {
         try {
-            await userService.updateTheme(theme);
+            await api.users.updateTheme(theme);
             this.m_theme.value = theme;
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_APPEARANCE_UPDATED)});
         } catch (e) {
@@ -241,7 +240,7 @@ export default class User {
      */
     public async setSidebarRail(sidebarRail: boolean) {
         try {
-            await userService.updateSidebarRail(sidebarRail);
+            await api.users.updateSidebarRail(sidebarRail);
             this.m_sidebarRail.value = sidebarRail;
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_APPEARANCE_UPDATED)});
         } catch (e) {
@@ -310,7 +309,7 @@ export default class User {
      * @param vaultId Vault to make active - the caller must already be an accepted member.
      */
     public async switchVault(vaultId: number) {
-        await vaultService.setActive(vaultId);
+        await api.vaults.setActive(vaultId);
         this.m_activeVault.value = vaultId;
     }
 
@@ -320,7 +319,7 @@ export default class User {
      */
     public async acceptSecurityNotice() {
         try {
-            await userService.acceptSecurityNotice();
+            await api.users.acceptSecurityNotice();
             this.m_securityNoticeAccepted.value = true;
         } catch (e) {
             console.error("Error while accepting security notice: ", e);
@@ -333,7 +332,7 @@ export default class User {
      */
     public async acceptTermsOfService() {
         try {
-            await userService.acceptTermsOfService();
+            await api.users.acceptTermsOfService();
             this.m_termsOfServiceAccepted.value = true;
         } catch (e) {
             console.error("Error while accepting terms of service: ", e);
@@ -351,7 +350,7 @@ export default class User {
      */
     public async update(name: string, email: string, language: string, region: string, currentPassword?: string) {
         try {
-            await userService.update(name, email, language, region, currentPassword);
+            await api.users.update(name, email, language, region, currentPassword);
             appSnackbarController.show({ message: i18n.global.t(AppLabels.SNACKBAR_PROFILE_UPDATED) });
             this.m_email.value = email;
             this.m_name.value = name;
@@ -368,7 +367,7 @@ export default class User {
      */
     public async removeImage() {
         try {
-            await userService.removeImage();
+            await api.users.removeImage();
             this.m_image.value = null;
             appSnackbarController.show({ message: i18n.global.t(AppLabels.SNACKBAR_PROFILE_IMAGE_DELETED)});
         } catch (e) {
@@ -383,7 +382,7 @@ export default class User {
      */
     public async uploadImage(image: File) {
         try {
-            await userService.uploadImage(image);
+            await api.users.uploadImage(image);
             const base64 = await this.__toBase64(image);
             this.m_image.value = base64;
             appSnackbarController.show({ message: i18n.global.t(AppLabels.SNACKBAR_PROFILE_IMAGE_UPDATED) });

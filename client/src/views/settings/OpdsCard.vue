@@ -55,7 +55,7 @@ import {onMounted, ref} from "vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import SettingsCard from "@/views/settings/SettingsCard.vue";
-import {userService} from "@/service/user/UserService";
+import {api} from "@/plugins/api";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 
@@ -69,7 +69,7 @@ const feedUrl = ref("");
 
 onMounted(async () => {
 	try {
-		enabled.value = await userService.getOpdsEnabled();
+		enabled.value = await api.users.getOpdsEnabled();
 	} catch (e) {
 		console.error("Error while fetching OPDS feed status", e);
 	} finally {
@@ -81,7 +81,7 @@ onMounted(async () => {
 async function generate() {
 	try {
 		busy.value = true;
-		feedUrl.value = window.location.origin + await userService.createOpdsToken();
+		feedUrl.value = window.location.origin + await api.users.createOpdsToken();
 		enabled.value = true;
 	} catch (e) {
 		console.error("Error while creating OPDS feed link", e);
@@ -103,7 +103,7 @@ function regenerate() {
 async function disable() {
 	try {
 		busy.value = true;
-		await userService.revokeOpdsToken();
+		await api.users.revokeOpdsToken();
 		enabled.value = false;
 		feedUrl.value = "";
 		appSnackbarController.show({message: t(AppLabels.SNACKBAR_OPDS_DISABLED)});

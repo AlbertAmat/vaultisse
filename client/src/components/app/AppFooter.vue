@@ -17,7 +17,7 @@ import {computed, onMounted, ref} from "vue";
 import {useI18n} from "vue-i18n";
 import {legalUiLabels, normalizeLegalLocale} from "@/views/legal/legalData";
 import {legalRoute} from "@/router/routes/LegalRoute";
-import {appService} from "@/service/app/AppService";
+import {api} from "@/plugins/api";
 
 const {locale} = useI18n();
 
@@ -31,7 +31,7 @@ const version = ref<string | null>(null);
 
 onMounted(async () => {
 	try {
-		const data = await appService.getVersion();
+		const data = await api.app.getVersion();
 		version.value = data.version;
 	} catch (e) {
 		console.error("Error fetching app version. ", e);

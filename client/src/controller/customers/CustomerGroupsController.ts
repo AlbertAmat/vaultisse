@@ -6,7 +6,7 @@
 import {Ref, ref, ShallowRef, shallowRef} from "vue";
 import {ICustomerGroup} from "@vaultisse/types/customer/ICustomerGroup";
 import CustomerGroup from "@/model/customer/CustomerGroup";
-import {customerGroupService} from "@/service/customers/CustomerGroupService";
+import {api} from "@/plugins/api";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -27,7 +27,7 @@ export default class CustomerGroupsController {
     public async reload() {
         try {
             this.m_loading.value = true;
-            const data: ICustomerGroup[] = await customerGroupService.getGroups();
+            const data: ICustomerGroup[] = await api.customerGroups.getGroups();
             this.m_groups.value = data.map(group => new CustomerGroup(group));
         } catch (e) {
             console.error("Error while fetching customer groups. ", e);
@@ -64,7 +64,7 @@ export default class CustomerGroupsController {
      */
     public async addGroup(name: string, description?: string) {
         try {
-            const group = await customerGroupService.addGroup(name, description);
+            const group = await api.customerGroups.addGroup(name, description);
             this.m_groups.value = [...this.m_groups.value, new CustomerGroup(group)];
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_NEW_GROUP_ADDED)})
         } catch (e) {
@@ -80,7 +80,7 @@ export default class CustomerGroupsController {
         const index = this.m_groups.value.findIndex(group => group.getId() === id);
         if (index != -1) {
             try {
-                await customerGroupService.deleteGroup(id);
+                await api.customerGroups.deleteGroup(id);
                 this.m_groups.value.splice(index, 1);
                 this.m_groups.value = [...this.m_groups.value];
                 appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_DELETED_GROUP)})

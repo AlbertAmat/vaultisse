@@ -12,7 +12,7 @@
 import {BookStockStatusEnum, IBookStock} from "@vaultisse/types/book/IBookStock";
 import {IBorrower} from "@vaultisse/types/book/IBorrower";
 import JsBarcode from "jsbarcode";
-import {bookService} from "@/service/book/BookService";
+import {api} from "@/plugins/api";
 import {ref, Ref} from "vue";
 import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
@@ -186,7 +186,7 @@ export default class BookStock {
      */
     public async update(status: BookStockStatusEnum, locationId: number, borrower: IBorrower) {
         try {
-            const data = await bookService.updateBookStock(this.m_book.getId(), this.m_id, status, locationId, borrower);
+            const data = await api.books.updateBookStock(this.m_book.getId(), this.m_id, status, locationId, borrower);
             this.m_status.value = data.status;
             this.m_locationId.value = data.location_id;
             this.m_locationName = data.location_name;
