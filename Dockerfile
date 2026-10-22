@@ -72,15 +72,14 @@ LABEL org.opencontainers.image.title="vaultisse" \
       org.opencontainers.image.source="https://github.com/AlbertAmat/vaultisse" \
       org.opencontainers.image.licenses="MIT"
 
-# Runtime layout: the bundled server in server/dist, with client/ and assets/db/
-# as siblings of server/ - these are the locations server/src/utils/Paths.ts
-# resolves in production.
-WORKDIR /app/dist
+# Runtime layout: everything sits next to the bundled server (index.js) - these
+# are the locations server/src/utils/Paths.ts resolves in production:
+#   /app/index.js  /app/node_modules  /app/assets  /app/client  /app/db/upgrade  /app/logs
+WORKDIR /app
 
-COPY --from=server-deps  /app/server/node_modules ./server/node_modules
-COPY --from=server-build /app/server/package.json  ./server/package.json
-COPY --from=server-build /app/server/dist          ./server/dist
-COPY --from=server-build /app/server/src/assets    ./server/dist/assets
+COPY --from=server-deps  /app/server/node_modules ./node_modules
+COPY --from=server-build /app/server/dist/        ./
+COPY --from=server-build /app/server/src/assets   ./assets
 
 # YAZ Z39.50 client (built in the yaz-build stage) plus the shared libraries it
 # links against; verified here so a broken build fails the image, not a lookup.
@@ -92,7 +91,7 @@ RUN apk add --no-cache libxml2 libxslt icu-libs readline openssl \
 # The upgrade SQL files applied automatically on startup (see
 # server/src/migrate/index.ts and GitHub issue #26) - not built by either
 # prior stage, so copied straight from the build context.
-COPY assets/db ./assets/db
+COPY assets/db ./db
 COPY --from=client-build /app/client/dist          ./client
 
 RUN mkdir -p /app/logs \
@@ -105,4 +104,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD node -e "require('http').get({host:'127.0.0.1',port:process.env.API_PORT||3000,path:'/api/rest/app/version'},r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
 
-CMD ["node", "server/dist/index.js"]
+CMD ["node", "index.js"]

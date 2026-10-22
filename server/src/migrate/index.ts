@@ -34,8 +34,6 @@ import {Pool} from "pg";
 import {Logger} from "../utils/Logger";
 import {UPGRADE_SQL_DIR} from "../utils/Paths";
 
-const DEFAULT_UPGRADE_DIR = UPGRADE_SQL_DIR;
-
 /**
  * One "does this legacy file's change already exist?" probe per upgrade file
  * that shipped before this runner existed. Keyed by the file's path relative
@@ -160,7 +158,7 @@ function discoverMigrationFiles(upgradeDir: string): string[] {
  *
  * @param upgradeDir Defaults to `assets/db/upgrade/` at the repo root.
  */
-export async function runMigrations(pool: Pool, logger: Logger, upgradeDir: string = DEFAULT_UPGRADE_DIR): Promise<void> {
+export async function runMigrations(pool: Pool, logger: Logger, upgradeDir: string = UPGRADE_SQL_DIR): Promise<void> {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS schema_migrations
         (

@@ -320,13 +320,19 @@ npm install
 npm run build                    # type-check + bundle -> server/dist/index.js
 ```
 
-Then run `NODE_ENV=production node server/dist/index.js` (with the environment from
-`.env.example`) from a layout where the built client and the SQL upgrade files sit next
-to `server/` the way the Docker image arranges them: `client/` (the contents of
-`client/dist`) and `assets/db/` as siblings of `server/`, and the server's `src/assets`
-copied to `server/dist/assets` (see the runtime stage of the `Dockerfile`; the paths
-are resolved in `server/src/utils/Paths.ts`). The server serves the built client itself,
-so a single Node.js process is all you need.
+Then run `NODE_ENV=production node index.js` (with the environment from `.env.example`)
+from a folder laid out like the Docker image (see the runtime stage of the
+[`Dockerfile`](Dockerfile); the paths are resolved in `server/src/utils/Paths.ts`):
+
+```
+index.js        <- server/dist/index.js
+node_modules/   <- `npm ci --omit=dev` in server/
+assets/         <- server/src/assets (login.html, register.html)
+client/         <- client/dist
+db/upgrade/     <- assets/db/upgrade
+```
+
+The server serves the built client itself, so a single Node.js process is all you need.
 
 ## Deploying with Docker
 
