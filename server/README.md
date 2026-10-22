@@ -9,7 +9,7 @@ architecture, and setup instructions covering both the client and the server.
 ```bash
 npm install
 cp .env.example .env   # then fill in your local values
-npm run dev             # starts the API with nodemon + ts-node
+npm run dev             # starts the API with tsx watch
 ```
 
 See [Configure the server](../README.md#3-configure-the-server) in the root

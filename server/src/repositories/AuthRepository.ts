@@ -9,7 +9,7 @@
 import {Pool, PoolClient} from "pg";
 import {BackupCode, LoginCandidate, NewUserFields, PendingTwoFactorUser} from "../types/auth";
 import {VaultPermissions} from "../types/vault";
-import {VaultUserStatus} from "../shared/types/vault/IVaultUser";
+import {VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 /** Data access for password login/registration/logout and AuthMiddleware's per-request session check. */
 export class AuthRepository {

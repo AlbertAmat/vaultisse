@@ -1,4 +1,4 @@
-import {VaultRoleSource, VaultUserStatus} from "../shared/types/vault/IVaultUser";
+import {VaultRoleSource, VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 export interface Vault {
     id: number;

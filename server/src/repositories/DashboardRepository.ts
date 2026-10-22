@@ -1,5 +1,5 @@
 import {Pool, PoolClient} from "pg";
-import {ReadingStatusEnum} from "../shared/types/book/IReadingStatus";
+import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
 import {BooksPerMonth, CategoryShelfRow, CurrentLoan, DashboardBookSummary, StockStatusCount} from "../types/dashboard";
 
 /**

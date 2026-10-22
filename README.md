@@ -35,7 +35,6 @@ language, format, cover image), and it can look books up automatically by ISBN.
   - [4. Run the server](#4-run-the-server)
   - [5. Run the client](#5-run-the-client)
 - [Building for production](#building-for-production)
-- [Deploying with PM2](#deploying-with-pm2)
 - [Deploying with Docker](#deploying-with-docker)
 - [Releasing a new version](#releasing-a-new-version)
 - [Internationalization](#internationalization)
@@ -181,7 +180,7 @@ rounds) and never stored or logged in plaintext. See
 - In **development**, Vite runs its own dev server (`npm run dev` in `client/`) and
   proxies any request to `/api/rest/*` to the API (`http://localhost:<API_PORT>` by
   default, see `vite.config.ts`). The API runs separately via `npm run dev` in
-  `server/` (nodemon + ts-node).
+  `server/` (`tsx watch`).
 - In **production**, the client is built into static files and the Express server
   serves them directly (see `AuthRoute.ts`, which serves `index.html` for `/app` and
   `/app/*`, guarded by `requireAuth`) — there is a single process and a single port.
@@ -214,9 +213,7 @@ vaultisse/
 │       ├── utils/         # Logger, etc.
 │       └── assets/        # Static login/register pages, prod client bundle
 ├── assets/
-│   ├── db/                # SQL schema (databaseSchema.sql) + upgrade/ (dated upgrade files)
-│   └── pm2/               # Sample PM2 ecosystem config for production
-├── build.sh               # Builds client + server into ./dist and zips it
+│   └── db/                # SQL schema (databaseSchema.sql) + upgrade/ (dated upgrade files)
 └── LICENSE
 ```
 
@@ -295,7 +292,7 @@ Generate a strong `JWT_SECRET`, for example: `openssl rand -hex 32`.
 ```bash
 cd server
 npm install
-npm run dev      # starts the API with nodemon on API_PORT
+npm run dev      # starts the API with tsx watch on API_PORT
 ```
 
 ### 5. Run the client
@@ -310,36 +307,33 @@ Open the URL Vite prints (typically `http://localhost:5173/app`) in your browser
 
 ## Building for production
 
-From the repository root:
+The supported way to run Vaultisse is the Docker image (see [Deploying with Docker](#deploying-with-docker)),
+built from the [`Dockerfile`](Dockerfile). There is no packaged zip/PM2 deployment.
+
+To run it without Docker, clone the repo and build both halves yourself:
 
 ```bash
-./build.sh
+npm install                      # repo root: client + shared packages (npm workspace)
+npm run build -w client          # -> client/dist
+cd server
+npm install
+npm run build                    # type-check + bundle -> server/dist/index.js
 ```
 
-This installs dependencies, builds the client (Vite) and server (`tsc`), assembles
-everything under `./dist` (`dist/client`, `dist/server`), copies server assets, and
-produces a deployable `dist.zip`. The server serves the built client itself, so a
-single Node.js process is all you need to run in production.
-
-## Deploying with PM2
-
-A sample [PM2](https://pm2.keymetrics.io/) config is provided at
-`assets/pm2/ecosystem.config.js.sample`. Copy it, fill in your production values
-(database credentials, `JWT_SECRET`, `FRONT_END_URL`, etc.), and run:
-
-```bash
-cp assets/pm2/ecosystem.config.js.sample ecosystem.config.js
-# edit ecosystem.config.js with your production values
-pm2 start ecosystem.config.js --env production
-```
+Then run `NODE_ENV=production node server/dist/index.js` (with the environment from
+`.env.example`) from a layout where the built client and the SQL upgrade files sit next
+to `server/` the way the Docker image arranges them: `client/` (the contents of
+`client/dist`) and `assets/db/` as siblings of `server/`, and the server's `src/assets`
+copied to `server/dist/assets` (see the runtime stage of the `Dockerfile`; the paths
+are resolved in `server/src/utils/Paths.ts`). The server serves the built client itself,
+so a single Node.js process is all you need.
 
 ## Deploying with Docker
 
 Every push of a `vX.Y.Z` tag builds a production image and publishes it to GitHub
 Container Registry at `ghcr.io/albertamat/vaultisse` (see
 [Releasing a new version](#releasing-a-new-version)). The image bundles the compiled
-server and the built client into one process, same as the PM2 deployment above — there
-is no separate frontend container.
+server and the built client into one process — there is no separate frontend container.
 
 To run it on a server with Docker installed:
 

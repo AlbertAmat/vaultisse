@@ -32,15 +32,9 @@ import * as fs from "fs";
 import * as path from "path";
 import {Pool} from "pg";
 import {Logger} from "../utils/Logger";
+import {UPGRADE_SQL_DIR} from "../utils/Paths";
 
-/**
- * Default location of the upgrade files relative to this compiled module.
- * This file lives at `server/src/migrate/index.ts` -> `server/dist/migrate/index.js`,
- * so three levels up reaches the repo root in both dev (ts-node, from `server/src/migrate/`)
- * and the runtime image (`/app/dist/server/dist/migrate/`, with `assets/db/`
- * copied in as a sibling of `server/` and `client/` - see the Dockerfile).
- */
-const DEFAULT_UPGRADE_DIR = path.join(__dirname, "..", "..", "..", "assets", "db", "upgrade");
+const DEFAULT_UPGRADE_DIR = UPGRADE_SQL_DIR;
 
 /**
  * One "does this legacy file's change already exist?" probe per upgrade file

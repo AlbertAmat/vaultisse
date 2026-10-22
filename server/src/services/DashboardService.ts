@@ -1,6 +1,6 @@
 import {Pool} from "pg";
 import {DashboardRepository} from "../repositories/DashboardRepository";
-import {ReadingStatusEnum} from "../shared/types/book/IReadingStatus";
+import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
 import {CategoryShelf, CategoryShelfRow, DashboardData} from "../types/dashboard";
 
 /** Business rules for the Dashboard resource: runs DashboardRepository's fan-out of queries and shapes the aggregate response. */

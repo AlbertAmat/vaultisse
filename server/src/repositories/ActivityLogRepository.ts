@@ -6,7 +6,7 @@
  * growing a new one per feature.
  */
 import {Pool, PoolClient} from "pg";
-import {ActivityAction} from "../shared/types/user/ActivityAction";
+import {ActivityAction} from "@vaultisse/types/user/ActivityAction";
 
 export interface RecordActivityOptions {
     entityType?: string | null;

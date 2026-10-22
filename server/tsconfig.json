@@ -26,7 +26,6 @@
 
     /* Modules */
     "module": "commonjs",                                /* Specify what module code is generated. */
-     "rootDir": "./src/",                                  /* Specify the root folder within your source files. */
     // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
     // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
     // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
@@ -58,7 +57,11 @@
     // "inlineSourceMap": true,                          /* Include sourcemap files inside the emitted JavaScript. */
     // "noEmit": true,                                   /* Disable emitting files from a compilation. */
      //"outFile": "./dist/",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
-     "outDir": "./dist/",                                   /* Specify an output folder for all emitted files. */
+     "noEmit": true,                                       /* Type-check only: dist/ is produced by scripts/build.js (esbuild). */
+     "baseUrl": ".",
+     "paths": {
+       "@vaultisse/types/*": ["../packages/types/src/*"]   /* shared wire types/enums - bundled into dist by esbuild, see scripts/build.js */
+     },
     // "removeComments": true,                           /* Disable emitting comments. */
     // "importHelpers": true,                            /* Allow importing helper functions from tslib once per project, instead of including them per-file. */
     // "downlevelIteration": true,                       /* Emit more compliant, but verbose and less performant JavaScript for iteration. */
@@ -108,9 +111,7 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  // Excluded from the production build (rootDir above is "./src/", so a
-  // sibling "test" directory would otherwise fail with TS6059). ts-jest
-  // still transforms test files fine - see tsconfig.test.json, which uses
-  // isolatedModules (per-file transpilation, no whole-program file list).
+  // Tests are excluded from the type-check; ts-jest transforms them with
+  // tsconfig.test.json, which uses isolatedModules (per-file transpilation).
   "exclude": ["node_modules", "dist", "test"]
 }

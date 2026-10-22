@@ -53,18 +53,21 @@ and used by both sides: `BookStockStatusEnum`, `ReadingStatusEnum`, `SearchFilte
 `SortType`, `VaultRoleSource`, `VaultUserStatus`, `ActivityAction`. The server must not
 define its own copy.
 
-The server is built and installed standalone (CommonJS, its own lockfile, `build.sh`
-and its own Docker stage), so it is not part of the npm workspace and can't depend on
-the package. Instead `server/scripts/sync-shared-types.js` copies `packages/types/src`
-into `server/src/shared/types/` (generated, gitignored) before `build`, `dev`, `lint`
-and `test` (the `pre*` npm scripts), and the server imports from there:
+The server is not part of the npm workspace (it has its own lockfile and Docker stage).
+It imports the package straight from source through a path alias:
 
 ```ts
-import {ReadingStatusEnum} from "../shared/types/book/IReadingStatus";
+import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
 ```
 
-Edit the files in `packages/types/src`, never the copy. The server's own `src/types/`
-keeps what is server-side only (DB rows, route inputs, `VaultRoleCode`).
+- `server/tsconfig.json` maps `@vaultisse/types/*` to `../packages/types/src/*` (type-check, `tsx`).
+- `server/jest.config.js` has the matching `moduleNameMapper`.
+- `server/scripts/build.js` (esbuild) bundles those files into `server/dist/index.js`, so
+  nothing from `packages/` is needed at run time; only the server's own `dependencies`
+  are installed in production.
+
+The server's own `src/types/` keeps what is server-side only (DB rows, route inputs,
+`VaultRoleCode`).
 
 Not unified: the server's interfaces for response bodies (e.g. `BookStockDetail`) and
 the client's `I*` types describe the same JSON under different names and are still

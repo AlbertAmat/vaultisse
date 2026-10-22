@@ -27,9 +27,9 @@ WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci
 COPY server/ ./
-# The shared wire types (single source, also used by the client workspace) are
-# copied into server/src/shared by the `prebuild` script, so the server stays a
-# standalone install - see server/scripts/sync-shared-types.js.
+# The shared wire types/enums (single source, also used by the client) are
+# imported via the `@vaultisse/types/*` path alias (server/tsconfig.json) and
+# bundled into dist/index.js by server/scripts/build.js.
 COPY packages/types/src /app/packages/types/src
 RUN npm run build
 
@@ -72,9 +72,9 @@ LABEL org.opencontainers.image.title="vaultisse" \
       org.opencontainers.image.source="https://github.com/AlbertAmat/vaultisse" \
       org.opencontainers.image.licenses="MIT"
 
-# Same runtime layout produced by build.sh, so the compiled server's
-# relative path lookups (server/dist -> ../../../client) resolve the same
-# way they do in the existing PM2/dist.zip deployment.
+# Runtime layout: the bundled server in server/dist, with client/ and assets/db/
+# as siblings of server/ - these are the locations server/src/utils/Paths.ts
+# resolves in production.
 WORKDIR /app/dist
 
 COPY --from=server-deps  /app/server/node_modules ./server/node_modules

@@ -4,7 +4,7 @@ import {UserRepository} from "../repositories/UserRepository";
 import {UserSessionRepository} from "../repositories/UserSessionRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {ActivityLogRepository} from "../repositories/ActivityLogRepository";
-import {ActivityAction} from "../shared/types/user/ActivityAction";
+import {ActivityAction} from "@vaultisse/types/user/ActivityAction";
 import {withTransaction} from "../repositories/withTransaction";
 import {TwoFactorAuth} from "../utils/TwoFactorAuth";
 import {ActivityLogEntry, ProfileUpdateFields, TwoFactorSetup, UserSession} from "../types/user";

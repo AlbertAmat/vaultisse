@@ -4,7 +4,7 @@ import {OidcUserService, OidcUserError} from "../../src/services/OidcUserService
 import {OidcClaims} from "../../src/repositories/OidcRepository";
 import {nextFakeIp, TEST_PASSWORD} from "../helpers/auth";
 import {VaultRepository} from "../../src/repositories/VaultRepository";
-import {VaultRoleSource} from "../../src/shared/types/vault/IVaultUser";
+import {VaultRoleSource} from "@vaultisse/types/vault/IVaultUser";
 import {setupTestApp} from "../helpers/testApp";
 
 const app = setupTestApp();

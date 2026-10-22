@@ -3,7 +3,7 @@ import {VaultRepository} from "../repositories/VaultRepository";
 import {UserRepository} from "../repositories/UserRepository";
 import {withTransaction} from "../repositories/withTransaction";
 import {Vault, VaultInfo, VaultInvitePreview, VaultRole, VaultRoleCode, VaultUser} from "../types/vault";
-import {VaultRoleSource, VaultUserStatus} from "../shared/types/vault/IVaultUser";
+import {VaultRoleSource, VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 import {appService} from "../AppService";
 import {ConflictError, ForbiddenError, NotFoundError, ValidationError} from "../errors/DomainError";
 

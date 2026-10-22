@@ -13,7 +13,7 @@
 import {parse} from "csv-parse/sync";
 import {IImportedBook} from "./IImportedBook";
 import {IsbnVerification} from "../../../utils/IsbnVerification";
-import {ReadingStatusEnum} from "../../../shared/types/book/IReadingStatus";
+import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
 
 /**
  * Raw shape of one row from a Goodreads "Export Library" CSV, keyed by its

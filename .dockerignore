@@ -4,7 +4,6 @@
 
 **/node_modules
 dist
-dist.zip
 server/dist
 client/dist
 
@@ -18,4 +17,3 @@ bookStorage.log
 CONTRIBUTING.md
 CODE_OF_CONDUCT.md
 SECURITY.md
-server/src/shared

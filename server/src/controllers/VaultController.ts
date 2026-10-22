@@ -3,7 +3,7 @@ import {Request, Response} from "express";
 import {appService} from "../AppService";
 import {VaultService} from "../services/VaultService";
 import {DomainError} from "../errors/DomainError";
-import {VaultRoleSource, VaultUserStatus} from "../shared/types/vault/IVaultUser";
+import {VaultRoleSource, VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 /** Thin HTTP<->service glue for the Vault resource. Constructed once per process (see VaultRoute.ts) and reused across requests. */
 export class VaultController {

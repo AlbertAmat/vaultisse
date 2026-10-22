@@ -1,4 +1,4 @@
-import {BookStockStatusEnum} from "../../shared/types/book/IBookStock";
+import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
 
 /**
  * Minimal identity fields for a single physical copy of a book.

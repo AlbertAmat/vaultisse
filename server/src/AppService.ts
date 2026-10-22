@@ -20,6 +20,7 @@ import {logFailedRequests} from "./middlewares/RequestLogMiddleware"; // Logs ev
 import {BookMetadataRepository} from "./repositories/BookMetadataRepository";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 import {runMigrations} from "./migrate";
+import {ASSETS_DIR} from "./utils/Paths";
 
 /** Present only when every required OIDC env var is set. See isOidcEnabled(). */
 export interface OidcConfig {
@@ -209,7 +210,7 @@ export class AppService {
         this.m_app.use(blockWritesInDemo);
 
         // use static from compiled app in /assets/app
-        this.m_app.use(express.static(path.join(__dirname,  "assets", "app")));
+        this.m_app.use(express.static(path.join(ASSETS_DIR, "app")));
 
         this.m_cspExtraImgSrc = AppService.__readCspExtraImgSrc();
 

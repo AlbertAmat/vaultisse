@@ -1,5 +1,5 @@
-import {BookStockStatusEnum} from "../shared/types/book/IBookStock";
-import {ReadingStatusEnum} from "../shared/types/book/IReadingStatus";
+import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
+import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
 
 export interface BookAuthor {
     id: number;

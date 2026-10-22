@@ -5,10 +5,9 @@ import {appService} from "../AppService";
 import {AuthService, PendingLoginExpiredError} from "../services/AuthService";
 import {UnauthorizedError, ValidationError} from "../errors/DomainError";
 import {SessionCookie} from "../utils/SessionCookie";
+import {ASSETS_DIR, CLIENT_DIST_DIR} from "../utils/Paths";
 
-// Compiled Vue app: alongside the server in production (Docker image),
-// under client/dist during local development.
-export const clientDistPath = process.env.NODE_ENV === "production" ? path.join(__dirname, "../../../client") : path.join(__dirname, '../../../client/dist')
+export const clientDistPath = CLIENT_DIST_DIR;
 
 /** Thin HTTP<->service glue for the Auth resource (password login/2FA/register/logout, SSO, and serving the SPA shell). Constructed once per process (see AuthRoute.ts) and reused across requests. */
 export class AuthController {
@@ -57,7 +56,7 @@ export class AuthController {
         SessionCookie.clearSessionCookie(res);
         SessionCookie.clearPending2faCookie(res);
         SessionCookie.clearOidcPendingCookie(res);
-        res.sendFile(path.join(__dirname, "..", "assets", "login.html"));
+        res.sendFile(path.join(ASSETS_DIR, "login.html"));
     }
 
     /**
@@ -232,7 +231,7 @@ export class AuthController {
             res.redirect("/app");
             return;
         }
-        res.sendFile(path.join(__dirname, "..", "assets", "register.html"));
+        res.sendFile(path.join(ASSETS_DIR, "register.html"));
     }
 
     /**
