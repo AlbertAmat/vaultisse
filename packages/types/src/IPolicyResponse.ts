@@ -5,7 +5,6 @@ import ILocation from "./location/ILocation";
 import {IUser} from "./user/IUser";
 import ICustomer from "./customer/ICustomer";
 import {IBorrowingMember} from "./book/IBorrower";
-import {AppLabels} from "./i18n/AppLabels";
 
 /**
  * Bootstrap payload fetched once after login from `GET /app/policy`: the
@@ -33,8 +32,11 @@ export default interface IPolicyResponse {
     formats: IFormat[];
     /** Every location belonging to the user. */
     locations: ILocation[];
-    /** UI translation strings for the user's language, keyed by `AppLabels`. */
-    labels: Record<AppLabels, string>;
+    /**
+     * UI translation strings for the user's language, keyed by label name. The key set is
+     * defined by each front end (the web client's is the `AppLabels` enum), not by this package.
+     */
+    labels: Record<string, string>;
     /** Max accepted size, in MB, for a `POST /import/library` upload - see `ImportRoute.ts`. */
     maxImportFileSizeMb: number;
 }

@@ -7,7 +7,7 @@ copying it.
 
 | Package | Contents |
 |---|---|
-| [`@vaultisse/types`](types) | The wire types: request/response interfaces (`IBook`, `IPolicyResponse`, ...) and the enums that travel over the API (`BookStockStatusEnum`, `AppLabels`, ...). Pure TypeScript, no runtime dependencies. |
+| [`@vaultisse/types`](types) | The wire types: request/response interfaces (`IBook`, `IPolicyResponse`, ...) and the enums that travel over the API (`BookStockStatusEnum`, `ReadingStatusEnum`, ...). Pure TypeScript, no runtime dependencies. |
 | [`@vaultisse/api-client`](api-client) | `createApiClient()`: one service class per `/api/rest/<resource>` (`api.books`, `api.loans`, ...) on a shared axios instance. No UI or framework code. |
 
 Both are **source-only**: there is no build step, the consuming bundler (Vite,

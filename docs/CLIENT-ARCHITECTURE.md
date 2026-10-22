@@ -182,6 +182,6 @@ pages, which are static per-language files rather than DB-backed labels.
 | Router setup + auth/loans guard | `client/src/router/Router.ts` |
 | Per-feature route definitions | `client/src/router/routes/*.ts` |
 | i18n instance | `client/src/plugins/i18n/i18n.ts` |
-| Message key enum | `packages/types/src/i18n/AppLabels.ts` (re-exported by `client/src/plugins/i18n/AppLabels.ts`) |
+| Message key enum | `client/src/plugins/i18n/AppLabels.ts` |
 | Vuetify setup | `client/src/plugins/vuetify.ts` |
 | App shell / bootstrap sequence | `client/src/main.ts`, `client/src/App.vue` |
