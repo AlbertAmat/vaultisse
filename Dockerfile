@@ -19,18 +19,20 @@ WORKDIR /app/client
 RUN npm run build
 
 # ---------------------------------------------------------------------------
-# 2) Compile the Express/TypeScript server
+# 2) Bundle the Express/TypeScript server
+#    Same folder layout as the repo: server/ imports the shared wire types/enums
+#    from ../packages/types through the `@vaultisse/types/*` path alias
+#    (server/tsconfig.json) and server/scripts/build.js bundles them into
+#    dist/index.js.
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS server-build
 RUN apk add --no-cache python3 make g++
+WORKDIR /app
+COPY server/package.json server/package-lock.json server/
+RUN npm ci --prefix server
+COPY server/ server/
+COPY packages/types/ packages/types/
 WORKDIR /app/server
-COPY server/package.json server/package-lock.json ./
-RUN npm ci
-COPY server/ ./
-# The shared wire types/enums (single source, also used by the client) are
-# imported via the `@vaultisse/types/*` path alias (server/tsconfig.json) and
-# bundled into dist/index.js by server/scripts/build.js.
-COPY packages/types/src /app/packages/types/src
 RUN npm run build
 
 # ---------------------------------------------------------------------------

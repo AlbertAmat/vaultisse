@@ -17,3 +17,4 @@ node_modules
 ecosystem-config.js
 /bookStorage.log
 /server/dist/
+/server/logs.log/
