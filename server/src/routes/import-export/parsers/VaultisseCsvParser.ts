@@ -12,7 +12,7 @@
 import {parse} from "csv-parse/sync";
 import {IImportedBook} from "./IImportedBook";
 import {IsbnVerification} from "../../../utils/IsbnVerification";
-import {ReadingStatusEnum} from "../../../types/book/IReadingStatus";
+import {ReadingStatusEnum} from "../../../shared/types/book/IReadingStatus";
 
 /** Parses Vaultisse's own hand-fillable CSV format into `IImportedBook[]`. A static-only utility class - stateless, no DB access, same treatment as BookMetadataRepository.ts/GoodreadsCsvParser.ts. */
 export class VaultisseCsvParser {

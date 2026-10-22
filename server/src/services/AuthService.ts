@@ -7,11 +7,13 @@ import {OidcUserService} from "./OidcUserService";
 import {UserRepository} from "../repositories/UserRepository";
 import {UserSessionRepository} from "../repositories/UserSessionRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
-import {ActivityLogRepository, ActivityAction} from "../repositories/ActivityLogRepository";
+import {ActivityLogRepository} from "../repositories/ActivityLogRepository";
+import {ActivityAction} from "../shared/types/user/ActivityAction";
 import {TwoFactorAuth} from "../utils/TwoFactorAuth";
 import {withTransaction} from "../repositories/withTransaction";
 import {UnauthorizedError, ValidationError} from "../errors/DomainError";
-import {VaultRoleCode, VaultUserStatus} from "../types/vault";
+import {VaultRoleCode} from "../types/vault";
+import {VaultUserStatus} from "../shared/types/vault/IVaultUser";
 
 export type LoginOutcome =
     | {kind: "success"; token: string}

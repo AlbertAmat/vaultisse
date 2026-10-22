@@ -1,8 +1,8 @@
 import {Pool, PoolClient} from "pg";
 import {v4 as uuidv4} from "uuid";
-import {ReadingStatusEnum} from "../types/book/IReadingStatus";
-import {SearchFilter} from "../types/search/SearchFilter";
-import {SortType} from "../types/search/SortType";
+import {ReadingStatusEnum} from "../shared/types/book/IReadingStatus";
+import {SearchFilter} from "../shared/types/search/SearchFilter";
+import {SortType} from "../shared/types/search/SortType";
 import {
     BookCounters,
     BookDetail,

@@ -34,7 +34,8 @@ echo "============================================="
 echo "Building server..."
 cd "$ROOT_DIR/server"
 npm install
-npx tsc
+# `prebuild` copies packages/types into server/src/shared before tsc runs
+npm run build
 
 # Move server build to root/dist/server
 mkdir "$DIST_DIR/server"

@@ -46,10 +46,26 @@ The web client wires this up once in `client/src/plugins/api.ts`.
 2. Add the method to the matching service in `packages/api-client/src/`.
 3. Call it from the client as `api.<resource>.<method>()` (`client/src/plugins/api.ts`).
 
-## What is *not* shared (yet)
+## Shared with the server
 
-`server/` still has its own `src/types/`. Those are server-side shapes (DB rows,
-route inputs), not the wire types, and the server is built and installed
-standalone (CommonJS, its own lockfile, its own Docker stage), so it is not
-part of the workspace. Only the enums are literal duplicates
-(`BookStockStatusEnum`, `ReadingStatusEnum`); keep them in sync by hand.
+Enums that are values of a DB column or an API parameter are defined **once**, here,
+and used by both sides: `BookStockStatusEnum`, `ReadingStatusEnum`, `SearchFilter`,
+`SortType`, `VaultRoleSource`, `VaultUserStatus`, `ActivityAction`. The server must not
+define its own copy.
+
+The server is built and installed standalone (CommonJS, its own lockfile, `build.sh`
+and its own Docker stage), so it is not part of the npm workspace and can't depend on
+the package. Instead `server/scripts/sync-shared-types.js` copies `packages/types/src`
+into `server/src/shared/types/` (generated, gitignored) before `build`, `dev`, `lint`
+and `test` (the `pre*` npm scripts), and the server imports from there:
+
+```ts
+import {ReadingStatusEnum} from "../shared/types/book/IReadingStatus";
+```
+
+Edit the files in `packages/types/src`, never the copy. The server's own `src/types/`
+keeps what is server-side only (DB rows, route inputs, `VaultRoleCode`).
+
+Not unified: the server's interfaces for response bodies (e.g. `BookStockDetail`) and
+the client's `I*` types describe the same JSON under different names and are still
+written twice.

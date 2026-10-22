@@ -1,3 +1,5 @@
+import {ActivityAction} from "./ActivityAction";
+
 /**
  * One row of the current user's recent auth activity (sign-ins, failed
  * sign-ins, sign-outs, password changes), as returned by
@@ -6,7 +8,7 @@
  *
  * @example
  * const a: IActivityLogEntry = {
- *   id: "42", action: "login", metadata: {ip: "203.0.113.4"},
+ *   id: "42", action: ActivityAction.LOGIN, metadata: {ip: "203.0.113.4"},
  *   createdDate: "2026-09-03T18:05:00.000Z"
  * };
  */
@@ -18,7 +20,7 @@ export default interface IActivityLogEntry {
      * compared/sorted, so the string form is fine as-is.
      */
     id: string;
-    action: "login" | "login_failed" | "logout" | "password_changed";
+    action: ActivityAction;
     /** Free-form context for `action` - e.g. `{ip}`, or `{attemptedUsername}` for a login_failed with no matching account. */
     metadata: Record<string, unknown> | null;
     /** When this happened (ISO string). */

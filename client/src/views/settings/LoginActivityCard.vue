@@ -47,6 +47,7 @@ import SettingsCard from "@/views/settings/SettingsCard.vue";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
 import {api} from "@/plugins/api";
 import IActivityLogEntry from "@vaultisse/types/user/IActivityLogEntry";
+import {ActivityAction} from "@vaultisse/types/user/ActivityAction";
 
 const {t} = useI18n();
 
@@ -65,23 +66,23 @@ onMounted(async () => {
 
 function actionIcon(action: IActivityLogEntry["action"]): string {
 	switch (action) {
-		case "login": return "mdi-login-variant";
-		case "login_failed": return "mdi-alert-circle-outline";
-		case "logout": return "mdi-logout-variant";
-		case "password_changed": return "mdi-key-outline";
+		case ActivityAction.LOGIN: return "mdi-login-variant";
+		case ActivityAction.LOGIN_FAILED: return "mdi-alert-circle-outline";
+		case ActivityAction.LOGOUT: return "mdi-logout-variant";
+		case ActivityAction.PASSWORD_CHANGED: return "mdi-key-outline";
 	}
 }
 
 function iconColor(action: IActivityLogEntry["action"]): string | undefined {
-	return action === "login_failed" ? "error" : undefined;
+	return action === ActivityAction.LOGIN_FAILED ? "error" : undefined;
 }
 
 function actionLabel(action: IActivityLogEntry["action"]): string {
 	switch (action) {
-		case "login": return t(AppLabels.ACTIVITY_LOGIN);
-		case "login_failed": return t(AppLabels.ACTIVITY_LOGIN_FAILED);
-		case "logout": return t(AppLabels.ACTIVITY_LOGOUT);
-		case "password_changed": return t(AppLabels.ACTIVITY_PASSWORD_CHANGED);
+		case ActivityAction.LOGIN: return t(AppLabels.ACTIVITY_LOGIN);
+		case ActivityAction.LOGIN_FAILED: return t(AppLabels.ACTIVITY_LOGIN_FAILED);
+		case ActivityAction.LOGOUT: return t(AppLabels.ACTIVITY_LOGOUT);
+		case ActivityAction.PASSWORD_CHANGED: return t(AppLabels.ACTIVITY_PASSWORD_CHANGED);
 	}
 }
 

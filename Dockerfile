@@ -27,6 +27,10 @@ WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci
 COPY server/ ./
+# The shared wire types (single source, also used by the client workspace) are
+# copied into server/src/shared by the `prebuild` script, so the server stays a
+# standalone install - see server/scripts/sync-shared-types.js.
+COPY packages/types/src /app/packages/types/src
 RUN npm run build
 
 # ---------------------------------------------------------------------------

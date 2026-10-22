@@ -29,7 +29,13 @@ export interface IBookStock extends IBookStockBase{
     customer_name: string;
 }
 
-/** Lifecycle states for a physical book copy (mirrors the server's `BookStockStatusEnum`). */
+/**
+ * Lifecycle states for a single physical copy of a book (`book_stocks.status`).
+ * Also compiled into the server (see `server/scripts/sync-shared-types.js`).
+ *
+ * @example
+ * if (stock.status === BookStockStatusEnum.AVAILABLE) { ... }
+ */
 export enum BookStockStatusEnum {
     /** On a shelf, not lent out or damaged. */
     AVAILABLE = 0,

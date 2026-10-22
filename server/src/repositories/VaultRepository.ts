@@ -1,5 +1,6 @@
 import {Pool, PoolClient} from "pg";
-import {Vault, VaultInvitePreview, VaultMembership, VaultRole, VaultRoleCode, VaultRoleSource, VaultUpdateFields, VaultUser, VaultUserStatus} from "../types/vault";
+import {Vault, VaultInvitePreview, VaultMembership, VaultRole, VaultRoleCode, VaultUpdateFields, VaultUser} from "../types/vault";
+import {VaultRoleSource, VaultUserStatus} from "../shared/types/vault/IVaultUser";
 
 /** Data access for the `vault`, `vault_users`, and `vault_roles` tables. See VaultService for the business rules built on top of this. */
 export class VaultRepository {

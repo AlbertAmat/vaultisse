@@ -3,8 +3,8 @@
  * independent of the physical stock lifecycle (`BookStockStatusEnum`) - this
  * tracks whether *the user* wants to/is/has read the book, not whether a
  * copy is on a shelf or loaned out. `null` means untracked (the default for
- * any book not explicitly placed on one of these three "shelves"). Mirrors
- * the server's `ReadingStatusEnum` (`server/src/types/book/IReadingStatus.ts`).
+ * any book not explicitly placed on one of these three "shelves"). Also compiled
+ * into the server (see `server/scripts/sync-shared-types.js`).
  *
  * @example
  * if (book.getReadingStatus() === ReadingStatusEnum.CURRENTLY_READING) { ... }

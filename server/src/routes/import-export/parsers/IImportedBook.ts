@@ -4,7 +4,7 @@
  * database. Keeping this shared and origin-agnostic is what lets the route
  * stay the same as more origins are added - only a new parser is needed.
  */
-import {ReadingStatusEnum} from "../../../types/book/IReadingStatus";
+import {ReadingStatusEnum} from "../../../shared/types/book/IReadingStatus";
 
 export interface IImportedBook {
     /** Row's 1-based position in the source file, for error reporting. */

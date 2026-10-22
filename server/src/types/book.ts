@@ -1,5 +1,5 @@
-import {BookStockStatusEnum} from "./book/IBookStock";
-import {ReadingStatusEnum} from "./book/IReadingStatus";
+import {BookStockStatusEnum} from "../shared/types/book/IBookStock";
+import {ReadingStatusEnum} from "../shared/types/book/IReadingStatus";
 
 export interface BookAuthor {
     id: number;

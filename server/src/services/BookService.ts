@@ -9,7 +9,7 @@ import {LoanHistoryRepository} from "../repositories/LoanHistoryRepository";
 import {withTransaction} from "../repositories/withTransaction";
 import {IsbnVerification} from "../utils/IsbnVerification";
 import {FileSignature} from "../utils/FileSignature";
-import {ReadingStatusEnum} from "../types/book/IReadingStatus";
+import {ReadingStatusEnum} from "../shared/types/book/IReadingStatus";
 import {IBookAddMd} from "../types/book/IBookAddMd";
 import {
     BookCounters,

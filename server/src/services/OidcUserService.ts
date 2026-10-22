@@ -12,7 +12,8 @@ import {ResolvedAuthUser} from "../types/auth";
 import {UserRepository} from "../repositories/UserRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {withTransaction} from "../repositories/withTransaction";
-import {VaultRole, VaultRoleCode, VaultRoleSource, VaultUserStatus} from "../types/vault";
+import {VaultRole, VaultRoleCode} from "../types/vault";
+import {VaultRoleSource, VaultUserStatus} from "../shared/types/vault/IVaultUser";
 
 export class OidcUserError extends Error {
     public constructor(message: string) {

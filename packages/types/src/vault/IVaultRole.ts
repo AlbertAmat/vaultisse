@@ -6,7 +6,7 @@
  * permission order.
  */
 export interface IVaultRole {
-    /** Matches `vault_roles.code` / `VaultRoleCode` server-side. */
+    /** Matches `vault_roles.code` (the server's `VaultRoleCode` enum). */
     code: number;
     /** Role name (e.g. "admin"). */
     name: string;

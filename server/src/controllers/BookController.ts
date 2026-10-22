@@ -4,8 +4,8 @@ import multer from "multer";
 import {appService} from "../AppService";
 import {BookService} from "../services/BookService";
 import {DomainError} from "../errors/DomainError";
-import {SearchFilter} from "../types/search/SearchFilter";
-import {SortType} from "../types/search/SortType";
+import {SearchFilter} from "../shared/types/search/SearchFilter";
+import {SortType} from "../shared/types/search/SortType";
 
 // Multer setup - store in memory
 const storage = multer.memoryStorage();

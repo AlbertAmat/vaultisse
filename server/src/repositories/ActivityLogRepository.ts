@@ -6,19 +6,7 @@
  * growing a new one per feature.
  */
 import {Pool, PoolClient} from "pg";
-
-/**
- * Auth events currently written - keep in sync with GET /user/activity's
- * filter (which reads `Object.values(ActivityAction)` rather than
- * duplicating this list, so the two can't drift). The `action` DB column
- * itself is a plain VARCHAR with no CHECK constraint.
- */
-export enum ActivityAction {
-    LOGIN = "login",
-    LOGIN_FAILED = "login_failed",
-    LOGOUT = "logout",
-    PASSWORD_CHANGED = "password_changed",
-}
+import {ActivityAction} from "../shared/types/user/ActivityAction";
 
 export interface RecordActivityOptions {
     entityType?: string | null;

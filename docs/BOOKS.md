@@ -153,8 +153,9 @@ Details worth knowing:
 
 ## The stock lifecycle
 
-`book_stocks.status` (`BookStockStatusEnum`, mirrored identically on client
-and server):
+`book_stocks.status` (`BookStockStatusEnum`, defined once in
+[`packages/types`](../packages/types/src/book/IBookStock.ts) and used by both
+client and server):
 
 | Value | Name | Meaning |
 |---|---|---|

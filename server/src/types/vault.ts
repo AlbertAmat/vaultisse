@@ -1,3 +1,5 @@
+import {VaultRoleSource, VaultUserStatus} from "../shared/types/vault/IVaultUser";
+
 export interface Vault {
     id: number;
     name: string;
@@ -23,18 +25,6 @@ export interface VaultUser {
     /** Whether the member has an SSO identity, i.e. whether "role from SSO groups" can apply to them. */
     oidc_linked: boolean;
     date_created: string;
-}
-
-/** Matches `vault_users.role_source`: who decides a member's role. */
-export enum VaultRoleSource {
-    MANUAL = 0,
-    OIDC = 1
-}
-
-export enum VaultUserStatus {
-    PENDING = 0,
-    ACCEPTED = 1,
-    REJECTED = 2
 }
 
 /** Matches `vault_roles.code` (see assets/db/upgrade/1.3.0.sql) - values don't sort in permission order, use `rank` for that. */
