@@ -8,12 +8,12 @@ import {VaultPermissions} from "./vault";
 
 export {};
 
-// Deliberately a .ts file, not .d.ts: a .d.ts is never emitted, so the
-// side-effect import in AppService.ts (needed so ts-node's language service
-// is guaranteed to load this file and merge the augmentation below - it
-// won't otherwise, since nothing else imports it) would fail to resolve at
-// runtime with MODULE_NOT_FOUND. A .ts file compiles to a real (near-empty)
-// JS file, so the same import works both for type-checking and at runtime.
+// Deliberately a .ts file, not .d.ts: the side-effect import in AppService.ts
+// (needed so the type-checker is guaranteed to load this file and merge the
+// augmentation below - it won't otherwise, since nothing else imports it) has
+// to resolve at runtime too (tsx in dev, esbuild's bundle in production), and
+// a .d.ts can't be run or bundled. A .ts file works both for type-checking
+// and at runtime.
 declare global {
     namespace Express {
         interface Request {

@@ -1,11 +1,11 @@
-/** Matches `vault_users.status`. Also compiled into the server (see `server/scripts/sync-shared-types.js`). */
+/** Matches `vault_users.status`. Also used by the server (see packages/README.md). */
 export enum VaultUserStatus {
     PENDING = 0,
     ACCEPTED = 1,
     REJECTED = 2,
 }
 
-/** Matches `vault_users.role_source`: who decides a member's role. Also compiled into the server. */
+/** Matches `vault_users.role_source`: who decides a member's role. Also used by the server. */
 export enum VaultRoleSource {
     MANUAL = 0,
     OIDC = 1,

@@ -31,7 +31,7 @@ export interface IBookStock extends IBookStockBase{
 
 /**
  * Lifecycle states for a single physical copy of a book (`book_stocks.status`).
- * Also compiled into the server (see `server/scripts/sync-shared-types.js`).
+ * Also used by the server (see packages/README.md).
  *
  * @example
  * if (stock.status === BookStockStatusEnum.AVAILABLE) { ... }
