@@ -23,9 +23,8 @@ normal development is enough, tests use a completely separate database on it
 (see below) so they never touch your dev/demo data.
 
 ```bash
-cd server
-npm test          # single run
-npm run test:watch
+npm test                                  # single run (from the repo root)
+npm run test:watch -w @vaultisse/server   # watch mode
 ```
 
 ## How a test file works

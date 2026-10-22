@@ -36,15 +36,9 @@ See the [README](README.md#getting-started) for full setup instructions (databas
 environment variables, running the client and server). In short:
 
 ```bash
-# server
-cd server
-npm install
-npm run dev
-
-# client (in another terminal)
-cd client
-npm install
-npm run dev
+npm install            # once, from the repo root (npm workspaces: client, server, packages/*)
+npm run dev:server
+npm run dev:client     # in another terminal
 ```
 
 ## Repository layout
@@ -101,8 +95,8 @@ return`). Group unrelated changes into separate commits/PRs where practical.
 2. Make your change, following the conventions above.
 3. Run the relevant checks:
    ```bash
-   cd server && npm run lint
-   cd client && npm run type-check
+   npm run lint -w @vaultisse/server
+   npm run type-check -w @vaultisse/client
    ```
 4. Push your branch and open a pull request against `main`. Describe:
    - What the change does and why

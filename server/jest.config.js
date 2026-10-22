@@ -7,8 +7,6 @@
  */
 module.exports = {
     preset: "ts-jest",
-    // Shared wire types/enums live in ../packages/types (same alias as tsconfig.json "paths").
-    moduleNameMapper: {"^@vaultisse/types/(.*)$": "<rootDir>/../packages/types/src/$1"},
     testEnvironment: "node",
     rootDir: ".",
     testMatch: ["<rootDir>/test/**/*.test.ts"],

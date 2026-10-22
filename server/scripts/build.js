@@ -2,11 +2,10 @@
  * Bundles the server into dist/index.js with esbuild (the `tsc` step only
  * type-checks - see `npm run typecheck`).
  *
- * Bundling is what lets the server import the shared wire types/enums straight
- * from ../packages/types (via the `@vaultisse/types/*` path alias in tsconfig.json)
- * without copying them in or publishing a package: they are compiled into the
- * bundle along with the server's own code. Everything listed in `dependencies`
- * stays external and is installed with `npm ci --omit=dev` (bcrypt is a native addon).
+ * `@vaultisse/types` (a workspace package, listed in devDependencies) is compiled
+ * into the bundle along with the server's own code, so nothing from packages/ is
+ * needed at run time. Everything listed in `dependencies` stays external and is
+ * installed with `npm ci --omit=dev` (bcrypt is a native addon).
  */
 const esbuild = require("esbuild");
 const path = require("path");

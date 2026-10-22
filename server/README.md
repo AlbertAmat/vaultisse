@@ -7,9 +7,9 @@ architecture, and setup instructions covering both the client and the server.
 ## Quick start
 
 ```bash
-npm install
+npm install            # from the repo root: the server is an npm workspace
 cp .env.example .env   # then fill in your local values
-npm run dev             # starts the API with tsx watch
+npm run dev            # starts the API with tsx watch
 ```
 
 See [Configure the server](../README.md#3-configure-the-server) in the root
@@ -19,7 +19,7 @@ README for what each environment variable does, and
 ## Scripts
 
 - `npm run dev` — start the API in watch mode (`NODE_ENV=development`)
-- `npm run build` — compile TypeScript to `dist/`
+- `npm run build` — type-check, then bundle to `dist/index.js` with esbuild (see `scripts/build.js`)
 - `npm start` — run the compiled server (`dist/index.js`) — used in production
 - `npm run lint` — run `tslint --fix`
 

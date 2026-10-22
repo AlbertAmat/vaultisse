@@ -2,6 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    // ts-jest emits CommonJS, unlike the type-check-only base config
+    "module": "commonjs",
+    "moduleResolution": "node10"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "clientv3",
+  "name": "@vaultisse/client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -28,10 +28,6 @@
     "vue-i18n": "^11.1.12",
     "vue-router": "^4.5.1",
     "vuetify": "^4.2.4"
-  },
-  "overrides": {
-    "@xmldom/xmldom": "^0.9.12",
-    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",

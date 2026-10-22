@@ -1,48 +1,55 @@
 ARG NODE_VERSION=22-alpine
 
+# The repo is an npm workspaces monorepo (client, server, packages/*) with a
+# single root lockfile, so every install runs from the repo root and the build
+# context is the whole repo. Only the manifests are copied before `npm ci` so the
+# dependency layers stay cached until a package.json / the lockfile changes.
+
 # ---------------------------------------------------------------------------
-# 1) Build the Vue client (Vite)
-#    The client is an npm workspace together with packages/* (shared types and
-#    API client), so the install runs from the repo root against the root
-#    lockfile; only the manifests are copied first to keep the layer cached.
+# 1) Install every workspace's dependencies once (shared by both builds)
 # ---------------------------------------------------------------------------
-FROM node:${NODE_VERSION} AS client-build
+FROM node:${NODE_VERSION} AS deps
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY client/package.json client/
+COPY server/package.json server/
 COPY packages/types/package.json packages/types/
 COPY packages/api-client/package.json packages/api-client/
 RUN npm ci
+
+# ---------------------------------------------------------------------------
+# 2) Build the Vue client (Vite)
+# ---------------------------------------------------------------------------
+FROM deps AS client-build
 COPY client/ client/
 COPY packages/ packages/
-WORKDIR /app/client
-RUN npm run build
+RUN npm run build -w @vaultisse/client
 
 # ---------------------------------------------------------------------------
-# 2) Bundle the Express/TypeScript server
-#    Same folder layout as the repo: server/ imports the shared wire types/enums
-#    from ../packages/types through the `@vaultisse/types/*` path alias
-#    (server/tsconfig.json) and server/scripts/build.js bundles them into
-#    dist/index.js.
+# 3) Bundle the Express/TypeScript server into server/dist/index.js
+#    (esbuild also bundles the shared @vaultisse/types, see server/scripts/build.js)
 # ---------------------------------------------------------------------------
-FROM node:${NODE_VERSION} AS server-build
-RUN apk add --no-cache python3 make g++
-WORKDIR /app
-COPY server/package.json server/package-lock.json server/
-RUN npm ci --prefix server
+FROM deps AS server-build
 COPY server/ server/
 COPY packages/types/ packages/types/
-WORKDIR /app/server
-RUN npm run build
+RUN npm run build -w @vaultisse/server
 
 # ---------------------------------------------------------------------------
-# 3) Install production-only server dependencies (no devDependencies, no tsc)
+# 3a) Install production-only server dependencies (no devDependencies, no tsc)
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS server-deps
 RUN apk add --no-cache python3 make g++
-WORKDIR /app/server
-COPY server/package.json server/package-lock.json ./
-RUN npm ci --omit=dev
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY client/package.json client/
+COPY server/package.json server/
+COPY packages/types/package.json packages/types/
+COPY packages/api-client/package.json packages/api-client/
+# The workspace symlinks (node_modules/@vaultisse/*) would dangle in the runtime
+# image and aren't needed: the shared types are bundled into index.js.
+RUN npm ci --omit=dev -w @vaultisse/server \
+    && rm -rf node_modules/@vaultisse
 
 # ---------------------------------------------------------------------------
 # 3b) YAZ Z39.50 client, built from source: Alpine has no `yaz` package (only
@@ -79,7 +86,7 @@ LABEL org.opencontainers.image.title="vaultisse" \
 #   /app/index.js  /app/node_modules  /app/assets  /app/client  /app/db/upgrade  /app/logs
 WORKDIR /app
 
-COPY --from=server-deps  /app/server/node_modules ./node_modules
+COPY --from=server-deps  /app/node_modules        ./node_modules
 COPY --from=server-build /app/server/dist/        ./
 COPY --from=server-build /app/server/src/assets   ./assets
 

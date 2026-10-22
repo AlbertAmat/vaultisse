@@ -53,18 +53,18 @@ and used by both sides: `BookStockStatusEnum`, `ReadingStatusEnum`, `SearchFilte
 `SortType`, `VaultRoleSource`, `VaultUserStatus`, `ActivityAction`. The server must not
 define its own copy.
 
-The server is not part of the npm workspace (it has its own lockfile and Docker stage).
-It imports the package straight from source through a path alias:
+`server` is a workspace member like `client`, with `@vaultisse/types` as a (dev)
+dependency, so it imports the package by name:
 
 ```ts
 import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
 ```
 
-- `server/tsconfig.json` maps `@vaultisse/types/*` to `../packages/types/src/*` (type-check, `tsx`).
-- `server/jest.config.js` has the matching `moduleNameMapper`.
+- Type-checking uses `moduleResolution: "bundler"` (`server/tsconfig.json`), which reads the
+  package's `exports`; jest resolves it the same way and tests run through `ts-jest`.
 - `server/scripts/build.js` (esbuild) bundles those files into `server/dist/index.js`, so
   nothing from `packages/` is needed at run time; only the server's own `dependencies`
-  are installed in production.
+  are installed in production (`npm ci --omit=dev -w @vaultisse/server`).
 
 The server's own `src/types/` keeps what is server-side only (DB rows, route inputs,
 `VaultRoleCode`).
@@ -72,3 +72,11 @@ The server's own `src/types/` keeps what is server-side only (DB rows, route inp
 Not unified: the server's interfaces for response bodies (e.g. `BookStockDetail`) and
 the client's `I*` types describe the same JSON under different names and are still
 written twice.
+
+## Dependency pins (root `package.json`)
+
+npm only honours `overrides` in the **root** `package.json` of a workspace, so every
+security/compat pin lives there, not in the individual apps (`@xmldom/xmldom`, `uuid`,
+`path-to-regexp`, and `@types/express-serve-static-core`, which keeps `req.params` typed
+for Express 4). `supertest` is pinned to an exact version in `server/package.json`: 7.3.x
+breaks the multi-request agents in the vault tests.

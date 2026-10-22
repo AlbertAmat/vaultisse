@@ -8,7 +8,7 @@ server.
 ## Quick start
 
 ```bash
-npm install
+npm install          # from the repo root: the client is an npm workspace
 npm run dev          # starts Vite; proxies /api/rest to the server (see vite.config.ts)
 ```
 

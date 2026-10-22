@@ -60,12 +60,17 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: package-lock.json
 
+      # One install for the whole workspace (client, server, packages/*)
       - name: Install dependencies
-        working-directory: server
         run: npm ci
 
-      - name: Run tests
-        working-directory: server
+      - name: Build server (type-check + bundle)
+        run: npm run build -w @vaultisse/server
+
+      - name: Build client
+        run: npm run build -w @vaultisse/client
+
+      - name: Run server tests
         run: npm test

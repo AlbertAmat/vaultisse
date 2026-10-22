@@ -201,7 +201,7 @@ vaultisse/
 │       ├── model/         # Domain TypeScript models
 │       ├── router/        # Vue Router configuration
 │       ├── components/    # Shared UI components
-│       └── plugins/       # i18n, Vuetify, Axios setup
+│       └── plugins/       # i18n, Vuetify, API client setup (api.ts)
 ├── packages/              # Shared workspace packages (client + future browser extensions)
 │   ├── types/             # @vaultisse/types: API request/response types
 │   └── api-client/        # @vaultisse/api-client: axios client, one service per resource
@@ -209,11 +209,14 @@ vaultisse/
 │   └── src/
 │       ├── routes/        # One Express router per resource
 │       ├── middlewares/   # requireAuth (JWT) middleware
-│       ├── types/         # Shared TypeScript types
+│       ├── types/         # Server-side types (DB rows, route inputs)
 │       ├── utils/         # Logger, etc.
 │       └── assets/        # Static login/register pages, prod client bundle
 ├── assets/
 │   └── db/                # SQL schema (databaseSchema.sql) + upgrade/ (dated upgrade files)
+├── package.json           # npm workspaces root (client, server, packages/*) + release version anchor
+├── package-lock.json      # the single lockfile for all workspaces
+├── Dockerfile             # production image, built from the repo root
 └── LICENSE
 ```
 
@@ -289,18 +292,18 @@ Generate a strong `JWT_SECRET`, for example: `openssl rand -hex 32`.
 
 ### 4. Run the server
 
+The repository is an npm workspaces monorepo (`client`, `server`, `packages/*`): install
+once, from the repo root.
+
 ```bash
-cd server
-npm install
-npm run dev      # starts the API with tsx watch on API_PORT
+npm install            # repo root: installs every workspace
+npm run dev:server     # starts the API with tsx watch on API_PORT
 ```
 
 ### 5. Run the client
 
 ```bash
-npm install       # from the repo root: installs the client and the shared packages/ workspace
-cd client
-npm run dev       # starts Vite; proxies /api/rest to the server
+npm run dev:client     # starts Vite; proxies /api/rest to the server
 ```
 
 Open the URL Vite prints (typically `http://localhost:5173/app`) in your browser.
@@ -313,11 +316,9 @@ built from the [`Dockerfile`](Dockerfile). There is no packaged zip/PM2 deployme
 To run it without Docker, clone the repo and build both halves yourself:
 
 ```bash
-npm install                      # repo root: client + shared packages (npm workspace)
-npm run build -w client          # -> client/dist
-cd server
-npm install
-npm run build                    # type-check + bundle -> server/dist/index.js
+npm install                            # repo root: installs every workspace
+npm run build -w @vaultisse/client     # -> client/dist
+npm run build -w @vaultisse/server     # type-check + bundle -> server/dist/index.js
 ```
 
 Then run `NODE_ENV=production node index.js` (with the environment from `.env.example`)
@@ -326,7 +327,7 @@ from a folder laid out like the Docker image (see the runtime stage of the
 
 ```
 index.js        <- server/dist/index.js
-node_modules/   <- `npm ci --omit=dev` in server/
+node_modules/   <- `npm ci --omit=dev -w @vaultisse/server` from the repo root
 assets/         <- server/src/assets (login.html, register.html)
 client/         <- client/dist
 db/upgrade/     <- assets/db/upgrade
@@ -392,7 +393,7 @@ your own reverse proxy/DNS, production behind Cloudflare Tunnel, and a one-click
 ## Releasing a new version
 
 The repository root has a `package.json` that exists solely to anchor the release
-version (the client and server aren't published packages and keep their own internal
+version (the workspaces aren't published packages and keep their own internal
 version fields). To cut a release:
 
 ```bash
