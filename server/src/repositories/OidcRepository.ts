@@ -22,7 +22,8 @@ export interface OidcClaims {
     name?: string;
     preferredUsername?: string;
     /** Values of the configured groups claim; empty when the claim is absent. */
-    groups: string[];
+    /** Group names from the IdP, or null when the IdP sent no groups claim at all (then group sync must not run). */
+    groups: string[] | null;
 }
 
 interface OidcPendingPayload {
@@ -182,14 +183,17 @@ export class OidcRepository {
      * Reads the configured groups claim (ID token first, then userinfo). IdPs emit it as an array, or occasionally a single string.
      * @param idToken Decoded ID token claims.
      * @param userinfo Userinfo endpoint response, if it was fetched.
-     * @returns The group names, empty when group sync is off or the claim is absent.
+     * @returns The group names, or null when the claim is absent (group sync must then be skipped).
      */
-    private static readGroups(idToken: Record<string, unknown>, userinfo: Record<string, unknown> | null): string[] {
-        const claim = appService.getOidcConfig()?.groupSync?.claim;
+    private static readGroups(idToken: Record<string, unknown>, userinfo: Record<string, unknown> | null): string[] | null {
+        const claim = appService.getOidcConfig()?.groupsClaim;
         if (!claim) {
-            return [];
+            return null;
         }
         const value = idToken[claim] ?? userinfo?.[claim];
+        if (value === undefined) {
+            return null;
+        }
         const list = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
         return list.filter((g): g is string => typeof g === "string");
     }
@@ -230,8 +234,8 @@ export class OidcRepository {
 
         const idToken = tokenSet.claims();
         let userinfo: {email?: string; email_verified?: boolean; name?: string; preferred_username?: string; [claim: string]: unknown} | null = null;
-        const groupClaim = config.groupSync?.claim;
-        const needsGroups = !!groupClaim && idToken[groupClaim] === undefined;
+        const groupClaim = config.groupsClaim;
+        const needsGroups = idToken[groupClaim] === undefined;
         if ((!idToken.email || needsGroups) && tokenSet.access_token) {
             try {
                 userinfo = await client.userinfo(tokenSet.access_token);

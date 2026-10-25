@@ -79,6 +79,9 @@ export class AuthService {
      * @throws UnauthorizedError (401) on invalid credentials.
      */
     public async login(usernameOrEmail: string, password: string, userAgent: string | undefined, ip: string | undefined): Promise<LoginOutcome> {
+        if (appService.isSsoOnly()) {
+            throw new UnauthorizedError("Password login is disabled. Sign in with SSO.");
+        }
         const authRepo = new AuthRepository(this.pool);
         const candidate = await authRepo.findLoginCandidate(usernameOrEmail);
         if (!candidate) {

@@ -12,8 +12,8 @@ import {ResolvedAuthUser} from "../types/auth";
 import {UserRepository} from "../repositories/UserRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {withTransaction} from "../repositories/withTransaction";
-import {VaultRole, VaultRoleCode} from "../types/vault";
-import {VaultRoleSource, VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
+import {VaultRoleCode} from "../types/vault";
+import {VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 export class OidcUserError extends Error {
     public constructor(message: string) {
@@ -145,10 +145,14 @@ export class OidcUserService {
                 // Provision a personal vault (issue #7), same as password
                 // registration (see AuthService.register) - a JIT-created
                 // account needs somewhere of its own to put a book too.
-                const vaultRepo = new VaultRepository(client);
-                const vaultId = await vaultRepo.createVault(`${this.displayName(claims)}'s library`, null);
-                await vaultRepo.addMember(vaultId, user.id, VaultRoleCode.ADMIN, VaultUserStatus.ACCEPTED);
-                await new UserRepository(client).setActiveVault(user.id, vaultId);
+                // OIDC_PERSONAL_VAULT=false skips it: the SSO groups then
+                // decide which vaults the user sees (see syncGroupRoles).
+                if (appService.getOidcConfig()?.personalVault !== false) {
+                    const vaultRepo = new VaultRepository(client);
+                    const vaultId = await vaultRepo.createVault(`${this.displayName(claims)}'s library`, null);
+                    await vaultRepo.addMember(vaultId, user.id, VaultRoleCode.ADMIN, VaultUserStatus.ACCEPTED);
+                    await new UserRepository(client).setActiveVault(user.id, vaultId);
+                }
 
                 return user;
             });
@@ -165,50 +169,55 @@ export class OidcUserService {
     }
 
     /**
-     * Applies the IdP-group -> vault role mapping (issue #29) for one login, in every vault where this user's
-     * role is set to follow SSO groups. The highest-ranked role among the user's mapped groups is granted
-     * (accepted immediately). With no mapped group the membership is left as it is. Does nothing unless group
-     * mapping is configured. Never throws: a failure in one vault (e.g. demoting its last admin, rejected by a
-     * DB trigger) is logged and the other vaults and the login proceed.
+     * Applies the per-vault SSO group mapping (issue #29) for one login. In every vault that has a mapping,
+     * a user with a matching group joins (accepted immediately) with the highest-ranked matching role; an
+     * SSO-managed member with no matching group is removed, or made Restricted when they still have books on
+     * loan so the loans stay tracked. Vaults without a mapping and members added by hand are never touched.
+     * Skipped when the IdP sent no groups claim, so a misconfigured IdP can't empty every vault. Never throws:
+     * a failure in one vault (e.g. removing its last admin, rejected by a DB trigger) is logged and the other
+     * vaults and the login proceed.
      * @param userId Vaultisse user id.
-     * @param groups Group names from the IdP claim.
+     * @param groups Group names from the IdP claim, or null when the claim was absent.
      */
-    public async syncGroupRoles(userId: number, groups: string[]): Promise<void> {
-        const sync = appService.getOidcConfig()?.groupSync;
-        if (!sync) {
+    public async syncGroupRoles(userId: number, groups: string[] | null): Promise<void> {
+        if (groups === null) {
             return;
         }
 
         try {
             const vaultRepo = new VaultRepository(this.pool);
-            const vaultIds = await vaultRepo.listSsoRoleVaultIds(userId);
-            if (vaultIds.length === 0) {
+            const mappings = await vaultRepo.listAllSsoGroups();
+            if (mappings.length === 0) {
                 return;
             }
 
             const roles = await vaultRepo.listRoles();
-            let target: VaultRole | null = null;
-            for (const group of groups) {
-                const roleName = sync.groupRoles.get(group);
-                const role = roles.find((r) => r.name === roleName);
-                if (role && (!target || role.rank > target.rank)) {
-                    target = role;
+            const rankOf = (code: number) => roles.find((r) => r.code === code)?.rank ?? -Infinity;
+            const targets = new Map<number, number | null>();
+            for (const m of mappings) {
+                const best = targets.get(m.vault_id) ?? null;
+                if (groups.includes(m.group_name) && (best === null || rankOf(m.role) > rankOf(best))) {
+                    targets.set(m.vault_id, m.role);
+                } else if (!targets.has(m.vault_id)) {
+                    targets.set(m.vault_id, null);
                 }
             }
-            if (!target) {
-                return;
-            }
 
-            for (const vaultId of vaultIds) {
+            const managed = new Set(await vaultRepo.listSsoMemberVaultIds(userId));
+            for (const [vaultId, role] of targets) {
                 try {
-                    if (target.code === VaultRoleCode.BORROWER && !(await vaultRepo.isLoansEnabled(vaultId))) {
-                        console.error(`OIDC group sync: vault ${vaultId} has loans disabled, can't make user ${userId} a borrower`);
-                        continue;
-                    }
-                    const membership = await vaultRepo.getMembership(vaultId, userId);
-                    if (membership && (membership.role !== target.code || membership.status !== VaultUserStatus.ACCEPTED)) {
-                        // Keep role_source = oidc: this is the sync itself, not a manual edit.
-                        await vaultRepo.updateMember(vaultId, userId, {role: target.code, status: VaultUserStatus.ACCEPTED, roleSource: VaultRoleSource.OIDC});
+                    if (role !== null) {
+                        if (role === VaultRoleCode.BORROWER && !(await vaultRepo.isLoansEnabled(vaultId))) {
+                            console.error(`OIDC group sync: vault ${vaultId} has loans disabled, can't make user ${userId} a borrower`);
+                            continue;
+                        }
+                        await vaultRepo.upsertSsoMember(vaultId, userId, role);
+                    } else if (managed.has(vaultId)) {
+                        if (await vaultRepo.hasOutstandingLoans(vaultId, userId)) {
+                            await vaultRepo.upsertSsoMember(vaultId, userId, VaultRoleCode.RESTRICTED);
+                        } else {
+                            await vaultRepo.removeMember(vaultId, userId);
+                        }
                     }
                 } catch (err) {
                     console.error(`OIDC group sync failed for user ${userId} in vault ${vaultId}:`, err);

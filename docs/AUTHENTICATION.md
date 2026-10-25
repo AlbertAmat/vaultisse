@@ -153,21 +153,32 @@ SSO login does **not** prompt for Vaultisse TOTP — the IdP already did MFA
 if the operator configured it. Password login is unchanged. Logout is still
 local (`GET /logout`); there is no IdP `end_session` redirect.
 
-**Group → role mapping** (optional). Set `OIDC_GROUP_ROLES` (comma-separated
-`idp-group=role`, role one of `readonly`, `borrower`, `normal`, `admin`);
-`OIDC_GROUPS_CLAIM` defaults to `groups`. Nothing changes until a vault admin
-opts a member in: in the vault's member list, a member who has signed in with
-SSO gets an extra role option, "Based on SSO groups". On every SSO login, in
-each vault where that user is set this way, their highest-ranked mapped role
-is applied with `status = accepted`. A user with no mapped group keeps the
-role they have. Choosing a role by hand switches the member back to manual.
-Personal vaults and manually managed members are never touched. The IdP is
-authoritative for opted-in members, so a role change in the IdP overwrites the
-role at their next login (removing someone from a group does not demote them
-by itself). A change that would leave a vault without an admin, or make
-someone a borrower in a vault without loans, is skipped and logged; login
-still succeeds. The IdP must emit the groups claim (Authentik: the `profile`
-scope).
+**Vault access from SSO groups** (optional). Each vault lists which IdP
+groups have access and which role each one gets (vault settings → "Add by SSO
+group", needs `can_manage_settings`), e.g. `family-users` → normal,
+`library-admins` → admin. `OIDC_GROUPS_CLAIM` (default `groups`) names the
+claim that carries the groups. On every SSO login, in each vault that has a
+mapping:
+
+- a user with a matching group joins (accepted immediately) with the highest
+  matching role;
+- an SSO-managed member who no longer matches is removed at that login, unless
+  they still have books on loan: then they become `restricted` (no new loans,
+  existing ones stay tracked) and are restored if they regain a group;
+- members added by hand are never removed or changed (an admin choosing a role
+  for an SSO-managed member also turns them into a manual one), and a vault with
+  no mapping stays fully manual.
+
+If the IdP sends no groups claim at all, the sync is skipped, so a
+misconfigured IdP can't empty every vault. A change that would leave a vault
+without an admin, or make someone a borrower in a vault without loans, is
+skipped and logged; login still succeeds. The IdP must emit the groups claim
+(Authentik: the `profile` scope).
+
+`OIDC_PERSONAL_VAULT=false` stops new SSO users getting a personal vault, so
+they only see the vaults their groups map to (default `true`). `SSO_ONLY=true`
+turns off password registration and password login so only the IdP gets people
+in (default `false`; ignored unless OIDC is configured).
 
 Failed SSO attempts redirect to `/login?error=sso` with a generic message.
 Successful ones write `activity_log` with `action: login` and

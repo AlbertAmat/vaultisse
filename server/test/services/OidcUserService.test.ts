@@ -4,7 +4,6 @@ import {OidcUserService, OidcUserError} from "../../src/services/OidcUserService
 import {OidcClaims} from "../../src/repositories/OidcRepository";
 import {nextFakeIp, TEST_PASSWORD} from "../helpers/auth";
 import {VaultRepository} from "../../src/repositories/VaultRepository";
-import {VaultRoleSource} from "@vaultisse/types/vault/IVaultUser";
 import {setupTestApp} from "../helpers/testApp";
 
 const app = setupTestApp();
@@ -130,19 +129,8 @@ describe("findOrCreateOidcUser", () => {
 describe("syncGroupRoles", () => {
     const pool = () => appService.getDatabasePool();
 
-    /** Points the group-sync config at a fixed group -> role mapping. */
-    function mockGroupSync() {
-        jest.spyOn(appService, "getOidcConfig").mockReturnValue({
-            issuer: "i", clientId: "c", clientSecret: "s", redirectUri: "r", scopes: "openid", buttonLabel: "SSO",
-            groupSync: {
-                claim: "groups",
-                groupRoles: new Map([["example-users", "borrower"], ["example-managers", "normal"], ["example-admins", "admin"]]),
-            },
-        });
-    }
-
-    /** A vault with an admin, plus `userId` as a pending member whose role follows SSO groups. */
-    async function setupVault(userId: number, loans = true) {
+    /** A vault with an admin, a loans setting and the given group -> role mapping. */
+    async function setupVault(mapping: Record<string, number>, loans = true) {
         const vaults = new VaultRepository(pool());
         const vaultId = await vaults.createVault("Shared", null);
         const admin = await new OidcUserService(pool()).findOrCreateOidcUser(freshClaims());
@@ -150,57 +138,116 @@ describe("syncGroupRoles", () => {
         if (loans) {
             await pool().query("UPDATE vault SET loans_enabled = TRUE WHERE id = $1", [vaultId]);
         }
-        await vaults.addMember(vaultId, userId, 3, 0);
-        await vaults.updateMember(vaultId, userId, {roleSource: VaultRoleSource.OIDC});
+        await vaults.replaceSsoGroups(vaultId, Object.entries(mapping).map(([group_name, role]) => ({group_name, role})));
         return vaultId;
+    }
+
+    /** Puts `userId` on loan of a copy from the vault. */
+    async function lendBook(vaultId: number, userId: number) {
+        const book = await pool().query("INSERT INTO books (name, vault_id) VALUES ('Loan test', $1) RETURNING id", [vaultId]);
+        await pool().query(
+            "INSERT INTO book_stocks (vault_id, book_id, code, status, member_user_id) VALUES ($1, $2, $3, 2, $4)",
+            [vaultId, book.rows[0].id, Math.random().toString(36).slice(2, 12).padEnd(10, "0"), userId]
+        );
     }
 
     afterEach(() => jest.restoreAllMocks());
 
-    it("grants the highest mapped role to SSO-driven memberships, and keeps the role when no group matches", async () => {
-        mockGroupSync();
+    it("adds the user with the highest matching role, and removes them when the groups no longer match", async () => {
         const service = new OidcUserService(pool());
         const vaults = new VaultRepository(pool());
         const user = await service.findOrCreateOidcUser(freshClaims());
-        const vaultId = await setupVault(user.id);
+        const vaultId = await setupVault({"example-users": 2, "example-managers": 0, "example-admins": 1});
 
         await service.syncGroupRoles(user.id, ["example-users", "example-managers", "unmapped"]);
         expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 0, status: 1});
 
-        await service.syncGroupRoles(user.id, ["example-users"]);
-        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 2, status: 1});
+        await service.syncGroupRoles(user.id, ["example-users", "example-admins"]);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 1, status: 1});
 
         await service.syncGroupRoles(user.id, ["unmapped"]);
-        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 2, status: 1});
-        expect(await vaults.listSsoRoleVaultIds(user.id)).toEqual([vaultId]);
+        expect(await vaults.getMembership(vaultId, user.id)).toBeNull();
     });
 
-    it("leaves manually managed memberships alone, and a manual role change ends SSO control", async () => {
-        mockGroupSync();
+    it("makes a member with outstanding loans Restricted instead of removing them, and restores them on return", async () => {
         const service = new OidcUserService(pool());
         const vaults = new VaultRepository(pool());
         const user = await service.findOrCreateOidcUser(freshClaims());
-        const vaultId = await setupVault(user.id);
+        const vaultId = await setupVault({"example-users": 0});
 
-        await vaults.updateMember(vaultId, user.id, {role: 3});
+        await service.syncGroupRoles(user.id, ["example-users"]);
+        await lendBook(vaultId, user.id);
+        await service.syncGroupRoles(user.id, []);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 4, status: 1, can_borrow: false});
+
+        await service.syncGroupRoles(user.id, ["example-users"]);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 0, status: 1});
+    });
+
+    it("never removes or changes members added by hand", async () => {
+        const service = new OidcUserService(pool());
+        const vaults = new VaultRepository(pool());
+        const user = await service.findOrCreateOidcUser(freshClaims());
+        const vaultId = await setupVault({"example-admins": 1});
+        await vaults.addMember(vaultId, user.id, 3, 1);
+
         await service.syncGroupRoles(user.id, ["example-admins"]);
-        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 3, status: 0});
-        expect(await vaults.listSsoRoleVaultIds(user.id)).toEqual([]);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 3, status: 1});
+        await service.syncGroupRoles(user.id, []);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 3, status: 1});
+    });
+
+    it("a manual role change takes an SSO member off SSO management", async () => {
+        const service = new OidcUserService(pool());
+        const vaults = new VaultRepository(pool());
+        const user = await service.findOrCreateOidcUser(freshClaims());
+        const vaultId = await setupVault({"example-users": 0});
+
+        await service.syncGroupRoles(user.id, ["example-users"]);
+        await vaults.updateMember(vaultId, user.id, {role: 3});
+        await service.syncGroupRoles(user.id, []);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 3, status: 1});
+    });
+
+    it("leaves vaults without a mapping alone", async () => {
+        const service = new OidcUserService(pool());
+        const vaults = new VaultRepository(pool());
+        const user = await service.findOrCreateOidcUser(freshClaims());
+        const vaultId = await setupVault({});
+        await vaults.addMember(vaultId, user.id, 0, 1);
+        await vaults.upsertSsoMember(vaultId, user.id, 0); // no-op: hand-added accepted member
+
+        await service.syncGroupRoles(user.id, []);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 0, status: 1});
+    });
+
+    it("does nothing when the IdP sent no groups claim", async () => {
+        const service = new OidcUserService(pool());
+        const vaults = new VaultRepository(pool());
+        const user = await service.findOrCreateOidcUser(freshClaims());
+        const vaultId = await setupVault({"example-users": 0});
+
+        await service.syncGroupRoles(user.id, ["example-users"]);
+        await service.syncGroupRoles(user.id, null);
+        expect(await vaults.getMembership(vaultId, user.id)).toMatchObject({role: 0, status: 1});
     });
 
     it("skips the borrower role in a vault without loans", async () => {
-        mockGroupSync();
         jest.spyOn(console, "error").mockImplementation(() => undefined);
         const service = new OidcUserService(pool());
         const user = await service.findOrCreateOidcUser(freshClaims());
-        const vaultId = await setupVault(user.id, false);
+        const vaultId = await setupVault({"example-users": 2}, false);
 
         await service.syncGroupRoles(user.id, ["example-users"]);
-        expect(await new VaultRepository(pool()).getMembership(vaultId, user.id)).toMatchObject({role: 3, status: 0});
+        expect(await new VaultRepository(pool()).getMembership(vaultId, user.id)).toBeNull();
     });
 
-    it("does nothing when group mapping is not configured", async () => {
+    it("skips the personal vault when OIDC_PERSONAL_VAULT is off", async () => {
+        jest.spyOn(appService, "getOidcConfig").mockReturnValue({
+            issuer: "i", clientId: "c", clientSecret: "s", redirectUri: "r", scopes: "openid", buttonLabel: "SSO",
+            groupsClaim: "groups", personalVault: false,
+        });
         const user = await new OidcUserService(pool()).findOrCreateOidcUser(freshClaims());
-        await expect(new OidcUserService(pool()).syncGroupRoles(user.id, ["example-admins"])).resolves.toBeUndefined();
+        expect(await new VaultRepository(pool()).getVaults(user.id)).toEqual([]);
     });
 });

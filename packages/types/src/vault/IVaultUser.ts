@@ -5,7 +5,7 @@ export enum VaultUserStatus {
     REJECTED = 2,
 }
 
-/** Matches `vault_users.role_source`: who decides a member's role. Also used by the server. */
+/** Matches `vault_users.role_source`: who manages the membership. Also used by the server. */
 export enum VaultRoleSource {
     MANUAL = 0,
     OIDC = 1,
@@ -24,10 +24,8 @@ export interface IVaultUser {
     /** Role name (e.g. "admin") - not the numeric code, see IVaultRole for the picker's own shape. */
     role: string;
     status: VaultUserStatus;
-    /** Who decides the role: set by hand, or following the member's SSO groups. */
+    /** How the member got in: added by hand, or by the vault's SSO group mapping (then removed when they leave the groups). */
     role_source: VaultRoleSource;
-    /** Whether the member has an SSO identity, so their role can follow SSO groups. */
-    oidc_linked: boolean;
     /** ISO date the member row was created (join/invite request date). */
     date_created: string;
 }

@@ -1,4 +1,5 @@
 import request from "supertest";
+import {appService} from "../../src/AppService";
 import {setupTestApp} from "../helpers/testApp";
 import {nextFakeIp, TEST_PASSWORD} from "../helpers/auth";
 
@@ -211,7 +212,7 @@ describe("GET /auth/oidc/* (disabled by default)", () => {
     it("reports SSO disabled when OIDC env vars are unset", async () => {
         const res = await request(app).get("/auth/oidc/status");
         expect(res.status).toBe(200);
-        expect(res.body).toEqual({enabled: false, label: "Sign in with SSO"});
+        expect(res.body).toEqual({enabled: false, label: "Sign in with SSO", ssoOnly: false});
     });
 
     it("returns 404 from /auth/oidc/start when SSO is not configured", async () => {
@@ -229,5 +230,17 @@ describe("GET /auth/oidc/* (disabled by default)", () => {
             .redirects(0);
         expect(res.status).toBe(302);
         expect(res.headers.location).toBe("/login?error=sso");
+    });
+});
+
+describe("SSO_ONLY mode", () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it("rejects password login and registration, and reports ssoOnly", async () => {
+        jest.spyOn(appService, "isSsoOnly").mockReturnValue(true);
+        const login = await request(app).post("/login").set("X-Forwarded-For", nextFakeIp()).send({username: "x", password: "y"});
+        expect(login.status).toBe(401);
+        const reg = await request(app).post("/register").set("X-Forwarded-For", nextFakeIp()).send({userName: "u", email: "u@example.com", name: "U", password: "Passw0rd!x"});
+        expect(reg.status).toBe(403);
     });
 });

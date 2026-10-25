@@ -78,6 +78,54 @@
 
 					<v-divider class="my-4"></v-divider>
 
+					<!-- SSO groups -->
+					<template v-if="vault.ssoEnabled && canManageSettings">
+						<p class="vault-section-title">{{t(AppLabels.VAULT_SSO_GROUPS)}}</p>
+						<p class="v-card-subtitle pl-0 mb-2" style="white-space: normal">{{t(AppLabels.VAULT_SSO_GROUPS_DESC)}}</p>
+						<div v-for="(group, index) in ssoGroups" :key="index" class="d-flex align-center mb-2" style="gap: 8px">
+							<v-text-field
+								v-model="group.group_name"
+								:label="t(AppLabels.VAULT_SSO_GROUP_NAME)"
+								density="compact"
+								variant="outlined"
+								hide-details
+							></v-text-field>
+							<v-select
+								v-model="group.role"
+								:items="ssoRoleItems"
+								density="compact"
+								variant="outlined"
+								hide-details
+								style="max-width: 180px"
+							></v-select>
+							<v-btn icon="mdi-close" variant="text" size="small" @click="ssoGroups.splice(index, 1)"></v-btn>
+						</div>
+						<div class="d-flex justify-space-between mb-2">
+							<v-btn
+								variant="text"
+								size="small"
+								prepend-icon="mdi-plus"
+								class="text-none"
+								@click="ssoGroups.push({group_name: '', role: null})"
+							>
+								{{t(AppLabels.VAULT_SSO_GROUP_ADD)}}
+							</v-btn>
+							<v-btn
+								:disabled="!ssoGroupsDirty || !ssoGroupsValid || savingSsoGroups"
+								:loading="savingSsoGroups"
+								color="primary"
+								variant="tonal"
+								size="small"
+								class="text-none"
+								@click="saveSsoGroups()"
+							>
+								{{t(AppLabels.SAVE)}}
+							</v-btn>
+						</div>
+
+						<v-divider class="my-4"></v-divider>
+					</template>
+
 					<!-- Invite link -->
 					<template v-if="canManageMembers">
 						<p class="vault-section-title">{{t(AppLabels.VAULT_INVITE)}}</p>
@@ -123,7 +171,7 @@
 									</v-chip>
 								</div>
 								<p class="v-card-subtitle pl-0 vault-member-subtitle">
-									{{capitalize(member.role)}}<template v-if="member.role_source === VaultRoleSource.OIDC"> · {{t(AppLabels.VAULT_ROLE_FROM_SSO)}}</template>
+									{{capitalize(member.role)}}<template v-if="member.role_source === VaultRoleSource.OIDC"> · {{t(AppLabels.VAULT_MANAGED_BY_SSO)}}</template>
 								</p>
 							</div>
 
@@ -151,13 +199,13 @@
 								<v-select
 									v-if="canManageMembers && member.user_id !== myUserId"
 									:model-value="roleValueFor(member)"
-									:items="roleItemsFor(member)"
+									:items="roleItems"
 									density="compact"
 									variant="outlined"
 									hide-details
 									style="max-width: 260px"
 									class="mr-2"
-									@update:model-value="(value: number | typeof SSO_ROLE) => changeRole(member, value)"
+									@update:model-value="(value: number) => changeRole(member, value)"
 								></v-select>
 
 								<v-btn
@@ -307,19 +355,20 @@ const roleItems = computed(() => (vault.value?.roles ?? [])
 	.filter((r) => r.name !== 'borrower' || vault.value?.loansEnabled)
 	.map((r) => ({title: capitalize(r.name), value: r.code})));
 
-/** Picker value that hands a member's role to their SSO groups (the other values are role codes). */
-const SSO_ROLE = "sso";
+/** Roles an SSO group can grant: not "restricted", which the sync only assigns itself. */
+const ssoRoleItems = computed(() => roleItems.value.filter((r) => r.title !== 'Restricted'));
 
-/**
- * The role picker's items for one member - the roles, plus "based on SSO groups" when the server maps
- * SSO groups to roles and the member has an SSO identity.
- */
-function roleItemsFor(member: IVaultUser) {
-	if (!vault.value?.oidcGroupSync || !member.oidc_linked) {
-		return roleItems.value;
-	}
-	return [...roleItems.value, {title: t(AppLabels.VAULT_ROLE_FROM_SSO), value: SSO_ROLE}];
-}
+/** Editable copy of the vault's SSO group -> role mapping. */
+const ssoGroups: Ref<{group_name: string; role: number | null}[]> = ref([]);
+const savingSsoGroups: Ref<boolean> = ref(false);
+
+const ssoGroupsDirty = computed(() => {
+	const saved = vault.value?.ssoGroups ?? [];
+	return ssoGroups.value.length !== saved.length
+		|| ssoGroups.value.some((g, i) => g.group_name !== saved[i].group_name || g.role !== saved[i].role);
+});
+
+const ssoGroupsValid = computed(() => ssoGroups.value.every((g) => g.group_name.trim().length > 0 && g.role !== null));
 
 const settingsDirty = computed(() => {
 	if (!vault.value) return false;
@@ -351,6 +400,7 @@ async function load() {
 		name.value = vault.value.name;
 		description.value = vault.value.description ?? "";
 		loansEnabled.value = vault.value.loansEnabled;
+		ssoGroups.value = vault.value.ssoGroups.map((g) => ({group_name: g.group_name, role: g.role}));
 	} finally {
 		loading.value = false;
 	}
@@ -368,10 +418,7 @@ function capitalize(value: string): string {
  * (`IVaultUser.role`) against the fetched role definitions, since the
  * member row itself only carries the name, not the numeric code.
  */
-function roleValueFor(member: IVaultUser): number | typeof SSO_ROLE | undefined {
-	if (member.role_source === VaultRoleSource.OIDC) {
-		return SSO_ROLE;
-	}
+function roleValueFor(member: IVaultUser): number | undefined {
 	return vault.value?.roles.find((r) => r.name === member.role)?.code;
 }
 
@@ -391,6 +438,21 @@ async function saveSettings() {
 		await load();
 	} finally {
 		savingSettings.value = false;
+	}
+}
+
+/**
+ * Saves the SSO group -> role mapping; takes effect for each user at their next SSO login.
+ */
+async function saveSsoGroups() {
+	if (!vault.value) return;
+	try {
+		savingSsoGroups.value = true;
+		await api.vaults.setSsoGroups(vault.value.id, ssoGroups.value.map((g) => ({group_name: g.group_name.trim(), role: g.role as number})));
+		appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_VAULT_UPDATED)});
+		await load();
+	} finally {
+		savingSsoGroups.value = false;
 	}
 }
 
@@ -424,15 +486,11 @@ async function approveOrReject(member: IVaultUser, status: VaultUserStatus) {
 /**
  *
  */
-async function changeRole(member: IVaultUser, role: number | typeof SSO_ROLE) {
+async function changeRole(member: IVaultUser, role: number) {
 	if (!vault.value) return;
 	try {
 		actingOnId.value = member.user_id;
-		await api.vaults.updateMember(
-			vault.value.id,
-			member.user_id,
-			role === SSO_ROLE ? {roleSource: VaultRoleSource.OIDC} : {role}
-		);
+		await api.vaults.updateMember(vault.value.id, member.user_id, {role});
 		appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_MEMBER_UPDATED)});
 		await load();
 	} finally {

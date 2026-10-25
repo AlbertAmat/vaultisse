@@ -1373,6 +1373,11 @@ VALUES ('en', 'REMOVE', 'Remove'),
        ('en', 'VAULT_STATUS_PENDING', 'Pending'),
        ('en', 'VAULT_STATUS_REJECTED', 'Rejected'),
        ('en', 'VAULT_ROLE_FROM_SSO', 'Based on SSO groups'),
+       ('en', 'VAULT_SSO_GROUPS', 'Add by SSO group'),
+       ('en', 'VAULT_SSO_GROUPS_DESC', 'Members of the SSO groups listed here join this vault automatically at login with the mapped role (the highest one if they match several), and are removed when they leave those groups. A member who still has books on loan becomes Restricted instead. Members added by hand are never removed. With no groups listed, access stays manual.'),
+       ('en', 'VAULT_SSO_GROUP_NAME', 'SSO group'),
+       ('en', 'VAULT_SSO_GROUP_ADD', 'Add group'),
+       ('en', 'VAULT_MANAGED_BY_SSO', 'Managed by SSO'),
        ('en', 'VAULT_LEAVE', 'Leave'),
        ('en', 'VAULT_LEAVE_DESC', 'Are you sure you want to leave this vault? You''ll lose access to its books and data unless you''re invited back.'),
        ('en', 'VAULT_REMOVE_MEMBER', 'Remove member'),
@@ -1407,6 +1412,11 @@ VALUES ('en', 'REMOVE', 'Remove'),
        ('ca', 'VAULT_STATUS_PENDING', 'Pendent'),
        ('ca', 'VAULT_STATUS_REJECTED', 'Rebutjat'),
        ('ca', 'VAULT_ROLE_FROM_SSO', 'Segons els grups SSO'),
+       ('ca', 'VAULT_SSO_GROUPS', 'Afegeix per grup SSO'),
+       ('ca', 'VAULT_SSO_GROUPS_DESC', 'Els membres dels grups SSO d''aquesta llista s''uneixen automàticament a la biblioteca en iniciar sessió amb el rol assignat (el més alt si coincideixen amb diversos) i s''eliminen quan deixen aquests grups. Un membre que encara té llibres en préstec passa a ser Restringit. Els membres afegits manualment mai s''eliminen. Sense grups, l''accés continua sent manual.'),
+       ('ca', 'VAULT_SSO_GROUP_NAME', 'Grup SSO'),
+       ('ca', 'VAULT_SSO_GROUP_ADD', 'Afegeix grup'),
+       ('ca', 'VAULT_MANAGED_BY_SSO', 'Gestionat per SSO'),
        ('ca', 'VAULT_LEAVE', 'Abandona'),
        ('ca', 'VAULT_LEAVE_DESC', 'Segur que vols abandonar aquesta biblioteca? Perdràs l''accés als seus llibres i dades tret que et tornin a convidar.'),
        ('ca', 'VAULT_REMOVE_MEMBER', 'Elimina el membre'),
@@ -1441,6 +1451,11 @@ VALUES ('en', 'REMOVE', 'Remove'),
        ('es', 'VAULT_STATUS_PENDING', 'Pendiente'),
        ('es', 'VAULT_STATUS_REJECTED', 'Rechazado'),
        ('es', 'VAULT_ROLE_FROM_SSO', 'Según los grupos SSO'),
+       ('es', 'VAULT_SSO_GROUPS', 'Añadir por grupo SSO'),
+       ('es', 'VAULT_SSO_GROUPS_DESC', 'Los miembros de los grupos SSO de esta lista se unen automáticamente a la biblioteca al iniciar sesión con el rol asignado (el más alto si coinciden con varios) y se eliminan al dejar esos grupos. Un miembro que aún tiene libros prestados pasa a ser Restringido. Los miembros añadidos a mano nunca se eliminan. Sin grupos, el acceso sigue siendo manual.'),
+       ('es', 'VAULT_SSO_GROUP_NAME', 'Grupo SSO'),
+       ('es', 'VAULT_SSO_GROUP_ADD', 'Añadir grupo'),
+       ('es', 'VAULT_MANAGED_BY_SSO', 'Gestionado por SSO'),
        ('es', 'VAULT_LEAVE', 'Abandonar'),
        ('es', 'VAULT_LEAVE_DESC', '¿Seguro que quieres abandonar esta biblioteca? Perderás el acceso a sus libros y datos a menos que vuelvan a invitarte.'),
        ('es', 'VAULT_REMOVE_MEMBER', 'Quitar miembro'),
@@ -1475,6 +1490,11 @@ VALUES ('en', 'REMOVE', 'Remove'),
        ('it', 'VAULT_STATUS_PENDING', 'In attesa'),
        ('it', 'VAULT_STATUS_REJECTED', 'Rifiutato'),
        ('it', 'VAULT_ROLE_FROM_SSO', 'In base ai gruppi SSO'),
+       ('it', 'VAULT_SSO_GROUPS', 'Aggiungi per gruppo SSO'),
+       ('it', 'VAULT_SSO_GROUPS_DESC', 'I membri dei gruppi SSO elencati entrano automaticamente in questa biblioteca all''accesso con il ruolo associato (il più alto se corrispondono a più gruppi) e vengono rimossi quando lasciano quei gruppi. Un membro con libri ancora in prestito diventa Limitato. I membri aggiunti a mano non vengono mai rimossi. Senza gruppi, l''accesso resta manuale.'),
+       ('it', 'VAULT_SSO_GROUP_NAME', 'Gruppo SSO'),
+       ('it', 'VAULT_SSO_GROUP_ADD', 'Aggiungi gruppo'),
+       ('it', 'VAULT_MANAGED_BY_SSO', 'Gestito da SSO'),
        ('it', 'VAULT_LEAVE', 'Abbandona'),
        ('it', 'VAULT_LEAVE_DESC', 'Sei sicuro di voler abbandonare questa biblioteca? Perderai l''accesso ai suoi libri e dati a meno che tu non venga invitato di nuovo.'),
        ('it', 'VAULT_REMOVE_MEMBER', 'Rimuovi membro'),
@@ -1557,6 +1577,7 @@ INSERT INTO vault_roles (code, name, rank, can_borrow, can_edit_catalog, can_man
 VALUES
     (3, 'readonly', 0, FALSE, FALSE, FALSE, FALSE),
     (2, 'borrower', 1, TRUE,  FALSE, FALSE, FALSE),
+    (4, 'restricted', -1, FALSE, FALSE, FALSE, FALSE),
     (0, 'normal',   2, TRUE,  TRUE,  FALSE, FALSE),
     (1, 'admin',    3, TRUE,  TRUE,  TRUE,  TRUE);
 
@@ -1636,9 +1657,20 @@ CREATE TABLE vault_users
     user_id      INT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     role         SMALLINT NOT NULL DEFAULT 0 REFERENCES vault_roles (code),
     status       SMALLINT NOT NULL DEFAULT 0, -- 0 pending, 1 accepted, 2 rejected
-    role_source  SMALLINT NOT NULL DEFAULT 0, -- 0 manual, 1 oidc (role follows the user's SSO groups at each login)
+    role_source  SMALLINT NOT NULL DEFAULT 0, -- 0 manual, 1 sso (added by the vault's SSO group mapping; removed or restricted at login when the groups no longer match)
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (vault_id, user_id)
+);
+
+-- Per-vault SSO group -> role mapping (issue #29). At SSO login a user joins
+-- every vault where one of their IdP groups is listed here, with the highest
+-- matching role. A vault with no rows here stays fully manual.
+CREATE TABLE vault_sso_groups
+(
+    vault_id   INT          NOT NULL REFERENCES vault (id) ON DELETE CASCADE,
+    group_name VARCHAR(200) NOT NULL,
+    role       SMALLINT     NOT NULL REFERENCES vault_roles (code),
+    PRIMARY KEY (vault_id, group_name)
 );
 
 -- Enforces "a vault must keep at least one admin" at the DB level;
@@ -2388,6 +2420,11 @@ VALUES ('fr', 'ADD_BOOK', 'Ajouter un livre'),
        ('fr', 'VAULT_STATUS_PENDING', 'En attente'),
        ('fr', 'VAULT_STATUS_REJECTED', 'Rejeté'),
        ('fr', 'VAULT_ROLE_FROM_SSO', 'Selon les groupes SSO'),
+       ('fr', 'VAULT_SSO_GROUPS', 'Ajout par groupe SSO'),
+       ('fr', 'VAULT_SSO_GROUPS_DESC', 'Les membres des groupes SSO listés rejoignent automatiquement cette bibliothèque à la connexion avec le rôle associé (le plus élevé s''ils correspondent à plusieurs) et sont retirés quand ils quittent ces groupes. Un membre qui a encore des livres en prêt devient Restreint. Les membres ajoutés manuellement ne sont jamais retirés. Sans groupe, l''accès reste manuel.'),
+       ('fr', 'VAULT_SSO_GROUP_NAME', 'Groupe SSO'),
+       ('fr', 'VAULT_SSO_GROUP_ADD', 'Ajouter un groupe'),
+       ('fr', 'VAULT_MANAGED_BY_SSO', 'Géré par SSO'),
        ('fr', 'VAULT_LEAVE', 'Quitter'),
        ('fr', 'VAULT_LEAVE_DESC', 'Es-tu sûr de vouloir quitter cette bibliothèque ? Tu perdras l''accès à ses livres et à ses données à moins d''être réinvité.'),
        ('fr', 'VAULT_REMOVE_MEMBER', 'Retirer le membre'),
@@ -2750,6 +2787,11 @@ VALUES ('de', 'ADD_BOOK', 'Buch hinzufügen'),
        ('de', 'VAULT_STATUS_PENDING', 'Ausstehend'),
        ('de', 'VAULT_STATUS_REJECTED', 'Abgelehnt'),
        ('de', 'VAULT_ROLE_FROM_SSO', 'Nach SSO-Gruppen'),
+       ('de', 'VAULT_SSO_GROUPS', 'Hinzufügen per SSO-Gruppe'),
+       ('de', 'VAULT_SSO_GROUPS_DESC', 'Mitglieder der hier aufgeführten SSO-Gruppen treten dieser Bibliothek bei der Anmeldung mit der zugeordneten Rolle bei (der höchsten, wenn mehrere passen) und werden entfernt, wenn sie die Gruppen verlassen. Wer noch Bücher ausgeliehen hat, wird stattdessen Eingeschränkt. Manuell hinzugefügte Mitglieder werden nie entfernt. Ohne Gruppen bleibt der Zugriff manuell.'),
+       ('de', 'VAULT_SSO_GROUP_NAME', 'SSO-Gruppe'),
+       ('de', 'VAULT_SSO_GROUP_ADD', 'Gruppe hinzufügen'),
+       ('de', 'VAULT_MANAGED_BY_SSO', 'Von SSO verwaltet'),
        ('de', 'VAULT_LEAVE', 'Verlassen'),
        ('de', 'VAULT_LEAVE_DESC', 'Möchtest du diese Bibliothek wirklich verlassen? Du verlierst den Zugriff auf ihre Bücher und Daten, es sei denn, du wirst erneut eingeladen.'),
        ('de', 'VAULT_REMOVE_MEMBER', 'Mitglied entfernen'),

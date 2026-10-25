@@ -76,7 +76,7 @@ router.post('/join/:uuid', requireAuth, (req, res) => getVaultController().join(
  *
  * Example response (200):
  *  { "id": 1, "name": "Jane's library", "description": null, "invitationUuid": "...", "loansEnabled": false,
- *    "oidcGroupSync": false, "dateCreated": "...", "users": [...], "roles": [...] }
+ *    "ssoEnabled": false, "ssoGroups": [], "dateCreated": "...", "users": [...], "roles": [...] }
  * Responses: 200 success | 404 { "error": "Vault not found" }.
  */
 router.get('/:id', requireAuth, (req, res) => getVaultController().get(req, res));
@@ -156,10 +156,9 @@ router.get('/:id/members', requireAuth, (req, res) => getVaultController().membe
  * Updates a member's role and/or approval status. Approving/rejecting a pending join request is just
  * setting `status` here. Rejected as ValidationError if it would leave the vault without an admin.
  *
- * `roleSource: 1` makes the member's role follow their SSO groups (needs OIDC_GROUP_ROLES and an SSO-linked member);
- * setting `role` by hand sets it back to 0 (manual).
+ * Setting `role` by hand makes the member manual: the vault's SSO group sync no longer manages or removes them.
  *
- * Auth: required. Caller must have `can_manage_members`. Body: { "role": 0, "status": 1, "roleSource": 0 } (any of the fields)
+ * Auth: required. Caller must have `can_manage_members`. Body: { "role": 0, "status": 1 } (any of the fields)
  *
  * Example response (200): { "message": "Member updated successfully" }
  * Responses: 200 success | 400 { "error": "..." } | 403 { "error": "..." } | 404 { "error": "..." }.
@@ -178,5 +177,20 @@ router.put('/:id/members/:userId', requireAuth, (req, res) => getVaultController
  * Responses: 200 success | 400 { "error": "..." } | 403 { "error": "..." } | 404 { "error": "Vault not found" }.
  */
 router.delete('/:id/members/:userId', requireAuth, (req, res) => getVaultController().removeMember(req, res));
+
+/**
+ * PUT /vault/:id/sso-groups
+ * ---------------------------
+ * Replaces the vault's SSO group -> role mapping. At SSO login a user joins every vault where one of their
+ * groups is listed, with the highest matching role, and is removed (or made Restricted if they still have
+ * books on loan) when they no longer match. Members added by hand are never removed. An empty list keeps
+ * the vault fully manual.
+ *
+ * Auth: required. Caller must have `can_manage_settings`. Body: { "groups": [{ "group_name": "family-users", "role": 0 }] }
+ *
+ * Example response (200): { "message": "SSO groups updated successfully" }
+ * Responses: 200 success | 400 { "error": "..." } | 403 { "error": "..." } | 404 { "error": "..." }.
+ */
+router.put('/:id/sso-groups', requireAuth, (req, res) => getVaultController().setSsoGroups(req, res));
 
 export default router;

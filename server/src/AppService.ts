@@ -30,14 +30,10 @@ export interface OidcConfig {
     redirectUri: string;
     scopes: string;
     buttonLabel: string;
-    groupSync: OidcGroupSyncConfig | null;
-}
-
-/** IdP group -> vault role mapping (issue #29). Present only when OIDC_GROUP_ROLES is set. */
-export interface OidcGroupSyncConfig {
-    claim: string;
-    /** IdP group name -> `vault_roles.name` (lowercase). */
-    groupRoles: Map<string, string>;
+    /** Name of the ID-token/userinfo claim that lists the user's groups (OIDC_GROUPS_CLAIM, default `groups`). */
+    groupsClaim: string;
+    /** Whether a newly created SSO user gets a personal vault on first login (OIDC_PERSONAL_VAULT, default true). */
+    personalVault: boolean;
 }
 
 export class AppService {
@@ -409,35 +405,7 @@ export class AppService {
         const scopes = (process.env.OIDC_SCOPES ?? "").trim() || "openid profile email";
         const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
 
-        return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel, groupSync: AppService.__readOidcGroupSync()};
-    }
-
-    /**
-     * Read the IdP-group -> vault-role mapping from env vars. Returns null
-     * when OIDC_GROUP_ROLES is unset. Throws on a
-     * malformed mapping so a typo fails at startup, not silently at login.
-     * @private
-     */
-    private static __readOidcGroupSync(): OidcGroupSyncConfig | null {
-        const raw = (process.env.OIDC_GROUP_ROLES ?? "").trim();
-        if (!raw) {
-            return null;
-        }
-
-        const validRoles = ["readonly", "borrower", "normal", "admin"];
-        const groupRoles = new Map<string, string>();
-        for (const entry of raw.split(",")) {
-            const idx = entry.lastIndexOf("=");
-            const group = entry.slice(0, idx).trim();
-            const role = entry.slice(idx + 1).trim().toLowerCase();
-            if (idx < 1 || !group || !validRoles.includes(role)) {
-                throw new Error(`Invalid OIDC_GROUP_ROLES entry "${entry.trim()}" (expected group=${validRoles.join("|")})`);
-            }
-            groupRoles.set(group, role);
-        }
-
-        const claim = (process.env.OIDC_GROUPS_CLAIM ?? "").trim() || "groups";
-        return {claim, groupRoles};
+        return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel, groupsClaim: (process.env.OIDC_GROUPS_CLAIM ?? "").trim() || "groups", personalVault: (process.env.OIDC_PERSONAL_VAULT ?? "").trim().toLowerCase() !== "false"};
     }
 
     /**
@@ -510,9 +478,18 @@ export class AppService {
         return this.m_allowDevAuth;
     }
 
-    /** Whether GET/POST /register should be served - see REGISTRATION_ENABLED. */
+    /** Whether GET/POST /register should be served - see REGISTRATION_ENABLED. Always false in SSO-only mode. */
     public isRegistrationEnabled(): boolean {
-        return this.m_registrationEnabled;
+        return this.m_registrationEnabled && !this.isSsoOnly();
+    }
+
+    /**
+     * SSO-only mode (SSO_ONLY=true): password registration and password login are off, so the IdP is the single
+     * source of truth for who gets in. Ignored (false) unless SSO is actually enabled, so a misconfiguration
+     * can't lock everyone out.
+     */
+    public isSsoOnly(): boolean {
+        return process.env.SSO_ONLY === "true" && this.isOidcEnabled();
     }
 
     /**

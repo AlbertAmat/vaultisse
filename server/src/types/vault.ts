@@ -9,11 +9,19 @@ export interface Vault {
 export interface VaultInfo extends Vault {
     invitationUuid: string;
     loansEnabled: boolean;
-    /** Whether the server maps SSO groups to roles, i.e. whether members can be set to "role from SSO groups". */
-    oidcGroupSync: boolean;
+    /** Whether SSO is enabled on the server, i.e. whether the SSO group mapping can be used. */
+    ssoEnabled: boolean;
+    /** SSO groups that give access to this vault, each with the role it grants. */
+    ssoGroups: VaultSsoGroup[];
     dateCreated: string;
     users: VaultUser[];
     roles: VaultRole[];
+}
+
+export interface VaultSsoGroup {
+    group_name: string;
+    /** `vault_roles.code` granted to members of the group. */
+    role: number;
 }
 
 export interface VaultUser {
@@ -22,8 +30,6 @@ export interface VaultUser {
     role: string;
     status: VaultUserStatus;
     role_source: VaultRoleSource;
-    /** Whether the member has an SSO identity, i.e. whether "role from SSO groups" can apply to them. */
-    oidc_linked: boolean;
     date_created: string;
 }
 
@@ -32,7 +38,9 @@ export enum VaultRoleCode {
     NORMAL = 0,
     ADMIN = 1,
     BORROWER = 2,
-    READONLY = 3
+    READONLY = 3,
+    /** Lost their SSO groups while still holding loans: can't take out new books, existing loans stay tracked. */
+    RESTRICTED = 4
 }
 
 export interface VaultRole {

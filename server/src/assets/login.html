@@ -469,6 +469,11 @@
                 button.textContent = data.label;
             }
             button.classList.add('is-visible');
+            if (data.ssoOnly) {
+                // SSO-only server: no password form, the IdP is the only way in.
+                document.getElementById('loginForm').style.display = 'none';
+                return;
+            }
             divider.classList.add('is-visible');
         })
         .catch(function () { /* password login still works */ });

@@ -18,3 +18,10 @@ ecosystem-config.js
 /bookStorage.log
 /server/dist/
 /server/logs.log/
+
+# Local env files and backups - never commit (they hold secrets)
+.env*
+!.env.example
+**/.env*
+!**/.env.example
+*.zip

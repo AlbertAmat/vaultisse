@@ -1,9 +1,9 @@
 import type {AxiosInstance} from "axios";
 import IVault from "@vaultisse/types/vault/IVault";
-import IVaultInfo from "@vaultisse/types/vault/IVaultInfo";
+import IVaultInfo, {IVaultSsoGroup} from "@vaultisse/types/vault/IVaultInfo";
 import IVaultInvitePreview from "@vaultisse/types/vault/IVaultInvitePreview";
 import {IVaultRole} from "@vaultisse/types/vault/IVaultRole";
-import {VaultRoleSource, VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
+import {VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 /**
  * Thin HTTP client for the `/api/rest/vault` endpoints (see
@@ -91,8 +91,17 @@ export class VaultService {
      * @param userId Member's id.
      * @param fields Fields to change - either, or both.
      */
-    public async updateMember(vaultId: number, userId: number, fields: {role?: number; status?: VaultUserStatus; roleSource?: VaultRoleSource}): Promise<void> {
+    public async updateMember(vaultId: number, userId: number, fields: {role?: number; status?: VaultUserStatus}): Promise<void> {
         await this.http.put(`/vault/${vaultId}/members/${userId}`, fields);
+    }
+
+    /**
+     * Replaces a vault's SSO group -> role mapping (needs `can_manage_settings`). An empty list keeps the vault manual.
+     * @param vaultId Vault id.
+     * @param groups Group name as the identity provider reports it, and the role code it grants.
+     */
+    public async setSsoGroups(vaultId: number, groups: IVaultSsoGroup[]): Promise<void> {
+        await this.http.put(`/vault/${vaultId}/sso-groups`, {groups});
     }
 
     /**

@@ -26,13 +26,14 @@ describe("registration bootstrap", () => {
 });
 
 describe("GET /vault/roles", () => {
-    it("lists the four fixed roles with their permissions, least to most privileged", async () => {
+    it("lists the five fixed roles with their permissions, least to most privileged", async () => {
         const res = await admin.agent.get("/api/rest/vault/roles");
         expect(res.status).toBe(200);
 
         const byName = Object.fromEntries(res.body.map((r: any) => [r.name, r]));
-        expect(Object.keys(byName).sort()).toEqual(["admin", "borrower", "normal", "readonly"]);
+        expect(Object.keys(byName).sort()).toEqual(["admin", "borrower", "normal", "readonly", "restricted"]);
 
+        expect(byName.restricted).toMatchObject({can_borrow: false, can_edit_catalog: false, can_manage_members: false, can_manage_settings: false});
         expect(byName.readonly).toMatchObject({can_borrow: false, can_edit_catalog: false, can_manage_members: false, can_manage_settings: false});
         expect(byName.borrower).toMatchObject({can_borrow: true, can_edit_catalog: false, can_manage_members: false, can_manage_settings: false});
         expect(byName.normal).toMatchObject({can_borrow: true, can_edit_catalog: true, can_manage_members: false, can_manage_settings: false});
@@ -40,7 +41,7 @@ describe("GET /vault/roles", () => {
 
         // rank, not code, is what sorts least to most permissive.
         const byRank = [...res.body].sort((a: any, b: any) => a.rank - b.rank).map((r: any) => r.name);
-        expect(byRank).toEqual(["readonly", "borrower", "normal", "admin"]);
+        expect(byRank).toEqual(["restricted", "readonly", "borrower", "normal", "admin"]);
     });
 });
 
@@ -550,5 +551,25 @@ describe("vault access control (security audit: role enforcement / stale active 
 
         const bobPolicy = await bob.agent.get("/api/rest/app/policy");
         expect(bobPolicy.body.user.activeVault).not.toBe(vaultId);
+    });
+});
+
+describe("PUT /vault/:id/sso-groups", () => {
+    it("saves the mapping for an admin, returns it in GET /vault/:id, and validates input", async () => {
+        const create = await admin.agent.post("/api/rest/vault").send({name: "SSO Library"});
+        const id = create.body.id;
+
+        const bad = await admin.agent.put(`/api/rest/vault/${id}/sso-groups`).send({groups: [{group_name: "a", role: 99}]});
+        expect(bad.status).toBe(400);
+        const dup = await admin.agent.put(`/api/rest/vault/${id}/sso-groups`).send({groups: [{group_name: "a", role: 0}, {group_name: "a", role: 1}]});
+        expect(dup.status).toBe(400);
+        const borrower = await admin.agent.put(`/api/rest/vault/${id}/sso-groups`).send({groups: [{group_name: "a", role: 2}]});
+        expect(borrower.status).toBe(400); // loans are off in a new vault
+
+        const ok = await admin.agent.put(`/api/rest/vault/${id}/sso-groups`).send({groups: [{group_name: "family-users", role: 0}, {group_name: "library-admins", role: 1}]});
+        expect(ok.status).toBe(200);
+
+        const get = await admin.agent.get(`/api/rest/vault/${id}`);
+        expect(get.body.ssoGroups).toEqual([{group_name: "family-users", role: 0}, {group_name: "library-admins", role: 1}]);
     });
 });

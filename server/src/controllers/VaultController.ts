@@ -3,7 +3,7 @@ import {Request, Response} from "express";
 import {appService} from "../AppService";
 import {VaultService} from "../services/VaultService";
 import {DomainError} from "../errors/DomainError";
-import {VaultRoleSource, VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
+import {VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 /** Thin HTTP<->service glue for the Vault resource. Constructed once per process (see VaultRoute.ts) and reused across requests. */
 export class VaultController {
@@ -228,8 +228,8 @@ export class VaultController {
             return;
         }
 
-        const {role, status, roleSource} = req.body;
-        if (role === undefined && status === undefined && roleSource === undefined) {
+        const {role, status} = req.body;
+        if (role === undefined && status === undefined) {
             res.status(400).json({error: 'Nothing to update'});
             return;
         }
@@ -237,14 +237,10 @@ export class VaultController {
             res.status(400).json({error: 'Invalid status'});
             return;
         }
-        if (roleSource !== undefined && !Object.values(VaultRoleSource).includes(roleSource)) {
-            res.status(400).json({error: 'Invalid role source'});
-            return;
-        }
 
         try {
             const callerId = appService.getSessionUser(req);
-            await new VaultService(this.pool).updateMember(vaultId, callerId, targetUserId, {role, status, roleSource});
+            await new VaultService(this.pool).updateMember(vaultId, callerId, targetUserId, {role, status});
             res.status(200).json({message: "Member updated successfully"});
         } catch (e) {
             if (e instanceof DomainError) {
@@ -252,6 +248,36 @@ export class VaultController {
                 return;
             }
             console.error("Error while updating vault member", e);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    /**
+     * PUT /vault/:id/sso-groups - replaces the vault's SSO group -> role mapping.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public async setSsoGroups(req: Request, res: Response): Promise<void> {
+        const vaultId = Number(req.params.id);
+        if (!Number.isInteger(vaultId)) {
+            res.status(400).json({error: 'Invalid vault ID'});
+            return;
+        }
+        if (!Array.isArray(req.body?.groups)) {
+            res.status(400).json({error: 'groups must be an array'});
+            return;
+        }
+
+        try {
+            const callerId = appService.getSessionUser(req);
+            await new VaultService(this.pool).setSsoGroups(vaultId, callerId, req.body.groups);
+            res.status(200).json({message: "SSO groups updated successfully"});
+        } catch (e) {
+            if (e instanceof DomainError) {
+                res.status(e.httpStatus).send({error: e.message});
+                return;
+            }
+            console.error("Error while updating vault SSO groups", e);
             res.status(500).send('Internal Server Error');
         }
     }

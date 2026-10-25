@@ -1,5 +1,5 @@
 import {Pool, PoolClient} from "pg";
-import {Vault, VaultInvitePreview, VaultMembership, VaultRole, VaultRoleCode, VaultUpdateFields, VaultUser} from "../types/vault";
+import {Vault, VaultInvitePreview, VaultMembership, VaultRole, VaultRoleCode, VaultSsoGroup, VaultUpdateFields, VaultUser} from "../types/vault";
 import {VaultRoleSource, VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 /** Data access for the `vault`, `vault_users`, and `vault_roles` tables. See VaultService for the business rules built on top of this. */
@@ -429,15 +429,88 @@ export class VaultRepository {
     }
 
     /**
-     * Lists the ids of the vaults where a user's role follows their SSO groups.
-     * @param userId User id.
+     * Lists a vault's SSO group -> role mapping.
+     * @param vaultId Vault id.
      */
-    public async listSsoRoleVaultIds(userId: number): Promise<number[]> {
+    public async listSsoGroups(vaultId: number): Promise<VaultSsoGroup[]> {
+        const result = await this.db.query(
+            "SELECT group_name, role FROM vault_sso_groups WHERE vault_id = $1 ORDER BY group_name",
+            [vaultId]
+        );
+        return result.rows;
+    }
+
+    /**
+     * Lists the SSO group mapping of every vault that has one.
+     * @returns One row per (vault, group).
+     */
+    public async listAllSsoGroups(): Promise<{vault_id: number; group_name: string; role: number}[]> {
+        const result = await this.db.query("SELECT vault_id, group_name, role FROM vault_sso_groups");
+        return result.rows;
+    }
+
+    /**
+     * Replaces a vault's whole SSO group mapping.
+     * @param vaultId Vault id.
+     * @param groups New mapping; an empty list switches the vault back to fully manual membership.
+     */
+    public async replaceSsoGroups(vaultId: number, groups: VaultSsoGroup[]): Promise<void> {
+        await this.db.query("DELETE FROM vault_sso_groups WHERE vault_id = $1", [vaultId]);
+        for (const g of groups) {
+            await this.db.query(
+                "INSERT INTO vault_sso_groups (vault_id, group_name, role) VALUES ($1, $2, $3)",
+                [vaultId, g.group_name, g.role]
+            );
+        }
+    }
+
+    /**
+     * Gives a user access to a vault through the SSO group mapping: inserts them as an accepted, SSO-managed
+     * member, or updates the role of one already SSO-managed or still pending. An accepted or rejected member
+     * added by hand is left alone. Also makes it their active vault if they had none.
+     * @param vaultId Vault id.
+     * @param userId User id.
+     * @param role Role code to grant.
+     */
+    public async upsertSsoMember(vaultId: number, userId: number, role: number): Promise<void> {
+        await this.db.query(
+            `INSERT INTO vault_users (vault_id, user_id, role, status, role_source)
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT (vault_id, user_id) DO UPDATE
+                SET role = EXCLUDED.role, status = EXCLUDED.status, role_source = EXCLUDED.role_source
+              WHERE vault_users.role_source = $5 OR vault_users.status = $6`,
+            [vaultId, userId, role, VaultUserStatus.ACCEPTED, VaultRoleSource.OIDC, VaultUserStatus.PENDING]
+        );
+        await this.db.query(
+            "UPDATE users SET last_used_vault_id = $1 WHERE id = $2 AND last_used_vault_id IS NULL",
+            [vaultId, userId]
+        );
+    }
+
+    /**
+     * Lists the vaults where a user is an SSO-managed member.
+     * @param userId User id.
+     * @returns Vault ids.
+     */
+    public async listSsoMemberVaultIds(userId: number): Promise<number[]> {
         const result = await this.db.query(
             "SELECT vault_id FROM vault_users WHERE user_id = $1 AND role_source = $2 ORDER BY vault_id",
             [userId, VaultRoleSource.OIDC]
         );
         return result.rows.map((r) => r.vault_id);
+    }
+
+    /**
+     * Whether a member still has copies on loan from a vault.
+     * @param vaultId Vault id.
+     * @param userId Member's id.
+     */
+    public async hasOutstandingLoans(vaultId: number, userId: number): Promise<boolean> {
+        const result = await this.db.query(
+            "SELECT 1 FROM book_stocks WHERE vault_id = $1 AND member_user_id = $2 AND status = 2 LIMIT 1",
+            [vaultId, userId]
+        );
+        return (result.rowCount ?? 0) > 0;
     }
 
     /**
@@ -447,7 +520,7 @@ export class VaultRepository {
     public async listMembers(vaultId: number): Promise<VaultUser[]> {
         const result = await this.db.query(
             `SELECT vu.user_id, u.name, vr.name AS role, vu.status, vu.role_source,
-                    (u.oidc_sub IS NOT NULL) AS oidc_linked, vu.date_created
+                    vu.date_created
                FROM vault_users vu
                JOIN users u ON u.id = vu.user_id
                JOIN vault_roles vr ON vr.code = vu.role
@@ -497,9 +570,9 @@ export class VaultRepository {
      * @param fields Fields to change.
      * @returns Rows affected - 0 if that user isn't a member of that vault.
      */
-    public async updateMember(vaultId: number, userId: number, fields: { role?: number; status?: VaultUserStatus; roleSource?: VaultRoleSource }): Promise<number> {
-        // Setting a role by hand takes the member off SSO-driven roles, unless the caller says otherwise.
-        const roleSource = fields.roleSource ?? (fields.role !== undefined ? VaultRoleSource.MANUAL : null);
+    public async updateMember(vaultId: number, userId: number, fields: { role?: number; status?: VaultUserStatus }): Promise<number> {
+        // Setting a role by hand takes the member off SSO management, so the group sync won't undo it.
+        const roleSource = fields.role !== undefined ? VaultRoleSource.MANUAL : null;
         const result = await this.db.query(
             `UPDATE vault_users
                 SET role = COALESCE($1, role),

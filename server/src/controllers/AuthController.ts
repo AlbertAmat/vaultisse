@@ -140,6 +140,7 @@ export class AuthController {
         res.json({
             enabled: appService.isOidcEnabled(),
             label: config?.buttonLabel ?? "Sign in with SSO",
+            ssoOnly: appService.isSsoOnly(),
         });
     }
 
