@@ -34,6 +34,15 @@ jobs:
         run: |
           echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           echo "image=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          # A tag with a suffix (v1.3.7-beta.1) is a prerelease: it must not
+          # take over :latest, and its GitHub Release is flagged as such.
+          if [[ "${GITHUB_REF_NAME#v}" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "tags=${REGISTRY}/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            printf 'tags=%s\n' "${REGISTRY}/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME#v},${REGISTRY}/${GITHUB_REPOSITORY,,}:latest" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -52,9 +61,7 @@ jobs:
           push: true
           build-args: |
             APP_VERSION=${{ steps.meta.outputs.version }}
-          tags: |
-            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
-            ${{ steps.meta.outputs.image }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -62,6 +69,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
+          prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
           body: |
             Docker image: `${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}`
 

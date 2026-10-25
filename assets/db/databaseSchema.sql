@@ -33,7 +33,8 @@ VALUES ('1.0.0/1.sql'),
        ('1.3.2.sql'),
        ('1.3.4.sql'),
        ('1.3.5.sql'),
-       ('1.3.6.sql');
+       ('1.3.6.sql'),
+       ('1.3.7.sql');
 
 CREATE TABLE app_languages
 (

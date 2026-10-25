@@ -406,6 +406,10 @@ Pushing that tag triggers `.github/workflows/docker-release.yml`, which builds t
 Docker image, pushes `ghcr.io/albertamat/vaultisse:X.Y.Z` and `:latest`, and creates
 a matching GitHub Release with auto-generated notes.
 
+For a beta, give `npm version` an explicit prerelease version (`npm version 1.3.7-beta.1`).
+A tag with a suffix is published as `ghcr.io/albertamat/vaultisse:1.3.7-beta.1` only (never
+`:latest`) and its GitHub Release is marked as a prerelease.
+
 The running app version is available at `GET /api/rest/app/version` (unauthenticated),
 useful for confirming what's actually deployed.
 
