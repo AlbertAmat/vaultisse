@@ -1,6 +1,6 @@
 {
   "name": "vaultisse",
-  "version": "1.3.7-beta.1",
+  "version": "1.3.7",
   "private": true,
   "description": "Vaultisse - self-hosted personal/library book tracker. npm workspaces monorepo: client/ (Vue web app), server/ (Express API) and packages/* (shared wire types and API client). The root version is the release anchor for the Docker pipeline.",
   "workspaces": [
