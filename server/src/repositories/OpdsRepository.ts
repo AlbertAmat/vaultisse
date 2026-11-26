@@ -44,6 +44,19 @@ export class OpdsRepository {
     }
 
     /**
+     * Records feed use as account activity (at most one write a day), so a
+     * reader-app-only user isn't treated as inactive.
+     * @param userId Owning user's id.
+     */
+    public async touchActivity(userId: number): Promise<void> {
+        await this.db.query(
+            `UPDATE users SET last_activity_date = NOW()
+              WHERE id = $1 AND (last_activity_date IS NULL OR last_activity_date < NOW() - INTERVAL '1 day')`,
+            [userId]
+        );
+    }
+
+    /**
      * Stores (replacing any previous) or clears a user's feed token hash.
      * @param userId Owning user's id.
      * @param tokenHash SHA-256 hex of the new token, or null to disable the feed.

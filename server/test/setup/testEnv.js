@@ -47,6 +47,8 @@ process.env.DEBUG_LOGGING = "false";
 // Mail off unless a specific test file sets these itself.
 process.env.SMTP_HOST = "";
 process.env.SMTP_FROM = "";
+process.env.ACCOUNT_INACTIVITY_DAYS = "";
+process.env.ACCOUNT_DELETION_NOTICE_DAYS = "";
 // SSO off unless a specific test file sets these itself (AppService reads
 // them once at construct time, so the default suite stays password-only).
 process.env.OIDC_ISSUER = "";

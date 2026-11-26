@@ -1,4 +1,4 @@
-import {Pool} from "pg";
+import {Pool, PoolClient} from "pg";
 import {appService} from "../AppService";
 import {UserRepository} from "../repositories/UserRepository";
 import {UserSessionRepository} from "../repositories/UserSessionRepository";
@@ -126,6 +126,20 @@ export class UserService {
     }
 
     /**
+     * Removes an account and every vault it is the sole member of. Does no
+     * permission check; run it inside a transaction.
+     * @param client Transaction's checked-out client.
+     * @param userId Account to remove.
+     */
+    public static async removeAccountData(client: PoolClient, userId: number): Promise<void> {
+        const vaultRepo = new VaultRepository(client);
+        for (const vaultId of await vaultRepo.findSoleMemberVaultIds(userId)) {
+            await vaultRepo.deleteVaultCompletely(vaultId);
+        }
+        await new UserRepository(client).deleteAccount(userId);
+    }
+
+    /**
      * Deletes the caller's account after re-verifying their password.
      *
      * Any vault this account is the *sole* member of (its personal library,
@@ -156,14 +170,7 @@ export class UserService {
         }
 
         try {
-            await withTransaction(this.pool, async (client) => {
-                const vaultRepo = new VaultRepository(client);
-                const soleVaultIds = await vaultRepo.findSoleMemberVaultIds(userId);
-                for (const vaultId of soleVaultIds) {
-                    await vaultRepo.deleteVaultCompletely(vaultId);
-                }
-                await new UserRepository(client).deleteAccount(userId);
-            });
+            await withTransaction(this.pool, (client) => UserService.removeAccountData(client, userId));
         } catch (error: any) {
             if (error.code === "P0001") {
                 throw new ConflictError("You're the only admin of a shared vault - transfer admin to another member, or delete the vault, before deleting your account.");

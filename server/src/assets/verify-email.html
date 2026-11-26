@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaultisse - Verify email</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pb-bg: #f7f2ea;
+            --pb-surface: #ffffff;
+            --pb-border: #e7ddcb;
+            --pb-text: #2f2a22;
+            --pb-text-muted: #7d7364;
+            --pb-primary: #c97b3d;
+            --pb-primary-dark: #a35f2c;
+            --pb-accent-soft: #f5e3d0;
+            --pb-error: #d64545;
+            --pb-error-soft: #fbeaea;
+            --pb-success: #3f8f5f;
+            --pb-success-soft: #eaf6ee;
+            --pb-nav-bg: #2b2318;
+            --pb-nav-bg-alt: #241c13;
+            --pb-nav-text: #f3ede1;
+            --pb-nav-text-muted: #b9ab90;
+            --pb-shadow: 0 1px 2px rgba(47, 42, 34, .06), 0 20px 48px -20px rgba(47, 42, 34, .28);
+            --pb-radius: 14px;
+            --pb-radius-sm: 10px;
+            --pb-font-display: 'Fraunces', 'Georgia', serif;
+            --pb-font-body: 'Inter', system-ui, sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: var(--pb-font-body);
+            color: var(--pb-text);
+            background: var(--pb-bg);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .auth-shell {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* ---------- Brand panel ---------- */
+        .brand-panel {
+            position: relative;
+            flex: 0 0 42%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 48px 56px;
+            background: linear-gradient(160deg, var(--pb-nav-bg) 0%, var(--pb-nav-bg-alt) 100%);
+            color: var(--pb-nav-text);
+            overflow: hidden;
+        }
+
+        .brand-panel::before {
+            content: "";
+            position: absolute;
+            inset: -20% -20% auto auto;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(closest-side, rgba(201, 123, 61, .35), transparent);
+            pointer-events: none;
+        }
+
+        .brand-mark {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-mark span {
+            font-family: var(--pb-font-display);
+            font-weight: 600;
+            font-size: 20px;
+            letter-spacing: .01em;
+        }
+
+        .brand-copy {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-copy h1 {
+            font-family: var(--pb-font-display);
+            font-weight: 600;
+            font-size: 34px;
+            line-height: 1.25;
+            margin: 0 0 14px;
+        }
+
+        .brand-copy p {
+            color: var(--pb-nav-text-muted);
+            font-size: 15px;
+            line-height: 1.6;
+            max-width: 360px;
+            margin: 0;
+        }
+
+        /* Decorative row of book spines */
+        .spines {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 84px;
+        }
+
+        .spines i {
+            display: block;
+            width: 14px;
+            border-radius: 3px 3px 0 0;
+            opacity: .9;
+        }
+
+        .spines i:nth-child(1) { height: 56px; background: #c97b3d; }
+        .spines i:nth-child(2) { height: 78px; background: #e0a15c; }
+        .spines i:nth-child(3) { height: 40px; background: #78dcf6; }
+        .spines i:nth-child(4) { height: 66px; background: #f5e3d0; }
+        .spines i:nth-child(5) { height: 50px; background: #a35f2c; }
+        .spines i:nth-child(6) { height: 72px; background: #f5fb7b; }
+        .spines i:nth-child(7) { height: 34px; background: #c97b3d; }
+        .spines i:nth-child(8) { height: 60px; background: #e0a15c; }
+
+        /* ---------- Form panel ---------- */
+        .form-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--pb-surface);
+            border: 1px solid var(--pb-border);
+            border-radius: var(--pb-radius);
+            box-shadow: var(--pb-shadow);
+            padding: 40px 36px;
+        }
+
+        .auth-eyebrow {
+            font-family: var(--pb-font-body);
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--pb-primary);
+            margin: 0 0 8px;
+        }
+
+        .auth-card h2 {
+            font-family: var(--pb-font-display);
+            font-weight: 600;
+            font-size: 24px;
+            margin: 0 0 28px;
+            color: var(--pb-text);
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--pb-text-muted);
+            margin-bottom: 6px;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--pb-border);
+            border-radius: var(--pb-radius-sm);
+            font-size: 15px;
+            font-family: var(--pb-font-body);
+            color: var(--pb-text);
+            background: var(--pb-bg);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--pb-primary);
+            box-shadow: 0 0 0 3px rgba(201, 123, 61, .18);
+            background: var(--pb-surface);
+        }
+
+        .input-group.has-toggle input {
+            padding-right: 42px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--pb-text-muted);
+            border-radius: 8px;
+        }
+
+        .toggle-password:hover {
+            color: var(--pb-primary);
+            background: var(--pb-accent-soft);
+        }
+
+        .toggle-password svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--pb-primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--pb-radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: var(--pb-font-body);
+            cursor: pointer;
+            transition: background-color .15s ease;
+            margin-top: 6px;
+        }
+
+        .btn:hover {
+            background: var(--pb-primary-dark);
+        }
+
+        .error-message {
+            display: none;
+            align-items: flex-start;
+            gap: 8px;
+            color: var(--pb-error);
+            background: var(--pb-error-soft);
+            border: 1px solid rgba(214, 69, 69, .25);
+            border-radius: var(--pb-radius-sm);
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            font-size: 13.5px;
+            line-height: 1.4;
+        }
+
+        .success-message {
+            display: none;
+            color: var(--pb-success);
+            background: var(--pb-success-soft);
+            border: 1px solid rgba(63, 143, 95, .25);
+            border-radius: var(--pb-radius-sm);
+            padding: 16px;
+            margin-bottom: 4px;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .success-message a {
+            color: var(--pb-primary-dark);
+            font-weight: 600;
+        }
+
+        .foot-link {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 13.5px;
+            color: var(--pb-text-muted);
+        }
+
+        .foot-link a {
+            color: var(--pb-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .foot-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 860px) {
+            .brand-panel { display: none; }
+            .form-panel { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+<div class="auth-shell">
+    <div class="brand-panel">
+        <div class="brand-mark">
+            <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+                <rect width="32" height="32" rx="8" fill="#f5e3d0"/>
+                <path d="M8 8.5C8 7.67 8.67 7 9.5 7H15v18H9.5A1.5 1.5 0 0 1 8 23.5v-15Z" fill="#a35f2c"/>
+                <path d="M24 8.5c0-.83-.67-1.5-1.5-1.5H17v18h5.5a1.5 1.5 0 0 0 1.5-1.5v-15Z" fill="#c97b3d"/>
+            </svg>
+            <span>Vaultisse</span>
+        </div>
+
+        <div class="brand-copy">
+            <h1>One last<br>step.</h1>
+            <p>Confirm that this email address is yours.</p>
+        </div>
+
+        <div class="spines" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+    </div>
+
+    <div class="form-panel">
+        <div class="auth-card">
+            <p class="auth-eyebrow">Almost there</p>
+            <h2>Verify your email</h2>
+
+            <div class="success-message" id="success-message"></div>
+            <div class="error-message" id="error-message"></div>
+
+            <button type="button" class="btn" id="verifyButton">Verify my email</button>
+
+            <p class="foot-link"><a href="/login">Go to login</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // The token is in the fragment so it is never written to server logs.
+    const token = new URLSearchParams(window.location.hash.slice(1)).get('token');
+
+    document.getElementById('verifyButton').addEventListener('click', async function () {
+        const button = this;
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        button.disabled = true;
+        errorMessage.style.display = "none";
+
+        try {
+            const response = await fetch("/verify-email", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({token})
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                successMessage.innerText = data.message;
+                successMessage.style.display = "block";
+                button.style.display = "none";
+                return;
+            }
+            errorMessage.innerText = data.message + " Try logging in to get a new link.";
+        } catch (error) {
+            errorMessage.innerText = "Couldn't reach the server. Please try again.";
+        }
+        errorMessage.style.display = "flex";
+        button.disabled = false;
+    });
+</script>
+</body>
+</html>

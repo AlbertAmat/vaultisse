@@ -4,6 +4,7 @@ import {appService} from "../AppService";
 import {AuthRepository} from "../repositories/AuthRepository";
 import {OidcRepository} from "../repositories/OidcRepository";
 import {OidcUserService} from "./OidcUserService";
+import {UserService} from "./UserService";
 import {EmailVerificationService} from "./EmailVerificationService";
 import {EmailVerificationRepository} from "../repositories/EmailVerificationRepository";
 import {UserRepository} from "../repositories/UserRepository";
@@ -277,11 +278,7 @@ export class AuthService {
                 // Such an account could never log in, so it holds no data.
                 const abandoned = await new EmailVerificationRepository(client).findAbandonedIds(fields.userName, fields.email);
                 for (const abandonedId of abandoned) {
-                    const abandonedVaults = new VaultRepository(client);
-                    for (const vaultId of await abandonedVaults.findSoleMemberVaultIds(abandonedId)) {
-                        await abandonedVaults.deleteVaultCompletely(vaultId);
-                    }
-                    await new UserRepository(client).deleteAccount(abandonedId);
+                    await UserService.removeAccountData(client, abandonedId);
                 }
 
                 const newUserId = await new AuthRepository(client).register({

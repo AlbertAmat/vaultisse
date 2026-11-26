@@ -21,6 +21,7 @@ instead - this document is architecture, not a reporting policy.
 - [Two-factor authentication](#two-factor-authentication)
 - [Passwords](#passwords)
 - [Email verification (optional SMTP)](#email-verification-optional-smtp)
+- [Inactive account deletion](#inactive-account-deletion)
 - [Registration approval](#registration-approval)
 - [Other defenses](#other-defenses)
 - [Known limitations](#known-limitations)
@@ -373,6 +374,22 @@ later remove the SMTP settings, still-unverified accounts stay blocked; set
 Notifications (plain text, English): password changed, two-factor turned off,
 email change requested, a vault join request (to members who can manage
 members), and its approval or rejection (to the requester).
+
+## Inactive account deletion
+
+Off unless `ACCOUNT_INACTIVITY_DAYS` is set. The server checks a minute after
+startup and then daily. Activity means logging in, using a session, or using
+the OPDS feed. Deletion is the same as "Delete account": the account and any
+vault only it belongs to are removed for good.
+
+With `ACCOUNT_DELETION_NOTICE_DAYS` (needs SMTP), a warning is emailed that
+many days ahead, and nothing is deleted until that long after a warning the
+mail server accepted. Using the account cancels it. Without it, accounts that
+are already idle long enough are deleted at the first check - back up first.
+
+Never deleted: disabled or unverified accounts, members with books on loan,
+and the only admin of a vault shared with others. Nothing runs with
+`DEMO_MODE` or `ALLOW_DEV_AUTH`.
 
 ## Registration approval
 

@@ -77,6 +77,7 @@ export class OpdsService {
         if (userId === null) {
             return null;
         }
+        await new OpdsRepository(this.pool).touchActivity(userId);
         const active = await new AuthRepository(this.pool).getActiveUserTokenVersion(userId);
         if (!active || active.activeVaultId === null) {
             return null;

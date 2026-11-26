@@ -2841,3 +2841,8 @@ VALUES ('en', 'SNACKBAR_EMAIL_VERIFICATION_SENT', 'Check your new email address 
        ('it', 'SNACKBAR_EMAIL_VERIFICATION_SENT', 'Controlla il nuovo indirizzo email e segui il link per confermare la modifica'),
        ('fr', 'SNACKBAR_EMAIL_VERIFICATION_SENT', 'Consulte ta nouvelle adresse e-mail et suis le lien pour confirmer le changement'),
        ('de', 'SNACKBAR_EMAIL_VERIFICATION_SENT', 'Prüfe deine neue E-Mail-Adresse und folge dem Link, um die Änderung zu bestätigen');
+
+-- Inactive-account deletion (see InactivityService.ts): last use that doesn't
+-- go through a session (OPDS), and when the deletion warning was sent.
+ALTER TABLE users ADD COLUMN last_activity_date TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN deletion_warned_at TIMESTAMPTZ;

@@ -21,6 +21,7 @@ import {BookMetadataRepository} from "./repositories/BookMetadataRepository";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 import {runMigrations} from "./migrate";
 import {MailService} from "./services/MailService";
+import {InactivityConfig, InactivityService} from "./services/InactivityService";
 import {ASSETS_DIR} from "./utils/Paths";
 
 /** Present only when every required OIDC env var is set. See isOidcEnabled(). */
@@ -79,6 +80,12 @@ export class AppService {
      * @private
      */
     private readonly m_mailService: MailService;
+
+    /**
+     * Inactive-account deletion settings, or null when off
+     * @private
+     */
+    private readonly m_inactivityConfig: InactivityConfig | null;
 
     /**
      * Secret key for JWT
@@ -308,6 +315,8 @@ export class AppService {
 
         this.m_mailService  = new MailService(MailService.readConfig(process.env), this.m_logger);
 
+        this.m_inactivityConfig = InactivityService.readConfig(process.env, this.m_mailService.isEnabled());
+
         // Route console.error (used by the controllers' catch blocks, stack traces
         // included) into the log file too; it used to reach stderr only.
         console.error = (...args: unknown[]) => this.m_logger.error(format(...args));
@@ -342,6 +351,8 @@ export class AppService {
         });
 
         this.m_server = server;
+
+        this.__scheduleInactivityCleanup(server);
 
         // Log server start
         this.m_logger.info(`Server running on port ${this.m_port};`)
@@ -453,6 +464,33 @@ export class AppService {
         console.log("  This project is open source — contributions and issues welcome!");
         console.log("  https://github.com/AlbertAmat/vaultisse");
         console.log("");
+    }
+
+    /**
+     * Runs the inactive-account cleanup a minute after startup and then daily,
+     * when enabled. Never in demo mode, nor with ALLOW_DEV_AUTH (its fake
+     * user never logs in, so would look inactive).
+     * @private
+     */
+    private __scheduleInactivityCleanup(server: Server) {
+        const config = this.m_inactivityConfig;
+        if (!config || process.env.DEMO_MODE === "true" || this.m_allowDevAuth) {
+            return;
+        }
+
+        this.m_logger.warn(`Inactive accounts are deleted after ${config.inactivityDays} days (`
+            + (config.noticeDays > 0 ? `warned ${config.noticeDays} days ahead).` : "with no warning)."));
+
+        const run = () => {
+            new InactivityService(this.m_databasePool, config).run()
+                .catch((error) => console.error("Inactive-account cleanup failed:", error));
+        };
+        const first = setTimeout(run, 60 * 1000);
+        const daily = setInterval(run, 24 * 60 * 60 * 1000);
+        server.on("close", () => {
+            clearTimeout(first);
+            clearInterval(daily);
+        });
     }
 
     /**
