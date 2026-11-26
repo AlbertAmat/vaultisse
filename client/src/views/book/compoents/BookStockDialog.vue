@@ -93,7 +93,6 @@
 </template>
 
 <script setup lang="ts">
-import {IBorrower} from "@vaultisse/types/book/IBorrower";
 /**
  * Create/edit dialog for a book stock (physical copy): status, location,
  * and (only when status is BOOKED) the customer it's loaned to. Passing an
@@ -106,6 +105,7 @@ import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
 import BookStock from "@/model/book/BookStock";
 import {applicationService} from "@/service/ApplicationService";
 import {useI18n} from "vue-i18n";
+import {borrowerItems, toBorrower} from "@/views/book/compoents/borrowerOptions";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 
 interface Props {
@@ -175,38 +175,8 @@ const selectedCustomer: Ref<string | null> = ref(
 			: null
 );
 
-/**
- * Everyone a book can be lent to: customers plus vault members with borrow
- * permission. Values are prefixed ("c:" customer, "m:" member) because the
- * two kinds have separate id spaces.
- */
-const customers = computed(() => {
-	const customerItems = applicationService.getCustomers().map((customer) => {
-		return {
-			value: `c:${customer.getCustomerId()}`,
-			text: customer.getCustomerName()
-		}
-	});
-	const memberItems = applicationService.getBorrowingMembers().map((member) => {
-		return {
-			value: `m:${member.id}`,
-			text: member.name
-		}
-	});
-	return [...customerItems, ...memberItems];
-})
-
-/**
- * Splits the picker's prefixed value back into the customer/member pair the API expects.
- */
-function selectedBorrower(): IBorrower {
-	const value = selectedCustomer.value;
-	if (!value) {
-		return {customerId: null, memberUserId: null};
-	}
-	const id = Number(value.slice(2));
-	return value.startsWith("m:") ? {customerId: null, memberUserId: id} : {customerId: id, memberUserId: null};
-}
+/** Everyone a book can be lent to. */
+const customers = computed(() => borrowerItems());
 
 /**
  *
@@ -217,9 +187,9 @@ async function addStock(print: boolean = false) {
 		try {
 			loading.value = true;
 			if (props.stock) {
-				await props.stock.update(selectedStatus.value, selectedLocation.value, selectedBorrower())
+				await props.stock.update(selectedStatus.value, selectedLocation.value, toBorrower(selectedCustomer.value))
 			} else {
-				await props.book.addBookStock(selectedStatus.value, selectedLocation.value, selectedBorrower(), print);
+				await props.book.addBookStock(selectedStatus.value, selectedLocation.value, toBorrower(selectedCustomer.value), print);
 			}
 			closeDialog();
 		} finally {

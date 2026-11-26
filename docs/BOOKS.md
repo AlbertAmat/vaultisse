@@ -173,6 +173,11 @@ loan flow below, not by hand-crafting an already-loaned stock.
 change, and it's the one place that has to reconcile three related concerns
 in a single statement:
 
+On the book page, an available copy has a **Lend** button (pick the borrower)
+and a loaned one a **Return** button, shown to catalog editors when the vault
+has loans enabled. Lend is the same stock update as the edit dialog; Return
+calls `POST /book/return`. The UI calls `BOOKED` "On loan".
+
 - **`loaned_at`** is set only on the transition *into* `BOOKED` (not already
   `2`) and cleared on any transition *out* of it - a `CASE` expression keyed
   off both the new and previous status, so re-saving an already-booked stock

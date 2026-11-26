@@ -35,6 +35,29 @@
 				</template>
 
 				<template v-slot:item.actions="{ item }">
+					<v-btn
+						v-if="canLend && item.status === BookStockStatusEnum.AVAILABLE"
+						@click="showLendDialog(item.id)"
+						prepend-icon="mdi-account-arrow-right-outline"
+						variant="tonal"
+						color="primary"
+						density="compact"
+						class="mx-1 text-none"
+					>
+						{{t(AppLabels.LEND)}}
+					</v-btn>
+					<v-btn
+						v-if="canLend && item.status === BookStockStatusEnum.BOOKED"
+						@click="returnStock(item.id)"
+						:loading="returnLoading.includes(item.id)"
+						:disabled="returnLoading.includes(item.id)"
+						prepend-icon="mdi-keyboard-return"
+						variant="outlined"
+						density="compact"
+						class="mx-1 text-none"
+					>
+						{{t(AppLabels.RETURN)}}
+					</v-btn>
 					<v-icon
 						v-if="canEditCatalog"
 						@click="addToPrintQueue(item.id)"
@@ -77,6 +100,13 @@
 				:book="book"
 				:stock="selectedStock"
 			/>
+
+			<lend-stock-dialog
+				v-if="lendDialog && selectedStock"
+				v-model="lendDialog"
+				:book="book"
+				:stock="selectedStock"
+			/>
 		</template>
 	</card-component>
 </template>
@@ -84,13 +114,15 @@
 <script setup lang="ts">
 /**
  * Physical stocks table on the book detail view: lists every copy with its
- * code/location/status/customer, and lets the user add/edit/delete a stock
- * or queue its barcode for printing.
+ * code/location/status (with the borrower of a loaned copy), and lets the
+ * user lend/return, add/edit/delete a stock or queue its barcode for printing.
  */
 import {computed, Ref, ref, ShallowRef, shallowRef} from 'vue'
 import Book from "@/model/book/Book";
 import BookStock from "@/model/book/BookStock";
 import BookStockDialog from "@/views/book/compoents/BookStockDialog.vue";
+import LendStockDialog from "@/views/book/compoents/LendStockDialog.vue";
+import {BookStockStatusEnum} from "@vaultisse/types/book/IBookStock";
 import CardComponent from "@/components/card/CardComponent.vue";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
 import {useI18n} from "vue-i18n";
@@ -101,6 +133,9 @@ import {applicationService} from "@/service/ApplicationService";
 
 /** Hides add/edit/delete stock actions for roles that can't edit the catalog (readonly, borrower). */
 const canEditCatalog = applicationService.canEditCatalog();
+
+/** Lend/Return actions also need loans enabled in the vault. */
+const canLend = computed(() => canEditCatalog && applicationService.isLoansEnabled());
 
 interface Props {
 	book: Book
@@ -121,10 +156,6 @@ const headers = computed(() => {
 		{title: t(AppLabels.LOCATION), value: 'location_name'},
 		{title: t(AppLabels.BOOK_STOCK_STATUS), value: 'status'},
 	];
-
-	if (applicationService.isLoansEnabled()) {
-		cols.push({title: t(AppLabels.BOOKED_BY), value: 'booked_user'});
-	}
 
 	cols.push({title: t(AppLabels.ACTIONS), value: 'actions', align: 'end'});
 
@@ -148,6 +179,33 @@ function showAddStockDialog() {
 	stockDialog.value = true;
 }
 
+const lendDialog: Ref<boolean> = ref(false);
+
+function showLendDialog(stockId: number) {
+	const stock = props.book.getStocks().find((stock) => stock.getId() === stockId);
+
+	if (stock) {
+		selectedStock.value = stock;
+		lendDialog.value = true;
+	}
+}
+
+const returnLoading: Ref<number[]> = ref([]);
+
+/** Returns a loaned copy in one click. */
+async function returnStock(stockId: number) {
+	const stock = props.book.getStocks().find((stock) => stock.getId() === stockId);
+	if (!stock) {
+		return;
+	}
+	try {
+		returnLoading.value.push(stockId);
+		await stock.returnLoan();
+	} finally {
+		returnLoading.value.splice(returnLoading.value.indexOf(stockId), 1);
+	}
+}
+
 const deleteLoading: Ref<number[]> = ref([]);
 
 const stocks = computed(() => {
@@ -161,8 +219,10 @@ const stocks = computed(() => {
 			location_name: stock.getLocationName() || t(AppLabels.NO_LOCATION),
 			status: stock.getStatus(),
 			status_color: status!.color,
-			status_text: status!.text,
-			booked_user: stock.getCustomerName()
+			// A loaned copy names its borrower, while loans are enabled.
+			status_text: stock.getStatus() === BookStockStatusEnum.BOOKED && applicationService.isLoansEnabled() && stock.getCustomerName()
+				? t(AppLabels.LENT_TO_NAME, {name: stock.getCustomerName()})
+				: status!.text
 		}
 	})
 })

@@ -376,4 +376,9 @@ export enum AppLabels {
 
     // Email change awaiting confirmation (only when SMTP is configured) - see User.update.
     SNACKBAR_EMAIL_VERIFICATION_SENT = "SNACKBAR_EMAIL_VERIFICATION_SENT",
+
+    // Lend/Return actions on a book's copies - see BookStocks.vue.
+    LEND = "LEND",
+    LEND_BOOK = "LEND_BOOK",
+    LENT_TO_NAME = "LENT_TO_NAME",
 }

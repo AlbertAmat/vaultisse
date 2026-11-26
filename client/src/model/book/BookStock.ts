@@ -200,4 +200,22 @@ export default class BookStock {
         }
     }
 
+    /**
+     * Return a loaned copy: back to available with no borrower, and the loan
+     * closed in the loan history.
+     */
+    public async returnLoan() {
+        try {
+            await api.books.returnBooks([this.m_code]);
+            this.m_customerId.value = null;
+            this.m_memberUserId.value = null;
+            this.m_customerName = null;
+            this.m_status.value = BookStockStatusEnum.AVAILABLE;
+
+            appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_RETURN_BOOKS)})
+        } catch (e) {
+            console.error("Error while returning book stock", e)
+        }
+    }
+
 }
