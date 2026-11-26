@@ -811,6 +811,28 @@ export class BookRepository {
     }
 
     /**
+     * Lists copies whose label was never printed.
+     * @param vaultId Vault id.
+     * @param limit Most rows to return.
+     * @returns The first copies by book name, and how many are pending in total.
+     */
+    public async findUnprintedLabels(vaultId: number, limit: number): Promise<{total: number; stocks: {code: string; name: string; image_url: string | null}[]}> {
+        const result = await this.db.query(
+            `SELECT bs.code, b.name, NULLIF(b.image_url, '') AS image_url, COUNT(*) OVER ()::int AS total
+               FROM book_stocks bs
+               JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
+              WHERE bs.vault_id = $1 AND bs.label_printed_at IS NULL
+              ORDER BY b.name, bs.code
+              LIMIT $2`,
+            [vaultId, limit]
+        );
+        return {
+            total: result.rows[0]?.total ?? 0,
+            stocks: result.rows.map(({code, name, image_url}) => ({code, name, image_url})),
+        };
+    }
+
+    /**
      * Records that these copies' labels were just printed. Codes from other vaults are ignored.
      * @param codes Stock codes.
      * @param vaultId Vault id.

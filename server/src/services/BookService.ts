@@ -571,6 +571,18 @@ export class BookService {
         return new BookRepository(this.pool).deleteStock(bookId, stockId, vaultId);
     }
 
+    /** Most labels handed to the print queue at once - each carries its book's cover, and all end up in one PDF. */
+    private static readonly PENDING_LABELS_BATCH = 200;
+
+    /**
+     * Lists the next batch of copies whose label was never printed.
+     * @param vaultId Vault id.
+     * @returns Up to one batch of copies, and the total pending.
+     */
+    public async listPendingLabels(vaultId: number) {
+        return new BookRepository(this.pool).findUnprintedLabels(vaultId, BookService.PENDING_LABELS_BATCH);
+    }
+
     /**
      * Records that the labels of these copies were just printed.
      * @param vaultId Vault id.

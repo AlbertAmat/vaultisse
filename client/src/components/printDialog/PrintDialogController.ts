@@ -94,6 +94,24 @@ export class PrintDialogController {
     }
 
     /**
+     * Queues many labels at once, skipping the ones already there.
+     * @param items Labels with their stock code.
+     * @returns How many were added.
+     */
+    public addLabels(items: (PrintLabelItem & {code: string})[]): number {
+        const labels = { ...this.m_labels.value };
+        let added = 0;
+        for (const {code, ...item} of items) {
+            if (!(code in labels)) {
+                labels[code] = item;
+                added++;
+            }
+        }
+        this.m_labels.value = labels;
+        return added;
+    }
+
+    /**
      * Removes a single queued label by its stock code.
      * @param code Stock code of the label to remove (the key used in `addLabel`).
      */

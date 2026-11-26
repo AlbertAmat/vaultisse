@@ -491,6 +491,21 @@ describe("book stock lifecycle", () => {
         expect(await printedAt()).not.toBeNull();
     });
 
+    it("lists copies with unprinted labels until they're printed, only for the caller's vault", async () => {
+        const owner = await createAuthenticatedUser(app, "Labeller");
+        const bookId = (await owner.agent.post("/api/rest/book").field("name", "Pending Book")).body;
+        const locationId = await createLocation(owner.agent, "Shelf");
+        const {code} = (await owner.agent.post(`/api/rest/book/${bookId}/stock`).send({status: 0, location_id: locationId})).body;
+        const pending = async (who: ITestUser) => (await who.agent.get("/api/rest/book/stock-labels/pending").expect(200)).body;
+
+        expect((await pending(owner)).stocks).toContainEqual({code, name: "Pending Book", image_url: null});
+        expect((await pending(await createAuthenticatedUser(app))).total).toBe(0);
+
+        const codes = (await pending(owner)).stocks.map((s: any) => s.code);
+        await owner.agent.post("/api/rest/book/stock-labels/printed").send({codes}).expect(204);
+        expect(await pending(owner)).toEqual({total: 0, stocks: []});
+    });
+
     it("refuses to add a stock to another user's book (security audit #2)", async () => {
         // Regression test for an IDOR: addBookStock checked that the
         // location/customer belonged to the caller, but never checked the

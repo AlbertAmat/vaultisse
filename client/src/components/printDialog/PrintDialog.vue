@@ -90,6 +90,22 @@
 				</v-list-item>
 			</v-list>
 
+			<div v-if="canEditCatalog" class="px-3 pb-3">
+				<v-btn
+					@click="addPending()"
+					:loading="loadingPending"
+					:disabled="loadingPending"
+					prepend-icon="mdi-printer-pos-plus-outline"
+					variant="tonal"
+					color="primary"
+					density="compact"
+					class="text-none"
+					block
+				>
+					{{t(AppLabels.PRINT_ADD_PENDING)}}
+				</v-btn>
+			</div>
+
 			<v-divider/>
 
 			<v-card-actions class="pr-4">
@@ -126,13 +142,49 @@
  * clear the queue. See PrintDialogController.ts.
  */
 import {printDialogController} from "@/components/printDialog/PrintDialogController";
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
+import {api} from "@/plugins/api";
+import {applicationService} from "@/service/ApplicationService";
+import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarController";
+import BookStock from "@/model/book/BookStock";
 
 const controller = printDialogController;
 
 const {t} = useI18n();
+
+const canEditCatalog = computed(() => applicationService.canEditCatalog());
+
+const loadingPending = ref(false);
+
+/** Queues the copies whose label was never printed, a batch at a time. */
+async function addPending() {
+	try {
+		loadingPending.value = true;
+		const {total, stocks} = await api.books.getPendingLabels();
+		if (total === 0) {
+			appSnackbarController.show({message: t(AppLabels.SNACKBAR_NO_PENDING_LABELS)});
+			return;
+		}
+		const added = controller.addLabels(stocks.map((stock) => ({
+			code: stock.code,
+			name: stock.name,
+			label: BookStock.drawLabel(stock.code, stock.name),
+			imageUrl: stock.image_url
+		})));
+		const remaining = total - stocks.length;
+		appSnackbarController.show({
+			message: remaining > 0
+				? t(AppLabels.SNACKBAR_PENDING_LABELS_MORE, {count: added, remaining})
+				: t(AppLabels.SNACKBAR_PENDING_LABELS_ADDED, {count: added})
+		});
+	} catch (e) {
+		console.error("Error adding pending labels", e);
+	} finally {
+		loadingPending.value = false;
+	}
+}
 
 const model = computed({
 	get() {

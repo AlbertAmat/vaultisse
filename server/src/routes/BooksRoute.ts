@@ -224,6 +224,17 @@ router.post('/:id/stock', requireAuth, requireVaultPermission("canEditCatalog"),
 router.delete('/:id/stock/:stock_id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().deleteStock(req, res));
 
 /**
+ * GET /book/stock-labels/pending
+ * --------------------------------
+ * Copies of the caller's vault whose label was never printed, at most 200 per call, by book name.
+ *
+ * Auth: required.
+ *
+ * Example response (200): { "total": 1, "stocks": [{ "code": "abc123", "name": "The Hobbit", "image_url": null }] }
+ */
+router.get('/stock-labels/pending', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().listPendingLabels(req, res));
+
+/**
  * POST /book/stock-labels/printed
  * ---------------------------------
  * Sets `label_printed_at` to now on the given copies of the caller's vault.

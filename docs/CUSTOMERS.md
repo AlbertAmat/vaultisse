@@ -146,3 +146,18 @@ turned off while the vault has borrower members or books on loan. Turning it on:
 | Client: page controllers | `client/src/controller/customers/CustomersController.ts`, `CustomerGroupsController.ts` |
 | Client: customers page UI | `client/src/views/customers/CustomersView.vue`, `client/src/views/customers/components/` |
 | Client: loans feature toggle | `client/src/views/settings/VaultMembersDialog.vue`, `client/src/router/Router.ts` |
+
+## Library cards
+
+Each customer has a card (the card icon on their row): photo, name, group,
+member-since date and a CODE128 barcode of `customers.uuid`, written without
+hyphens to keep the bars wide. It downloads as a card-sized (85.6 x 54 mm)
+PDF. "Card setup" sets what every card of the vault shows: up to two custom
+label/value pairs (for example "School:" and its name) and a background
+image, stored in `customer_card_settings`.
+
+"Scan card" resolves a scanned barcode to the customer's current loans and
+history, and lends further copies by scanning them. Only available copies are
+accepted. All card endpoints are under `/customer` (see `CustomerRoute.ts`)
+and need permission to edit the catalog. Existing customers got a
+member-since date from their first recorded loan, or the upgrade date.

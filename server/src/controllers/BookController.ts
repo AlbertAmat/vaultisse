@@ -406,6 +406,20 @@ export class BookController {
     }
 
     /**
+     * GET /book/stock-labels/pending - copies whose label was never printed.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public async listPendingLabels(req: Request, res: Response): Promise<void> {
+        try {
+            res.status(200).json(await new BookService(this.pool).listPendingLabels(appService.getSessionVault(req)));
+        } catch (error) {
+            console.error("Error listing pending labels:", error);
+            res.status(500).send("Error listing pending labels");
+        }
+    }
+
+    /**
      * POST /book/stock-labels/printed - records that copies' labels were printed.
      * @param req Express request.
      * @param res Express response.

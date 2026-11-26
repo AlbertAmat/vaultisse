@@ -141,9 +141,19 @@ export default class BookStock {
      * @returns A canvas containing the rendered barcode + label text.
      */
     public generateBarcodeImage(): HTMLCanvasElement {
+        return BookStock.drawLabel(this.m_code, this.m_book.getName());
+    }
+
+    /**
+     * Draws a stock's printable label without needing the loaded book.
+     * @param code Stock code.
+     * @param bookName Book title printed below the barcode.
+     * @returns A canvas containing the rendered barcode + label text.
+     */
+    public static drawLabel(code: string, bookName: string): HTMLCanvasElement {
         // Create a barcode-only canvas
         const barcodeCanvas = document.createElement('canvas');
-        JsBarcode(barcodeCanvas, this.m_code, {
+        JsBarcode(barcodeCanvas, code, {
             format: "CODE128",
             displayValue: false,
             width: 4,
@@ -172,7 +182,7 @@ export default class BookStock {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         const yPos = barcodeCanvas.height + paddingBottom / 2;
-        ctx.fillText(`${this.m_book.getName()} : ${this.m_code}`, finalCanvas.width / 2, yPos);
+        ctx.fillText(`${bookName} : ${code}`, finalCanvas.width / 2, yPos);
 
         // return finalCanvas.toDataURL("image/png");
         return finalCanvas;

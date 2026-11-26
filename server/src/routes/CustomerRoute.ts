@@ -12,15 +12,41 @@
  * CustomerController/CustomerService/CustomerRepository for the actual
  * request handling, business rules, and SQL respectively.
  */
-import {Router} from 'express';
+import {Request, Response, Router} from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
 import {requireVaultPermission} from "../middlewares/VaultPermissionMiddleware";
 import {CustomerController} from "../controllers/CustomerController";
 import {lazy} from "./lazySingleton";
+import {CustomerCardController} from "../controllers/CustomerCardController";
+import {maxCoverImageSizeMb, upload} from "../controllers/BookController";
+import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
 
 const router = Router();
 const getCustomerController = lazy(() => new CustomerController(appService.getDatabasePool()));
+
+const getCardController = lazy(() => new CustomerCardController(appService.getDatabasePool()));
+
+// Library cards. All require canEditCatalog, like the rest of this router.
+// Registered first so "/card/..." is never read as a "/:id/..." route.
+
+/** GET /customer/card/settings - the vault's two custom card fields and background (data URI or null). */
+router.get('/card/settings', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCardController().getSettings(req, res));
+
+/** PUT /customer/card/settings - multipart: field1_label, field1_value, field2_label, field2_value, background (PNG/JPG file), remove_background. */
+router.put('/card/settings', requireAuth, requireVaultPermission("canEditCatalog"), upload.single("background"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getCardController().saveSettings(req, res));
+
+/** GET /customer/card/scan/:code - {customer, loans, history} for a scanned card barcode. 404 if it isn't a card of this vault. */
+router.get('/card/scan/:code', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCardController().scan(req, res));
+
+/** GET /customer/:id/card - {id, uuid, name, group_name, member_since, photo}. */
+router.get('/:id/card', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCardController().getCard(req, res));
+
+/** PUT /customer/:id/card - multipart: member_since (YYYY-MM-DD), photo (PNG/JPG file), remove_photo. */
+router.put('/:id/card', requireAuth, requireVaultPermission("canEditCatalog"), upload.single("photo"), handleUploadError(maxCoverImageSizeMb), (req: Request, res: Response) => getCardController().updateCard(req, res));
+
+/** POST /customer/:id/card/loan - { code }: lends one available copy. 404 unknown copy | 409 not available | 400 loans off. */
+router.post('/:id/card/loan', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getCardController().lend(req, res));
 
 // Customer groups
 

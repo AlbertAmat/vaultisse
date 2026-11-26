@@ -209,6 +209,15 @@ export class BookService {
     }
 
     /**
+     * Copies whose label was never printed.
+     * @returns Up to one batch of them, and the total pending.
+     */
+    public async getPendingLabels(): Promise<{total: number; stocks: {code: string; name: string; image_url: string | null}[]}> {
+        const {data} = await this.http.get(`/book/stock-labels/pending`);
+        return data;
+    }
+
+    /**
      * Record that the barcode labels of these copies were just printed.
      * @param codes Stock codes.
      */

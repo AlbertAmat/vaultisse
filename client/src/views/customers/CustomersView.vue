@@ -4,6 +4,25 @@
 			<template v-if="activeTab === 'customers'">
 				<v-btn
 					v-if="canEditCatalog"
+					@click="scanDialog = true"
+					prepend-icon="mdi-barcode-scan"
+					class="text-none ml-3"
+					color="primary"
+					variant="tonal"
+				>
+					{{t(AppLabels.CARD_SCAN)}}
+				</v-btn>
+				<v-btn
+					v-if="canEditCatalog"
+					@click="setupDialog = true"
+					prepend-icon="mdi-card-account-details-outline"
+					class="text-none ml-3"
+					variant="text"
+				>
+					{{t(AppLabels.CARD_SETUP)}}
+				</v-btn>
+				<v-btn
+					v-if="canEditCatalog"
 					@click="createCustomer()"
 					class="text-none ml-3"
 					color="primary"
@@ -74,6 +93,15 @@
 								<div class="entity-card-actions" @click.stop>
 									<v-icon
 										v-if="canEditCatalog"
+										@click="cardCustomerId = customer.id"
+										:title="t(AppLabels.CUSTOMER_CARD)"
+										size="small"
+										class="mx-1"
+									>
+										mdi-card-account-details-outline
+									</v-icon>
+									<v-icon
+										v-if="canEditCatalog"
 										@click="editCustomer(customer.id)"
 										size="small"
 										class="mx-1"
@@ -120,6 +148,15 @@
 				</v-window-item>
 			</v-window>
 
+			<card-settings-dialog v-if="setupDialog" v-model="setupDialog"/>
+			<scan-card-dialog v-if="scanDialog" v-model="scanDialog" @changed="refreshAfterScan()"/>
+			<customer-card-dialog
+				v-if="cardCustomerId !== null"
+				:model-value="true"
+				:customer-id="cardCustomerId"
+				@update:model-value="cardCustomerId = null"
+			/>
+
 			<customer-dialog
 				v-if="dialog"
 				v-model="dialog"
@@ -143,6 +180,9 @@ import {applicationService} from "@/service/ApplicationService";
 import PageComponent from "@/views/PageComponent.vue";
 import {computed, ref, Ref, ShallowRef, shallowRef} from "vue";
 import CustomerDialog from "@/views/customers/components/CustomerDialog.vue";
+import CardSettingsDialog from "@/views/customers/components/CardSettingsDialog.vue";
+import CustomerCardDialog from "@/views/customers/components/CustomerCardDialog.vue";
+import ScanCardDialog from "@/views/customers/components/ScanCardDialog.vue";
 import {confirmationDialogController} from "@/components/confirmationDialog/ConfirmationDialogController";
 import CustomersController from "@/controller/customers/CustomersController";
 import CustomerGroupsController from "@/controller/customers/CustomerGroupsController";
@@ -191,6 +231,17 @@ const deleteLoading: Ref<number[]> = ref([]);
  * Ids of the customer cards currently expanded to show their loaned books.
  */
 const expanded: Ref<number[]> = ref([]);
+
+const scanDialog: Ref<boolean> = ref(false);
+const setupDialog: Ref<boolean> = ref(false);
+/** Customer whose library card is open, or null. */
+const cardCustomerId: Ref<number | null> = ref(null);
+
+/** Reloads loan counts. Cards are collapsed so their book tables refetch when reopened. */
+async function refreshAfterScan() {
+	expanded.value = [];
+	await controller.reload();
+}
 
 /**
  *
