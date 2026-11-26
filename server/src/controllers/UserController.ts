@@ -57,8 +57,8 @@ export class UserController {
     public async updateProfile(req: Request, res: Response): Promise<void> {
         try {
             const {name, email, language, region, currentPassword} = req.body;
-            await new UserService(this.pool).updateProfile(appService.getSessionUser(req), {name, email, language, region}, currentPassword);
-            res.status(200).json({message: "User updated successfully"});
+            const {emailVerificationSent} = await new UserService(this.pool).updateProfile(appService.getSessionUser(req), {name, email, language, region}, currentPassword);
+            res.status(200).json({message: "User updated successfully", emailVerificationSent});
         } catch (err: any) {
             if (err instanceof DomainError) {
                 res.status(err.httpStatus).json({message: err.message});

@@ -20,6 +20,7 @@ import {logFailedRequests} from "./middlewares/RequestLogMiddleware"; // Logs ev
 import {BookMetadataRepository} from "./repositories/BookMetadataRepository";
 import "./types/express"; // Request.sessionId/sessionKey ambient augmentation - imported for its side effect, see that file's comment
 import {runMigrations} from "./migrate";
+import {MailService} from "./services/MailService";
 import {ASSETS_DIR} from "./utils/Paths";
 
 /** Present only when every required OIDC env var is set. See isOidcEnabled(). */
@@ -72,6 +73,12 @@ export class AppService {
      * @private
      */
     private readonly m_logger: Logger;
+
+    /**
+     * Outgoing mail; disabled when no SMTP server is configured
+     * @private
+     */
+    private readonly m_mailService: MailService;
 
     /**
      * Secret key for JWT
@@ -299,6 +306,8 @@ export class AppService {
         // Initialize logger
         this.m_logger       = new Logger(String(process.env.LOGGER_PATH));
 
+        this.m_mailService  = new MailService(MailService.readConfig(process.env), this.m_logger);
+
         // Route console.error (used by the controllers' catch blocks, stack traces
         // included) into the log file too; it used to reach stderr only.
         console.error = (...args: unknown[]) => this.m_logger.error(format(...args));
@@ -351,6 +360,11 @@ export class AppService {
     /** Get HTTP server instance */
     public getServer(): Server<any, any> | null {
         return this.m_server;
+    }
+
+    /** Outgoing mail service - check isEnabled() before relying on it. */
+    public getMailService(): MailService {
+        return this.m_mailService;
     }
 
     /** Get JWT secret */

@@ -4,6 +4,8 @@ export interface LoginCandidate {
     password: string;
     tokenVersion: number;
     totpEnabled: boolean;
+    /** Password login is refused while FALSE. */
+    emailVerified: boolean;
     /** Consecutive wrong-password count (security audit #5) - see AuthService.login. */
     failedLoginCount: number;
     /** Set once failedLoginCount crosses the threshold; login is rejected while this is in the future. */
@@ -33,6 +35,8 @@ export interface NewUserFields {
     email: string;
     passwordHash: string;
     disabled: boolean;
+    /** FALSE while the address still has to be confirmed (only when mail is configured). */
+    emailVerified: boolean;
 }
 
 /** Minimal shape needed to mint a session token/cookie after any login path (password, 2FA, or OIDC). */

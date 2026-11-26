@@ -6,6 +6,7 @@ import {Vault, VaultInfo, VaultInvitePreview, VaultRole, VaultRoleCode, VaultSso
 import {VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 import {appService} from "../AppService";
 import {ConflictError, ForbiddenError, NotFoundError, ValidationError} from "../errors/DomainError";
+import {NotificationService} from "./NotificationService";
 
 /** Business rules for the Vault resource (vault CRUD, membership, invitations). Calls VaultRepository/UserRepository; throws DomainError subclasses for expected failures. */
 export class VaultService {
@@ -212,6 +213,7 @@ export class VaultService {
         if (!inserted) {
             throw new ConflictError("Already a member of this vault");
         }
+        void new NotificationService(this.pool).joinRequested(vault.id, userId);
         return vault;
     }
 
@@ -248,10 +250,16 @@ export class VaultService {
             throw new ValidationError("The borrower role needs loans enabled in this vault");
         }
 
+        const before = await repo.getMembership(vaultId, targetUserId);
+
         try {
             const rowsAffected = await repo.updateMember(vaultId, targetUserId, fields);
             if (rowsAffected !== 1) {
                 throw new NotFoundError("Member not found");
+            }
+            if (before?.status === VaultUserStatus.PENDING
+                && (fields.status === VaultUserStatus.ACCEPTED || fields.status === VaultUserStatus.REJECTED)) {
+                void new NotificationService(this.pool).joinDecided(vaultId, targetUserId, fields.status === VaultUserStatus.ACCEPTED);
             }
         } catch (error: any) {
             if (error.code === 'P0001') {

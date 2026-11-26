@@ -4,6 +4,8 @@ import {appService} from "../AppService";
 import {AuthRepository} from "../repositories/AuthRepository";
 import {OidcRepository} from "../repositories/OidcRepository";
 import {OidcUserService} from "./OidcUserService";
+import {EmailVerificationService} from "./EmailVerificationService";
+import {EmailVerificationRepository} from "../repositories/EmailVerificationRepository";
 import {UserRepository} from "../repositories/UserRepository";
 import {UserSessionRepository} from "../repositories/UserSessionRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
@@ -11,7 +13,7 @@ import {ActivityLogRepository} from "../repositories/ActivityLogRepository";
 import {ActivityAction} from "@vaultisse/types/user/ActivityAction";
 import {TwoFactorAuth} from "../utils/TwoFactorAuth";
 import {withTransaction} from "../repositories/withTransaction";
-import {UnauthorizedError, ValidationError} from "../errors/DomainError";
+import {ForbiddenError, UnauthorizedError, ValidationError} from "../errors/DomainError";
 import {VaultRoleCode} from "../types/vault";
 import {VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
@@ -48,6 +50,10 @@ export interface RegisterFields {
 export class PendingLoginExpiredError extends UnauthorizedError {
 }
 
+/** Thrown by login when the password is right but the email address was never confirmed. */
+export class EmailNotVerifiedError extends ForbiddenError {
+}
+
 /**
  * Business rules for the Auth resource: password login/2FA/register/logout
  * and the OIDC/SSO flow. Calls AuthRepository/UserSessionRepository/
@@ -76,7 +82,7 @@ export class AuthService {
      * @param userAgent Request `User-Agent` header, if any.
      * @param ip Request client IP, if any.
      * @returns Either a full session token, or a pending-2FA token.
-     * @throws UnauthorizedError (401) on invalid credentials.
+     * @throws UnauthorizedError (401) on invalid credentials, EmailNotVerifiedError (403) if the address isn't confirmed yet.
      */
     public async login(usernameOrEmail: string, password: string, userAgent: string | undefined, ip: string | undefined): Promise<LoginOutcome> {
         if (appService.isSsoOnly()) {
@@ -119,6 +125,11 @@ export class AuthService {
         // knowing the password can't be used to reset an in-progress 2FA
         // lockout (security audit #5).
         await authRepo.resetFailedLoginAttempts(candidate.id);
+
+        // Only after the password check, so this can't reveal which accounts exist.
+        if (!candidate.emailVerified) {
+            throw new EmailNotVerifiedError("Please verify your email address before logging in.");
+        }
 
         if (candidate.totpEnabled) {
             appService.getLogger().debug("Password OK, awaiting 2FA code for user:" + usernameOrEmail);
@@ -229,10 +240,11 @@ export class AuthService {
     /**
      * Registers a new user account.
      * @param fields Registration fields.
-     * @returns Whether the account requires admin approval before it can log in.
+     * With mail configured, the account also can't log in until its address is verified.
+     * @returns Whether the account requires admin approval, and whether it must verify its email.
      * @throws ValidationError (400) on invalid email/weak password, or a duplicate email/code (deliberately mapped to 400, not 409 - see the CWE-203 note below).
      */
-    public async register(fields: RegisterFields): Promise<{requiresApproval: boolean}> {
+    public async register(fields: RegisterFields): Promise<{requiresApproval: boolean; requiresVerification: boolean}> {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(fields.email)) {
             throw new ValidationError("Invalid email format.");
@@ -255,14 +267,30 @@ export class AuthService {
         const hashedPassword = await appService.hashPassword(fields.password);
         const requiresApproval = process.env.REGISTRATION_REQUIRES_APPROVAL === "true";
 
+        const requiresVerification = appService.getMailService().isEnabled();
+        let userId: number;
+
         try {
-            await withTransaction(this.pool, async (client) => {
+            userId = await withTransaction(this.pool, async (client) => {
+                // Free the code/email held by a registration that was never
+                // verified and whose link expired (e.g. a mistyped address).
+                // Such an account could never log in, so it holds no data.
+                const abandoned = await new EmailVerificationRepository(client).findAbandonedIds(fields.userName, fields.email);
+                for (const abandonedId of abandoned) {
+                    const abandonedVaults = new VaultRepository(client);
+                    for (const vaultId of await abandonedVaults.findSoleMemberVaultIds(abandonedId)) {
+                        await abandonedVaults.deleteVaultCompletely(vaultId);
+                    }
+                    await new UserRepository(client).deleteAccount(abandonedId);
+                }
+
                 const newUserId = await new AuthRepository(client).register({
                     name: fields.name,
                     code: fields.userName,
                     email: fields.email,
                     passwordHash: hashedPassword,
                     disabled: requiresApproval,
+                    emailVerified: !requiresVerification,
                 });
 
                 // Provision a personal vault (issue #7): every catalog
@@ -274,6 +302,7 @@ export class AuthService {
                 const vaultId = await vaultRepo.createVault(`${fields.name}'s library`, null);
                 await vaultRepo.addMember(vaultId, newUserId, VaultRoleCode.ADMIN, VaultUserStatus.ACCEPTED);
                 await new UserRepository(client).setActiveVault(newUserId, vaultId);
+                return newUserId;
             });
         } catch (err: any) {
             if (err.code === "23505") { // PostgreSQL unique violation
@@ -289,7 +318,13 @@ export class AuthService {
             throw err;
         }
 
-        return {requiresApproval};
+        // After the commit: a delivery failure leaves the account in place, and
+        // the login page offers to resend the link.
+        if (requiresVerification) {
+            await new EmailVerificationService(this.pool).sendRegistrationLink(userId, fields.email);
+        }
+
+        return {requiresApproval, requiresVerification};
     }
 
     /**

@@ -20,6 +20,7 @@ instead - this document is architecture, not a reporting policy.
 - [`activity_log`: the audit trail](#activity_log-the-audit-trail)
 - [Two-factor authentication](#two-factor-authentication)
 - [Passwords](#passwords)
+- [Email verification (optional SMTP)](#email-verification-optional-smtp)
 - [Registration approval](#registration-approval)
 - [Other defenses](#other-defenses)
 - [Known limitations](#known-limitations)
@@ -344,6 +345,34 @@ do by accident, not easier.
 Hashed with bcrypt, 12 salt rounds. Never logged or stored in plaintext.
 Registration and password-change both enforce: 8+ characters, an uppercase
 letter, a digit, and a special character.
+
+## Email verification (optional SMTP)
+
+Mail is off unless `SMTP_HOST` and `SMTP_FROM` are set (a half-filled setup,
+or no `FRONT_END_URL`, stops the server at startup). With mail on:
+
+- A new registration gets `users.email_verified = FALSE` and a link valid for
+  24 hours. `POST /login` answers 403 (`emailNotVerified: true`) until the
+  link is confirmed; the login page then offers to resend it. This is
+  independent of `REGISTRATION_REQUIRES_APPROVAL`: with both on, an account
+  needs both.
+- The link opens a page with a confirm button, so a mail scanner that only
+  opens links verifies nothing. The token is in the URL fragment, and only its
+  SHA-256 is stored (`user_email_verifications`).
+- Changing your email keeps the old address until the new one confirms it.
+  The old address is told about the request; changing the password cancels it.
+- A never-verified registration whose link expired is deleted when someone
+  registers with the same username or email.
+- An SSO login that matches an unverified account by verified email takes it
+  over: its password is replaced, so the registrant can't get in.
+
+Accounts that existed before, and SSO-created ones, count as verified. If you
+later remove the SMTP settings, still-unverified accounts stay blocked; set
+`users.email_verified = TRUE` by hand to release one.
+
+Notifications (plain text, English): password changed, two-factor turned off,
+email change requested, a vault join request (to members who can manage
+members), and its approval or rejection (to the requester).
 
 ## Registration approval
 

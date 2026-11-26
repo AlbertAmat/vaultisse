@@ -350,9 +350,12 @@ export default class User {
      */
     public async update(name: string, email: string, language: string, region: string, currentPassword?: string) {
         try {
-            await api.users.update(name, email, language, region, currentPassword);
-            appSnackbarController.show({ message: i18n.global.t(AppLabels.SNACKBAR_PROFILE_UPDATED) });
-            this.m_email.value = email;
+            const {emailVerificationSent} = await api.users.update(name, email, language, region, currentPassword);
+            appSnackbarController.show({ message: i18n.global.t(emailVerificationSent ? AppLabels.SNACKBAR_EMAIL_VERIFICATION_SENT : AppLabels.SNACKBAR_PROFILE_UPDATED) });
+            // A pending change keeps the old address until it's confirmed.
+            if (!emailVerificationSent) {
+                this.m_email.value = email;
+            }
             this.m_name.value = name;
             this.m_language.value = language;
             this.m_region.value = region;

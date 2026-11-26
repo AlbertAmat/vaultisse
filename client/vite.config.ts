@@ -39,6 +39,12 @@ export default defineConfig(({command, mode}) => {
             proxy: isProd
                 ? undefined
                 : {
+                    // Emailed verification links point at FRONT_END_URL.
+                    '/verify-email': {
+                        target: 'http://localhost:3000',
+                        changeOrigin: true,
+                        secure: false,
+                    },
                     '/api/rest': {
                         target: 'http://localhost:3000',
                         changeOrigin: true,

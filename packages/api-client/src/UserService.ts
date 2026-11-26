@@ -63,15 +63,17 @@ export class UserService {
      * @param language New preferred UI language (2-letter code).
      * @param region New preferred region code.
      * @param currentPassword Current password, required only when `email` differs from the stored one.
+     * @returns Whether the email change is waiting for the new address to confirm it.
      */
-    public async update(name: string, email: string, language: string, region: string, currentPassword?: string) {
-        await this.http.put(`/user`, {
+    public async update(name: string, email: string, language: string, region: string, currentPassword?: string): Promise<{emailVerificationSent: boolean}> {
+        const response = await this.http.put(`/user`, {
             name: name,
             email: email,
             language: language,
             region: region,
             currentPassword: currentPassword,
         })
+        return {emailVerificationSent: response.data?.emailVerificationSent === true};
     }
 
     /**

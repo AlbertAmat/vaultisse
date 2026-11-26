@@ -73,6 +73,25 @@ export class OidcUserRepository {
     }
 
     /**
+     * Hands a never-verified local account to the owner the IdP vouched for:
+     * replaces the password (whoever registered it never proved they own the
+     * address), revokes its tokens and marks the address verified.
+     * @param userId Account id.
+     * @param passwordHash Hash of a random, unknown password.
+     * @returns The new token_version, or null if the account was already verified.
+     */
+    public async claimUnverified(userId: number, passwordHash: string): Promise<number | null> {
+        const result = await this.db.query(
+            `UPDATE users
+                SET password = $2, email_verified = TRUE, token_version = token_version + 1
+              WHERE id = $1 AND email_verified = FALSE
+            RETURNING token_version AS "tokenVersion"`,
+            [userId, passwordHash]
+        );
+        return result.rows[0]?.tokenVersion ?? null;
+    }
+
+    /**
      * Checks whether a login code is already taken.
      * @param code Candidate login code.
      * @returns Whether it's already in use.

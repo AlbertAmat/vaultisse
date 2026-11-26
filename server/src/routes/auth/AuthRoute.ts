@@ -221,12 +221,50 @@ router.get("/register", (req, res) => getAuthController().showRegister(req, res)
  * Example response (201):
  *  { "success": true, "message": "Register successful", "redirectUrl": "/login" }
  *
+ * With SMTP configured, the response also has `requiresVerification: true`
+ * and the account can't log in until it follows the emailed link
+ * (see POST /verify-email).
+ *
  * Responses: 400 missing/invalid fields, weak password, or a duplicate
  *            email/username (deliberately generic - see CWE-203 note in
  *            AuthService.register) | 403 registration disabled
  *            (REGISTRATION_ENABLED=false) | 500 server error.
  */
 router.post("/register", authLimiter, (req, res) => getAuthController().register(req, res));
+
+// Its own bucket, so asking for a new link doesn't use up login attempts.
+const verifyLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 5,
+    message: {message: "Too many attempts, please try again later."},
+});
+
+/**
+ * GET /verify-email
+ * ------------------
+ * Serves the confirmation page an emailed link opens. The token travels in
+ * the URL fragment, which never reaches the server on this request.
+ * Unauthenticated.
+ */
+router.get("/verify-email", (req, res) => getAuthController().showVerifyEmail(req, res));
+
+/**
+ * POST /verify-email
+ * -------------------
+ * Confirm a new account's address, or an email change. Unauthenticated -
+ * the single-use token is the proof. Body: { "token": "..." }
+ * Responses: 200 verified | 400 invalid/used/expired link | 429 rate limited.
+ */
+router.post("/verify-email", verifyLimiter, (req, res) => getAuthController().verifyEmail(req, res));
+
+/**
+ * POST /verify-email/resend
+ * --------------------------
+ * Send a new link to an unverified account, at most once a minute per
+ * account. Unauthenticated. Body: { "username": "jdoe" } (code or email).
+ * Always 200 (see AuthController.resendVerification) | 429 rate limited.
+ */
+router.post("/verify-email/resend", verifyLimiter, (req, res) => getAuthController().resendVerification(req, res));
 
 /**
  * GET /logout

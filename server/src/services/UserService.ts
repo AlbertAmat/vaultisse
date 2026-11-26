@@ -7,6 +7,9 @@ import {ActivityLogRepository} from "../repositories/ActivityLogRepository";
 import {ActivityAction} from "@vaultisse/types/user/ActivityAction";
 import {withTransaction} from "../repositories/withTransaction";
 import {TwoFactorAuth} from "../utils/TwoFactorAuth";
+import {EmailVerificationService} from "./EmailVerificationService";
+import {NotificationService} from "./NotificationService";
+import {EmailVerificationRepository} from "../repositories/EmailVerificationRepository";
 import {ActivityLogEntry, ProfileUpdateFields, TwoFactorSetup, UserSession} from "../types/user";
 import {ConflictError, NotFoundError, UnauthorizedError, ValidationError} from "../errors/DomainError";
 
@@ -66,12 +69,16 @@ export class UserService {
      * via password reset, or for hijacking a future OIDC/SSO first login
      * (see OidcUserService.findOrCreateOidcUser).
      *
+     * With mail configured, the new address must also confirm the change
+     * before it applies; until then the current one stays.
+     *
      * @param userId Owning user's id.
      * @param fields New field values.
      * @param currentPassword Current password - required only when `fields.email` differs from the stored one.
-     * @throws UnauthorizedError (401) if the email is being changed and `currentPassword` doesn't match.
+     * @returns Whether a confirmation email was sent instead of changing the address now.
+     * @throws UnauthorizedError (401) if the email is being changed and `currentPassword` doesn't match, ValidationError (400) if the new address can't be used.
      */
-    public async updateProfile(userId: number, fields: ProfileUpdateFields, currentPassword: string | undefined): Promise<void> {
+    public async updateProfile(userId: number, fields: ProfileUpdateFields, currentPassword: string | undefined): Promise<{emailVerificationSent: boolean}> {
         const repo = new UserRepository(this.pool);
 
         const currentEmail = await repo.getEmail(userId);
@@ -83,7 +90,15 @@ export class UserService {
             }
         }
 
+        if (changingEmail && appService.getMailService().isEnabled()) {
+            await new EmailVerificationService(this.pool).requestEmailChange(userId, fields.email);
+            await repo.updateProfile(userId, {...fields, email: currentEmail});
+            void new NotificationService(this.pool).emailChangeRequested(userId);
+            return {emailVerificationSent: true};
+        }
+
         await repo.updateProfile(userId, fields);
+        return {emailVerificationSent: false};
     }
 
     /**
@@ -206,6 +221,10 @@ export class UserService {
         }
 
         await new ActivityLogRepository(this.pool).recordActivity(userId, ActivityAction.PASSWORD_CHANGED, {metadata: {ip}});
+
+        // Cancel a pending email change - changing the password is how an owner locks an intruder out.
+        await new EmailVerificationRepository(this.pool).deleteForUser(userId);
+        void new NotificationService(this.pool).passwordChanged(userId);
 
         const newToken = appService.createSessionToken(userId, newTokenVersion, sessionKey);
         return {newToken};
@@ -332,5 +351,6 @@ export class UserService {
         }
         await repo.disableTwoFactor(userId);
         await repo.deleteBackupCodes(userId);
+        void new NotificationService(this.pool).twoFactorDisabled(userId);
     }
 }

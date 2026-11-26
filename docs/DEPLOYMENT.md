@@ -68,6 +68,15 @@ Once every account you need exists, set `REGISTRATION_ENABLED=false` (see
 
 ---
 
+### Email (optional)
+
+To verify new users' addresses and send notifications, set `SMTP_HOST`,
+`SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and `SMTP_FROM` in `.env` (see
+`.env.example`), and make sure `FRONT_END_URL` is the address users open,
+since links in emails point there. Leave them empty to run without email.
+What changes when it's on: "Email verification" in
+[AUTHENTICATION.md](AUTHENTICATION.md).
+
 ## A. Self-hosted, local only — no public access
 
 Use this when Vaultisse should only ever be reached from the machine it runs on, or

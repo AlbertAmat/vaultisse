@@ -36,6 +36,7 @@ export class AuthRepository {
         const looksLikeEmail = usernameOrEmail.includes("@");
         const result = await this.db.query(
             `SELECT id, code, password, token_version AS "tokenVersion", totp_enabled AS "totpEnabled",
+                    email_verified AS "emailVerified",
                     failed_login_count AS "failedLoginCount", lockout_until AS "lockoutUntil"
                FROM users
               WHERE ${looksLikeEmail ? "email" : "code"} = $1 AND disabled = FALSE`,
@@ -164,10 +165,10 @@ export class AuthRepository {
      */
     public async register(fields: NewUserFields): Promise<number> {
         const result = await this.db.query(
-            `INSERT INTO users (name, code, email, password, disabled)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO users (name, code, email, password, disabled, email_verified)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING id`,
-            [fields.name, fields.code, fields.email, fields.passwordHash, fields.disabled]
+            [fields.name, fields.code, fields.email, fields.passwordHash, fields.disabled, fields.emailVerified]
         );
         return result.rows[0].id;
     }

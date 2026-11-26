@@ -44,6 +44,9 @@ process.env.LIBRARYTHING_API_KEY = "";
 process.env.MAX_IMPORT_FILE_SIZE_MB = process.env.MAX_IMPORT_FILE_SIZE_MB || "10";
 process.env.MAX_EBOOK_FILE_SIZE_MB = process.env.MAX_EBOOK_FILE_SIZE_MB || "10";
 process.env.DEBUG_LOGGING = "false";
+// Mail off unless a specific test file sets these itself.
+process.env.SMTP_HOST = "";
+process.env.SMTP_FROM = "";
 // SSO off unless a specific test file sets these itself (AppService reads
 // them once at construct time, so the default suite stays password-only).
 process.env.OIDC_ISSUER = "";

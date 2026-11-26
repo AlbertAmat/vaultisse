@@ -10,6 +10,7 @@ import {OidcUserRepository, OidcAccountRow} from "../repositories/OidcUserReposi
 import {OidcClaims} from "../repositories/OidcRepository";
 import {ResolvedAuthUser} from "../types/auth";
 import {UserRepository} from "../repositories/UserRepository";
+import {EmailVerificationRepository} from "../repositories/EmailVerificationRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {withTransaction} from "../repositories/withTransaction";
 import {VaultRoleCode} from "../types/vault";
@@ -123,8 +124,12 @@ export class OidcUserService {
                 throw new OidcUserError("Cannot link an unverified email to an existing account");
             }
 
+            const claimedVersion = await repo.claimUnverified(byEmail.id, await appService.hashPassword(crypto.randomBytes(32).toString("hex")));
+            if (claimedVersion !== null) {
+                await new EmailVerificationRepository(this.pool).deleteForUser(byEmail.id);
+            }
             await repo.linkIdentity(byEmail.id, claims.issuer, sub);
-            return {id: byEmail.id, tokenVersion: byEmail.tokenVersion};
+            return {id: byEmail.id, tokenVersion: claimedVersion ?? byEmail.tokenVersion};
         }
 
         const code = await this.allocateUniqueCode(this.slugCode(claims.preferredUsername, email));

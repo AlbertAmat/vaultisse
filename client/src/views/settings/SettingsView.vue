@@ -396,6 +396,8 @@ async function save() {
 			emailChanged.value ? currentPasswordForEmail.value : undefined
 		)
 		currentPasswordForEmail.value = "";
+		// Show the stored address again if the change is still awaiting confirmation.
+		email.value = controller.getUser().getEmail();
 	} finally {
 		saving.value = false;
 	}

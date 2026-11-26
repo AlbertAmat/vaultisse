@@ -2,7 +2,8 @@ import {Pool} from "pg";
 import {Request, Response} from "express";
 import path from "path";
 import {appService} from "../AppService";
-import {AuthService, PendingLoginExpiredError} from "../services/AuthService";
+import {AuthService, EmailNotVerifiedError, PendingLoginExpiredError} from "../services/AuthService";
+import {EmailVerificationService} from "../services/EmailVerificationService";
 import {UnauthorizedError, ValidationError} from "../errors/DomainError";
 import {SessionCookie} from "../utils/SessionCookie";
 import {ASSETS_DIR, CLIENT_DIST_DIR} from "../utils/Paths";
@@ -85,6 +86,10 @@ export class AuthController {
             SessionCookie.setSessionCookie(res, outcome.token);
             res.json({success: true, message: "Login successful", redirectUrl: "/app"});
         } catch (err) {
+            if (err instanceof EmailNotVerifiedError) {
+                res.status(err.httpStatus).json({message: err.message, emailNotVerified: true});
+                return;
+            }
             if (err instanceof UnauthorizedError) {
                 res.status(err.httpStatus).json({message: err.message});
                 return;
@@ -258,14 +263,21 @@ export class AuthController {
         }
 
         try {
-            const {requiresApproval} = await new AuthService(this.pool).register({userName, email, name, password});
+            const {requiresApproval, requiresVerification} = await new AuthService(this.pool).register({userName, email, name, password});
+
+            let message = requiresApproval
+                ? "Registration successful. An administrator needs to review and approve your account before you can log in."
+                : "Registration successful. You can now log in.";
+            if (requiresVerification) {
+                message = "Registration successful. Check your email and follow the link to verify your address."
+                    + (requiresApproval ? " An administrator also needs to approve your account before you can log in." : "");
+            }
 
             res.status(201).json({
                 success: true,
-                message: requiresApproval
-                    ? "Registration successful. An administrator needs to review and approve your account before you can log in."
-                    : "Registration successful. You can now log in.",
+                message,
                 requiresApproval,
+                requiresVerification,
                 redirectUrl: "/login",
             });
         } catch (err) {
@@ -276,6 +288,64 @@ export class AuthController {
             console.error("Register error:", err);
             res.status(500).json({message: "Internal server error"});
         }
+    }
+
+    /**
+     * GET /verify-email - serves the page that confirms the link's token.
+     * Confirming needs a button press (POST), so a mail scanner that merely
+     * opens the link can't verify an address.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public showVerifyEmail(req: Request, res: Response): void {
+        res.sendFile(path.join(ASSETS_DIR, "verify-email.html"));
+    }
+
+    /**
+     * POST /verify-email - confirms a verification link.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public async verifyEmail(req: Request, res: Response): Promise<void> {
+        const token = req.body.token;
+        if (typeof token !== "string" || !token) {
+            res.status(400).json({message: "This link is invalid or has expired."});
+            return;
+        }
+
+        try {
+            const {kind, requiresApproval} = await new EmailVerificationService(this.pool).verify(token);
+            let message = "Your email address has been updated.";
+            if (kind === "registration") {
+                message = requiresApproval
+                    ? "Email verified. An administrator still needs to approve your account before you can log in."
+                    : "Email verified. You can now log in.";
+            }
+            res.json({success: true, message});
+        } catch (err) {
+            if (err instanceof ValidationError) {
+                res.status(err.httpStatus).json({message: err.message});
+                return;
+            }
+            console.error("Email verification error:", err);
+            res.status(500).json({message: "Internal server error"});
+        }
+    }
+
+    /**
+     * POST /verify-email/resend - sends a new link. Answers the same whether
+     * or not the account exists, and doesn't wait for delivery, so neither the
+     * body nor the timing reveals which accounts exist.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public resendVerification(req: Request, res: Response): void {
+        const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
+        if (username) {
+            new EmailVerificationService(this.pool).resend(username)
+                .catch((err) => console.error("Resend verification error:", err));
+        }
+        res.json({success: true, message: "If that account is waiting for verification, a new link is on its way."});
     }
 
     /**

@@ -413,6 +413,10 @@
                     Invalid username or password
                 </div>
 
+                <p class="foot-link" id="resendRow" style="display: none; margin: 0 0 16px">
+                    <a href="#" id="resendLink">Resend verification email</a>
+                </p>
+
                 <button type="submit" class="btn">Login</button>
 
                 <p class="foot-link" id="registerLink">No account? <a href="/register">Register and start using the app</a></p>
@@ -487,6 +491,23 @@
         })
         .catch(function () { /* leave the register link visible */ });
 
+    document.getElementById('resendLink').addEventListener('click', async function (event) {
+        event.preventDefault();
+        const errorMessage = document.getElementById('error-message');
+        try {
+            const response = await fetch("/verify-email/resend", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({username: document.getElementById('username').value})
+            });
+            errorMessage.innerText = (await response.json()).message;
+        } catch (error) {
+            errorMessage.innerText = "Couldn't send the request. Please try again.";
+        }
+        errorMessage.style.display = "flex";
+        document.getElementById('resendRow').style.display = "none";
+    });
+
     document.getElementById('loginForm').addEventListener('submit', async function (event) {
         event.preventDefault(); // Prevent default form submission
 
@@ -503,6 +524,8 @@
             });
 
             const data = await response.json();
+
+            document.getElementById('resendRow').style.display = data.emailNotVerified ? "block" : "none";
 
             if (!response.ok) {
                 errorMessage.innerText = data.message;

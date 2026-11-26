@@ -373,4 +373,7 @@ export enum AppLabels {
 
     // Book attribution (issue #7 follow-up): who added a book to the vault - see BookView.vue.
     BOOK_ADDED_BY = "BOOK_ADDED_BY",
+
+    // Email change awaiting confirmation (only when SMTP is configured) - see User.update.
+    SNACKBAR_EMAIL_VERIFICATION_SENT = "SNACKBAR_EMAIL_VERIFICATION_SENT",
 }
