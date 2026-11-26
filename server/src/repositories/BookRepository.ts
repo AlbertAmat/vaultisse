@@ -265,7 +265,8 @@ export class BookRepository {
                    'location_name', locations.name,
                    'customer_id', customers.id,
                    'member_user_id', borrower_users.id,
-                   'customer_name', COALESCE(customers.name, borrower_users.name)
+                   'customer_name', COALESCE(customers.name, borrower_users.name),
+                   'label_printed_at', book_stocks.label_printed_at
                )
            ) FILTER(WHERE book_stocks.id IS NOT NULL), '[]'
                    )                                                                    AS stocks,
@@ -796,7 +797,8 @@ export class BookRepository {
                     locations.name as location_name,
                     customers.id   as customer_id,
                     borrower_users.id as member_user_id,
-                    COALESCE(customers.name, borrower_users.name) as customer_name
+                    COALESCE(customers.name, borrower_users.name) as customer_name,
+                    book_stocks.label_printed_at
              FROM book_stocks
                       LEFT JOIN customers ON book_stocks.customer_id = customers.id AND customers.vault_id = $2
                       LEFT JOIN users borrower_users ON book_stocks.member_user_id = borrower_users.id
@@ -806,6 +808,18 @@ export class BookRepository {
             [stockId, vaultId]
         );
         return result.rows[0] ?? null;
+    }
+
+    /**
+     * Records that these copies' labels were just printed. Codes from other vaults are ignored.
+     * @param codes Stock codes.
+     * @param vaultId Vault id.
+     */
+    public async markLabelsPrinted(codes: string[], vaultId: number): Promise<void> {
+        await this.db.query(
+            "UPDATE book_stocks SET label_printed_at = NOW() WHERE code = ANY($1::text[]) AND vault_id = $2",
+            [codes, vaultId]
+        );
     }
 
     /**

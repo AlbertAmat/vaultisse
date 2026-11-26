@@ -47,6 +47,8 @@ export interface BookStockDetail {
     member_user_id: number | null;
     /** The customer's or member's name. */
     customer_name: string | null;
+    /** When the barcode label was last printed, or null if never. */
+    label_printed_at: Date | null;
 }
 
 export interface BookFileMeta {

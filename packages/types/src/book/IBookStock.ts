@@ -27,6 +27,8 @@ export interface IBookStock extends IBookStockBase{
     member_user_id: number | null;
     /** Name of the customer or vault member this stock is loaned/booked to. */
     customer_name: string;
+    /** ISO date-time the barcode label was last printed, or null if never. */
+    label_printed_at: string | null;
 }
 
 /**

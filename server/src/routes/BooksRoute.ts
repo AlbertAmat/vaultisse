@@ -224,6 +224,16 @@ router.post('/:id/stock', requireAuth, requireVaultPermission("canEditCatalog"),
 router.delete('/:id/stock/:stock_id', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().deleteStock(req, res));
 
 /**
+ * POST /book/stock-labels/printed
+ * ---------------------------------
+ * Sets `label_printed_at` to now on the given copies of the caller's vault.
+ *
+ * Auth: required. Body: { "codes": ["abc123", "def456"] }
+ * Responses: 204 | 400 missing/invalid codes.
+ */
+router.post('/stock-labels/printed', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getBookController().markLabelsPrinted(req, res));
+
+/**
  * PUT /book/:id/stock/:stock_id
  * ---------------------------------
  * Updates a book stock's status/location/customer. Recording a loan/return in `loan_history` when the

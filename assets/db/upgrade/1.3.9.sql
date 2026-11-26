@@ -30,6 +30,14 @@ CREATE TABLE user_email_verifications
 ALTER TABLE users ADD COLUMN last_activity_date TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN deletion_warned_at TIMESTAMPTZ;
 
+-- ============================================================
+-- Stock label print date
+-- ============================================================
+
+-- When this copy's barcode label was last printed (the label PDF generated);
+-- NULL = never.
+ALTER TABLE book_stocks ADD COLUMN label_printed_at TIMESTAMPTZ;
+
 INSERT INTO app_labels (language, code, text)
 VALUES ('en', 'SNACKBAR_EMAIL_VERIFICATION_SENT', 'Check your new email address and follow the link to confirm the change'),
        ('ca', 'SNACKBAR_EMAIL_VERIFICATION_SENT', 'Revisa la nova adreça de correu i segueix l''enllaç per confirmar el canvi'),

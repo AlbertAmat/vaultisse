@@ -406,6 +406,25 @@ export class BookController {
     }
 
     /**
+     * POST /book/stock-labels/printed - records that copies' labels were printed.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public async markLabelsPrinted(req: Request, res: Response): Promise<void> {
+        try {
+            await new BookService(this.pool).markLabelsPrinted(appService.getSessionVault(req), req.body.codes);
+            res.status(204).send();
+        } catch (error) {
+            if (error instanceof DomainError) {
+                res.status(error.httpStatus).send(error.message);
+                return;
+            }
+            console.error("Error recording printed labels:", error);
+            res.status(500).send("Error recording printed labels");
+        }
+    }
+
+    /**
      * PUT /book/:id/stock/:stock_id - updates a book stock's status/location/customer.
      * @param req Express request.
      * @param res Express response.

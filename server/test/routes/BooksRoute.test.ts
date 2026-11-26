@@ -474,6 +474,23 @@ describe("book stock lifecycle", () => {
         expect(deleteRes.body).toBe(true);
     });
 
+    it("records when a stock's label was printed, only within the caller's vault", async () => {
+        const bookId = (await user.agent.post("/api/rest/book").field("name", "Labelled Book")).body;
+        const locationId = await createLocation(user.agent, "Label Shelf");
+        const stock = (await user.agent.post(`/api/rest/book/${bookId}/stock`).send({status: 0, location_id: locationId})).body;
+        expect(stock.label_printed_at).toBeNull();
+        const printedAt = async () => (await user.agent.get(`/api/rest/book/${bookId}`)).body.stocks
+            .find((s: any) => s.id === stock.id).label_printed_at;
+
+        const intruder = await createAuthenticatedUser(app, "Intruder");
+        await intruder.agent.post("/api/rest/book/stock-labels/printed").send({codes: [stock.code]});
+        expect(await printedAt()).toBeNull();
+
+        await user.agent.post("/api/rest/book/stock-labels/printed").send({codes: []}).expect(400);
+        await user.agent.post("/api/rest/book/stock-labels/printed").send({codes: [stock.code]}).expect(204);
+        expect(await printedAt()).not.toBeNull();
+    });
+
     it("refuses to add a stock to another user's book (security audit #2)", async () => {
         // Regression test for an IDOR: addBookStock checked that the
         // location/customer belonged to the caller, but never checked the

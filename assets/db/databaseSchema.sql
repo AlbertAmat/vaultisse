@@ -2846,3 +2846,7 @@ VALUES ('en', 'SNACKBAR_EMAIL_VERIFICATION_SENT', 'Check your new email address 
 -- go through a session (OPDS), and when the deletion warning was sent.
 ALTER TABLE users ADD COLUMN last_activity_date TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN deletion_warned_at TIMESTAMPTZ;
+
+-- When this copy's barcode label was last printed (the label PDF generated);
+-- NULL = never.
+ALTER TABLE book_stocks ADD COLUMN label_printed_at TIMESTAMPTZ;

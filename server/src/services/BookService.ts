@@ -572,6 +572,19 @@ export class BookService {
     }
 
     /**
+     * Records that the labels of these copies were just printed.
+     * @param vaultId Vault id.
+     * @param codes Stock codes, as received from the client.
+     * @throws ValidationError (400) unless it's a non-empty list of codes.
+     */
+    public async markLabelsPrinted(vaultId: number, codes: unknown): Promise<void> {
+        if (!Array.isArray(codes) || codes.length === 0 || !codes.every((code) => typeof code === "string")) {
+            throw new ValidationError("codes must be a non-empty list of stock codes");
+        }
+        await new BookRepository(this.pool).markLabelsPrinted(codes, vaultId);
+    }
+
+    /**
      * Updates a book stock's status/location/customer, recording a loan/return in loan_history when the status crosses in/out of "booked".
      * @param bookId Book id.
      * @param stockId Stock id.

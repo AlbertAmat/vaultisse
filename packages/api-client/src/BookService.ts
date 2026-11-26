@@ -209,6 +209,14 @@ export class BookService {
     }
 
     /**
+     * Record that the barcode labels of these copies were just printed.
+     * @param codes Stock codes.
+     */
+    public async markLabelsPrinted(codes: string[]): Promise<void> {
+        await this.http.post(`/book/stock-labels/printed`, {codes});
+    }
+
+    /**
      * Add a new physical stock (copy) of a book at a location.
      * @param id Book id.
      * @param locationId Destination location id.

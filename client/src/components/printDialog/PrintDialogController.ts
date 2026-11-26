@@ -1,5 +1,6 @@
 import { ref, Ref, ShallowRef, shallowRef } from "vue";
 import jsPDF from "jspdf";
+import {api} from "@/plugins/api";
 import {appSnackbarController, SnackbarType} from "@/components/appSnackbar/AppSnackbarController";
 import {i18n} from "@/plugins/i18n/i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
@@ -145,6 +146,9 @@ export class PrintDialogController {
 
         // Prompt the user to download the PDF
         pdf.save("labels.pdf");
+        // Not awaited: the PDF is already saved, and a failure shows the usual error dialog.
+        api.books.markLabelsPrinted(Object.keys(this.m_labels.value))
+            .catch((e) => console.error("Error while recording printed labels", e));
         this.cancel();
     }
 
