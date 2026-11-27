@@ -451,17 +451,17 @@ describe("anomaly alerts", () => {
         const notify = jest.spyOn(appService.getNotifier(), "notify").mockResolvedValue(true);
         const login = (ip: string, ago: string) => pool().query("INSERT INTO activity_log (actor_id, action, metadata, created_date) VALUES ($1, 'login', $2, NOW() - $3::interval)", [id, JSON.stringify({ip}), ago]);
 
-        // A young installation has nothing to compare with.
+        // Other test files share this database and add sign-ins of their own, so look for this country's alert only.
+        await login(GB, "40 days");
         await login(JP, "5 minutes");
         await service().check();
-        expect(notify).not.toHaveBeenCalled();
-
-        await login(GB, "40 days");
-        await login(GB, "10 minutes");
-        await service().check();
-        expect(notify).toHaveBeenCalledTimes(1);
-        expect(notify.mock.calls[0][1]).toMatchObject({dedupeKey: "country:JP", cooldownMs: 14 * 86400000});
-        expect(notify.mock.calls[0][1].title).toContain("Japan");
+        const alerts = notify.mock.calls.filter(([, r]) => r.dedupeKey === "country:JP");
+        expect(alerts).toHaveLength(1);
+        expect(alerts[0][0]).toBe("anomaly");
+        expect(alerts[0][1]).toMatchObject({cooldownMs: 14 * 86400000});
+        expect(alerts[0][1].title).toContain("Japan");
+        // GB was used before, so it never raises one.
+        expect(notify.mock.calls.some(([, r]) => r.dedupeKey === "country:GB")).toBe(false);
     });
 
     it("spots a burst of new accounts", async () => {
