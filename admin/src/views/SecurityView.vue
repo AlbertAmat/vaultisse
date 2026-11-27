@@ -100,6 +100,34 @@
 
 				<!-- Blocked IPs -->
 				<v-tabs-window-item value="blocked">
+					<!-- Automatic blocking -->
+					<div class="pa-4 pb-0">
+						<div class="auto pa-4">
+							<div class="d-flex flex-wrap align-center ga-3">
+								<v-icon color="primary">mdi-shield-lock-outline</v-icon>
+								<div style="flex: 1; min-width: 220px">
+									<div class="font-weight-medium">Automatic blocking</div>
+									<div class="text-body-2 text-medium-emphasis">Blocks an address that keeps failing to sign in, so you don't have to do it by hand.</div>
+								</div>
+								<v-switch v-model="auto.ADMIN_AUTOBLOCK_ENABLED" color="primary" hide-details :label="auto.ADMIN_AUTOBLOCK_ENABLED ? 'On' : 'Off'" :disabled="!canWrite()"/>
+							</div>
+							<div v-if="auto.ADMIN_AUTOBLOCK_ENABLED" class="d-flex flex-wrap align-start ga-3 mt-3">
+								<span class="mt-2">Block an address after</span>
+								<v-text-field v-model="auto.ADMIN_AUTOBLOCK_THRESHOLD" type="number" min="3" style="width: 90px" :disabled="!canWrite()"/>
+								<span class="mt-2">failed logins within</span>
+								<v-text-field v-model="auto.ADMIN_AUTOBLOCK_WINDOW_MIN" type="number" min="1" suffix="min" style="width: 120px" :disabled="!canWrite()"/>
+								<span class="mt-2">, for</span>
+								<v-text-field v-model="auto.ADMIN_AUTOBLOCK_HOURS" type="number" min="1" suffix="h" style="width: 110px" :disabled="!canWrite()"/>
+							</div>
+							<div class="d-flex flex-wrap align-center ga-3 mt-2">
+								<p class="text-caption text-medium-emphasis" style="flex: 1; min-width: 240px">
+									Never blocks private or local addresses, or one that signed in successfully in the last 24 hours. Behind a reverse proxy, set <span class="mono">TRUST_PROXY=true</span> so real visitor addresses are seen. The admins are emailed when one is blocked.
+								</p>
+								<v-btn v-if="canWrite()" color="primary" variant="flat" size="small" :loading="savingAuto" :disabled="!autoDirty" @click="saveAuto">Save</v-btn>
+							</div>
+						</div>
+					</div>
+
 					<div v-if="canWrite()" class="d-flex flex-wrap ga-3 pa-4 align-start">
 						<v-text-field v-model="blockForm.ip" label="IP address" placeholder="203.0.113.7" style="max-width: 220px"/>
 						<v-text-field v-model="blockForm.reason" label="Reason" style="max-width: 280px"/>
@@ -111,9 +139,9 @@
 							<thead><tr><th>Address</th><th>Reason</th><th>By</th><th>Until</th><th></th></tr></thead>
 							<tbody>
 								<tr v-for="b in blocked" :key="b.ipAddress">
-									<td class="mono">{{ b.ipAddress }}</td>
+									<td class="mono">{{ b.ipAddress }} <v-chip v-if="b.automatic" size="x-small" color="primary" variant="tonal" class="ml-1">auto</v-chip></td>
 									<td>{{ b.reason ?? "—" }}</td>
-									<td class="text-caption">{{ b.blockedBy ?? "—" }}<div class="text-medium-emphasis">{{ relative(b.createdDate) }}</div></td>
+									<td class="text-caption">{{ b.automatic ? "Automatic" : (b.blockedBy ?? "—") }}<div class="text-medium-emphasis">{{ relative(b.createdDate) }}</div></td>
 									<td>{{ b.expiresAt ? dateTime(b.expiresAt) : "Until unblocked" }}</td>
 									<td class="text-right"><v-btn v-if="canWrite()" size="small" variant="tonal" @click="unblock(b.ipAddress)">Unblock</v-btn></td>
 								</tr>
@@ -161,8 +189,8 @@
 </template>
 
 <script setup lang="ts">
-import {onBeforeUnmount, onMounted, reactive, ref, watch} from "vue";
-import type {IBlockedIp, ILockout, ISecurityEvent, ISecuritySummary, ITraffic, IUserSession, SecurityEventType} from "@vaultisse/types/admin/IAdmin";
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from "vue";
+import type {IBlockedIp, ISettingGroup, ILockout, ISecurityEvent, ISecuritySummary, ITraffic, IUserSession, SecurityEventType} from "@vaultisse/types/admin/IAdmin";
 import {api} from "@/api";
 import {canWrite, notify} from "@/store";
 import {dateTime, num, relative} from "@/utils/format";
@@ -185,6 +213,37 @@ const sessions = ref<IUserSession[]>([]);
 const sessionTotal = ref(0);
 const sessionPage = ref(1);
 const blockForm = reactive({ip: "", reason: "", hours: ""});
+const auto = reactive({ADMIN_AUTOBLOCK_ENABLED: false, ADMIN_AUTOBLOCK_THRESHOLD: "20", ADMIN_AUTOBLOCK_WINDOW_MIN: "10", ADMIN_AUTOBLOCK_HOURS: "24"});
+const autoSaved = ref("");
+const savingAuto = ref(false);
+const autoSnapshot = () => JSON.stringify(auto);
+const autoDirty = computed(() => autoSnapshot() !== autoSaved.value);
+
+/** Loads the automatic-blocking settings into the form. */
+function fillAuto(groups: ISettingGroup[]) {
+	for (const item of groups.find((group) => group.id === "security")?.items ?? []) {
+		if (item.key === "ADMIN_AUTOBLOCK_ENABLED") auto.ADMIN_AUTOBLOCK_ENABLED = item.value === "true";
+		if (item.key === "ADMIN_AUTOBLOCK_THRESHOLD") auto.ADMIN_AUTOBLOCK_THRESHOLD = item.value ?? "";
+		if (item.key === "ADMIN_AUTOBLOCK_WINDOW_MIN") auto.ADMIN_AUTOBLOCK_WINDOW_MIN = item.value ?? "";
+		if (item.key === "ADMIN_AUTOBLOCK_HOURS") auto.ADMIN_AUTOBLOCK_HOURS = item.value ?? "";
+	}
+	autoSaved.value = autoSnapshot();
+}
+
+async function saveAuto() {
+	savingAuto.value = true;
+	try {
+		fillAuto(await api.settings.update({
+			ADMIN_AUTOBLOCK_ENABLED: String(auto.ADMIN_AUTOBLOCK_ENABLED),
+			ADMIN_AUTOBLOCK_THRESHOLD: String(auto.ADMIN_AUTOBLOCK_THRESHOLD),
+			ADMIN_AUTOBLOCK_WINDOW_MIN: String(auto.ADMIN_AUTOBLOCK_WINDOW_MIN),
+			ADMIN_AUTOBLOCK_HOURS: String(auto.ADMIN_AUTOBLOCK_HOURS),
+		}));
+		notify(auto.ADMIN_AUTOBLOCK_ENABLED ? "Automatic blocking is on." : "Automatic blocking is off.");
+	} finally {
+		savingAuto.value = false;
+	}
+}
 const confirmBlock = ref(false);
 
 const eventTypes = [
@@ -263,6 +322,7 @@ async function revoke(id: number) {
 let timer: ReturnType<typeof setInterval> | undefined;
 watch(tab, () => refresh());
 onMounted(() => {
+	api.settings.list().then(fillAuto);
 	refresh();
 	timer = setInterval(() => {
 		if (tab.value === "traffic" && !document.hidden) {
@@ -272,3 +332,11 @@ onMounted(() => {
 });
 onBeforeUnmount(() => clearInterval(timer));
 </script>
+
+<style scoped>
+.auto {
+	border: 1px solid var(--pb-border);
+	border-radius: 10px;
+	background: var(--pb-surface-alt);
+}
+</style>

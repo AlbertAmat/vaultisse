@@ -39,6 +39,22 @@ describe("admin portal switched off", () => {
         await pool.query("UPDATE app_settings SET value = $1 WHERE key = 'INSTANCE_UUID'", [id]);
     });
 
+    it("shows no announcements and never goes read-only, even if the database says maintenance is on", async () => {
+        const pool = appService.getDatabasePool();
+        await pool.query("INSERT INTO announcements (message, level) VALUES ('Should stay hidden', 'critical')");
+        await pool.query("INSERT INTO app_settings (key, value) VALUES ('MAINTENANCE_ENABLED', 'true') ON CONFLICT (key) DO UPDATE SET value = 'true'");
+        try {
+            await appService.getNotices().refresh();
+            expect((await request(app).get("/api/rest/app/notice")).body).toEqual({announcements: [], maintenance: null});
+            const user = await createAuthenticatedUser(app);
+            const res = await user.agent.post("/api/rest/book").field("name", "Allowed").field("description", "d").field("isbn", `97${Date.now()}`.slice(0, 13));
+            expect(res.status).toBeLessThan(300);
+        } finally {
+            await pool.query("DELETE FROM announcements WHERE message = 'Should stay hidden'");
+            await pool.query("DELETE FROM app_settings WHERE key = 'MAINTENANCE_ENABLED'");
+        }
+    });
+
     it("ignores settings stored in the database", async () => {
         await appService.getDatabasePool().query("INSERT INTO app_settings (key, value) VALUES ('REGISTRATION_ENABLED', 'false') ON CONFLICT (key) DO UPDATE SET value = 'false'");
         try {

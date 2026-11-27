@@ -21,7 +21,9 @@ import {requireFreshAuth, requireSuperadmin} from "../middleware";
 import {PlatformRepository, UserStatusFilter} from "../repositories/PlatformRepository";
 import {AdminAuditService} from "../services/AdminAuditService";
 import {DeletionService} from "../services/DeletionService";
+import {ACCOUNT_ACTIONS, AccountAction, AccountActions} from "../services/AccountActions";
 
+const MAX_BULK = 500;
 const STATUSES: UserStatusFilter[] = ["active", "pending", "disabled", "pending_deletion", "unverified"];
 
 /**
@@ -33,6 +35,7 @@ const STATUSES: UserStatusFilter[] = ["active", "pending", "disabled", "pending_
 export function usersRoutes(pool: Pool, audit: AdminAuditService, deletions: DeletionService): Router {
     const router = Router();
     const platform = new PlatformRepository(pool);
+    const actions = new AccountActions(pool, audit, deletions);
 
     const requireUser = async (id: number) => {
         const user = await platform.findUser(id);
@@ -67,50 +70,63 @@ export function usersRoutes(pool: Pool, audit: AdminAuditService, deletions: Del
 
     router.post("/:id/approve", requireSuperadmin, handle(async (req, res) => {
         const id = idParam(req);
-        const user = await requireUser(id);
-        if (user.disabledReason !== "pending_approval") {
-            throw new ConflictError("This account isn't waiting for approval.");
-        }
-        await platform.setUserDisabled(id, false, null);
-        await audit.record(req, "user.approve", {entityType: "user", entityId: id, entityLabel: user.code});
-        const mail = appService.getMailService();
-        if (mail.isEnabled() && user.emailVerified) {
-            void mail.send(user.email, "Your Vaultisse account was approved", `Hello ${user.name},\n\nYour account was approved. You can log in now:\n${mail.link("/login")}\n`);
-        }
+        await actions.approve(req, id);
         res.json({user: await platform.findUser(id)});
     }));
 
     router.post("/:id/disable", requireSuperadmin, handle(async (req, res) => {
         const id = idParam(req);
-        const user = await requireUser(id);
-        if (user.disabledReason === "pending_deletion") {
-            throw new ConflictError("A deletion is scheduled for this account; cancel it under Deletions first.");
-        }
-        await platform.setUserDisabled(id, true, "admin");
-        await audit.record(req, "user.disable", {entityType: "user", entityId: id, entityLabel: user.code, metadata: {reason: text(req.body?.reason)?.slice(0, 200)}});
+        await actions.disable(req, id, text(req.body?.reason));
         res.json({user: await platform.findUser(id)});
     }));
 
     router.post("/:id/enable", requireSuperadmin, handle(async (req, res) => {
         const id = idParam(req);
-        const user = await requireUser(id);
-        if (user.disabledReason === "pending_deletion") {
-            throw new ConflictError("A deletion is scheduled for this account; cancel it under Deletions instead.");
-        }
-        if (user.disabledReason === "pending_approval") {
-            throw new ConflictError("This account is waiting for approval; use Approve.");
-        }
-        await platform.setUserDisabled(id, false, null);
-        await audit.record(req, "user.enable", {entityType: "user", entityId: id, entityLabel: user.code});
+        await actions.enable(req, id);
         res.json({user: await platform.findUser(id)});
     }));
 
     router.post("/:id/force-logout", requireSuperadmin, handle(async (req, res) => {
-        const id = idParam(req);
-        const user = await requireUser(id);
-        await platform.forceLogout(id);
-        await audit.record(req, "user.force_logout", {entityType: "user", entityId: id, entityLabel: user.code});
+        await actions.forceLogout(req, idParam(req));
         res.json({message: "Every session of this account was ended."});
+    }));
+
+    /**
+     * POST /bulk  `{action, ids?: number[], status?: "pending" | ...}`
+     * The same action on many accounts at once: `ids` for a selection, or `status` for "everyone with this
+     * status" (approve all pending). Each account is handled on its own, with its own audit entry; one that
+     * can't be (say, it is already approved) is reported and the rest carry on. Deleting needs a fresh
+     * verification and `confirm: "DELETE"`, and still goes through the grace period.
+     */
+    router.post("/bulk", requireSuperadmin, (req, res, next) => (req.body?.action === "delete" ? requireFreshAuth(req, res, next) : next()), handle(async (req, res) => {
+        const action = req.body?.action as AccountAction;
+        if (!ACCOUNT_ACTIONS.includes(action)) {
+            throw new ValidationError("Unknown action.");
+        }
+        if (action === "delete" && req.body?.confirm !== "DELETE") {
+            throw new ValidationError("Type DELETE to confirm.");
+        }
+        let ids: number[];
+        if (Array.isArray(req.body?.ids)) {
+            ids = [...new Set<number>((req.body.ids as unknown[]).map(Number))].filter((id) => Number.isInteger(id) && id > 0);
+        } else if (typeof req.body?.status === "string" && STATUSES.includes(req.body.status)) {
+            ids = await actions.idsWithStatus(req.body.status, MAX_BULK);
+        } else {
+            throw new ValidationError("Select accounts first.");
+        }
+        if (ids.length === 0) {
+            throw new ValidationError("Select accounts first.");
+        }
+        if (ids.length > MAX_BULK) {
+            throw new ValidationError(`Up to ${MAX_BULK} accounts at a time.`);
+        }
+        const results = [];
+        for (const id of ids) {
+            results.push(await actions.apply(req, action, id, text(req.body?.reason)));
+        }
+        const ok = results.filter((result) => result.ok).length;
+        await audit.record(req, "user.bulk", {entityType: "user", metadata: {action, requested: ids.length, ok, failed: ids.length - ok}});
+        res.json({results, ok, failed: results.length - ok});
     }));
 
     router.post("/:id/reset-2fa", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {

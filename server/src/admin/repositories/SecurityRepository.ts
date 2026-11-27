@@ -17,6 +17,8 @@ export interface BlockedIpRow {
     ipAddress: string;
     reason: string | null;
     blockedBy: string | null;
+    /** Blocked by the portal itself after too many failed logins. */
+    automatic: boolean;
     createdDate: Date;
     expiresAt: Date | null;
 }
@@ -116,7 +118,7 @@ export class SecurityRepository {
     /** @returns Every block that hasn't expired. */
     public async listBlockedIps(): Promise<BlockedIpRow[]> {
         const result = await this.db.query(
-            `SELECT b.ip_address AS "ipAddress", b.reason, a.email AS "blockedBy", b.created_date AS "createdDate", b.expires_at AS "expiresAt"
+            `SELECT b.ip_address AS "ipAddress", b.reason, a.email AS "blockedBy", b.automatic, b.created_date AS "createdDate", b.expires_at AS "expiresAt"
                FROM blocked_ips b LEFT JOIN admin_users a ON a.id = b.blocked_by
               WHERE b.expires_at IS NULL OR b.expires_at > CURRENT_TIMESTAMP
               ORDER BY b.created_date DESC`
@@ -131,14 +133,31 @@ export class SecurityRepository {
      * @param adminId Admin blocking it.
      * @param expiresAt When the block lapses, or null for no end.
      */
-    public async blockIp(ip: string, reason: string | null, adminId: number, expiresAt: Date | null): Promise<void> {
+    public async blockIp(ip: string, reason: string | null, adminId: number | null, expiresAt: Date | null, automatic: boolean = false): Promise<void> {
         await this.db.query(
-            `INSERT INTO blocked_ips (ip_address, reason, blocked_by, expires_at) VALUES ($1, $2, $3, $4)
+            `INSERT INTO blocked_ips (ip_address, reason, blocked_by, expires_at, automatic) VALUES ($1, $2, $3, $4, $5)
              ON CONFLICT (ip_address) DO UPDATE
-                SET reason = EXCLUDED.reason, blocked_by = EXCLUDED.blocked_by,
+                SET reason = EXCLUDED.reason, blocked_by = EXCLUDED.blocked_by, automatic = EXCLUDED.automatic,
                     expires_at = EXCLUDED.expires_at, created_date = CURRENT_TIMESTAMP`,
-            [ip, reason, adminId, expiresAt]
+            [ip, reason, adminId, expiresAt, automatic]
         );
+    }
+
+    /**
+     * @param ip Address.
+     * @param sinceMs How far back to look.
+     * @returns Whether somebody signed in successfully (a user, or an admin session) from this address in that time.
+     */
+    public async hasRecentSuccessfulLogin(ip: string, sinceMs: number): Promise<boolean> {
+        const since = new Date(Date.now() - sinceMs);
+        const users = await this.db.query(
+            "SELECT 1 FROM activity_log WHERE action = 'login' AND metadata->>'ip' = $1 AND created_date > $2 LIMIT 1", [ip, since]
+        );
+        if ((users.rowCount ?? 0) > 0) {
+            return true;
+        }
+        const admins = await this.db.query("SELECT 1 FROM admin_sessions WHERE ip_address = $1 AND last_seen_date > $2 LIMIT 1", [ip, since]);
+        return (admins.rowCount ?? 0) > 0;
     }
 
     /**

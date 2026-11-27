@@ -135,7 +135,9 @@ CREATE TABLE blocked_ips
     blocked_by   INT REFERENCES admin_users (id) ON DELETE SET NULL,
     created_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     -- NULL = until unblocked by hand.
-    expires_at   TIMESTAMPTZ
+    expires_at   TIMESTAMPTZ,
+    -- TRUE when the portal blocked it by itself after too many failed logins.
+    automatic    BOOLEAN     NOT NULL DEFAULT FALSE
 );
 
 -- ============================================================
@@ -241,3 +243,38 @@ CREATE TABLE admin_notifications
 );
 CREATE INDEX idx_admin_notifications_created ON admin_notifications (created_date DESC);
 CREATE INDEX idx_admin_notifications_dedupe ON admin_notifications (dedupe_key, created_date DESC);
+
+-- ============================================================
+-- Announcements, broadcast emails
+-- ============================================================
+
+-- Banners shown to every user of the app (maintenance windows, news). Shown while enabled and between
+-- starts_at and ends_at. (Maintenance mode itself is a plain row in app_settings.)
+CREATE TABLE announcements
+(
+    id           SERIAL PRIMARY KEY,
+    message      VARCHAR(500) NOT NULL,
+    level        VARCHAR(10)  NOT NULL DEFAULT 'info' CHECK (level IN ('info', 'warning', 'critical')),
+    starts_at    TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ends_at      TIMESTAMPTZ,
+    enabled      BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_by   INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Emails an admin sent to the users, and how the sending went. The message text is kept so the history
+-- shows exactly what people received.
+CREATE TABLE broadcasts
+(
+    id           SERIAL PRIMARY KEY,
+    subject      VARCHAR(200) NOT NULL,
+    body         TEXT         NOT NULL,
+    audience     VARCHAR(30)  NOT NULL,
+    recipients   INT          NOT NULL,
+    sent         INT          NOT NULL DEFAULT 0,
+    failed       INT          NOT NULL DEFAULT 0,
+    status       VARCHAR(12)  NOT NULL DEFAULT 'sending' CHECK (status IN ('sending', 'done', 'cancelled', 'interrupted')),
+    created_by   INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    finished_at  TIMESTAMPTZ
+);

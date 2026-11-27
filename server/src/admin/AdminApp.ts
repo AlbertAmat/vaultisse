@@ -27,6 +27,11 @@ import {blockUntilPasswordChanged, ipAllowlist, requireAdmin, sameOriginOnly} fr
 import {authRoutes} from "./routes/AuthRoutes";
 import {deletionsRoutes} from "./routes/DeletionsRoutes";
 import {logsRoutes} from "./routes/LogsRoutes";
+import {inactivityRoutes} from "./routes/InactivityRoutes";
+import {termsRoutes} from "./routes/TermsRoutes";
+import {broadcastRoutes} from "./routes/BroadcastRoutes";
+import {BroadcastService} from "./services/BroadcastService";
+import {announcementsRoutes} from "./routes/AnnouncementsRoutes";
 import {notificationsRoutes} from "./routes/NotificationsRoutes";
 import {systemRoutes} from "./routes/SystemRoutes";
 import {overviewAndAdminsRoutes} from "./routes/OverviewAndAdminsRoutes";
@@ -48,6 +53,7 @@ export class AdminApp {
     private readonly auth: AdminAuthService;
     private readonly audit: AdminAuditService;
     private readonly deletions: DeletionService;
+    private readonly broadcasts: BroadcastService;
 
     /**
      * @param config Admin bootstrap config.
@@ -62,6 +68,7 @@ export class AdminApp {
             const days = Number(appService.getSettings().get("ADMIN_DELETION_GRACE_DAYS"));
             return Number.isFinite(days) && days >= 0 ? days : 7;
         });
+        this.broadcasts = new BroadcastService(pool, logger);
         this.configure();
     }
 
@@ -122,6 +129,10 @@ export class AdminApp {
         app.use("/api/admin/security", securityRoutes(this.pool, this.audit));
         app.use("/api/admin/logs", logsRoutes(this.pool, this.audit));
         app.use("/api/admin/system", systemRoutes());
+        app.use("/api/admin/announcements", announcementsRoutes(this.pool, this.audit));
+        app.use("/api/admin/broadcast", broadcastRoutes(this.broadcasts, this.audit));
+        app.use("/api/admin/inactivity", inactivityRoutes(this.pool, this.audit));
+        app.use("/api/admin/terms", termsRoutes(this.pool));
         app.use("/api/admin/notifications", notificationsRoutes(this.pool, this.audit));
         app.use("/api/admin", (_req, res) => {
             res.status(404).json({message: "Not found"});
@@ -158,6 +169,8 @@ export class AdminApp {
         this.logger.info(`Admin portal running on port ${port};`);
 
         await this.ensureFirstAdmin(port);
+        // A broadcast that was still sending when the server stopped can't continue: say so.
+        await this.broadcasts.markInterrupted().catch((error) => this.logger.error(`Updating broadcasts failed: ${error}`));
 
         if (!process.env.SETTINGS_ENCRYPTION_KEY?.trim()) {
             this.logger.warn("SETTINGS_ENCRYPTION_KEY is not set: secrets saved in the admin portal are encrypted with a key derived from JWT_SECRET. Set a dedicated SETTINGS_ENCRYPTION_KEY (and keep it stable).");

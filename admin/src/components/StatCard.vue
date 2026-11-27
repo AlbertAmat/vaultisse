@@ -4,7 +4,7 @@
 			<v-icon v-if="icon" :icon="icon" size="18"/>
 			{{ label }}
 		</div>
-		<div class="text-h4 font-weight-bold mt-1" :class="color ? `text-${color}` : ''">{{ value }}</div>
+		<div class="value font-weight-bold mt-1" :class="color ? `text-${color}` : ''">{{ value }}</div>
 		<div v-if="hint" class="text-caption text-medium-emphasis mt-1">{{ hint }}</div>
 	</v-card>
 </template>
@@ -12,3 +12,10 @@
 <script setup lang="ts">
 defineProps<{ label: string; value: string | number; hint?: string; icon?: string; color?: string; to?: string }>();
 </script>
+
+<style scoped>
+.value {
+	font-size: 1.9rem;
+	line-height: 1.15;
+}
+</style>

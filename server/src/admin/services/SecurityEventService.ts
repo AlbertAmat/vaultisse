@@ -29,6 +29,7 @@ const RETENTION_DAYS = 30;
 /** Buffers and persists security events. */
 export class SecurityEventService {
     private pending = new Map<string, Pending>();
+    private observer: ((type: SecurityEventType, ip: string | undefined, detail?: string) => void) | null = null;
     private timer: NodeJS.Timeout | null = null;
     private readonly repo: SecurityRepository;
 
@@ -39,6 +40,11 @@ export class SecurityEventService {
      */
     public constructor(pool: Pool, private readonly logger: Logger, private readonly enabled: boolean) {
         this.repo = new SecurityRepository(pool);
+    }
+
+    /** @param observer Told about every event as it happens (the automatic IP blocker). */
+    public setObserver(observer: (type: SecurityEventType, ip: string | undefined, detail?: string) => void): void {
+        this.observer = observer;
     }
 
     /**
@@ -52,6 +58,7 @@ export class SecurityEventService {
             return;
         }
         const ip = req.ip ?? "unknown";
+        this.observer?.(type, req.ip, detail);
         const bucket = new Date(Math.floor(Date.now() / 60000) * 60000);
         const key = `${type}|${ip}|${bucket.getTime()}`;
         const existing = this.pending.get(key);

@@ -30,6 +30,22 @@ const getAppController = lazy(() => new AppController(appService.getDatabasePool
 router.get('/version', (req, res) => getAppController().getVersion(req, res));
 
 /**
+ * GET /app/notice
+ * ------------------
+ * What the app should tell its users right now: announcement banners and maintenance mode, both set from the
+ * admin portal. Public so the login page can show it too. Always empty while the portal is off.
+ *
+ * Auth: none.
+ *
+ * Example response (200): { "announcements": [{ "id": 3, "message": "Maintenance tonight at 22:00", "level": "warning" }],
+ *                           "maintenance": null }
+ */
+router.get('/notice', (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json(appService.getNotices().publicNotice());
+});
+
+/**
  * GET /app/policy
  * ------------------
  * Bootstrap payload fetched once after login: the current user's profile plus every reference list

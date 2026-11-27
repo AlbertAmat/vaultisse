@@ -8,15 +8,34 @@
 				<v-select v-model="status" :items="statuses" clearable placeholder="Any status" style="max-width: 220px" @update:model-value="reload"/>
 				<v-select v-model="sort" :items="sorts" style="max-width: 200px" @update:model-value="reload"/>
 				<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" @click="load"/>
+				<v-btn v-if="canWrite() && status === 'pending' && total > 0" color="success" variant="flat" prepend-icon="mdi-check-all" @click="approveAllOpen = true">Approve all {{ total }}</v-btn>
+			</div>
+
+			<!-- Selection bar -->
+			<div v-if="selected.size > 0" class="selection d-flex flex-wrap align-center ga-2 px-4 py-2">
+				<strong>{{ selected.size }} selected</strong>
+				<v-spacer/>
+				<template v-if="canWrite()">
+					<v-btn size="small" variant="tonal" prepend-icon="mdi-check" @click="bulk('approve')">Approve</v-btn>
+					<v-btn size="small" variant="tonal" prepend-icon="mdi-account-lock-outline" @click="bulk('disable')">Disable</v-btn>
+					<v-btn size="small" variant="tonal" prepend-icon="mdi-account-check-outline" @click="bulk('enable')">Enable</v-btn>
+					<v-btn size="small" variant="tonal" prepend-icon="mdi-logout-variant" @click="bulk('force-logout')">Sign out</v-btn>
+					<v-btn size="small" variant="tonal" color="error" prepend-icon="mdi-delete-outline" @click="bulkDeleteOpen = true">Delete…</v-btn>
+				</template>
+				<v-btn size="small" variant="text" @click="selected = new Set()">Clear</v-btn>
 			</div>
 			<v-divider/>
 			<div class="table-wrap">
 				<v-table hover>
 					<thead>
-						<tr><th>Account</th><th>Status</th><th>Vaults</th><th>Last sign-in</th><th>Created</th></tr>
+						<tr>
+							<th style="width: 44px"><v-checkbox-btn :model-value="allSelected" :indeterminate="selected.size > 0 && !allSelected" aria-label="Select all on this page" @update:model-value="toggleAll"/></th>
+							<th>Account</th><th>Status</th><th>Vaults</th><th>Last sign-in</th><th>Created</th>
+						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="user in items" :key="user.id" class="row-click" @click="open(user.id)">
+						<tr v-for="user in items" :key="user.id" class="row-click" :class="{picked: selected.has(user.id)}" @click="open(user.id)">
+							<td @click.stop><v-checkbox-btn :model-value="selected.has(user.id)" :aria-label="`Select ${user.name}`" @update:model-value="toggle(user.id)"/></td>
 							<td>
 								<div class="font-weight-medium">{{ user.name }}</div>
 								<div class="text-caption text-medium-emphasis">{{ user.code }} · {{ user.email }}</div>
@@ -26,7 +45,7 @@
 							<td>{{ relative(user.lastLoginDate) }}</td>
 							<td>{{ dateOnly(user.createdDate) }}</td>
 						</tr>
-						<tr v-if="!items.length && !loading"><td colspan="5" class="text-center text-medium-emphasis pa-8">No accounts match.</td></tr>
+						<tr v-if="!items.length && !loading"><td colspan="6" class="text-center text-medium-emphasis pa-8">No accounts match.</td></tr>
 					</tbody>
 				</v-table>
 			</div>
@@ -92,6 +111,41 @@
 			</div>
 		</v-navigation-drawer>
 
+		<!-- Bulk: approve everyone waiting -->
+		<v-dialog v-model="approveAllOpen" max-width="440">
+			<v-card class="pa-2">
+				<v-card-title>Approve all {{ total }} waiting accounts?</v-card-title>
+				<v-card-text class="text-body-2">They can sign in right away{{ " " }}and, if email is set up, each gets a message saying so.</v-card-text>
+				<v-card-actions>
+					<v-spacer/>
+					<v-btn variant="text" @click="approveAllOpen = false">Cancel</v-btn>
+					<v-btn color="success" variant="flat" :loading="working" @click="approveAll">Approve all</v-btn>
+				</v-card-actions>
+			</v-card>
+		</v-dialog>
+
+		<!-- Bulk: delete -->
+		<confirm-danger-dialog v-model="bulkDeleteOpen" :title="`Delete ${selected.size} accounts?`" action-label="Delete accounts" confirm-text="DELETE" :action="bulkDelete">
+			The {{ selected.size }} selected accounts are locked out now and deleted after the grace period, together with every library only they belong to. Until then each can be cancelled under Deletions.
+		</confirm-danger-dialog>
+
+		<!-- Bulk: what happened -->
+		<v-dialog v-model="resultOpen" max-width="520" scrollable>
+			<v-card v-if="result" class="pa-2">
+				<v-card-title class="d-flex align-center ga-2">
+					<v-icon :color="result.failed ? 'warning' : 'success'">{{ result.failed ? "mdi-alert-outline" : "mdi-check-circle-outline" }}</v-icon>
+					{{ result.ok }} done{{ result.failed ? `, ${result.failed} not done` : "" }}
+				</v-card-title>
+				<v-card-text v-if="result.failed">
+					<p class="text-body-2 text-medium-emphasis mb-2">These were skipped; everything else went through.</p>
+					<v-list density="compact" bg-color="transparent" class="pa-0">
+						<v-list-item v-for="r in result.results.filter((x) => !x.ok)" :key="r.id" :title="r.code ?? `#${r.id}`" :subtitle="r.message"/>
+					</v-list>
+				</v-card-text>
+				<v-card-actions><v-spacer/><v-btn variant="flat" color="primary" @click="resultOpen = false">Close</v-btn></v-card-actions>
+			</v-card>
+		</v-dialog>
+
 		<confirm-danger-dialog
 			v-if="detail"
 			v-model="removing"
@@ -108,10 +162,10 @@
 </template>
 
 <script setup lang="ts">
-import {defineComponent, h, onMounted, ref} from "vue";
+import {computed, defineComponent, h, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 import {VChip} from "vuetify/components";
-import type {IAccount, IAccountDetail, UserStatus} from "@vaultisse/types/admin/IAdmin";
+import type {BulkAccountAction, IAccount, IAccountDetail, IBulkResult, UserStatus} from "@vaultisse/types/admin/IAdmin";
 import {api} from "@/api";
 import {canWrite, notify} from "@/store";
 import {dateOnly, dateTime, relative} from "@/utils/format";
@@ -150,6 +204,57 @@ const sort = ref("created");
 const drawer = ref(false);
 const detail = ref<IAccountDetail | null>(null);
 const removing = ref(false);
+const selected = ref(new Set<number>());
+const approveAllOpen = ref(false);
+const bulkDeleteOpen = ref(false);
+const working = ref(false);
+const resultOpen = ref(false);
+const result = ref<IBulkResult | null>(null);
+
+const allSelected = computed(() => items.value.length > 0 && items.value.every((user) => selected.value.has(user.id)));
+function toggle(id: number) {
+	const next = new Set(selected.value);
+	next.has(id) ? next.delete(id) : next.add(id);
+	selected.value = next;
+}
+function toggleAll(value: boolean | null) {
+	selected.value = value ? new Set(items.value.map((user) => user.id)) : new Set();
+}
+
+/** Runs an action on the selection and shows what happened. */
+async function bulk(action: BulkAccountAction) {
+	working.value = true;
+	try {
+		await showResult(await api.users.bulk(action, {ids: [...selected.value]}));
+	} finally {
+		working.value = false;
+	}
+}
+
+async function bulkDelete() {
+	await showResult(await api.users.bulk("delete", {ids: [...selected.value]}, {confirm: "DELETE"}));
+}
+
+async function approveAll() {
+	working.value = true;
+	try {
+		approveAllOpen.value = false;
+		await showResult(await api.users.bulk("approve", {status: "pending"}));
+	} finally {
+		working.value = false;
+	}
+}
+
+async function showResult(outcome: IBulkResult) {
+	result.value = outcome;
+	selected.value = new Set();
+	if (outcome.failed > 0) {
+		resultOpen.value = true;
+	} else {
+		notify(`Done: ${outcome.ok} ${outcome.ok === 1 ? "account" : "accounts"}.`);
+	}
+	await load();
+}
 
 const statuses = [
 	{title: "Active", value: "active"},
@@ -172,6 +277,7 @@ const debounced = () => {
 
 async function load() {
 	loading.value = true;
+	selected.value = new Set();
 	try {
 		const result = await api.users.list({search: search.value ?? "", status: status.value ?? undefined, sort: sort.value, page: page.value, pageSize});
 		items.value = result.items;
@@ -212,6 +318,14 @@ onMounted(load);
 </script>
 
 <style scoped>
+.selection {
+	background: rgba(var(--v-theme-primary), 0.1);
+}
+
+tr.picked {
+	background: rgba(var(--v-theme-primary), 0.06);
+}
+
 .facts {
 	display: grid;
 	grid-template-columns: max-content 1fr;

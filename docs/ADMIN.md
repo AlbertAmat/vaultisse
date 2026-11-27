@@ -23,6 +23,12 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 - [Settings without env vars](#settings-without-env-vars)
 - [Accounts, vaults and deletions](#accounts-vaults-and-deletions)
 - [Plans and quotas](#plans-and-quotas)
+- [Announcements and maintenance mode](#announcements-and-maintenance-mode)
+- [Emailing the users](#emailing-the-users)
+- [Inactive accounts: who is deleted next](#inactive-accounts-who-is-deleted-next)
+- [Bulk actions on accounts](#bulk-actions-on-accounts)
+- [Terms acceptance report](#terms-acceptance-report)
+- [Automatic IP blocking](#automatic-ip-blocking)
 - [System page](#system-page)
 - [Notifications to admins](#notifications-to-admins)
 - [Security, logs and audit](#security-logs-and-audit)
@@ -283,6 +289,88 @@ unlimited). A vault uses the plan assigned to it, or the default plan, or no lim
 - Enforced **only while the portal is enabled**.
 - There is no billing. Plans are assigned by hand. Payment integration is out of scope.
 
+## Announcements and maintenance mode
+
+*Announcements* puts a banner at the top of the app (and on the login and register pages) for every
+user: "Maintenance tonight at 22:00", a new feature. Each has a look (information and warning can be
+dismissed by the user; critical stays), a start and an optional end, so you can schedule it and forget
+it, and can be switched off or edited at any time. Text is shown as you write it (it isn't translated).
+
+**Maintenance mode** makes the whole app read-only. Every request that would change something (adding
+or editing books, lending, uploads, registering) is refused with `503` and your message, which also
+shows as a dark banner for everybody. Reading and signing in keep working, and the admin console is not
+affected. Turning it on needs a fresh password + code check, since it affects every user. The state is
+stored separately from the editable settings, so a configuration reset doesn't end it. While the portal
+is off none of this applies.
+
+The app reads `GET /api/rest/app/notice` (public, always empty with the portal off) on load, every two
+minutes and when the tab regains focus.
+
+## Emailing the users
+
+*Email users* sends a plain-text message to the people who use the app, for things that can't wait for
+their next visit: a closure, new terms, a security notice.
+
+1. **Pick the audience:** everyone, vault admins, accounts active in the last 30 days, or accounts without
+   two-factor. Only enabled accounts with a verified email are ever addressed.
+2. **Write** a subject and message. `{name}` is replaced by each person's name.
+3. **Preview** shows the exact recipient count, a few masked addresses and the email as it will read.
+   *Send a test to me* delivers it to your own address first.
+4. **Send** needs a fresh verification and a confirmation that repeats the count you saw; if the audience
+   changed since the preview, it refuses and shows the new number.
+
+Emails go out one by one in the background (a gentle pace, so the mail server isn't flooded). Progress
+shows live, it can be stopped (what was already sent stays sent), and only one broadcast runs at a time.
+One that was cut off by a restart is marked *Interrupted*. History keeps what was sent and how it went;
+every email also appears in *Logs > Emails sent*. A footer says it is a service message about their account.
+
+## Inactive accounts: who is deleted next
+
+If automatic deletion of inactive accounts is on (*Settings > Inactive accounts*), accounts nobody used for
+N days are deleted, after an email warning M days before. *Deletions > Inactive accounts* shows who that
+affects so nobody is surprised: those **to be warned next**, **already warned** (and when they'll be
+deleted), those **deleted at the next daily run**, and who is **coming up** within 7, 14, 30 or 90 days.
+
+- **Keep** counts an account as active now: its clock restarts and a warning is cancelled.
+- **What if** previews another period ("what if I set it to 90 days?") without changing anything. It works
+  even while the feature is off, so you can see the effect before turning it on.
+- The rules are those of the real job: accounts that can't sign in anyway, borrowers with copies still on
+  loan, and the only admin of a vault shared with others are never deleted, so they are never listed.
+
+## Bulk actions on accounts
+
+In *Accounts*, tick several rows (or the box in the header) and a bar offers **Approve, Disable, Enable,
+Sign out** and **Delete**. With the *Awaiting approval* filter on, **Approve all N** handles everyone
+waiting in one go. Each account is handled on its own with its own audit entry (plus one summary entry);
+one that can't be changed (already approved, a deletion is scheduled...) is reported and the rest carry on.
+Deleting needs a fresh verification and typing `DELETE`, and goes through the normal grace period, so it
+can still be cancelled. Up to 500 accounts per action.
+
+## Terms acceptance report
+
+*Terms & notices* shows, for the Terms of Service and the security notice, how many accounts accepted, were
+asked but haven't answered, or haven't been asked yet (usually: not signed in since it was introduced), with
+the list per account, search, and an **Export CSV** of the current filter. The CSV opens safely in a
+spreadsheet (cells that start with `=`, `+`, `-` or `@` are neutralised).
+
+## Automatic IP blocking
+
+*Security > Blocked addresses > Automatic blocking* (off by default) blocks an address that keeps failing to
+sign in: after N failed logins within M minutes (defaults 20 within 10), for H hours (default 24). It counts
+failed user logins, locked accounts, failed admin logins and the attempts the login rate limiter refuses
+(the limiter stops an address after 5 tries per 5 minutes, so those refusals are what a determined attacker
+mostly produces). A block is recorded in the audit trail, emailed to the admins, and shows as *auto* in the
+list; unblock it any time.
+
+Because a wrong block would lock real people out, it **never** blocks:
+
+- private, loopback or link-local addresses (behind Docker or a reverse proxy without `TRUST_PROXY=true`
+  every visitor shows up as one such address, and blocking it would block everybody);
+- an address from which somebody signed in successfully in the last 24 hours (a shared office address);
+- an address on `ADMIN_ALLOWED_IPS`.
+
+Behind a reverse proxy, set `TRUST_PROXY=true` so real visitor addresses are seen.
+
 ## System page
 
 *System* answers "what am I running and is it healthy":
@@ -418,6 +506,8 @@ Everything is under `/api/admin` on the admin port and needs an admin session ex
 |---|---|
 | Auth | `POST /auth/login`, `/auth/2fa`, `/auth/enroll/start`, `/auth/enroll/confirm`, `/auth/reauth`, `/auth/password`, `/auth/logout`; `GET /auth/me` |
 | Overview | `GET /overview`, `GET /system` |
+| Communication | `GET/POST /announcements`, `PUT/DELETE /announcements/:id`, `PUT /announcements/maintenance`; `GET /broadcast/audiences`, `POST /broadcast/preview`, `/broadcast/test`, `/broadcast`, `GET /broadcast`, `GET /broadcast/:id`, `POST /broadcast/:id/cancel` |
+| Account tools | `POST /users/bulk`; `GET /inactivity`, `POST /inactivity/:id/keep`; `GET /terms/summary`, `/terms/list`, `/terms/export.csv` |
 | Settings | `GET/PUT /settings`, `POST /settings/test-email`, `POST /settings/test-key` |
 | System | `GET /system`, `GET /system/details`, `POST /system/check-updates` |
 | Notifications | `GET /notifications`, `GET /notifications/history`, `PUT /notifications/me`, `PATCH /notifications/recipients/:id`, `POST /notifications/test` |

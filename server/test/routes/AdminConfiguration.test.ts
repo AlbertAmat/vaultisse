@@ -12,7 +12,7 @@ const pool = () => appService.getDatabasePool();
 type Admin = Awaited<ReturnType<typeof createLoggedInAdmin>>;
 const setSettings = (admin: Admin, changes: Record<string, string | null>) => admin.agent.put("/api/admin/settings").send({changes});
 const mailOn = (admin: Admin) => setSettings(admin, {SMTP_HOST: "smtp.example.invalid", SMTP_FROM: "Vaultisse <a@example.com>"});
-const savedCount = async () => (await pool().query("SELECT COUNT(*)::int AS n FROM app_settings WHERE key <> 'INSTANCE_UUID' AND key <> 'ONBOARDING_COMPLETED_AT'")).rows[0].n;
+const savedCount = async () => (await pool().query("SELECT COUNT(*)::int AS n FROM app_settings WHERE key <> 'INSTANCE_UUID' AND key <> 'ONBOARDING_COMPLETED_AT' AND key NOT LIKE 'MAINTENANCE\\_%'")).rows[0].n;
 
 let sentBodies: string[];
 beforeEach(() => {

@@ -33,6 +33,9 @@
 			<app-bar/>
 
 			<v-main class="app-main" id="scroller">
+				<!-- Announcements and maintenance notice from the admin portal -->
+				<announcement-banner/>
+
 				<!-- Content -->
 				<router-view/>
 
@@ -65,6 +68,7 @@
 import {onMounted, watch} from 'vue';
 import AppBar from "@/components/app/AppBar.vue";
 import AppMenu from "@/components/app/AppMenu.vue";
+import AnnouncementBanner from "@/components/app/AnnouncementBanner.vue";
 import {applicationService} from "@/service/ApplicationService";
 import ConfirmationDialog from "@/components/confirmationDialog/ConfirmationDialog.vue";
 import AppSnackbar from "@/components/appSnackbar/AppSnackbar.vue";

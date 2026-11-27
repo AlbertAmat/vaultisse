@@ -454,5 +454,36 @@
         }
     });
 </script>
+<div id="site-notice" role="region" aria-live="polite"></div>
+<script>
+// Announcements and maintenance notice set by the instance's admins (public endpoint, always safe to fail).
+(function () {
+    var box = document.getElementById("site-notice");
+    if (!box || !window.fetch) { return; }
+    fetch("/api/rest/app/notice", {cache: "no-store"})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+            if (!data) { return; }
+            var items = [];
+            if (data.maintenance) { items.push({level: "maintenance", message: data.maintenance.message}); }
+            (data.announcements || []).forEach(function (a) { items.push({level: a.level, message: a.message}); });
+            items.forEach(function (item) {
+                var row = document.createElement("div");
+                row.className = "site-notice site-notice--" + item.level;
+                row.textContent = item.message;
+                box.appendChild(row);
+            });
+        })
+        .catch(function () {});
+})();
+</script>
+<style>
+#site-notice { position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
+.site-notice { padding: 10px 16px; font: 500 14px/1.4 Inter, system-ui, sans-serif; text-align: center; border-bottom: 1px solid rgba(0,0,0,.08); }
+.site-notice--info { background: #e3f0fb; color: #174a7c; }
+.site-notice--warning { background: #fdf0d5; color: #7a4b00; }
+.site-notice--critical { background: #fbe1e1; color: #8a1c1c; }
+.site-notice--maintenance { background: #2b2318; color: #f3ede1; }
+</style>
 </body>
 </html>

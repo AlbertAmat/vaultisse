@@ -1,11 +1,20 @@
 <template>
 	<div class="page">
-		<page-header title="Deletions" subtitle="Accounts and vaults waiting out their grace period. They are locked now and deleted at the time shown; cancel to restore them.">
-			<v-switch v-model="showAll" label="Show history" hide-details density="compact" color="primary" @update:model-value="reload"/>
-			<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" @click="load"/>
+		<page-header title="Deletions" subtitle="Accounts and vaults waiting out their grace period, and who the automatic cleanup of inactive accounts will delete next.">
+			<template v-if="tab === 'scheduled'">
+				<v-switch v-model="showAll" label="Show history" hide-details density="compact" color="primary" @update:model-value="reload"/>
+				<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" @click="load"/>
+			</template>
 		</page-header>
 
-		<v-card>
+		<v-tabs v-model="tab" color="primary" class="mb-4">
+			<v-tab value="scheduled">Scheduled</v-tab>
+			<v-tab value="inactive">Inactive accounts</v-tab>
+		</v-tabs>
+
+		<inactive-accounts-panel v-if="tab === 'inactive'"/>
+
+		<v-card v-else>
 			<div class="table-wrap">
 				<v-table>
 					<thead>
@@ -55,9 +64,11 @@ import {api} from "@/api";
 import {canWrite, notify} from "@/store";
 import {dateTime, relative} from "@/utils/format";
 import ConfirmDangerDialog from "@/components/ConfirmDangerDialog.vue";
+import InactiveAccountsPanel from "@/components/InactiveAccountsPanel.vue";
 import PageHeader from "@/components/PageHeader.vue";
 import Pager from "@/components/Pager.vue";
 
+const tab = ref<"scheduled" | "inactive">("scheduled");
 const items = ref<IScheduledDeletion[]>([]);
 const total = ref(0);
 const page = ref(1);

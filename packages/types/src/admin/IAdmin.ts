@@ -300,6 +300,8 @@ export interface IBlockedIp {
     ipAddress: string;
     reason: string | null;
     blockedBy: string | null;
+    /** Blocked by the portal itself after too many failed logins. */
+    automatic: boolean;
     createdDate: string;
     expiresAt: string | null;
 }
@@ -416,4 +418,129 @@ export interface INotificationEntry {
 export interface IOnboardingStatus {
     completed: boolean;
     completedAt: string | null;
+}
+
+// --- Announcements and maintenance ---------------------------------------------------------------------
+
+export type AnnouncementLevel = "info" | "warning" | "critical";
+
+export interface IAnnouncement {
+    id: number;
+    message: string;
+    level: AnnouncementLevel;
+    startsAt: string;
+    endsAt: string | null;
+    enabled: boolean;
+    createdBy: string | null;
+    createdDate: string;
+    /** Where it stands right now. */
+    state: "active" | "scheduled" | "expired" | "off";
+}
+
+export interface IMaintenance {
+    enabled: boolean;
+    message: string;
+    since: string | null;
+}
+
+/** What the app shows its users (`GET /api/rest/app/notice`, public). */
+export interface IPublicNotice {
+    announcements: {id: number; message: string; level: AnnouncementLevel}[];
+    maintenance: {message: string} | null;
+}
+
+// --- Broadcast email -------------------------------------------------------------------------------------
+
+export type BroadcastAudience = "all" | "vault_admins" | "active_30" | "no_two_factor";
+
+export interface IBroadcastAudience {
+    value: BroadcastAudience;
+    label: string;
+    description: string;
+    count: number;
+}
+
+export interface IBroadcastPreview {
+    count: number;
+    /** A few recipients, masked. */
+    sample: string[];
+    /** The email as it will read, with the admin's own name for `{name}`. */
+    email: {subject: string; text: string};
+    mailEnabled: boolean;
+}
+
+export interface IBroadcast {
+    id: number;
+    subject: string;
+    body: string;
+    audience: string;
+    recipients: number;
+    sent: number;
+    failed: number;
+    status: "sending" | "done" | "cancelled" | "interrupted";
+    createdBy: string | null;
+    createdDate: string;
+    finishedAt: string | null;
+}
+
+// --- Inactive accounts -------------------------------------------------------------------------------------
+
+export type InactivityStatus = "due" | "warned" | "to_warn" | "upcoming";
+
+export interface IInactiveAccount {
+    id: number;
+    code: string;
+    name: string;
+    email: string;
+    lastActivity: string;
+    warnedAt: string | null;
+    status: InactivityStatus;
+    warnOn: string | null;
+    deleteOn: string;
+}
+
+export interface IInactivityPreview {
+    enabled: boolean;
+    configuredDays: number | null;
+    /** The period used: the configured one, or the simulated one. */
+    inactivityDays: number | null;
+    noticeDays: number;
+    mailEnabled: boolean;
+    simulated: boolean;
+    horizonDays: number;
+    items: IInactiveAccount[];
+    counts: {due: number; warned: number; toWarn: number; upcoming: number};
+}
+
+// --- Bulk actions -----------------------------------------------------------------------------------------
+
+export type BulkAccountAction = "approve" | "disable" | "enable" | "force-logout" | "delete";
+
+export interface IBulkResult {
+    results: {id: number; code: string | null; ok: boolean; message: string}[];
+    ok: number;
+    failed: number;
+}
+
+// --- Terms acceptance ---------------------------------------------------------------------------------------
+
+export type TermsDocument = "tos" | "security";
+export type TermsStatus = "accepted" | "pending" | "never";
+
+export interface ITermsCounts {
+    accepted: number;
+    pending: number;
+    never: number;
+    total: number;
+}
+
+export interface ITermsRow {
+    id: number;
+    code: string;
+    name: string;
+    email: string;
+    disabled: boolean;
+    askedDate: string | null;
+    acceptedDate: string | null;
+    status: TermsStatus;
 }

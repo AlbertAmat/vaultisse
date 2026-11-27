@@ -31,6 +31,9 @@ import {TrafficMonitor} from "./admin/services/TrafficMonitor";
 import {BlockedIpService} from "./admin/services/BlockedIpService";
 import {AdminApp} from "./admin/AdminApp";
 import {formatConfigTable} from "./admin/services/ConfigReport";
+import {AdminAuditService} from "./admin/services/AdminAuditService";
+import {AutoBlocker} from "./admin/services/AutoBlocker";
+import {NoticeService} from "./admin/services/NoticeService";
 import {AdminNotifier} from "./admin/services/AdminNotifier";
 import {SystemInfoService} from "./admin/services/SystemInfoService";
 import {UpdateChecker} from "./admin/services/UpdateChecker";
@@ -215,6 +218,13 @@ export class AppService {
     private readonly m_traffic = new TrafficMonitor();
     private m_blockedIps!: BlockedIpService;
 
+    /** Blocks addresses that keep failing to sign in (admin portal, off by default). */
+    private m_autoBlocker!: AutoBlocker;
+    private m_adminAudit!: AdminAuditService;
+
+    /** Announcement banners and maintenance mode shown to every user. */
+    private m_notices!: NoticeService;
+
     /** Admin notification emails and the health checks behind them. */
     private m_notifier!: AdminNotifier;
     private m_systemInfo!: SystemInfoService;
@@ -289,6 +299,10 @@ export class AppService {
         // Log every error response (4xx/5xx) to the server log. Registered before
         // the demo-mode block and the routes so it sees their responses too.
         this.m_app.use(logFailedRequests);
+
+        // Maintenance mode (admin portal): read-only for everyone while it is on. A thin wrapper because
+        // the service is created below, once the pool and logger exist.
+        this.m_app.use((req, res, next) => this.m_notices.blockWrites(req, res, next));
 
         // Reject state-changing requests when DEMO_MODE=true - must run
         // before routes are mounted so it covers AuthRoute (at "/") too.
@@ -384,6 +398,10 @@ export class AppService {
         this.m_securityEvents = new SecurityEventService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
         this.m_blockedIps = new BlockedIpService(this.m_databasePool, this.m_logger, this.m_securityEvents, this.m_adminConfig.enabled);
 
+        this.m_adminAudit = new AdminAuditService(this.m_databasePool);
+        this.m_autoBlocker = new AutoBlocker(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
+        this.m_securityEvents.setObserver((type, ip, detail) => this.m_autoBlocker.observe(type, ip, detail));
+        this.m_notices = new NoticeService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
         this.m_notifier = new AdminNotifier(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
         this.m_systemInfo = new SystemInfoService(this.m_databasePool, () => this.m_notifier.databaseSizeLimitMb());
         this.m_updateChecker = new UpdateChecker(
@@ -440,6 +458,7 @@ export class AppService {
             }
             this.__printConfiguration();
             await this.m_blockedIps.start();
+            await this.m_notices.start();
             this.m_securityEvents.start();
             this.m_notifier.start(bootTime);
         }
@@ -537,6 +556,21 @@ export class AppService {
         return this.m_instanceUuid;
     }
 
+    /** The admin audit trail (for system-made entries such as automatic blocks). */
+    public getAdminAudit(): AdminAuditService {
+        return this.m_adminAudit;
+    }
+
+    /** The automatic IP blocker. */
+    public getAutoBlocker(): AutoBlocker {
+        return this.m_autoBlocker;
+    }
+
+    /** Announcements and maintenance mode. */
+    public getNotices(): NoticeService {
+        return this.m_notices;
+    }
+
     /** Sends the notification emails to admins (a no-op while the portal is off). */
     public getNotifier(): AdminNotifier {
         return this.m_notifier;
@@ -595,6 +629,7 @@ export class AppService {
     /** Stops the admin portal's background work and listener (used on shutdown and by the tests). */
     public async stopAdmin(): Promise<void> {
         this.m_blockedIps.stop();
+        this.m_notices.stop();
         this.m_notifier.stop();
         await this.m_securityEvents.stop();
         await this.m_adminApp?.stop();

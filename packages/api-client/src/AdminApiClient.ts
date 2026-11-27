@@ -16,7 +16,7 @@ import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from "axios";
 import type {
     AdminLoginStep, AdminRole, IAccountDetail, IAccount, IAdminSelf, IAdminUser, IAdminVault, IAuditEntry, IBlockedIp, IDeletionRequestResult,
     IEnrollConfirm, IEnrollStart, ILockout, IOverview, IPaged, IPlan, IPlanInput, IScheduledDeletion, ISecurityEvent, ISecuritySummary,
-    IMailEntry, IOnboardingStatus, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
+    IAnnouncement, IBroadcast, IBroadcastAudience, IBroadcastPreview, IBulkResult, IInactivityPreview, IMaintenance, ITermsCounts, ITermsRow, AnnouncementLevel, BroadcastAudience, BulkAccountAction, TermsDocument, TermsStatus, IMailEntry, IOnboardingStatus, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
 } from "@vaultisse/types/admin/IAdmin";
 
 export interface AdminClientOptions {
@@ -52,6 +52,33 @@ export interface AdminApiClient {
     };
     overview(): Promise<IOverview>;
     system(): Promise<ISystemInfo>;
+    announcements: {
+        list(): Promise<{items: IAnnouncement[]; maintenance: IMaintenance}>;
+        create(input: {message: string; level: AnnouncementLevel; startsAt?: string | null; endsAt?: string | null}): Promise<void>;
+        update(id: number, input: {message: string; level: AnnouncementLevel; startsAt: string; endsAt: string | null; enabled: boolean}): Promise<void>;
+        remove(id: number): Promise<void>;
+        /** Read-only mode for the whole app. Turning it on needs a fresh verification (handled by the client). */
+        setMaintenance(enabled: boolean, message?: string): Promise<IMaintenance>;
+    };
+    broadcast: {
+        audiences(): Promise<{items: IBroadcastAudience[]; mailEnabled: boolean}>;
+        preview(input: {audience: BroadcastAudience; subject: string; body: string}): Promise<IBroadcastPreview>;
+        test(input: {subject: string; body: string}): Promise<{ok: boolean; error: string | null; to: string}>;
+        send(input: {audience: BroadcastAudience; subject: string; body: string; expectedCount: number}): Promise<IBroadcast>;
+        list(query: {page?: number; pageSize?: number}): Promise<IPaged<IBroadcast>>;
+        get(id: number): Promise<IBroadcast>;
+        cancel(id: number): Promise<void>;
+    };
+    inactivity: {
+        preview(query: {days?: number; horizon?: number}): Promise<IInactivityPreview>;
+        keep(id: number): Promise<void>;
+    };
+    terms: {
+        summary(): Promise<Record<TermsDocument, ITermsCounts>>;
+        list(query: {doc: TermsDocument; status?: TermsStatus; search?: string; page?: number; pageSize?: number}): Promise<IPaged<ITermsRow>>;
+        /** URL of the CSV export (same origin, so the session cookie authorises the download). */
+        exportUrl(query: {doc: TermsDocument; status?: TermsStatus; search?: string}): string;
+    };
     onboarding: {
         status(): Promise<IOnboardingStatus>;
         complete(): Promise<void>;
@@ -87,6 +114,8 @@ export interface AdminApiClient {
         forceLogout(id: number): Promise<void>;
         resetTwoFactor(id: number): Promise<void>;
         remove(id: number, confirm: string, immediate?: boolean): Promise<IDeletionRequestResult>;
+        /** The same action on many accounts: a selection (`ids`) or everyone with a status (`status`). */
+        bulk(action: BulkAccountAction, target: {ids?: number[]; status?: UserStatus}, extra?: {reason?: string; confirm?: string}): Promise<IBulkResult>;
     };
     vaults: {
         list(query: {search?: string; status?: string; page?: number; pageSize?: number}): Promise<IPaged<IAdminVault>>;
@@ -189,6 +218,31 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
         },
         overview: () => get("/overview"),
         system: () => get("/system"),
+        announcements: {
+            list: () => get("/announcements"),
+            create: (input) => post("/announcements", input),
+            update: (id, input) => put(`/announcements/${id}`, input),
+            remove: (id) => del(`/announcements/${id}`),
+            setMaintenance: async (enabled, message) => (await put<{maintenance: IMaintenance}>("/announcements/maintenance", {enabled, message})).maintenance,
+        },
+        broadcast: {
+            audiences: () => get("/broadcast/audiences"),
+            preview: (input) => post("/broadcast/preview", input),
+            test: (input) => post("/broadcast/test", input),
+            send: async (input) => (await post<{broadcast: IBroadcast}>("/broadcast", input)).broadcast,
+            list: (query) => get("/broadcast", query),
+            get: async (id) => (await get<{broadcast: IBroadcast}>(`/broadcast/${id}`)).broadcast,
+            cancel: (id) => post(`/broadcast/${id}/cancel`),
+        },
+        inactivity: {
+            preview: (query) => get("/inactivity", query),
+            keep: (id) => post(`/inactivity/${id}/keep`),
+        },
+        terms: {
+            summary: () => get("/terms/summary"),
+            list: (query) => get("/terms/list", query),
+            exportUrl: (query) => `${http.defaults.baseURL}/terms/export.csv?${new URLSearchParams(Object.entries(clean(query)).map(([k, v]) => [k, String(v)])).toString()}`,
+        },
         onboarding: {
             status: () => get("/onboarding"),
             complete: () => post("/onboarding/complete"),
@@ -219,6 +273,7 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             forceLogout: (id) => post(`/users/${id}/force-logout`),
             resetTwoFactor: (id) => post(`/users/${id}/reset-2fa`),
             remove: (id, confirm, immediate = false) => del(`/users/${id}`, {confirm, immediate}),
+            bulk: (action, target, extra) => post("/users/bulk", {action, ...target, ...extra}),
         },
         vaults: {
             list: (query) => get("/vaults", query),

@@ -24,7 +24,7 @@ export interface SettingDefinition {
     testable?: boolean;
 }
 
-export type SettingGroupId = "notifications" | "email" | "registration" | "sso" | "metadata" | "limits" | "inactivity" | "admin";
+export type SettingGroupId = "security" | "notifications" | "email" | "registration" | "sso" | "metadata" | "limits" | "inactivity" | "admin";
 
 export const SETTING_GROUPS: {id: SettingGroupId; label: string; description: string}[] = [
     {id: "email", label: "Email (SMTP)", description: "Outgoing mail for verification links and notifications. Leave host and from empty to run without email."},
@@ -33,6 +33,7 @@ export const SETTING_GROUPS: {id: SettingGroupId; label: string; description: st
     {id: "metadata", label: "API keys", description: "Keys for the services that look up book details and covers by ISBN. Each one can be tested before you save it."},
     {id: "limits", label: "Upload limits", description: "Largest files users can upload."},
     {id: "inactivity", label: "Inactive accounts", description: "Permanently deletes accounts nobody has used for a while. Leave the days empty to never delete."},
+    {id: "security", label: "Automatic IP blocking", description: "Blocks an address that keeps failing to sign in. Edited on the Security page."},
     {id: "notifications", label: "Admin notifications", description: "Which events email the admins. Edited on the Notifications page."},
     {id: "admin", label: "Admin portal", description: "Behaviour of the portal itself."},
 ];
@@ -68,6 +69,10 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     {key: "ACCOUNT_INACTIVITY_DAYS", group: "inactivity", label: "Delete after (days)", description: "Permanently deletes inactive accounts, and libraries only they belong to.", type: "number", min: 1},
     {key: "ACCOUNT_DELETION_NOTICE_DAYS", group: "inactivity", label: "Warn before deletion (days)", description: "Needs email, and must be smaller than the days above. Empty = no warning.", type: "number", min: 1},
 
+    {key: "ADMIN_AUTOBLOCK_ENABLED", group: "security", label: "Block addresses automatically", description: "Off by default. Private and local addresses are never blocked, nor ones that signed in successfully in the last 24 hours.", type: "boolean", defaultValue: "false"},
+    {key: "ADMIN_AUTOBLOCK_THRESHOLD", group: "security", label: "Failed logins that trigger a block", description: "Failed sign-ins (users and admins) from one address within the window below.", type: "number", defaultValue: "20", min: 3},
+    {key: "ADMIN_AUTOBLOCK_WINDOW_MIN", group: "security", label: "Window (minutes)", description: "How far back failed logins are counted.", type: "number", defaultValue: "10", min: 1},
+    {key: "ADMIN_AUTOBLOCK_HOURS", group: "security", label: "Block for (hours)", description: "How long an automatic block lasts. You can unblock earlier.", type: "number", defaultValue: "24", min: 1},
     {key: "ADMIN_UPDATE_CHECK", group: "admin", label: "Check for new versions", description: "Asks GitHub for the latest release now and then, so the System page can say whether an update exists. Nothing about this installation is sent.", type: "boolean", defaultValue: "true"},
     {key: "ADMIN_NOTIFY_USER_PENDING", group: "notifications", label: "A new account is waiting for approval", description: "Sent when someone registers while approval is required.", type: "boolean", defaultValue: "true"},
     {key: "ADMIN_NOTIFY_SECURITY", group: "notifications", label: "Unusual security activity", description: "Many failed logins, lockouts or rate-limit hits in a short time, or failed admin logins.", type: "boolean", defaultValue: "true"},
