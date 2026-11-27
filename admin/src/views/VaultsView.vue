@@ -1,7 +1,16 @@
 <template>
+	<!--
+	  Vaults (route /vaults, menu: Customers > Vaults)
+
+	  Libraries and who shares them: names, sizes, members, plan. The books, borrowers and loans inside are never shown.
+	  Data:   GET /api/admin/vaults (list)  and  GET /api/admin/vaults/:id (members, usage, plan)
+	  Actions (superadmin): suspend/restore, change plan, transfer ownership, clear content, delete (with grace period).
+	  Clear and transfer ask for a fresh verification. Clearing shows how MANY items there are per kind, never which.
+	-->
 	<div class="page">
 		<page-header title="Vaults" subtitle="Libraries and who shares them. You see names, sizes and members, never the books or borrowers inside."/>
 
+		<!-- The list: search, status filter, usage numbers, plan. -->
 		<v-card>
 			<div class="d-flex flex-wrap ga-3 pa-4">
 				<v-text-field v-model="search" prepend-inner-icon="mdi-magnify" placeholder="Search by vault name" clearable style="max-width: 360px" @update:model-value="debounced"/>
@@ -35,6 +44,7 @@
 			<pager :page="page" :page-size="pageSize" :total="total" @update:page="page = $event; load()"/>
 		</v-card>
 
+		<!-- Vault detail: usage against the plan's limits, members and the action buttons. -->
 		<v-dialog v-model="dialog" max-width="640" scrollable>
 			<v-card v-if="detail">
 				<v-card-title class="d-flex align-center">
@@ -145,6 +155,11 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * State: items/detail for the list and the open vault; transferOpen/clearOpen for the two support dialogs.
+ * clearable is computed from the content counts: each entry is {scope, label, count, hint}. Choosing "books" or "customers"
+ * also forces "history" (a loan can't outlive its copy or borrower), shown as a ticked, disabled box.
+ */
 import {computed, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 import type {ClearScope, IAdminVault, IClearCounts, IPlan, IVaultDetail} from "@vaultisse/types/admin/IAdmin";
@@ -199,6 +214,7 @@ const clearable = computed(() => {
 /** Clearing books or borrowers also removes the loan history: a loan can't outlive its copy or borrower. */
 const forced = computed(() => new Set<ClearScope>(picked.value.has("books") || picked.value.has("customers") ? ["history"] : []));
 
+/** Preselects the first accepted member who isn't admin yet, and "demote" for the previous admins (the usual "the owner left" case). */
 function openTransfer() {
 	transferTo.value = eligible.value[0]?.userId ?? null;
 	previous.value = "demote";
@@ -218,6 +234,7 @@ async function transfer() {
 	}
 }
 
+/** Loads the counts first (GET /vaults/:id/content) so the dialog can say "Books (312)" before anything is chosen. */
 async function openClear() {
 	counts.value = (await api.vaults.content(detail.value!.vault.id)).counts;
 	picked.value = new Set();
@@ -237,6 +254,7 @@ function selectAll() {
 	picked.value = picked.value.size === everything.length ? new Set() : new Set(everything);
 }
 
+/** Sends the chosen scopes and the typed vault name; the server refuses a wrong name. Example body: {scopes: ["authors", "categories"], confirm: "Alice's library"} */
 async function clear() {
 	clearing.value = true;
 	try {

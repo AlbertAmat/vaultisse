@@ -1,4 +1,5 @@
 <template>
+	<!-- Page title row: title and subtitle on the left (they take the free space), the actions of the page (slot) on the right, always on the same row. -->
 	<div class="d-flex align-start ga-3 mb-5">
 		<!-- Title and subtitle take the free space, so the actions stay on the same row, on the right. -->
 		<div class="flex-grow-1" style="min-width: 0">

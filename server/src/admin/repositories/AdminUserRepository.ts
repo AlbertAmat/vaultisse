@@ -39,6 +39,10 @@ const PUBLIC_COLUMNS = `id, email, name, role, disabled, must_change_password AS
                         created_date AS "createdDate", last_login_date AS "lastLoginDate"`;
 
 /** Hash stored for a backup code. */
+/**
+ * Example:
+ *   hashBackupCode("a1b2-c3d4") // 64 hex characters; only the hash of a backup code is stored, and each one works once
+ */
 export function hashBackupCode(code: string): string {
     return crypto.createHash("sha256").update(code).digest("hex");
 }

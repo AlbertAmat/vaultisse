@@ -57,6 +57,12 @@ export class RetentionService {
     }
 
     /** @param item Retention item. @returns The days it is kept (0 = forever). */
+    /**
+     * Example:
+     *   // RETENTION_MAIL_LOG_DAYS = "60"   ->  60
+     *   // RETENTION_AUDIT_DAYS = "30"      ->  90 (the audit trail is never kept for less than 90 days)
+     *   // RETENTION_ACTIVITY_LOG_DAYS unset ->  0  (default: kept forever)
+     */
     public days(item: RetentionItem): number {
         const raw = appService.getSettings().get(item.key);
         const value = Number(raw === undefined || raw === "" ? findSetting(item.key)?.defaultValue : raw);

@@ -1,4 +1,13 @@
 <template>
+	<!--
+	  Logs (route /logs, menu: Security & compliance)
+
+	  Three tabs.
+	    Sign-ins       the activity log of the users (GET /logs/activity?action=&ip=): who signed in from which address
+	    Emails sent    every email the app sent: recipient, subject, delivered or failed (never the text) (GET /logs/mail)
+	    Server log     the tail of the server's log file (GET /logs/server?lines=200&level=error&q=...)
+	  The server log can contain names and addresses: it is admin-only. How long each log is kept is set under Data retention.
+	-->
 	<div class="page">
 		<page-header title="Logs" subtitle="Sign-in activity, the emails sent to users, and the server's own log. They can contain names and addresses."/>
 
@@ -105,6 +114,7 @@ const logBox = ref<HTMLElement | null>(null);
 const actions = ["login", "login_failed", "logout", "password_changed"];
 const levels = [{title: "Errors", value: "error"}, {title: "Warnings", value: "warn"}, {title: "Info", value: "info"}];
 
+/** One-line summary of an activity entry's metadata. Example: {ip: "203.0.113.4"} -> "203.0.113.4". */
 const detail = (metadata: Record<string, unknown>) =>
 	Object.entries(metadata).filter(([key]) => key !== "ip" && key !== "attemptedUsername").map(([key, value]) => `${key}: ${value}`).join(" · ");
 

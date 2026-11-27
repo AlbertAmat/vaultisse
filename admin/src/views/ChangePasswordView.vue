@@ -1,4 +1,9 @@
 <template>
+	<!--
+	  Choose a new password (route /change-password). Shown instead of everything else while the account has mustChangePassword set:
+	  the generated first-admin password, or one an admin set for you. Rules: at least 12 characters with upper and lower case, a number and a symbol.
+	  Data:   POST /auth/password {currentPassword, newPassword}. Other sessions of this admin are ended by the change.
+	-->
 	<div class="screen">
 		<v-card class="pa-4" width="100%" max-width="440" border>
 			<div class="d-flex align-center ga-3 mb-4">

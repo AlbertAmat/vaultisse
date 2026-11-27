@@ -1,4 +1,13 @@
 <template>
+	<!--
+	  Security (route /security, menu: Security & compliance)
+
+	  What the app sees: traffic, failed sign-ins, rate limiting, locked accounts, blocked addresses, live user sessions.
+	  Tabs: Traffic | Events | Locked accounts | Blocked addresses | Sessions.   Auto-block settings sit on the Blocked tab.
+	  Data:   GET /security/summary, /traffic, /events, /lockouts, /blocked-ips, /sessions; POST /security/blocked-ips to block by hand.
+	  About DDoS: the app can show a flood and refuse blocked addresses, but it cannot absorb a real distributed attack. Put a
+	  CDN or reverse proxy with protection in front of it.
+	-->
 	<div class="page">
 		<page-header title="Security" subtitle="What the app sees: traffic, failed logins, rate limiting. It can refuse addresses you block, but a real DDoS has to be stopped in front of the app (CDN, reverse proxy or firewall).">
 			<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" @click="refresh"/>
@@ -230,6 +239,7 @@ function fillAuto(groups: ISettingGroup[]) {
 	autoSaved.value = autoSnapshot();
 }
 
+/** Saves the automatic-blocking settings like any other setting (PUT /settings); it never blocks private or recently successful addresses. */
 async function saveAuto() {
 	savingAuto.value = true;
 	try {

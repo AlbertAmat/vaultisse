@@ -1,4 +1,8 @@
 <template>
+	<!--
+	  "Confirm it's you": password + a code (or a backup code). Opened by the API client when the server answers 403 {reauthRequired: true}
+	  to a dangerous action; on success the same request is repeated. Dangerous actions then stay unlocked for 5 minutes.
+	-->
 	<v-dialog :model-value="!!state.reauth" max-width="420" persistent>
 		<v-card class="pa-2">
 			<v-card-title class="d-flex align-center ga-2">

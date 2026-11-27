@@ -83,6 +83,11 @@ export function idParam(req: Request, name: string = "id"): number {
  * @param req Express request.
  * @param maxPageSize Largest page size accepted.
  * @returns Page, size, limit and offset from `?page=&pageSize=`.
+ *
+ * @example
+ *   // GET /api/admin/users?page=3&pageSize=25
+ *   paging(req) // {page: 3, pageSize: 25, limit: 25, offset: 50}
+ *   // pageSize is capped (default 100) and page is at least 1
  */
 export function paging(req: Request, maxPageSize: number = 100): {page: number; pageSize: number; limit: number; offset: number} {
     const page = Math.max(1, Math.floor(Number(req.query.page)) || 1);

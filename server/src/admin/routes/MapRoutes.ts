@@ -8,6 +8,12 @@
  * Locations come from an offline database (see GeoLocator): nothing is sent to an outside service. A point shows
  * how many sign-ins and how many different accounts, never who they are. Private and local addresses (Docker, a
  * reverse proxy without TRUST_PROXY) have no place and are only counted.
+ *
+ * Example:
+ *   GET /api/admin/map/logins?days=30
+ *     -> {"available": true, "days": 30,
+ *         "points": [{"lat": 52.2264, "lon": 0.4841, "city": "Newmarket", "country": "GB", "logins": 31, "failed": 0, "accounts": 1, "addresses": 1, "lastLogin": "..."}],
+ *         "countries": [{"country": "GB", "logins": 31, "failed": 0}], "totals": {"logins": 122, "failed": 184, "located": 150, "unlocated": 154, "truncated": false}}
  */
 import {Router} from "express";
 import {Pool} from "pg";

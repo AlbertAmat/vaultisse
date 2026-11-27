@@ -1,4 +1,9 @@
 <template>
+	<!--
+	  One chart (Chart.js through vue-chartjs), coloured with the active Vuetify theme so it reads in light and dark.
+	  Props:   type bar | line | doughnut, labels, series [{label, data, color}], stacked, horizontal, colors (doughnut slices), height (px).
+	  Example: <chart-panel type="line" :labels="['1 Nov', '2 Nov']" :series="[{label: 'Books', data: [10, 14], color: 'primary'}]"/>
+	-->
 	<div :style="{height: `${height}px`}">
 		<component :is="type === 'line' ? Line : type === 'doughnut' ? Doughnut : Bar" :data="data" :options="options"/>
 	</div>

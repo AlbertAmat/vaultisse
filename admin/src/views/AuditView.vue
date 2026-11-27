@@ -1,4 +1,12 @@
 <template>
+	<!--
+	  Audit trail (route /audit, menu: Security & compliance)
+
+	  Everything admins did in this console: who, what, on what, from which address. The database refuses to change or delete these rows
+	  (an entry can only leave through the retention job, after 90 days), so nobody can quietly edit history.
+	  Data:   GET /logs/audit?action=&entityType=&page=      Example filter: action "user." lists every account action.
+	  Examples of actions: settings.update, user.merge, vault.clear, data_request.export, security.auto_block, retention.purge.
+	-->
 	<div class="page">
 		<page-header title="Audit trail" subtitle="Everything admins did here. The database refuses to change or delete these entries, so this record can't be edited from the portal.">
 			<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" @click="load"/>

@@ -1,4 +1,13 @@
 <template>
+	<!--
+	  Notifications (route /notifications, menu: Platform > Notifications)
+
+	  Which events email the admins, who receives them, and the history of what was sent.
+	  Events: new account to approve, security alerts, database problems, email failures, deletions, new version, anomalies, data requests,
+	  failed background jobs, server start. Each has an on/off switch (and sometimes a threshold, e.g. 5 failed emails).
+	  The same alert is not repeated within its cooldown. Webhooks receive the same events independently of these switches.
+	  Data:   GET /notifications, PUT /notifications/me, PATCH /notifications/recipients/:id, POST /notifications/test
+	-->
 	<div class="page">
 		<page-header title="Notifications" subtitle="Emails the console sends to the admins: things that need approval, and problems, so you hear about them without watching the console.">
 			<v-btn variant="tonal" prepend-icon="mdi-email-fast-outline" :loading="testing" :disabled="!overview?.mailEnabled" @click="sendTest">Send me a test</v-btn>

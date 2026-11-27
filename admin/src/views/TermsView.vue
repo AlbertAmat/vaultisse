@@ -1,4 +1,11 @@
 <template>
+	<!--
+	  Terms & notices (route /terms, menu: Communication)
+
+	  Who accepted the Terms of Service and the security notice, who was asked but hasn't answered, and who hasn't been asked yet.
+	  "Not asked yet" usually means the account hasn't signed in since the terms were introduced.
+	  Data:   GET /terms/summary (counts), GET /terms/list?doc=tos|security&status=accepted|pending|never, GET /terms/export.csv
+	-->
 	<div class="page">
 		<page-header title="Terms & notices" subtitle="Who has accepted the Terms of Service and the security notice, who was asked but hasn't answered, and who hasn't been asked yet.">
 			<v-btn variant="tonal" prepend-icon="mdi-download-outline" :href="exportUrl" download>Export CSV</v-btn>
@@ -75,7 +82,9 @@ const page = ref(1);
 const pageSize = 25;
 const loading = ref(false);
 
+/** Share of accepted among all accounts, rounded: 3 of 8 -> 38. */
 const percent = (counts: ITermsCounts) => (counts.total === 0 ? 0 : Math.round((counts.accepted * 100) / counts.total));
+/** Same-origin URL of the CSV export for the current filter; the session cookie authorises the download. */
 const exportUrl = computed(() => api.terms.exportUrl({doc: doc.value, status: status.value ?? undefined, search: search.value || undefined}));
 
 async function load() {

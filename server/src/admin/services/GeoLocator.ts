@@ -43,6 +43,11 @@ export function geoAvailable(): boolean {
 /**
  * @param ip Address as stored (may carry the `::ffff:` prefix of an IPv4 address seen on a dual-stack socket).
  * @returns Its place, or null for a private/local address, an invalid one, or one the database doesn't know.
+ *
+ * @example
+ *   locate("81.2.69.142")  // {lat: 52.2264, lon: 0.4841, country: "GB", region: "ENG", city: "Newmarket"}
+ *   locate("192.168.1.5")  // null (private address)
+ *   locate("not-an-ip")    // null
  */
 export function locate(ip: string): GeoPlace | null {
     const address = ip.startsWith("::ffff:") ? ip.slice(7) : ip;

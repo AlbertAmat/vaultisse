@@ -28,6 +28,12 @@ const STATUS_SQL: Record<Status, string> = {
 };
 
 /** @returns A cell safe to open in a spreadsheet (no formula injection) and quoted when needed. */
+/**
+ * Example:
+ *   csvCell("Alice")             // Alice
+ *   csvCell("Smith, John")       // "Smith, John"      (quoted because of the comma)
+ *   csvCell("=HYPERLINK(...)")   // '=HYPERLINK(...)   (a leading = + - @ is neutralised: no formula injection in a spreadsheet)
+ */
 export function csvCell(value: unknown): string {
     let text = value === null || value === undefined ? "" : value instanceof Date ? value.toISOString() : String(value);
     if (/^[=+\-@\t\r]/.test(text)) {

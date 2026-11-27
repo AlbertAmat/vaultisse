@@ -6,6 +6,10 @@
  *  PUT    /:id            `{message, level, startsAt, endsAt, enabled}`
  *  DELETE /:id
  *  PUT    /maintenance    `{enabled, message?}`  read-only mode for the whole app  [fresh verification to turn on]
+ *
+ * Example:
+ *   POST /api/admin/announcements   {"message": "Maintenance tonight at 22:00", "level": "warning", "endsAt": "2026-11-28T06:00:00Z"}
+ *   PUT  /api/admin/announcements/maintenance   (fresh verification to turn on)   {"enabled": true, "message": "Back at 22:30"}
  */
 import {NextFunction, Request, Response, Router} from "express";
 import {Pool} from "pg";

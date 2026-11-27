@@ -1,13 +1,24 @@
 <template>
+	<!--
+	  Jobs (route /jobs, menu: Platform > Jobs)
+
+	  What runs in the background and how it went: clean-ups, reminders, deletions, health checks. Each run is recorded, so a
+	  failure shows up here (and on the Overview, and by email) instead of only in the server log.
+	  Data:   GET /jobs (every job with its last run), POST /jobs/:id/run (run now), GET /jobs/:id/history (last 30 runs)
+	  Run now: jobs that change or delete data (warning triangle) ask for a fresh verification first.
+	  Refreshes itself every 15 seconds, so a running job turns into its result without reloading.
+	-->
 	<div class="page">
 		<page-header title="Jobs" subtitle="What runs in the background: clean-ups, reminders, deletions and checks. Each run is recorded here, so a failure shows up in the console instead of only in the server log.">
 			<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" :loading="loading" @click="load"/>
 		</page-header>
 
+		<!-- Lists the jobs whose last run failed. -->
 		<v-alert v-if="failing.length" type="error" variant="tonal" class="mb-4" icon="mdi-alert-circle-outline">
 			{{ failing.length === 1 ? "A job" : `${failing.length} jobs` }} failed on the last run: {{ failing.map((j) => j.name).join(", ") }}.
 		</v-alert>
 
+		<!-- One row per job, most frequent first. The result is cut to one line; hover for all of it. "Next run" is an estimate. -->
 		<v-card>
 			<div class="table-wrap">
 				<v-table density="comfortable">
@@ -49,6 +60,7 @@
 			Times in "Next run" are estimates: a run starts at the planned time, or a little later when the server was busy or just started. A failing job also emails the admins (Notifications > A background job failed), at most every six hours.
 		</p>
 
+		<!-- The last 30 runs of one job: when, who started it ("schedule" or an admin), status, how long, result. -->
 		<v-dialog v-model="historyOpen" max-width="760" scrollable>
 			<v-card v-if="viewing">
 				<v-card-title>{{ viewing.name }}: last runs</v-card-title>

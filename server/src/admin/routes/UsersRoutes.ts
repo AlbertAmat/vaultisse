@@ -15,6 +15,12 @@
  *  POST   /:id/force-logout   end every session
  *  POST   /:id/reset-2fa  remove two-factor (lost phone)           [fresh verification]
  *  DELETE /:id            `{confirm: "<account code>", immediate?}` [fresh verification] schedules the deletion
+ *
+ * Example:
+ *   POST /api/admin/users/7/email   (fresh verification)   {"email": "alice.martin@new-company.org", "verified": false}
+ *     -> {"email": "...", "verified": false, "notified": true}   ("notified": the old address was told, when email is set up)
+ *   POST /api/admin/users/7/merge   (fresh verification)   {"sourceId": 12, "confirm": "alice2"}
+ *     -> {"vaultsMoved": 1, "vaultsCombined": 0, "rowsReassigned": 4, "user": {...}}      (account 12 is gone)
  */
 import {Router} from "express";
 import {ConflictError, NotFoundError, ValidationError} from "../../errors/DomainError";

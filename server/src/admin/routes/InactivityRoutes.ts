@@ -36,6 +36,11 @@ interface Row {
  * @param noticeDays Warning period (0 = no warning).
  * @param now Current time.
  * @returns Where the account stands and when it would be deleted.
+ *
+ * @example
+ *   // idle 40 days, accounts deleted after 30, warned 7 days before:
+ *   classify({..., lastActivity: <40 days ago>, warnedAt: null}, 30, 7, Date.now())
+ *   //   -> {status: "to_warn" | "due" | ..., warnOn: <23 days after last activity>, deleteOn: <30 days after last activity>}
  */
 export function classify(row: Row, idleDays: number, noticeDays: number, now: number): {status: InactivityStatus; warnOn: Date | null; deleteOn: Date} {
     const last = new Date(row.lastActivity).getTime();

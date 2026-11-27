@@ -1,4 +1,12 @@
 <template>
+	<!--
+	  Deletions (route /deletions, menu: Customers > Deletions)
+
+	  Two tabs.
+	    Scheduled         accounts and vaults deleted from the console wait out a grace period (default 7 days) and can be cancelled.
+	    Inactive accounts a preview of who the automatic inactive-account cleanup would warn or delete (see InactiveAccountsPanel).
+	  Data:   GET /api/admin/deletions, POST /api/admin/deletions/:id/cancel, POST /api/admin/deletions/:id/execute
+	-->
 	<div class="page">
 		<page-header title="Deletions" subtitle="Accounts and vaults waiting out their grace period, and who the automatic cleanup of inactive accounts will delete next.">
 			<template v-if="tab === 'scheduled'">
@@ -14,6 +22,7 @@
 
 		<inactive-accounts-panel v-if="tab === 'inactive'"/>
 
+		<!-- The scheduled deletions: what, when it will happen, who asked, and Cancel / Delete now. -->
 		<v-card v-else>
 			<div class="table-wrap">
 				<v-table>
@@ -99,6 +108,7 @@ async function cancel(id: number) {
 	await load();
 }
 
+/** Skips the rest of the grace period. Needs a fresh verification (the API client prompts for it). */
 async function executeNow() {
 	await api.deletions.execute(executing.value!.id);
 	notify("Deleted.");

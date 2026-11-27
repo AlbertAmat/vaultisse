@@ -1,4 +1,12 @@
 <template>
+	<!--
+	  Deletions > Inactive accounts: a preview of the automatic inactive-account cleanup, so nobody is surprised.
+	  Accounts unused for N days are warned (if a notice period is set) and then deleted by the daily job. The "what if after N days" box
+	  shows another period's effect without changing anything, even while the feature is off.
+	  Statuses: due (deleted at the next run) | warned (waiting) | to_warn (warned next) | upcoming (within the chosen horizon).
+	  "Keep" counts an account as active now, which restarts its clock and cancels its warning.
+	  Data:   GET /inactivity?days=&horizon=, POST /inactivity/:id/keep
+	-->
 	<div>
 		<v-alert v-if="preview && !preview.enabled && !preview.simulated" type="info" variant="tonal" class="mb-4" icon="mdi-account-clock-outline">
 			Automatic deletion of inactive accounts is <strong>off</strong>, so nobody will be deleted. Try a period below to see who it would affect, or turn it on under Settings > Inactive accounts.

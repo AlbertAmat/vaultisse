@@ -20,6 +20,11 @@ const MAX_ADDRESSES = 20000;
 
 const regionNames = new Intl.DisplayNames(["en"], {type: "region"});
 /** @returns The English name of a country code. */
+/**
+ * Example:
+ *   countryName("GB") // "United Kingdom"
+ *   countryName("JP") // "Japan"
+ */
 export function countryName(code: string): string {
     try {
         return regionNames.of(code) ?? code;

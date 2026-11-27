@@ -39,6 +39,13 @@ const router = createRouter({
     ],
 });
 
+/**
+ * Guard run before every navigation:
+ *   1. On the very first one, ask the server who is signed in (GET /auth/me); a failure means "nobody".
+ *   2. Public pages (login) bounce a signed-in admin to the overview.
+ *   3. Everything else needs a signed-in admin, otherwise -> /login.
+ *   4. An admin who must change their password can only see /change-password.
+ */
 router.beforeEach(async (to) => {
     if (!state.ready) {
         try {

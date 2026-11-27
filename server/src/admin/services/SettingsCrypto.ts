@@ -31,6 +31,10 @@ export class SettingsCrypto {
     /**
      * @param plain Value to protect.
      * @returns `enc:v1:<iv>:<tag>:<ciphertext>`, each part base64url.
+     *
+     * @example
+     *   crypto.encrypt("my-smtp-password") // "enc:v1:<iv>:<tag>:<ciphertext>"  (AES-256-GCM; a different value every time)
+     *   crypto.decrypt(that)               // "my-smtp-password"
      */
     public encrypt(plain: string): string {
         const iv = crypto.randomBytes(12);

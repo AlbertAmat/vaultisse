@@ -1,7 +1,21 @@
 <template>
+	<!--
+	  Accounts (route /users, menu: Customers > Accounts)
+
+	  Everyone with an account on this installation. Only account metadata is ever shown: name, username, email, status,
+	  vault memberships, sign-in times. Never what is inside a library.
+
+	  Layout:  a filterable table (search / status / tag / sort)  +  a right-hand drawer with one account  +  dialogs.
+	  Data:    GET /api/admin/users?search=&status=&tag=&sort=&page=      the list
+	           GET /api/admin/users/:id                                    the drawer (account, memberships, notes, activity)
+	  Rights:  a read-only admin sees everything but has no action buttons (canWrite() is false).
+	  Danger:  email change, merge and delete ask for a fresh password + code (handled by the API client, see store.askReauth).
+	-->
 	<div class="page">
+		<!-- Title row. No actions here: bulk actions appear in the selection bar below once rows are ticked. -->
 		<page-header title="Accounts" subtitle="Everyone with an account on this installation."/>
 
+		<!-- Filters, selection bar and the table. -->
 		<v-card>
 			<div class="d-flex flex-wrap ga-3 pa-4">
 				<v-text-field v-model="search" prepend-inner-icon="mdi-magnify" placeholder="Search by name, username or email" clearable style="max-width: 360px" @update:model-value="debounced"/>
@@ -90,11 +104,13 @@
 					<v-btn v-if="detail.user.totpEnabled" variant="tonal" prepend-icon="mdi-shield-off-outline" @click="act(() => api.users.resetTwoFactor(detail!.user.id), 'Two-factor removed.')">Reset two-factor</v-btn>
 				</div>
 
+				<!-- Tags: free labels such as "vip" or "abuse warning". Only admins see them; saved on every change (saveTags). -->
 				<div class="text-subtitle-2 mt-6 mb-2">Tags <span class="text-caption text-medium-emphasis">only admins see these</span></div>
 				<v-combobox v-if="canWrite()" v-model="editTags" :items="allTags.map((t) => t.tag)" multiple chips closable-chips density="compact" placeholder="vip, abuse warning, pending refund…" hide-details @update:model-value="saveTags"/>
 				<div v-else-if="detail.user.tags.length"><v-chip v-for="t in detail.user.tags" :key="t" size="small" variant="tonal" class="mr-1">{{ t }}</v-chip></div>
 				<p v-else class="text-body-2 text-medium-emphasis">No tags.</p>
 
+				<!-- Private notes: shown newest first with who wrote them. Never visible to the user, but included in their personal-data export. -->
 				<div class="text-subtitle-2 mt-6 mb-2">Notes <span class="text-caption text-medium-emphasis">private, never shown to the user</span></div>
 				<div v-if="canWrite()" class="d-flex ga-2 align-start">
 					<v-textarea v-model="newNote" rows="2" auto-grow maxlength="2000" placeholder="What should the next admin know?" hide-details/>
@@ -107,6 +123,10 @@
 				</div>
 				<p v-if="!detail.notes.length" class="text-body-2 text-medium-emphasis mt-2">No notes.</p>
 
+				<!--
+				  GDPR: "Download their data" asks for a fresh verification, then downloads a ZIP via a one-minute link.
+				  "Log a request" jumps to Data requests with this account preselected (?new=1&user=<id>).
+				-->
 				<div class="text-subtitle-2 mt-6 mb-2">Personal data (GDPR)</div>
 				<div class="d-flex flex-wrap ga-2">
 					<v-btn variant="tonal" prepend-icon="mdi-folder-zip-outline" :loading="exporting" @click="exportData">Download their data</v-btn>
@@ -228,6 +248,12 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * State of the page.
+ *   items / total / page   the table;   detail   the account open in the drawer;   selected   ticked rows (bulk actions)
+ *   tag / allTags          the tag filter and the list of tags in use (GET /users/tags)
+ * Everything that changes an account goes through act() so the drawer and the table are refreshed afterwards.
+ */
 import {computed, defineComponent, h, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 import {VChip} from "vuetify/components";
@@ -358,6 +384,7 @@ const debounced = () => {
 	timer = setTimeout(reload, 300);
 };
 
+/** Loads the table for the current filters and, in the same breath, the list of tags in use for the tag filter. */
 async function load() {
 	loading.value = true;
 	selected.value = new Set();
@@ -371,6 +398,7 @@ async function load() {
 	}
 }
 
+/** Replaces the tags of the open account. Example: ["vip", "pending refund"]; the server lower-cases them and turns spaces into dashes ("pending-refund"). */
 async function saveTags(value: string[]) {
 	const id = detail.value!.user.id;
 	try {
@@ -426,6 +454,7 @@ function openMerge() {
 	mergeOpen.value = true;
 }
 
+/** Debounced search (250 ms) of the account to merge away; the account that stays is excluded from the results. */
 function searchMerge(text: string | null) {
 	clearTimeout(mergeTimer);
 	if (!text || text.length < 2 || mergeSource.value?.label === text) return;

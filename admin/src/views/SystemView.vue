@@ -1,4 +1,11 @@
 <template>
+	<!--
+	  System (route /system, menu: Platform > System)
+
+	  The version you run (and whether a newer one exists), the database (size, status, where it is), the migrations that were applied
+	  and when, and runtime facts. Data: GET /system/details, POST /system/check-updates.
+	  Database status: Healthy | Needs attention (a problem was found, e.g. the database is larger than the alert limit) | Not reachable.
+	-->
 	<div class="page">
 		<page-header title="System" subtitle="The version you run, the database it uses and how healthy it is, and the upgrades that were applied to it.">
 			<v-btn variant="tonal" prepend-icon="mdi-refresh" :loading="loading" @click="load">Refresh</v-btn>
@@ -154,6 +161,7 @@ const showAll = ref(false);
 
 // Only used inside the v-if above, where `info` is set.
 const db = computed(() => info.value!.database);
+/** The migration history is long: show the 8 latest, or all with "Show all". */
 const shown = computed(() => (showAll.value ? info.value!.migrations.items : info.value!.migrations.items.slice(0, 8)));
 const statusColor = computed(() => ({ok: "success", warning: "warning", down: "error"}[db.value.status]));
 const statusIcon = computed(() => ({ok: "mdi-check-circle-outline", warning: "mdi-alert-outline", down: "mdi-close-circle-outline"}[db.value.status]));

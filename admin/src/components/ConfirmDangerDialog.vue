@@ -1,4 +1,10 @@
 <template>
+	<!--
+	  Confirmation for a destructive action. Optionally the admin must type a word to enable the button (confirm-text), and the dialog can
+	  offer "do it right now" instead of waiting out a grace period (allow-immediate).
+	  Example: <confirm-danger-dialog v-model="open" title="Delete this account?" action-label="Delete" confirm-text="alice" allow-immediate :action="remove">…</confirm-danger-dialog>
+	  The dialog closes when action() resolves and stays open when it throws (the API client has already shown the error).
+	-->
 	<v-dialog :model-value="modelValue" max-width="480" @update:model-value="$emit('update:modelValue', $event)">
 		<v-card class="pa-2">
 			<v-card-title class="d-flex align-center ga-2 text-error">

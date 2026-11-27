@@ -1,4 +1,10 @@
 <template>
+	<!--
+	  The first-run setup guide. Opens by itself for a superadmin until it was finished or skipped (GET /onboarding/status), and can be reopened from Settings.
+	  Steps: welcome -> email (with a test button) -> who can sign up -> API keys (optional) -> notifications, then a summary of what was set.
+	  Every step saves its own settings with the same PUT /settings the Settings page uses, so the guide and the page can never disagree.
+	  Values that come from the environment are shown as such, so nobody re-enters what already works.
+	-->
 	<v-dialog :model-value="modelValue" max-width="760" persistent scrollable>
 		<v-card>
 			<!-- Progress -->

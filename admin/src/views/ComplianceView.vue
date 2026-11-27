@@ -1,10 +1,20 @@
 <template>
+	<!--
+	  Compliance (route /compliance, menu: Security & compliance)
+
+	  ISO/IEC 27001:2022 controls measured against this installation, with GDPR and SOC 2 references. A working aid for your audit file,
+	  not a certificate. Tabs: Controls | Registers (policies, suppliers, risks, assets) | Incidents | Access review.
+	  Data:   GET /compliance (controls + score + what needs attention), PUT /compliance/controls/:id, GET /compliance/export.csv
+	  Two kinds of control: MEASURED by the portal from live data (they turn green/amber/red by themselves and can't be edited into green)
+	  and DECLARED by a person (owner, status, evidence link, next review). The CSV is the statement of applicability.
+	-->
 	<div class="page">
 		<page-header title="Compliance" subtitle="ISO/IEC 27001:2022 controls measured against this installation, with GDPR and SOC 2 references. A working aid for your audit file, not a certificate.">
 			<v-btn variant="tonal" prepend-icon="mdi-download-outline" href="/api/admin/compliance/export.csv" download>Statement of applicability</v-btn>
 			<v-btn icon="mdi-refresh" variant="text" aria-label="Reload" :loading="loading" @click="load"/>
 		</page-header>
 
+		<!-- Readiness score (implemented = 1, partly = 1/2, not applicable excluded) and what needs attention (click an item to jump to its tab). -->
 		<v-row v-if="overview" class="mb-1">
 			<v-col cols="12" md="4">
 				<v-card class="pa-5 h-100 d-flex align-center ga-5">
@@ -36,6 +46,7 @@
 			<v-tab value="access">Access review</v-tab>
 		</v-tabs>
 
+		<!-- The controls table. Click a row to see what the control asks for and to record its owner, evidence and next review. -->
 		<v-card v-if="tab === 'controls'">
 			<div class="d-flex flex-wrap ga-3 pa-4">
 				<v-text-field v-model="search" prepend-inner-icon="mdi-magnify" placeholder="Search controls" clearable style="max-width: 320px"/>
@@ -60,10 +71,12 @@
 			<p class="text-caption text-medium-emphasis pa-4 pt-2">Click a control to see what it asks for, record its owner and evidence, or declare that it doesn't apply (with a reason). Checks that run by themselves can't be turned green by hand: fix the cause.</p>
 		</v-card>
 
+		<!-- The other tabs are self-contained components that reload this page's score through their "changed" event. -->
 		<register-panel v-else-if="tab === 'registers'" @changed="load"/>
 		<incidents-panel v-else-if="tab === 'incidents'" @changed="load"/>
 		<access-review-panel v-else @changed="load"/>
 
+		<!-- One control: the requirement, what the portal measured, what to keep, and the form for the declared part. -->
 		<v-dialog v-model="dialog" max-width="640" scrollable>
 			<v-card v-if="current">
 				<v-card-title class="d-flex align-center ga-2">{{ current.id }} · {{ current.title }}<v-spacer/><v-chip size="small" variant="tonal" :color="meta[current.outcome].color">{{ meta[current.outcome].label }}</v-chip></v-card-title>
@@ -97,6 +110,7 @@ import RegisterPanel from "@/components/RegisterPanel.vue";
 import IncidentsPanel from "@/components/IncidentsPanel.vue";
 import AccessReviewPanel from "@/components/AccessReviewPanel.vue";
 
+/** Label, colour and icon of each outcome: compliant, partial, gap, planned, not_assessed, not_applicable. */
 const meta: Record<ControlOutcome, {label: string; color?: string; icon: string}> = {
 	compliant: {label: "Implemented", color: "success", icon: "mdi-check-circle-outline"},
 	partial: {label: "Partly", color: "warning", icon: "mdi-circle-half-full"},

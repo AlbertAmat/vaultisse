@@ -29,6 +29,11 @@ function cell(value: string | null): string {
 /**
  * @param rows One row per setting.
  * @returns The lines of the table, ready to print.
+ *
+ * @example
+ *   // printed at every start:
+ *   // SETTING       ENV VAR        ADMIN PANEL    APPLIED      NOTE
+ *   // SMTP_HOST      smtp.old.com   smtp.new.com   admin panel  env var IGNORED (the admin panel overrides it)
  */
 export function formatConfigTable(rows: ConfigRow[]): string[] {
     const shown = rows.filter((row) => row.envValue !== null || row.panelValue !== null);

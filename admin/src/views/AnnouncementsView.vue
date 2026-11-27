@@ -1,4 +1,12 @@
 <template>
+	<!--
+	  Announcements & maintenance mode (route /announcements, menu: Communication)
+
+	  Announcements: a banner every user of the app sees (info and warning can be dismissed, critical cannot).
+	  Maintenance mode: the whole app becomes read-only; changes are refused with your message, reading still works.
+	  Data:   GET /api/admin/announcements (items + maintenance state), PUT /api/admin/announcements/maintenance
+	  Example banner: "Maintenance tonight at 22:00 (about 20 minutes)." level=warning, starts now, ends tomorrow 06:00.
+	-->
 	<div class="page">
 		<page-header title="Announcements" subtitle="A banner every user of the app sees (a maintenance window, news), and a maintenance mode that makes the whole app read-only.">
 			<v-btn v-if="canWrite()" color="primary" variant="flat" prepend-icon="mdi-plus" @click="edit(null)">New announcement</v-btn>
@@ -182,6 +190,7 @@ async function remove() {
 	await load();
 }
 
+/** Turning maintenance on needs a fresh verification (it stops every change for every user); turning it off does not. */
 async function setMaintenance(enabled: boolean) {
 	saving.value = true;
 	try {

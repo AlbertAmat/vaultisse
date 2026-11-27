@@ -8,6 +8,13 @@
  *  DELETE /:id
  *  POST   /:id/test       sends a test message
  *  GET    /:id/deliveries the last attempts
+ *
+ * Example:
+ *   POST /api/admin/webhooks   (fresh verification)
+ *     {"name": "Ops channel", "kind": "slack", "url": "https://hooks.slack.com/services/T0/B0/xxxx", "events": ["incident.opened", "ip.blocked"]}
+ *     -> 201 {"item": {"id": 1, "kind": "slack", "targetHint": "hooks.slack.com/…xxxx", "events": [...], "enabled": true}}   (the URL itself is never returned)
+ *
+ *   POST /api/admin/webhooks/1/test  -> {"ok": true, "error": null}   or   {"ok": false, "error": "The service answered HTTP 403."}
  */
 import {NextFunction, Request, Response, Router} from "express";
 import {NotFoundError, ValidationError} from "../../errors/DomainError";

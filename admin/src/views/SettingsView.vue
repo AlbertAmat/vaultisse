@@ -1,9 +1,21 @@
 <template>
+	<!--
+	  Settings (route /settings, menu: Platform > Settings)
+
+	  Change how the installation behaves without editing .env or restarting: email (SMTP), registration, single sign-on, API keys,
+	  upload limits, inactive accounts, admin portal. Groups that have their own page (notifications, automatic blocking, data retention)
+	  are hidden here.
+	  Priority: a value saved here wins over the environment variable of the same name. Each field says where its value comes from:
+	  "Set here" | "From env var" | "Default", and warns when an env var is being ignored.
+	  Data:   GET/PUT /settings, POST /settings/test-email, POST /settings/test-key, POST /settings/reset/request + /confirm
+	  Secrets (SMTP password, API keys) are stored encrypted and shown only as "set"; leaving the field empty keeps the saved one.
+	-->
 	<div class="page">
 		<page-header title="Settings" subtitle="Change how this installation behaves without touching environment variables. Changes apply immediately."/>
 
 		<v-alert v-if="!canWrite()" type="info" variant="tonal" class="mb-4" density="compact">Your account is read-only: you can look at the settings but not change them.</v-alert>
 
+		<!-- Tabs per group; each group saves on its own (Save / Discard) and sends only the fields that changed. -->
 		<v-card v-if="groups.length">
 			<v-tabs v-model="tab" show-arrows color="primary">
 				<v-tab v-for="group in groups" :key="group.id" :value="group.id">{{ group.label }}</v-tab>
@@ -113,6 +125,7 @@
 			</v-tabs-window>
 		</v-card>
 
+		<!-- Send a test email: tries the values typed in the form, even before they are saved. -->
 		<v-card class="pa-4 mt-4">
 			<div class="d-flex flex-wrap align-center ga-3">
 				<div>

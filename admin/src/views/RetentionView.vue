@@ -1,4 +1,13 @@
 <template>
+	<!--
+	  Data retention (route /retention, menu: Security & compliance)
+
+	  How long each kind of record is kept (GDPR art. 5(1)(e): no longer than needed). 0 days keeps a record forever.
+	  Data:   GET /retention (period, size, oldest, how many are already past it); saved through PUT /settings (keys RETENTION_*_DAYS)
+	  The hourly job "Purge old records" deletes what is older. "Purge now" runs it at once after a fresh verification.
+	  The audit trail can only shrink after 90 days and only through this setting: 1-89 is refused here and by the server.
+	  Example: mail log 60 days -> an email sent 61 days ago is deleted at the next run.
+	-->
 	<div class="page">
 		<page-header title="Data retention" subtitle="How long each kind of record is kept. Personal data should not be kept longer than needed (GDPR art. 5(1)(e)): you decide how long that is.">
 			<v-btn v-if="canWrite()" variant="tonal" prepend-icon="mdi-broom" :disabled="dirty || totalOverdue === 0" :loading="purging" @click="confirmPurge = true">Purge now<template v-if="totalOverdue"> ({{ num(totalOverdue) }})</template></v-btn>
@@ -61,6 +70,7 @@ const saving = ref(false);
 const purging = ref(false);
 const confirmPurge = ref(false);
 
+/** Valid when empty (= unchanged), 0 (forever), or a whole number of at least the item's minimum (90 for the audit trail). */
 const isValid = (item: IRetentionItem): boolean => {
 	const raw = draft[item.key];
 	if (raw === undefined || raw === "") return true;
@@ -77,6 +87,7 @@ async function load() {
 	for (const item of result.items) draft[item.key] = String(item.days);
 }
 
+/** Sends only the changed periods. Example: {RETENTION_MAIL_LOG_DAYS: "60", RETENTION_ACTIVITY_LOG_DAYS: "365"} */
 async function save() {
 	saving.value = true;
 	try {

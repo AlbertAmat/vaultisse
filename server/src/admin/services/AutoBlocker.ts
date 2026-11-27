@@ -31,6 +31,12 @@ const KNOWN_GOOD_MS = 24 * 60 * 60 * 1000;
 /**
  * @param ip Address as reported by Express.
  * @returns Whether it is a public internet address (the only kind that may be blocked automatically).
+ *
+ * @example
+ *   isPublicAddress("8.8.8.8")          // true   (a public internet address: may be blocked)
+ *   isPublicAddress("::ffff:203.0.113.5") // true   (IPv4 seen on a dual-stack socket)
+ *   isPublicAddress("192.168.1.20")    // false  (private: behind Docker or a proxy every visitor looks like this)
+ *   isPublicAddress("127.0.0.1")       // false
  */
 export function isPublicAddress(ip: string): boolean {
     const address = ip.startsWith("::ffff:") ? ip.slice(7) : ip;

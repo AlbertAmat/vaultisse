@@ -1,4 +1,9 @@
 <template>
+	<!--
+	  Compliance > Access review (ISO/IEC 27001 A.5.18). Lists the admins with when their access was last confirmed; "Confirm" stamps one admin,
+	  the big button stamps everyone enabled. Admins never reviewed, or not reviewed for 180 days, turn the control amber/red.
+	  Data:   GET /compliance/access, POST /compliance/access {ids?}
+	-->
 	<v-card>
 		<div class="d-flex flex-wrap align-center ga-3 pa-4 pb-0">
 			<div>

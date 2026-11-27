@@ -1,4 +1,13 @@
 <template>
+	<!--
+	  Email users (route /broadcast, menu: Communication)
+
+	  Write to the people who use the app. Nothing is sent before you have seen WHO gets it (exact count + masked examples) and
+	  WHAT they get (the email with {name} filled in). Sending needs a fresh verification and the count you previewed: if the
+	  audience changed meanwhile the server answers 409 and the preview is refreshed.
+	  Data:   GET /broadcast/audiences, POST /broadcast/preview, POST /broadcast/test, POST /broadcast, GET /broadcast/:id (progress)
+	  Audiences: everyone | vault admins | active in the last 30 days | without two-factor. Only enabled accounts with a verified email.
+	-->
 	<div class="page">
 		<page-header title="Email users" subtitle="Write to the people who use the app: a closure, new terms, a change. Preview exactly who gets it before anything is sent."/>
 
@@ -154,6 +163,7 @@ async function sendTest() {
 	}
 }
 
+/** Starts the sending in the background and polls its progress every 1.5 s (watchRunning). Example body: {audience: "all", subject, body, expectedCount: 7} */
 async function send() {
 	if (!preview.value) {
 		return;
@@ -197,6 +207,7 @@ function watchRunning() {
 	}, 1500);
 }
 
+/** Clicking a row of the history copies its subject, text and audience into the form to start a new message from it. */
 function reuse(item: IBroadcast) {
 	subject.value = item.subject;
 	body.value = item.body;

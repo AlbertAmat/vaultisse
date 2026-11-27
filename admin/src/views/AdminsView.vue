@@ -1,9 +1,17 @@
 <template>
+	<!--
+	  Admins (route /admins, menu: Platform > Admins)
+
+	  Who can sign in to this console, and where they are signed in right now. Admins are separate from regular accounts.
+	  Data:   GET /api/admin/admins  and  GET /api/admin/admins/sessions (a read-only admin sees only their own sessions)
+	  Rights: only a superadmin sees the menu to change role / disable / reset two-factor / delete, and "End session".
+	-->
 	<div class="page">
 		<page-header title="Admins" subtitle="Who can sign in to this console. Admins are separate from regular accounts and must use two-factor authentication.">
 			<v-btn v-if="canWrite()" color="primary" variant="flat" prepend-icon="mdi-plus" @click="dialog = true">New admin</v-btn>
 		</page-header>
 
+		<!-- Admin accounts. One fact per column so nothing wraps: name, email, role, two-factor, last sign-in. -->
 		<v-card>
 			<div class="table-wrap">
 				<v-table>
@@ -32,6 +40,7 @@
 			</div>
 		</v-card>
 
+		<!-- Live sessions of every admin. The place comes from an offline IP database (see Login map); "Private or unknown" means it could not be placed. -->
 		<v-card class="mt-6">
 			<div class="d-flex align-center pa-4 pb-0">
 				<div>
@@ -65,6 +74,7 @@
 			Locked out? Run <span class="mono">node index.js admin:reset --email you@example.com</span> inside the app's container to set a new password and remove two-factor.
 		</p>
 
+		<!-- New admin: they must choose their own password and set up two-factor at first sign-in. -->
 		<v-dialog v-model="dialog" max-width="440">
 			<v-card class="pa-2">
 				<v-card-title>New admin</v-card-title>
@@ -114,6 +124,7 @@ function deviceIcon(ua: string | null): string {
 	return ua && /Android|iPhone|iPad|iOS/.test(ua) ? "mdi-cellphone" : ua && /curl|node|axios|supertest/i.test(ua) ? "mdi-console" : "mdi-laptop";
 }
 
+/** "Newmarket, United Kingdom" for a located session, "Private or unknown" for 127.0.0.1 or an address the database doesn't know. */
 function place(session: IAdminSession): string {
 	if (!session.country) return session.ipAddress ? "Private or unknown" : "";
 	let country = session.country;
@@ -129,6 +140,7 @@ async function loadSessions() {
 	sessions.value = await api.admins.sessions();
 }
 
+/** Ends someone else's session (needs a fresh verification, handled by the API client). Your own session can't be ended here: sign out instead. */
 async function endSession(session: IAdminSession) {
 	await api.admins.revokeSession(session.id);
 	notify(`The session of ${session.adminName} was ended.`);

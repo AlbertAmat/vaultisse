@@ -1,4 +1,8 @@
 <template>
+	<!--
+	  Danger zone > "Use the environment variables again". Two steps: (1) a 6-digit code is emailed to the signed-in admin (valid 10 minutes, one use, 5 tries),
+	  (2) type the code and the word RESET. Removes every saved setting; INSTANCE_UUID, onboarding state and maintenance mode are kept.
+	-->
 	<v-dialog :model-value="modelValue" max-width="500" persistent>
 		<v-card class="pa-2">
 			<v-card-title class="d-flex align-center ga-2 text-error">

@@ -1,9 +1,17 @@
 <template>
+	<!--
+	  Plans & quotas (route /plans, menu: Customers > Plans & quotas)
+
+	  Limits per vault for hosting Vaultisse for other people: maximum books, members and storage (empty = unlimited).
+	  Quotas are enforced only while the admin portal is on. The default plan applies to every vault without a plan of its own.
+	  Data:   GET /api/admin/plans, POST/PUT/DELETE /api/admin/plans/:id, PUT /api/admin/plans/default
+	-->
 	<div class="page">
 		<page-header title="Plans & quotas" subtitle="Limits per vault, for hosting this for other people. A vault without a plan uses the default plan; empty limits mean unlimited.">
 			<v-btn v-if="canWrite()" color="primary" variant="flat" prepend-icon="mdi-plus" @click="edit(null)">New plan</v-btn>
 		</page-header>
 
+		<!-- Explains how plans behave when a limit is reached (adding is refused, nothing is deleted). -->
 		<v-alert type="info" variant="tonal" density="compact" class="mb-4" icon="mdi-information-outline">
 			Quotas only stop vaults from <em>adding</em> more: a vault already above a lowered limit keeps what it has. Billing isn't part of this: plans are assigned by hand under Vaults.
 		</v-alert>
@@ -39,6 +47,7 @@
 			</div>
 		</v-card>
 
+		<!-- Create / edit a plan. Example: code "pro", name "Pro", 5000 books, 25 members, 2000 MB. -->
 		<v-dialog v-model="dialog" max-width="460">
 			<v-card class="pa-2">
 				<v-card-title>{{ editing ? "Edit plan" : "New plan" }}</v-card-title>
@@ -81,7 +90,9 @@ const saving = ref(false);
 const removing = ref<IPlan | null>(null);
 const form = reactive({name: "", code: "", maxBooks: "", maxMembers: "", maxStorageMb: ""});
 
+/** null means unlimited: limit(null) -> "Unlimited", limit(5000) -> "5,000". */
 const limit = (value: number | null) => (value === null ? "Unlimited" : num(value));
+/** Form text to API value: "" -> null (unlimited), "50" -> 50. */
 const toLimit = (value: string) => (value === "" || value === null ? null : Number(value));
 
 async function load() {

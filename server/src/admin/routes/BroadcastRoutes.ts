@@ -8,6 +8,11 @@
  *  GET  /                 history
  *  GET  /:id              one broadcast (progress while it is sending)
  *  POST /:id/cancel       stop a broadcast that is still sending
+ *
+ * Example:
+ *   POST /api/admin/broadcast/preview  {"audience": "all", "subject": "Planned maintenance", "body": "Hello {name}, ..."}
+ *     -> {"count": 7, "sample": ["a****@example.com", ...], "email": {"subject": "...", "text": "Hello Administrator, ..."}}
+ *   POST /api/admin/broadcast           {"audience": "all", "subject": "...", "body": "...", "expectedCount": 7}   -> 409 when the audience is not 7 any more
  */
 import {Router} from "express";
 import {ValidationError} from "../../errors/DomainError";

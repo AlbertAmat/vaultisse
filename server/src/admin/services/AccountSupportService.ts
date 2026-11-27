@@ -23,6 +23,10 @@ export interface MergeResult {
 }
 
 /** @param email An address. @returns It with the middle hidden, for the audit trail. */
+/**
+ * Example:
+ *   maskEmail("alice@example.com") // "a***@example.com"
+ */
 export function maskEmail(email: string): string {
     const [name, domain] = email.split("@");
     return `${name.slice(0, 1)}***@${domain ?? ""}`;

@@ -1,4 +1,5 @@
 <template>
+	<!-- A number with a label: <stat-card label="Accounts" :value="6" icon="mdi-account" hint="1 new this week" to="/users" color="warning"/>. With `to` the whole card is a link. -->
 	<v-card class="pa-4 h-100" :to="to">
 		<div class="d-flex align-center ga-2 text-medium-emphasis text-body-2">
 			<v-icon v-if="icon" :icon="icon" size="18"/>

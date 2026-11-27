@@ -1,4 +1,5 @@
 <template>
+	<!-- Change your own password (from the account menu). Asks for the current one; the new one must be at least 12 characters with upper and lower case, a number and a symbol. -->
 	<v-dialog :model-value="modelValue" max-width="440" @update:model-value="$emit('update:modelValue', $event)">
 		<v-card class="pa-2">
 			<v-card-title>Change your password</v-card-title>

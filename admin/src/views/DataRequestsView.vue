@@ -1,18 +1,30 @@
 <template>
+	<!--
+	  Data requests (route /data-requests, menu: Security & compliance)
+
+	  GDPR requests from the people the app holds data about: ACCESS (art. 15, "show me my data") and ERASURE (art. 17, "delete it").
+	  Each has a one-month deadline (art. 12(3)), extendable once to three months with a written reason. A request stays on record
+	  after the account is gone: that record is the proof it was answered.
+	  Data:   GET/POST /data-requests, POST /data-requests/:id/{extend,close,erase}, POST /data-requests/export/:userId
+	  Flow:   log a request -> work through the steps in the dialog -> download the ZIP / erase -> mark as answered (or refuse with a reason).
+	-->
 	<div class="page">
 		<page-header title="Data requests" subtitle="People can ask what is held about them (access) or ask for it to be erased. Each request has a one-month deadline (GDPR art. 12) and is answered step by step.">
 			<v-btn v-if="canWrite()" color="primary" variant="flat" prepend-icon="mdi-plus" @click="openCreate()">Log a request</v-btn>
 		</page-header>
 
+		<!-- Shown while any open request is past its deadline. -->
 		<v-alert v-if="counts && counts.overdue > 0" type="error" variant="tonal" class="mb-4" icon="mdi-clock-alert-outline">
 			{{ counts.overdue }} {{ counts.overdue === 1 ? "request is" : "requests are" }} past the deadline. Answer them now, or record why an extension applies.
 		</v-alert>
 
+		<!-- Open (with a count, red when something is late) | Closed. -->
 		<v-tabs v-model="tab" color="primary" class="mb-4" @update:model-value="load">
 			<v-tab value="active">Open<v-chip v-if="counts?.open" size="x-small" class="ml-2" :color="counts.overdue ? 'error' : undefined" variant="tonal">{{ counts.open }}</v-chip></v-tab>
 			<v-tab value="closed">Closed</v-tab>
 		</v-tabs>
 
+		<!-- The list. Deadline chip: green-grey = time left, orange = 5 days or less, red = late. -->
 		<v-card>
 			<div class="table-wrap">
 				<v-table density="comfortable">
@@ -108,6 +120,7 @@
 			</v-card>
 		</v-dialog>
 
+		<!-- Extension: allowed once, up to three months from receipt; the person must be told within the first month. -->
 		<v-dialog v-model="extending" max-width="460">
 			<v-card class="pa-2">
 				<v-card-title>Extend the deadline</v-card-title>
@@ -119,6 +132,7 @@
 			</v-card>
 		</v-dialog>
 
+		<!-- Refusal: a reason is required and kept on record (the person is entitled to know it). -->
 		<v-dialog v-model="rejecting" max-width="460">
 			<v-card class="pa-2">
 				<v-card-title>Refuse this request</v-card-title>
@@ -160,6 +174,7 @@ const found = ref<{id: number; label: string}[]>([]);
 const form = reactive({kind: "access" as "access" | "erasure", account: null as {id: number; label: string} | null, email: "", receivedAt: today, notes: ""});
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
+/** Opens the "log a request" dialog. With a user id (from the account drawer: /data-requests?new=1&user=7) the account is preselected. */
 function openCreate(userId?: number) {
 	form.kind = "access";
 	form.account = null;
@@ -253,6 +268,7 @@ async function exportData() {
 	}
 }
 
+/** Carries out an erasure through the normal deletion flow. The request turns "Being erased" and closes by itself when the account is gone. */
 async function erase() {
 	erasing.value = true;
 	try {

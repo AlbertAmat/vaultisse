@@ -1,4 +1,11 @@
 <template>
+	<!--
+	  Sign-in (route /login). Steps: credentials -> two-factor code (or a backup code) -> [first time: QR code and backup codes].
+	  Two-factor is mandatory for admins. After the first sign-in with a generated or admin-set password the router sends the admin to the
+	  change-password page before anything else.
+	  Data:   POST /auth/login, /auth/2fa, /auth/enroll/start, /auth/enroll/confirm
+	  Wrong attempts are limited and lock the admin for a while; the message is deliberately the same for a wrong password and an unknown email.
+	-->
 	<div class="login">
 		<v-card class="pa-4" width="100%" max-width="440" border>
 			<div class="d-flex align-center ga-3 mb-4">

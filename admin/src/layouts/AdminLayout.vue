@@ -1,4 +1,9 @@
 <template>
+	<!--
+	  The frame of every signed-in page: the left menu (grouped: Customers, Communication, Security & compliance, Platform), the top bar
+	  (page title, theme switch, account menu) and the page itself (router-view). The menu is a plain list in the script (`groups`):
+	  add an entry there and a route in router.ts to add a page. On a narrow screen the menu becomes a drawer opened by the burger button.
+	-->
 	<v-navigation-drawer v-model="drawer" :permanent="mdAndUp" :temporary="!mdAndUp" width="240" class="app-menu" :dark="true">
 		<div class="d-flex align-center pt-4 pb-3 pl-5 pr-2 ga-2">
 			<brand-mark/>

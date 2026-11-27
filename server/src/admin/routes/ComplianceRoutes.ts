@@ -9,6 +9,11 @@
  *  GET    /incidents             POST /incidents    PUT /incidents/:id    (incidents are closed, never deleted)
  *  GET    /access                admins with the date of their last access review
  *  POST   /access                `{ids?}` confirm that the admins (all, by default) still need their access
+ *
+ * Example:
+ *   PUT /api/admin/compliance/controls/A.8.13
+ *     {"status": "implemented", "owner": "Operations", "justification": "Nightly pg_dump copied off-site", "evidenceUrl": "https://…", "nextReviewAt": "2027-01-15", "reviewed": true}
+ *     -> {"message": "Saved."}      (status "not_applicable" needs a justification; a measured control cannot be declared green)
  */
 import {Router} from "express";
 import {Pool} from "pg";

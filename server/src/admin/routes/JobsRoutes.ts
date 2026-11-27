@@ -4,6 +4,12 @@
  *  GET    /               every job with its last run, the estimate of the next one and its recent failures
  *  POST   /:id/run        runs it now and returns the result   [fresh verification for jobs that change or delete data]
  *  GET    /:id/history    the last 30 runs
+ *
+ * Example:
+ *   GET  /api/admin/jobs
+ *     -> {"items": [{"id": "retention", "name": "Purge old records", "schedule": "Every hour", "dangerous": true, "running": false,
+ *                    "lastRun": {"status": "ok", "message": "Removed 79 from security events", "durationMs": 8, ...}, "nextRunAt": "...", "recentFailures": 0}, ...]}
+ *   POST /api/admin/jobs/retention/run   (fresh verification, because it deletes data)  -> {"run": {...}}
  */
 import {NextFunction, Request, Response, Router} from "express";
 import {NotFoundError} from "../../errors/DomainError";

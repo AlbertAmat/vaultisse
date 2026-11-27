@@ -99,6 +99,11 @@ export class JobService {
      * @param adminId Admin who started it, for a manual run.
      * @returns The recorded run.
      * @throws NotFoundError for an unknown job, ConflictError when it is already running.
+     *
+     * @example
+     *   const run = await appService.getJobs().run("retention", "manual", admin.id);
+     *   // run = {jobId: "retention", status: "ok", message: "Removed 79 from security events", durationMs: 8, runBy: "admin@example.com", ...}
+     *   // a job that throws is NOT rethrown: run.status === "failed" and run.message is the error
      */
     public async run(id: string, trigger: JobTrigger, adminId: number | null = null): Promise<JobRun> {
         const job = this.jobs.get(id);

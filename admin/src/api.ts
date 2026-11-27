@@ -21,6 +21,11 @@ export function errorMessage(error: unknown): string {
     return axiosError?.message ?? "Something went wrong.";
 }
 
+/**
+ * The single API client. Calls look like api.users.list({search: "alice"}) or api.vaults.clear(id, ["authors"], "My library").
+ * Behaviour wired in here: an expired session sends the admin to /login; any other failed request shows a red message (unless the call opted out);
+ * a 403 "reauthRequired" opens the password + code prompt and repeats the request once the admin passed it.
+ */
 export const api = createAdminApiClient({
     onSessionExpired: () => {
         state.admin = null;

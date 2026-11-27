@@ -1,9 +1,19 @@
 <template>
+	<!--
+	  Webhooks (route /webhooks, menu: Platform > Webhooks)
+
+	  Sends what happens in the portal (a new account, an incident, a blocked address, an alert) to Slack, Discord, Telegram or any URL.
+	  The secret part of a target (URL, bot token, signing secret) is stored encrypted and never shown again: the list shows only a hint
+	  such as "hooks.slack.com/…mnop". Editing without typing a new target keeps the saved one.
+	  Data:   GET/POST /webhooks, PUT/PATCH/DELETE /webhooks/:id, POST /webhooks/:id/test, GET /webhooks/:id/deliveries
+	  Creating a webhook or changing where it points needs a fresh verification.
+	-->
 	<div class="page">
 		<page-header title="Webhooks" subtitle="Send what happens here to Slack, Discord, Telegram or any URL: a new account, an incident, a blocked address, an alert.">
 			<v-btn v-if="canWrite()" color="primary" variant="flat" prepend-icon="mdi-plus" @click="openForm(null)">Add a webhook</v-btn>
 		</page-header>
 
+		<!-- One fact per column: name, type, where it sends, how many events, last delivery, on/off. -->
 		<v-card>
 			<div class="table-wrap">
 				<v-table density="comfortable">
@@ -110,6 +120,7 @@ import {dateTime, relative} from "@/utils/format";
 import ConfirmDangerDialog from "@/components/ConfirmDangerDialog.vue";
 import PageHeader from "@/components/PageHeader.vue";
 
+/** Per type: icon, label, example URL and the help text shown in the form. A generic URL receives POST {event, title, lines, instance, sentAt}. */
 const kinds: Record<WebhookKind, {title: string; icon: string; placeholder: string; help: string}> = {
 	slack: {title: "Slack", icon: "mdi-slack", placeholder: "https://hooks.slack.com/services/T000/B000/XXXX", help: "In Slack: Apps > Incoming Webhooks > Add to Slack, pick a channel and copy the Webhook URL."},
 	discord: {title: "Discord", icon: "mdi-discord", placeholder: "https://discord.com/api/webhooks/123456/abcdef", help: "In Discord: channel settings > Integrations > Webhooks > New Webhook > Copy Webhook URL."},
@@ -134,6 +145,7 @@ const canSave = computed(() => {
 	return form.kind === "telegram" ? !!form.token && !!form.chatId : !!form.url;
 });
 
+/** New webhooks start with the most useful events ticked (account.created, incident.opened, ip.blocked, security.alert, anomaly.detected). */
 function openForm(hook: IWebhook | null) {
 	editing.value = hook;
 	form.kind = hook?.kind ?? "slack";

@@ -1,4 +1,9 @@
 <template>
+	<!--
+	  Compliance > Registers: policies, suppliers, risks and assets (what an ISMS asks to keep). One table per kind, switched with the chips.
+	  A policy past its review date turns control A.5.1 red; suppliers feed A.5.19, assets A.5.9.
+	  Data:   GET/POST /compliance/register?kind=, PUT/DELETE /compliance/register/:id
+	-->
 	<div>
 		<v-card>
 			<div class="d-flex flex-wrap align-center ga-3 pa-4 pb-0">
@@ -67,6 +72,7 @@ import {dateOnly} from "@/utils/format";
 
 const emit = defineEmits<{changed: []}>();
 
+/** Per kind: names, which optional fields the form shows (rating, version, approval date) and the hint under the tabs. */
 const kinds: {value: RegisterKind; single: string; plural: string; rating?: string; details: string; link: string; hint: string}[] = [
 	{value: "policy", single: "policy", plural: "Policies", details: "What it covers", link: "Link to the document", hint: "Information security, access control, backup, incident response, acceptable use, record of processing (GDPR art. 30)... Each with its approval and next review (ISO/IEC 27001 A.5.1)."},
 	{value: "supplier", single: "supplier", plural: "Suppliers", rating: "Criticality", details: "What they do for you and which data they handle", link: "Link to the contract or data processing agreement", hint: "Hosting, email delivery, backups, DNS, monitoring: everyone who handles your data or keeps the service running (A.5.19, GDPR art. 28)."},

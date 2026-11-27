@@ -1,4 +1,13 @@
 <template>
+	<!--
+	  Login map (route /map, menu: Security & compliance)
+
+	  Where people sign in from, placed by IP address on an OpenStreetMap. The server places addresses with an offline database (no address
+	  is sent to a third party); your browser only loads the map tiles from openstreetmap.org.
+	  Data:   GET /map/logins?days=7|30|90|365 -> {points: [{lat, lon, city, country, logins, failed, accounts, addresses}], countries, totals}
+	  A circle is one place (addresses that resolve to the same spot are merged); its size is the number of events and it turns red when
+	  failed attempts outnumber sign-ins. Popups never name a person. Private addresses (10.x, 192.168.x) have no place and are only counted.
+	-->
 	<div class="page">
 		<page-header title="Login map" subtitle="Where people sign in from, placed by IP address. Locations come from an offline database on this server: no address is sent to anyone.">
 			<v-select v-model="days" :items="periods" density="compact" style="width: 170px" hide-details @update:model-value="load"/>
@@ -86,6 +95,7 @@ const country = (code: string): string => {
 };
 const place = (p: IMapPoint): string => [p.city, p.region].filter(Boolean).join(", ") || "Somewhere in the country";
 
+/** Builds the popup with DOM text nodes (not HTML), so a place name can never inject markup. */
 function popup(p: IMapPoint): HTMLElement {
 	const el = document.createElement("div");
 	const title = document.createElement("strong");
@@ -103,6 +113,7 @@ function popup(p: IMapPoint): HTMLElement {
 	return el;
 }
 
+/** Redraws the circles for the two switches (sign-ins / failed attempts) and zooms the map to fit them. Radius = 6 + 2 * sqrt(events), at most 26. */
 function draw() {
 	if (!map || !layer) return;
 	layer.clearLayers();

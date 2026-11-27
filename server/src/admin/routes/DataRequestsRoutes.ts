@@ -8,6 +8,14 @@
  *  POST   /:id/erase           `{immediate?}`   carry out an erasure request through the deletion flow   [fresh verification]
  *  POST   /export/:userId      `{}` -> `{url}` a one-minute link to the personal-data export (ZIP) of an account   [fresh verification]
  *  GET    /export/:userId/:token   downloads it (single use)
+ *
+ * Example:
+ *   POST /api/admin/data-requests
+ *     {"kind": "erasure", "userId": 7, "receivedAt": "2026-11-01T10:00:00Z", "notes": "Email from the customer"}
+ *     -> 201 {"item": {"id": 3, "kind": "erasure", "status": "open", "dueAt": "2026-12-01T10:00:00Z", "daysLeft": 4, ...}}
+ *
+ *   POST /api/admin/data-requests/export/7       (after a fresh verification)   -> {"url": "/api/admin/data-requests/export/7/<token>"}
+ *   GET  <that url>                               -> a ZIP (once, within a minute, for the same admin)
  */
 import crypto from "crypto";
 import {Router} from "express";

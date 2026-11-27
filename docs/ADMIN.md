@@ -823,3 +823,18 @@ The tests live in `server/test/routes/AdminPortal.test.ts` (the portal on),
 `AdminDisabled.test.ts` (the portal off must change nothing) and
 `server/test/admin/AdminUnits.test.ts`. Schema changes are in
 `assets/db/upgrade/1.4.0.sql` and `assets/db/databaseSchema.sql`.
+
+### Reading the code
+
+The portal's code is documented where you read it:
+
+- **Every page** (`admin/src/views/*.vue`) starts with a comment inside `<template>` that says what the page is, its route
+  and menu entry, which API calls it makes, who may use it (read-only admins) and which actions ask for a fresh
+  verification. Comments before the main blocks (`<v-card>`, `<v-dialog>`, the drawer) say what each one is for, and the script
+  explains the state and the less obvious functions, with an example where one helps.
+- **Server files** (`server/src/admin/`) have a header comment with the endpoints, and `@example` lines on the helpers
+  with a surprising result (`isPublicAddress`, `locate`, `outcomeOf`, `validateTarget`, `csvCell`, ...). The route files end their
+  header with a request and answer example.
+- To add a page: a view in `admin/src/views`, a route in `admin/src/router.ts`, an entry in the `groups` list of
+  `admin/src/layouts/AdminLayout.vue`, the API method in `packages/api-client/src/AdminApiClient.ts` (and its types in
+  `packages/types/src/admin/IAdmin.ts`), and the route in `server/src/admin/routes/`, mounted in `AdminApp.ts`.

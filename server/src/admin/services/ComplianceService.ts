@@ -40,6 +40,13 @@ export interface Overview {
 const SCORE: Record<ControlOutcome, number | null> = {compliant: 1, partial: 0.5, gap: 0, planned: 0, not_assessed: 0, not_applicable: null};
 
 /** @returns The outcome of a control from what was measured and what was declared. */
+/**
+ * Example:
+ *   outcomeOf({state: "pass", detail: ""}, null)           // "compliant"   (measured, green)
+ *   outcomeOf({state: "fail", detail: ""}, "implemented")  // "gap"         (a person cannot declare a failing check green)
+ *   outcomeOf({state: "fail", detail: ""}, "not_applicable") // "not_applicable" (but they can declare it does not apply)
+ *   outcomeOf(null, "planned")                              // "planned"     (not measurable: the declaration counts)
+ */
 export function outcomeOf(measured: CheckResult | null, declared: ControlStatus | null): ControlOutcome {
     if (declared === "not_applicable") return "not_applicable";
     if (measured) {

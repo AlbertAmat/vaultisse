@@ -97,6 +97,12 @@ function hostIs(url: URL, ...hosts: string[]): boolean {
  * @param kind Kind of webhook.
  * @param target What the admin typed.
  * @throws ValidationError when it isn't acceptable.
+ *
+ * @example
+ *   validateTarget("slack", {url: "https://hooks.slack.com/services/T0/B0/xxxx"})   // ok
+ *   validateTarget("slack", {url: "https://evil.example.com/services/T0/B0/xxxx"})   // throws: not a Slack webhook URL
+ *   validateTarget("telegram", {token: "123456:ABC...", chatId: "-1001234567"})      // ok (negative id = group)
+ *   validateTarget("generic", {url: "http://example.com/x"})                         // throws: must be https (unless ALLOW_HTTP=true)
  */
 export function validateTarget(kind: WebhookKind, target: WebhookTarget): void {
     if (kind === "telegram") {

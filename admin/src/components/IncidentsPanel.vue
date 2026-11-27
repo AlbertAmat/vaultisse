@@ -1,4 +1,9 @@
 <template>
+	<!--
+	  Compliance > Incidents. The register of security incidents (ISO/IEC 27001 A.5.24-A.5.26). Incidents are closed, never deleted.
+	  For a personal-data breach the table counts down the 72 hours GDPR art. 33 gives to tell the authority, and turns red when the time is up
+	  without a notification date. Data: GET/POST /compliance/incidents, PUT /compliance/incidents/:id
+	-->
 	<div>
 		<v-alert type="info" variant="tonal" density="compact" class="mb-3" icon="mdi-clock-alert-outline">
 			A breach of personal data must be reported to the data protection authority <strong>within 72 hours</strong> of becoming aware of it (GDPR art. 33), and to the people affected when the risk to them is high (art. 34). Incidents are closed, never deleted: the record is the evidence.

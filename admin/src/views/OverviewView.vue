@@ -1,19 +1,31 @@
 <template>
+	<!--
+	  Overview (route /, menu: Overview)
+
+	  The state of the installation at a glance: alerts, headline numbers, trends, system card. Metadata only.
+	  Data:   GET /api/admin/overview            headline counts (accounts, vaults, books, failed jobs, ...)
+	          GET /api/admin/overview/charts?days=7|30|90   everything the charts draw
+	          GET /api/admin/system              the system card at the bottom
+	  The 7/30/90 switch only reloads the charts (loadCharts); the counts above them don't depend on the period.
+	-->
 	<div class="page">
 		<page-header title="Overview" subtitle="The state of this installation at a glance. Only metadata is shown, never what is inside a library.">
 			<v-btn variant="tonal" prepend-icon="mdi-refresh" :loading="loading" @click="load">Refresh</v-btn>
 		</page-header>
 
+		<!-- Shown only while accounts wait for approval; links to the filtered Accounts list. -->
 		<v-alert v-if="counts && counts.usersPending > 0" type="info" variant="tonal" class="mb-4" icon="mdi-account-clock-outline">
 			{{ counts.usersPending }} new {{ counts.usersPending === 1 ? "account is" : "accounts are" }} waiting for approval.
 			<template #append><v-btn variant="text" to="/users?status=pending">Review</v-btn></template>
 		</v-alert>
+		<!-- A background job failed on its last run: see Jobs. -->
 		<v-alert v-if="counts && counts.failedJobs > 0" type="error" variant="tonal" class="mb-4" icon="mdi-timer-alert-outline">
 			{{ counts.failedJobs }} background {{ counts.failedJobs === 1 ? "job" : "jobs" }} failed on the last run.
 			<template #append><v-btn variant="text" to="/jobs">See jobs</v-btn></template>
 		</v-alert>
 		<v-alert v-if="system && system.database !== 'ok'" type="error" variant="tonal" class="mb-4">The database is not reachable.</v-alert>
 
+		<!-- Headline numbers. Each card with a link goes to the page that explains it. -->
 		<v-row v-if="counts">
 			<v-col cols="6" md="3"><stat-card label="Accounts" :value="num(counts.users)" icon="mdi-account-multiple-outline" to="/users" :hint="`${num(counts.signupsWeek)} new this week`"/></v-col>
 			<v-col cols="6" md="3"><stat-card label="Online now" :value="num(counts.activeNow)" icon="mdi-circle-medium" color="success" :hint="`${num(counts.activeDay)} today · ${num(counts.activeWeek)} this week`"/></v-col>
@@ -25,6 +37,7 @@
 			<v-col cols="6" md="3"><stat-card label="Pending deletions" :value="num(counts.pendingDeletions)" icon="mdi-delete-clock-outline" to="/deletions" :color="counts.pendingDeletions ? 'warning' : undefined"/></v-col>
 		</v-row>
 
+		<!-- Period switch for the charts below (7, 30 or 90 days). -->
 		<div class="d-flex flex-wrap align-center ga-3 mt-2 mb-1">
 			<div class="text-subtitle-1 font-weight-medium">Trends</div>
 			<v-chip-group v-model="days" mandatory selected-class="text-primary" @update:model-value="loadCharts">
@@ -32,6 +45,11 @@
 			</v-chip-group>
 		</div>
 
+		<!--
+		  Charts. Row 1: new accounts, sign-ins.  Row 2: accounts by status, vaults by plan, security events.
+		  Row 3: library growth, failed sign-ins (users and admins), emails sent.  Row 4: vaults near their plan limit, biggest vaults.
+		  Days without data are drawn as 0, so the bars always cover the whole period.
+		-->
 		<v-row v-if="charts">
 			<v-col cols="12" md="6">
 				<v-card class="pa-4 h-100">
@@ -110,6 +128,7 @@
 			</v-col>
 		</v-row>
 
+		<!-- System card: version, instance id, uptime, database latency and which features are on. -->
 		<v-card v-if="system" class="pa-4 mt-4">
 			<div class="d-flex align-center mb-3">
 				<div class="text-subtitle-1 font-weight-medium">System</div>

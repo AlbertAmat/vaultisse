@@ -22,6 +22,10 @@ function dosDateTime(date: Date): {time: number; day: number} {
 /**
  * @param entries Files to put in the archive.
  * @returns The ZIP file.
+ *
+ * @example
+ *   const zip = buildZip([{name: "README.txt", data: Buffer.from("hello")}, {name: "data/account.json", data: Buffer.from("{}")}]);
+ *   // zip is a Buffer holding a valid .zip with two deflated files; send it with Content-Type: application/zip
  */
 export function buildZip(entries: ZipEntry[]): Buffer {
     const locals: Buffer[] = [];

@@ -10,6 +10,13 @@
  *  DELETE /vaults/:id         `{confirm: "<vault name>", immediate?}` [fresh verification]
  *
  *  GET/POST /plans, PUT/DELETE /plans/:id, PUT /plans/default `{planId | null}`
+ *
+ * Example:
+ *   POST /api/admin/vaults/5/transfer   (fresh verification)   {"toUserId": 9, "previous": "demote"}     previous: keep | demote | remove
+ *     -> {"vault": "Alice's library", "newAdmin": "bob", "changed": 1}
+ *   GET  /api/admin/vaults/5/content   -> {"vault": {...}, "counts": {"books": 312, "copies": 312, "files": 4, "history": 87, "customers": 24, ...}}   (counts only)
+ *   POST /api/admin/vaults/5/clear     (fresh verification)   {"scopes": ["authors", "categories"], "confirm": "Alice's library"}
+ *     -> {"removed": {"authors": 38, "categories": 9}, "counts": {...}}
  */
 import {Router} from "express";
 import {Pool} from "pg";

@@ -1,4 +1,5 @@
 <template>
+	<!-- Previous / next buttons and "26–50 of 312". v-model style: <pager :page="page" :page-size="25" :total="total" @update:page="page = $event; load()"/> -->
 	<div class="d-flex align-center justify-end ga-2 pa-3 text-body-2">
 		<span class="text-medium-emphasis">{{ from }}–{{ to }} of {{ total.toLocaleString() }}</span>
 		<v-btn icon="mdi-chevron-left" size="small" variant="text" :disabled="page <= 1" aria-label="Previous page" @click="$emit('update:page', page - 1)"/>
