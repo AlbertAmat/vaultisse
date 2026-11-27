@@ -36,14 +36,32 @@ not enforced. The server behaves exactly as before, configured by env vars alone
    SETTINGS_ENCRYPTION_KEY=<openssl rand -hex 32>
    ```
 2. Restart the `app` container. The server now also listens on `ADMIN_PORT` (3001).
-3. Create the first admin. There is deliberately no sign-up page for admins:
+3. Read the first admin's login from the container output. The first time the portal
+   runs with no admin, the server creates one and prints a block like this (once, in
+   `docker compose logs app`; it is deliberately not written to the log file the
+   console can display):
+   ```
+   ====================================================================
+     ADMIN PORTAL - first start
+         username: admin@vaultisse.local
+         password: <generated, 20 characters>
+     Sign in at https://adm.example.com
+     CHANGE THIS PASSWORD AFTER THE FIRST LOGIN: you will be asked to.
+   ====================================================================
+   ```
+4. Open the portal and sign in with it. Set up two-factor authentication (mandatory,
+   save the backup codes it shows once), then the console **makes you choose your
+   own password** before anything else works. The same applies to every admin
+   another admin creates later: they must replace the password they were given.
+
+   There is no sign-up page for admins. To create one by hand, or to recover a lost
+   password, use the command line:
    ```bash
    docker compose exec -it app node index.js admin:create --email you@example.com --name "You"
+   docker compose exec -it app node index.js admin:reset  --email you@example.com
    ```
-   It asks for a password (not echoed). Use `ADMIN_PASSWORD` in the environment
-   instead for scripts.
-4. Open the portal, sign in, and set up two-factor authentication (mandatory). Save
-   the backup codes it shows once.
+   (`ADMIN_PASSWORD` in the environment replaces the prompt in scripts.) Passwords
+   set this way are your choice and aren't forced to change.
 
 To reach it on its own domain, point a reverse proxy at the admin port, e.g. Caddy:
 

@@ -113,6 +113,7 @@ export function authRoutes(auth: AdminAuthService, audit: AdminAuditService): Ro
             email: admin.email,
             name: admin.name,
             role: admin.role,
+            mustChangePassword: admin.mustChangePassword,
             reauthUntil: admin.reauthUntil && admin.reauthUntil.getTime() > Date.now() ? admin.reauthUntil : null,
         });
     }));

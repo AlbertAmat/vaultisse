@@ -81,6 +81,18 @@ export function requireAdmin(auth: AdminAuthService) {
     };
 }
 
+/**
+ * Middleware: an admin who still has the generated (or admin-set) password can't do anything but change
+ * it. Mounted after {@link requireAdmin} on everything except the `/auth/*` routes, which stay reachable.
+ */
+export function blockUntilPasswordChanged(req: Request, res: Response, next: NextFunction): void {
+    if (req.admin?.mustChangePassword) {
+        res.status(403).json({message: "Choose a new password before continuing.", passwordChangeRequired: true});
+        return;
+    }
+    next();
+}
+
 /** Middleware: only superadmins may continue. */
 export function requireSuperadmin(req: Request, res: Response, next: NextFunction): void {
     if (req.admin?.role !== "superadmin") {

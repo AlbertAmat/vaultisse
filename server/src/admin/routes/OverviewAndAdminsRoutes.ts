@@ -36,7 +36,7 @@ export function overviewAndAdminsRoutes(pool: Pool, auth: AdminAuthService, audi
     }));
 
     router.post("/admins", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {
-        const admin = await auth.create({email: req.body?.email, name: req.body?.name, password: req.body?.password, role: req.body?.role ?? "readonly"});
+        const admin = await auth.create({email: req.body?.email, name: req.body?.name, password: req.body?.password, role: req.body?.role ?? "readonly", mustChangePassword: true});
         await audit.record(req, "admin.create", {entityType: "admin", entityId: admin.id, entityLabel: admin.email, metadata: {role: admin.role}});
         res.status(201).json({admin});
     }));

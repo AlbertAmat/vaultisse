@@ -6,6 +6,7 @@ import {state} from "@/store";
 const router = createRouter({
     history: createWebHistory(),
     routes: [
+        {path: "/change-password", name: "change-password", component: () => import("@/views/ChangePasswordView.vue"), meta: {title: "Choose a new password"}},
         {path: "/login", name: "login", component: () => import("@/views/LoginView.vue"), meta: {public: true}},
         {
             path: "/",
@@ -39,7 +40,14 @@ router.beforeEach(async (to) => {
     if (to.meta.public) {
         return state.admin ? {name: "overview"} : true;
     }
-    return state.admin ? true : {name: "login"};
+    if (!state.admin) {
+        return {name: "login"};
+    }
+    // A generated or admin-set password must be replaced before anything else.
+    if (state.admin.mustChangePassword) {
+        return to.name === "change-password" ? true : {name: "change-password"};
+    }
+    return to.name === "change-password" ? {name: "overview"} : true;
 });
 
 router.afterEach((to) => {

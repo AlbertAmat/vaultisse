@@ -246,7 +246,7 @@ export class AdminAuthService {
         }
         const timeLeft = decoded.exp - Math.floor(now / 1000);
         return {
-            admin: {id: admin.id, email: admin.email, name: admin.name, role: admin.role, sessionId: session.id, reauthUntil: session.reauthUntil},
+            admin: {id: admin.id, email: admin.email, name: admin.name, role: admin.role, mustChangePassword: admin.mustChangePassword, sessionId: session.id, reauthUntil: session.reauthUntil},
             refreshedToken: timeLeft < this.sessionMs / 1000 / 2 ? this.createSessionToken(admin.id, admin.tokenVersion, decoded.sid) : null,
         };
     }
@@ -292,6 +292,9 @@ export class AdminAuthService {
             throw new UnauthorizedError("Invalid current password.");
         }
         validateAdminPassword(newPassword);
+        if (newPassword === currentPassword) {
+            throw new ValidationError("Choose a password different from the current one.");
+        }
         const sessionKey = await this.sessionKeyOf(admin.sessionId);
         const tokenVersion = await this.repo.setPassword(admin.id, await bcrypt.hash(newPassword, 12));
         // setPassword bumped token_version, so every token (including this one) is stale: end the other
@@ -316,7 +319,7 @@ export class AdminAuthService {
      * @returns The new admin.
      * @throws ValidationError / ConflictError on bad input or a duplicate email.
      */
-    public async create(fields: {email: string; name: string; password: string; role: AdminRole}): Promise<AdminUserRow> {
+    public async create(fields: {email: string; name: string; password: string; role: AdminRole; mustChangePassword?: boolean}): Promise<AdminUserRow> {
         const email = String(fields.email ?? "").trim();
         const name = String(fields.name ?? "").trim();
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 100) {
@@ -330,7 +333,7 @@ export class AdminAuthService {
         }
         validateAdminPassword(fields.password);
         try {
-            const id = await this.repo.create({email, name, passwordHash: await bcrypt.hash(fields.password, 12), role: fields.role});
+            const id = await this.repo.create({email, name, passwordHash: await bcrypt.hash(fields.password, 12), role: fields.role, mustChangePassword: fields.mustChangePassword});
             return (await this.repo.findById(id))!;
         } catch (error: any) {
             if (error?.code === "23505") {
@@ -397,6 +400,37 @@ export class AdminAuthService {
         }
         await this.repo.delete(id);
         return target;
+    }
+
+    /**
+     * First start with the portal on and no admin yet: creates one with a generated password that must be
+     * changed at first login. Called once at start-up; does nothing when any admin exists.
+     * @returns The new admin's login, or null when an admin already existed.
+     */
+    public async bootstrapFirstAdmin(): Promise<{email: string; password: string} | null> {
+        if ((await this.repo.count()) > 0) {
+            return null;
+        }
+        // 20 characters from an unambiguous alphabet, with one of each class so the password rules always hold.
+        const pick = (chars: string) => chars[crypto.randomInt(chars.length)];
+        const classes = ["ABCDEFGHJKLMNPQRSTUVWXYZ", "abcdefghijkmnpqrstuvwxyz", "23456789", "!@#$%^&*-_=+"];
+        const all = classes.join("");
+        const chars = [...classes.map(pick), ...Array.from({length: 16}, () => pick(all))];
+        for (let i = chars.length - 1; i > 0; i--) {
+            const j = crypto.randomInt(i + 1);
+            [chars[i], chars[j]] = [chars[j], chars[i]];
+        }
+        const password = chars.join("");
+        const email = "admin@vaultisse.local";
+        try {
+            await this.create({email, name: "Administrator", password, role: "superadmin", mustChangePassword: true});
+        } catch (error) {
+            if (error instanceof ConflictError) {
+                return null;
+            }
+            throw error;
+        }
+        return {email, password};
     }
 
     /**

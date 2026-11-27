@@ -37,6 +37,9 @@ CREATE TABLE admin_users
     password           TEXT                NOT NULL,
     role               VARCHAR(12)         NOT NULL DEFAULT 'superadmin' CHECK (role IN ('superadmin', 'readonly')),
     disabled           BOOLEAN             NOT NULL DEFAULT FALSE,
+    -- TRUE for the generated first admin and for admins created by another admin: the console makes
+    -- them choose their own password before anything else.
+    must_change_password BOOLEAN           NOT NULL DEFAULT FALSE,
     token_version      INT                 NOT NULL DEFAULT 0,
     -- Two-factor auth is mandatory: an admin without totp_enabled must enrol at first login.
     totp_secret        TEXT,

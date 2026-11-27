@@ -26,6 +26,16 @@ export const api = createAdminApiClient({
         state.admin = null;
         hooks.sessionExpired();
     },
-    onError: (error) => notify(errorMessage(error), "error"),
+    onError: (error) => {
+        // The forced password change is handled by the router, not by a toast.
+        if ((error.response?.data as {passwordChangeRequired?: boolean} | undefined)?.passwordChangeRequired) {
+            if (state.admin) {
+                state.admin.mustChangePassword = true;
+            }
+            hooks.sessionExpired();
+            return;
+        }
+        notify(errorMessage(error), "error");
+    },
     reauth: askReauth,
 });

@@ -6,6 +6,8 @@ export interface AdminContext {
     email: string;
     name: string;
     role: AdminRole;
+    /** The admin must choose a new password before doing anything else. */
+    mustChangePassword: boolean;
     sessionId: number;
     /** When the session's fresh password+code verification lapses; null/past = dangerous actions need `/auth/reauth` first. */
     reauthUntil: Date | null;

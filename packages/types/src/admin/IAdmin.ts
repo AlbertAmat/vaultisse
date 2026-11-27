@@ -10,6 +10,8 @@ export interface IAdminSelf {
     email: string;
     name: string;
     role: AdminRole;
+    /** The admin must choose a new password before anything else (generated first admin, or created by another admin). */
+    mustChangePassword: boolean;
     /** Until when dangerous actions are unlocked by a fresh password + code check; null when locked. */
     reauthUntil: string | null;
 }
@@ -20,6 +22,7 @@ export interface IAdminUser {
     name: string;
     role: AdminRole;
     disabled: boolean;
+    mustChangePassword: boolean;
     totpEnabled: boolean;
     createdDate: string;
     lastLoginDate: string | null;

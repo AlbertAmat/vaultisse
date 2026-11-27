@@ -10,6 +10,7 @@ export interface AdminUserRow {
     name: string;
     role: AdminRole;
     disabled: boolean;
+    mustChangePassword: boolean;
     tokenVersion: number;
     totpEnabled: boolean;
     createdDate: Date;
@@ -33,7 +34,7 @@ export interface AdminSessionRow {
     reauthUntil: Date | null;
 }
 
-const PUBLIC_COLUMNS = `id, email, name, role, disabled, token_version AS "tokenVersion", totp_enabled AS "totpEnabled",
+const PUBLIC_COLUMNS = `id, email, name, role, disabled, must_change_password AS "mustChangePassword", token_version AS "tokenVersion", totp_enabled AS "totpEnabled",
                         created_date AS "createdDate", last_login_date AS "lastLoginDate"`;
 
 /** Hash stored for a backup code. */
@@ -97,10 +98,10 @@ export class AdminUserRepository {
      * @returns The new admin's id.
      * @throws The raw pg error (23505 on a duplicate email).
      */
-    public async create(fields: {email: string; name: string; passwordHash: string; role: AdminRole}): Promise<number> {
+    public async create(fields: {email: string; name: string; passwordHash: string; role: AdminRole; mustChangePassword?: boolean}): Promise<number> {
         const result = await this.db.query(
-            `INSERT INTO admin_users (email, name, password, role) VALUES ($1, $2, $3, $4) RETURNING id`,
-            [fields.email, fields.name, fields.passwordHash, fields.role]
+            `INSERT INTO admin_users (email, name, password, role, must_change_password) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+            [fields.email, fields.name, fields.passwordHash, fields.role, fields.mustChangePassword ?? false]
         );
         return result.rows[0].id;
     }
@@ -124,11 +125,11 @@ export class AdminUserRepository {
      * @param id Admin id.
      * @param passwordHash New bcrypt hash.
      */
-    public async setPassword(id: number, passwordHash: string): Promise<number> {
+    public async setPassword(id: number, passwordHash: string, mustChangePassword: boolean = false): Promise<number> {
         const result = await this.db.query(
-            `UPDATE admin_users SET password = $2, token_version = token_version + 1, failed_login_count = 0, lockout_until = NULL
+            `UPDATE admin_users SET password = $2, must_change_password = $3, token_version = token_version + 1, failed_login_count = 0, lockout_until = NULL
               WHERE id = $1 RETURNING token_version AS "tokenVersion"`,
-            [id, passwordHash]
+            [id, passwordHash, mustChangePassword]
         );
         return result.rows[0].tokenVersion;
     }
@@ -140,6 +141,12 @@ export class AdminUserRepository {
     public async delete(id: number): Promise<boolean> {
         const result = await this.db.query("DELETE FROM admin_users WHERE id = $1", [id]);
         return (result.rowCount ?? 0) > 0;
+    }
+
+    /** @returns Number of admin accounts of any kind. */
+    public async count(): Promise<number> {
+        const result = await this.db.query("SELECT COUNT(*)::int AS total FROM admin_users");
+        return result.rows[0].total;
     }
 
     /** @returns Number of enabled superadmins (so the last one can't be removed). */

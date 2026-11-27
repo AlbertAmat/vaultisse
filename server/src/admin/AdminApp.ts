@@ -22,7 +22,7 @@ import {Logger} from "../utils/Logger";
 import {ADMIN_DIST_DIR} from "../utils/Paths";
 import {AdminConfig} from "./AdminConfig";
 import {MailLogRepository} from "./repositories/MailLogRepository";
-import {ipAllowlist, requireAdmin, sameOriginOnly} from "./middleware";
+import {blockUntilPasswordChanged, ipAllowlist, requireAdmin, sameOriginOnly} from "./middleware";
 import {authRoutes} from "./routes/AuthRoutes";
 import {deletionsRoutes} from "./routes/DeletionsRoutes";
 import {logsRoutes} from "./routes/LogsRoutes";
@@ -110,6 +110,7 @@ export class AdminApp {
         // Unauthenticated: login and second factor. Everything else needs a valid admin session.
         app.use("/api/admin/auth", authRoutes(this.auth, this.audit));
         app.use("/api/admin", requireAdmin(this.auth));
+        app.use("/api/admin", blockUntilPasswordChanged);
         app.use("/api/admin", overviewAndAdminsRoutes(this.pool, this.auth, this.audit));
         app.use("/api/admin", settingsRoutes(this.audit));
         app.use("/api/admin/users", usersRoutes(this.pool, this.audit, this.deletions));
@@ -151,6 +152,8 @@ export class AdminApp {
         console.log(`Admin portal started at http://localhost:${port}${this.config.url ? ` (public: ${this.config.url})` : ""}.`);
         this.logger.info(`Admin portal running on port ${port};`);
 
+        await this.ensureFirstAdmin(port);
+
         if (!process.env.SETTINGS_ENCRYPTION_KEY?.trim()) {
             this.logger.warn("SETTINGS_ENCRYPTION_KEY is not set: secrets saved in the admin portal are encrypted with a key derived from JWT_SECRET. Set a dedicated SETTINGS_ENCRYPTION_KEY (and keep it stable).");
         }
@@ -160,6 +163,40 @@ export class AdminApp {
         first.unref();
         hourly.unref();
         this.timers.push(first, hourly);
+    }
+
+    /**
+     * The first time the portal runs there is nobody who could sign in, so one admin is created with a generated
+     * password, printed once in the container's output (not in the log file the portal can display). That
+     * admin must change the password at first login.
+     * @param port Port the portal listens on, for the sign-in address in the message.
+     * @returns The generated login, or null when an admin already existed.
+     */
+    public async ensureFirstAdmin(port: number): Promise<{email: string; password: string} | null> {
+        const created = await this.auth.bootstrapFirstAdmin();
+        if (created) {
+            const where = this.config.url ?? `http://localhost:${port}`;
+            const line = "=".repeat(68);
+            console.log([
+                "",
+                line,
+                "  ADMIN PORTAL - first start",
+                "",
+                "  The portal is on and had no administrator, so one was created:",
+                "",
+                `      username: ${created.email}`,
+                `      password: ${created.password}`,
+                "",
+                `  Sign in at ${where}`,
+                "  CHANGE THIS PASSWORD AFTER THE FIRST LOGIN: you will be asked to.",
+                "  It is shown only this once. If you lose it, run:",
+                "    node index.js admin:reset --email " + created.email,
+                line,
+                "",
+            ].join("\n"));
+            this.logger.warn("Admin portal: the first administrator was created; its generated password was printed to the container output.");
+        }
+        return created;
     }
 
     /** Hourly housekeeping: carry out deletions whose grace period is over, drop old events and sessions. */
