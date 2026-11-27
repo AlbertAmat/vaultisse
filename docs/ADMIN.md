@@ -54,8 +54,6 @@ not enforced. The server behaves exactly as before, configured by env vars alone
    ```
    It lists the port and every address of the machine (and `ADMIN_URL`). In Docker,
    those IPs are the container's own: from the host use `localhost` and the published port.
-   ```text
-   ```
 4. Open the portal and sign in with it. Set up two-factor authentication (mandatory,
    save the backup codes it shows once), then the console **makes you choose your
    own password** before anything else works. The same applies to every admin
