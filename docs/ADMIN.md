@@ -624,7 +624,7 @@ when that time passes without a notification date. Incidents are closed, never d
 **Access review.** Confirm every few months that each admin still needs access (A.5.18). Admins never reviewed
 or not reviewed for 180 days are flagged. The date and the reviewer are stored on the admin account.
 
-Added to the database for this (all in the v1.4.0 upgrade): `compliance_controls`, `compliance_register`,
+Added to the database for this (all in the v1.3.9 upgrade): `compliance_controls`, `compliance_register`,
 `security_incidents`, and `admin_users.access_reviewed_at` / `access_reviewed_by`.
 
 ## System page
@@ -912,7 +912,7 @@ npm run dev:admin       # the console on http://localhost:5174, proxying /api/ad
 The tests live in `server/test/routes/AdminPortal.test.ts` (the portal on),
 `AdminDisabled.test.ts` (the portal off must change nothing) and
 `server/test/admin/AdminUnits.test.ts`. Schema changes are in
-`assets/db/upgrade/1.4.0.sql` and `assets/db/databaseSchema.sql`.
+`assets/db/upgrade/1.3.9.sql` and `assets/db/databaseSchema.sql`.
 
 ### Reading the code
 

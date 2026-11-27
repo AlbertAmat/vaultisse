@@ -1,7 +1,7 @@
 # Making the Vaultisse videos (instructions for Claude Code)
 
 This file is the playbook for **Claude Code**. When the owner says something like *"make a video about the admin panel setup"* or
-*"make the release video for v1.4.0"*, follow this file from top to bottom. It produces a finished video, its YouTube texts,
+*"make the release video for v1.3.9"*, follow this file from top to bottom. It produces a finished video, its YouTube texts,
 subtitles in four languages and a cover image, and **uploads it to the owner's YouTube channel** with the settings below.
 
 > **Run it on the owner's computer.** The videos, the subtitles and the YouTube credentials live on the owner's machine, never in this
@@ -35,7 +35,7 @@ subtitles in four languages and a cover image, and **uploads it to the owner's Y
 
 The title, the first words of the narration, the description and the tags are written for **search**, so someone who types the question finds this video:
 
-- The title says the exact task in the words people type, as a short phrase (see section 4): `𝗦𝗲𝘁𝘂𝗽: How to set up email (SMTP) in Vaultisse — v1.4.0`.
+- The title says the exact task in the words people type, as a short phrase (see section 4): `𝗦𝗲𝘁𝘂𝗽: How to set up email (SMTP) in Vaultisse — v1.3.9`.
 - The key phrase appears in the title, in the first sentence of the description, in the first sentence spoken, in a tag, and in the file names of the transcript.
 - One video answers one query. Do not mix two topics in one title.
 
@@ -45,10 +45,10 @@ The title, the first words of the narration, the description and the tags are wr
 
 - Output directory: `VIDEO_OUTPUT_DIR` (default `~/Vaultisse-Videos`). Read it from `~/.config/vaultisse-video/config.env`
   (template: [`config.example.env`](config.example.env)).
-- **One folder per video**, named `<yyyy-mm-dd>_<slug>_v<version>`, for example `2026-11-27_admin-panel-setup_v1.4.0`:
+- **One folder per video**, named `<yyyy-mm-dd>_<slug>_v<version>`, for example `2026-11-27_admin-panel-setup_v1.3.9`:
 
 ```
-~/Vaultisse-Videos/2026-11-27_admin-panel-setup_v1.4.0/
+~/Vaultisse-Videos/2026-11-27_admin-panel-setup_v1.3.9/
 ├── video.mp4                  the finished video (intro + main + outro, subtitles NOT burned in)
 ├── cover.png                  the YouTube cover, 1280x720, under 2 MB
 ├── README.md                  the YouTube texts: title, description, tags, chapters (see section 4)
@@ -74,7 +74,7 @@ Every title ends with the version the video belongs to.
 
 - Use the version the owner names. If none is named, use `version` in the repository's root `package.json` (the release anchor).
 - A feature not released yet belongs to the next version (the database upgrade file `assets/db/upgrade/<version>.sql` names it).
-- The same text appears in the folder name (`..._v1.4.0`), the title and the description.
+- The same text appears in the folder name (`..._v1.3.9`), the title and the description.
 
 ## 4. The YouTube texts (`README.md` inside the video folder)
 
@@ -84,7 +84,7 @@ Write this file so the owner can read it, and so the upload step can read it. Us
 # <title>
 
 ## Title
-𝗔𝗱𝗺𝗶𝗻 𝗽𝗮𝗻𝗲𝗹: Set it up and sign in for the first time — v1.4.0
+𝗔𝗱𝗺𝗶𝗻 𝗽𝗮𝗻𝗲𝗹: Set it up and sign in for the first time — v1.3.9
 
 ## Description
 <see the template below>
@@ -116,7 +116,7 @@ Playlist: Setup            <- from the playlist map in config.env, if any
 
 **Title rules**
 
-1. It **starts with the topic in bold followed by a colon**, then what is explained: `𝗦𝗲𝘁𝘂𝗽: Install Vaultisse with Docker — v1.4.0`.
+1. It **starts with the topic in bold followed by a colon**, then what is explained: `𝗦𝗲𝘁𝘂𝗽: Install Vaultisse with Docker — v1.3.9`.
    YouTube titles cannot be formatted, so the bold is made with Unicode bold letters (𝗦𝗲𝘁𝘂𝗽 = Mathematical Sans-Serif Bold, U+1D5D4 to U+1D5ED
    for A-Z and U+1D5EE to U+1D607 for a-z; digits U+1D7EC to U+1D7F5). Convert the topic word(s) only, not the whole title.
 2. It **ends with the version**: ` — v<version>`.
@@ -324,7 +324,7 @@ Every row below is **several short videos of up to 3 minutes**, one precise thin
 | **Management** | One video each: approve a new account; merge two accounts; clear a vault; block an address; read the admin sign-in history; answer a GDPR request; set data retention; add a webhook | One precise task per video, named as people ask it. |
 | **End user** | Add a book by ISBN; organise with categories and locations; lend and return; print labels and library cards; import | Use the app itself, not the admin panel. |
 | **Promo** | A 60 to 90 second trailer | No narration walk-through: short on-screen lines, music from `VIDEO_MUSIC_DIR`, the best five moments of the app, a clear call to action. |
-| **Release** | "What's new in v1.4.0" | At most 4 highlights, one slide and about 20 seconds each; the upgrade note in the last seconds ("upgrading is `docker compose pull && docker compose up -d`"); link the release notes. A release with more highlights gets one short video per big feature, plus this overview. |
+| **Release** | "What's new in v1.3.9" | At most 4 highlights, one slide and about 20 seconds each; the upgrade note in the last seconds ("upgrading is `docker compose pull && docker compose up -d`"); link the release notes. A release with more highlights gets one short video per big feature, plus this overview. |
 
 ## 13. What not to do
 

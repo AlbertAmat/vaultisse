@@ -2996,7 +2996,7 @@ VALUES ('en', 'PRINT_ADD_PENDING', 'Add unprinted labels'),
        ('de', 'SNACKBAR_PENDING_LABELS_MORE', 'Hinzugefügt: {count}. Drucken und erneut hinzufügen: noch {remaining} ausstehend');
 
 -- ============================================================
--- v1.4.0: optional admin portal (see assets/db/upgrade/1.4.0.sql)
+-- v1.3.9: optional admin portal (see assets/db/upgrade/1.3.9.sql)
 -- ============================================================
 
 -- ============================================================

@@ -54,7 +54,7 @@ describe("System page", () => {
         expect(database.largestTables[0].bytes).toBeGreaterThanOrEqual(database.largestTables[1].bytes);
 
         expect(migrations.total).toBeGreaterThan(5);
-        const mine = migrations.items.find((m: any) => m.filename === "1.4.0.sql");
+        const mine = migrations.items.find((m: any) => m.filename === "1.3.9.sql");
         expect(mine).toBeTruthy();
         expect(Date.now() - new Date(mine.appliedAt).getTime()).toBeLessThan(60 * 60 * 1000);
         expect(res.body.instanceUuid).toBe(appService.getInstanceUuid());
@@ -274,7 +274,7 @@ describe("admin notifications", () => {
         try {
             await (notifier() as any).announceStartup(new Date(Date.now() - 60 * 60 * 1000));
             const call = send.mock.calls.find((c) => /server started/.test(c[1]));
-            expect(call![2]).toContain("1.4.0.sql");
+            expect(call![2]).toContain("1.3.9.sql");
         } finally {
             await setSettings(admin, {ADMIN_NOTIFY_STARTUP: null});
             await mailOff(admin);
