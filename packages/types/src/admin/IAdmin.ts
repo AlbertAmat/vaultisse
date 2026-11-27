@@ -82,6 +82,8 @@ export interface ISettingGroup {
 export type SettingChanges = Record<string, string | null>;
 
 export interface ISystemInfo {
+    /** This installation's permanent random id. */
+    instanceUuid: string;
     version: string;
     node: string;
     uptimeSeconds: number;

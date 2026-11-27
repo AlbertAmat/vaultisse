@@ -27,6 +27,19 @@ export class SettingsRepository {
     }
 
     /**
+     * The installation's permanent id (`INSTANCE_UUID`), created here when missing - normally the
+     * migration already made it. Concurrent starts end up with the same value.
+     * @returns The id.
+     */
+    public async ensureInstanceUuid(): Promise<string> {
+        await this.db.query(
+            "INSERT INTO app_settings (key, value) VALUES ('INSTANCE_UUID', gen_random_uuid()::text) ON CONFLICT (key) DO NOTHING"
+        );
+        const result = await this.db.query("SELECT value FROM app_settings WHERE key = 'INSTANCE_UUID'");
+        return result.rows[0].value;
+    }
+
+    /**
      * Inserts or replaces one override.
      * @param key Setting key.
      * @param value Stored value (encrypted for secrets).

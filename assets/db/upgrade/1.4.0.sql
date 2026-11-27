@@ -206,3 +206,13 @@ CREATE TABLE mail_log
     created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_mail_log_created ON mail_log (created_date DESC);
+
+-- ============================================================
+-- Instance identity
+-- ============================================================
+
+-- A random id generated once per installation (new installs and upgrades alike), to tell instances
+-- apart in the future. Never changed afterwards and not editable from the admin portal. Exists
+-- whether or not the portal is enabled; the server also recreates it on start if it is missing.
+INSERT INTO app_settings (key, value) VALUES ('INSTANCE_UUID', gen_random_uuid()::text)
+ON CONFLICT (key) DO NOTHING;

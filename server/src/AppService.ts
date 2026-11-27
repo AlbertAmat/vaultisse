@@ -31,6 +31,7 @@ import {TrafficMonitor} from "./admin/services/TrafficMonitor";
 import {BlockedIpService} from "./admin/services/BlockedIpService";
 import {AdminApp} from "./admin/AdminApp";
 import {MailLogRepository} from "./admin/repositories/MailLogRepository";
+import {SettingsRepository} from "./admin/repositories/SettingsRepository";
 import {OidcRepository} from "./repositories/OidcRepository";
 import {rateLimited} from "./middlewares/RateLimitHandler";
 
@@ -183,6 +184,9 @@ export class AppService {
      * @private
      */
     private readonly m_allowHttp: boolean;
+
+    /** See getInstanceUuid(). */
+    private m_instanceUuid = "";
 
     /** Max size (in MB) accepted for an ebook file upload; see MAX_EBOOK_FILE_SIZE_MB. */
     private m_maxEbookFileSizeMb = 10;
@@ -385,6 +389,8 @@ export class AppService {
             process.exit(1);
         }
 
+        this.m_instanceUuid = await new SettingsRepository(this.m_databasePool).ensureInstanceUuid();
+
         if (this.m_adminConfig.enabled) {
             // Portal-managed settings take effect from here on. A bad stored value must not stop the
             // server from starting - it keeps the env-var configuration and says so in the log.
@@ -484,6 +490,11 @@ export class AppService {
     /** Whether a new account must be approved by an admin before it can log in (REGISTRATION_REQUIRES_APPROVAL). */
     public requiresRegistrationApproval(): boolean {
         return this.m_requiresApproval;
+    }
+
+    /** This installation's permanent random id (`INSTANCE_UUID` in `app_settings`), set once the database is ready. */
+    public getInstanceUuid(): string {
+        return this.m_instanceUuid;
     }
 
     /** Bootstrap config of the optional admin portal. */

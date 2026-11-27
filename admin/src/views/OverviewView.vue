@@ -40,6 +40,7 @@
 			<div class="text-subtitle-1 font-weight-medium mb-3">System</div>
 			<v-row dense>
 				<v-col cols="6" md="3"><div class="text-caption text-medium-emphasis">Version</div><div class="mono">{{ system.version }}</div></v-col>
+				<v-col cols="12" md="6"><div class="text-caption text-medium-emphasis">Instance id</div><div class="mono" style="word-break: break-all">{{ system.instanceUuid }}</div></v-col>
 				<v-col cols="6" md="3"><div class="text-caption text-medium-emphasis">Uptime</div>{{ duration(system.uptimeSeconds) }}</v-col>
 				<v-col cols="6" md="3"><div class="text-caption text-medium-emphasis">Database</div>
 					<v-chip size="small" :color="system.database === 'ok' ? 'success' : 'error'" variant="tonal">{{ system.database }} · {{ system.databaseLatencyMs }} ms</v-chip>

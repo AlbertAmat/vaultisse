@@ -24,6 +24,21 @@ describe("admin portal switched off", () => {
         expect(res.body.items).toBeUndefined();
     });
 
+    it("still has an instance id, which is recreated if the row is missing", async () => {
+        const pool = appService.getDatabasePool();
+        const id = appService.getInstanceUuid();
+        expect(id).toMatch(/^[0-9a-f-]{36}$/);
+        expect((await pool.query("SELECT value FROM app_settings WHERE key = 'INSTANCE_UUID'")).rows[0].value).toBe(id);
+        const {SettingsRepository} = await import("../../src/admin/repositories/SettingsRepository");
+        // Present: unchanged. Missing: a new one is created and then stays.
+        expect(await new SettingsRepository(pool).ensureInstanceUuid()).toBe(id);
+        await pool.query("DELETE FROM app_settings WHERE key = 'INSTANCE_UUID'");
+        const fresh = await new SettingsRepository(pool).ensureInstanceUuid();
+        expect(fresh).toMatch(/^[0-9a-f-]{36}$/);
+        expect(await new SettingsRepository(pool).ensureInstanceUuid()).toBe(fresh);
+        await pool.query("UPDATE app_settings SET value = $1 WHERE key = 'INSTANCE_UUID'", [id]);
+    });
+
     it("ignores settings stored in the database", async () => {
         await appService.getDatabasePool().query("INSERT INTO app_settings (key, value) VALUES ('REGISTRATION_ENABLED', 'false') ON CONFLICT (key) DO UPDATE SET value = 'false'");
         try {

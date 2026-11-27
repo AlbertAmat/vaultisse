@@ -163,6 +163,19 @@ describe("admin portal: settings without env vars", () => {
         expect((await admin.agent.post("/api/admin/settings/test-email").send({to: "not-an-email"})).status).toBe(400);
     });
 
+    it("has a permanent instance id that the portal can't change", async () => {
+        const admin = await createLoggedInAdmin(apps.admin());
+        const id = (await admin.agent.get("/api/admin/system")).body.instanceUuid;
+        expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+        expect(appService.getInstanceUuid()).toBe(id);
+        expect((await pool().query("SELECT value FROM app_settings WHERE key = 'INSTANCE_UUID'")).rows[0].value).toBe(id);
+        await admin.reauth();
+        expect((await admin.agent.put("/api/admin/settings").send({changes: {INSTANCE_UUID: "x"}})).status).toBe(400);
+        // Not part of the editable settings list either.
+        const listed = (await admin.agent.get("/api/admin/settings")).body.groups.flatMap((g: any) => g.items);
+        expect(listed.some((item: any) => item.key === "INSTANCE_UUID")).toBe(false);
+    });
+
     it("rejects unknown keys and malformed values", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
         expect((await admin.agent.put("/api/admin/settings").send({changes: {JWT_SECRET: "x"}})).status).toBe(400);

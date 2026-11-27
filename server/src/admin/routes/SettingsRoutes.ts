@@ -89,6 +89,7 @@ export function settingsRoutes(audit: AdminAuditService): Router {
         const memory = process.memoryUsage();
         const admin = appService.getAdminConfig();
         res.json({
+            instanceUuid: appService.getInstanceUuid(),
             version: process.env.APP_VERSION || "dev",
             node: process.version,
             uptimeSeconds: Math.floor(process.uptime()),

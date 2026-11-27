@@ -101,6 +101,7 @@
 				they are needed before the database can be reached, or only take effect at start-up. See <span class="mono">docs/ADMIN.md</span>.
 			</p>
 			<div v-if="system" class="d-flex flex-wrap ga-2 mt-3">
+				<v-chip size="small" variant="tonal" class="mono">Instance id {{ system.instanceUuid }}</v-chip>
 				<v-chip size="small" variant="tonal">API port {{ system.bootstrap.apiPort ?? "—" }}</v-chip>
 				<v-chip size="small" variant="tonal">Admin port {{ system.bootstrap.adminPort }}</v-chip>
 				<v-chip size="small" variant="tonal">Public URL {{ system.bootstrap.frontEndUrl ?? "—" }}</v-chip>

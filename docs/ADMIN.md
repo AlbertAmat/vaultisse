@@ -124,6 +124,12 @@ knows whether one is set. If the encryption key changes, stored secrets can't be
 read and must be entered again (the page says so). Changing a secret, or anything
 under single sign-on, asks for a fresh password + code check first.
 
+**Instance id.** Every installation has a permanent random id, `INSTANCE_UUID`, stored in
+`app_settings`. It is created automatically, by the migration for upgrades and by the schema
+for new installs (and again on start if the row was ever removed), whether or not the portal
+is on. It is shown under *Overview* and *Settings* and can't be edited; it exists so an
+installation can be recognised in the future.
+
 **Not editable here**, because they are needed before the database is reachable or
 only take effect at start-up: the database connection, ports, `JWT_SECRET`, proxy
 trust, CSP-related flags, `ADMIN_*`, `DEMO_MODE`. They are shown read-only.
