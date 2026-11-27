@@ -22,8 +22,9 @@ afterEach(() => jest.restoreAllMocks());
 
 type Admin = Awaited<ReturnType<typeof createLoggedInAdmin>>;
 const setSettings = (admin: Admin, changes: Record<string, string | null>) => admin.agent.put("/api/admin/settings").send({changes});
-const mailOn = (admin: Admin) => setSettings(admin, {SMTP_HOST: "smtp.example.invalid", SMTP_FROM: "Vaultisse <a@example.com>"});
-const mailOff = (admin: Admin) => setSettings(admin, {SMTP_HOST: null, SMTP_FROM: null});
+// Changing the mail server needs a fresh password + code, like a secret.
+const mailOn = async (admin: Admin) => { await admin.reauth(); return setSettings(admin, {SMTP_HOST: "smtp.example.invalid", SMTP_FROM: "Vaultisse <a@example.com>"}); };
+const mailOff = async (admin: Admin) => { await admin.reauth(); return setSettings(admin, {SMTP_HOST: null, SMTP_FROM: null}); };
 const history = async (admin: Admin) => (await admin.agent.get("/api/admin/notifications/history").query({pageSize: 100})).body.items as any[];
 const waitFor = async <T>(read: () => Promise<T | undefined>): Promise<T> => {
     for (let i = 0; i < 40; i++) {

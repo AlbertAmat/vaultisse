@@ -18,7 +18,7 @@ const success = (ip: string, email: string, ago = "1 hour") =>
 describe("admin sign-in history", () => {
     it("shows an address from Russia with five failed attempts, where it is, what it tried and whether it is blocked", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
-        const ip = `95.173.${100 + Math.floor(Math.random() * 100)}.${1 + Math.floor(Math.random() * 200)}`;
+        const ip = RU;
         for (const email of ["admin@vaultisse.local", "admin@vaultisse.local", "root@example.com", "administrator@example.com", "admin@vaultisse.local"]) await failure(ip, email, "password", "20 minutes");
         await success(GB, "owner@example.com");
 
@@ -48,7 +48,7 @@ describe("admin sign-in history", () => {
 
     it("lists the individual attempts with filters, and a day view by the hour", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
-        const ip = `5.255.${100 + Math.floor(Math.random() * 100)}.${1 + Math.floor(Math.random() * 200)}`;
+        const ip = RU2;
         await failure(ip, "a@example.com", "password", "5 minutes");
         await failure(ip, "a@example.com", "second factor", "4 minutes");
         await success(ip, "a@example.com", "3 minutes");
@@ -67,7 +67,7 @@ describe("admin sign-in history", () => {
 
     it("counts the attempts the rate limiter refused, even from an address that never reached the password check", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
-        const ip = `77.88.${100 + Math.floor(Math.random() * 100)}.${1 + Math.floor(Math.random() * 200)}`;
+        const ip = "77.88.55.60";
         await pool().query("INSERT INTO security_events (type, ip_address, bucket, count, detail) VALUES ('rate_limited', $1, date_trunc('minute', now()), 12, 'admin-login')", [ip]);
         const res = await admin.agent.get("/api/admin/admin-signins").query({days: 7});
         expect(res.body.sources.find((s: any) => s.ip === ip)).toMatchObject({failed: 0, limited: 12, suspicious: true, country: "RU"});
@@ -76,7 +76,7 @@ describe("admin sign-in history", () => {
 
     it("records real failed attempts through the sign-in page, so an attack is visible straight away", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
-        const ip = `178.154.${100 + Math.floor(Math.random() * 100)}.${1 + Math.floor(Math.random() * 200)}`;
+        const ip = "178.154.131.215";
         for (let i = 0; i < 5; i++) {
             const res = await request(apps.admin()).post("/api/admin/auth/login").set("X-Forwarded-For", ip).send({email: `ghost${i}@example.com`, password: "Wrong-Passw0rd!x"});
             expect(res.status).toBe(401);
@@ -93,7 +93,7 @@ describe("admin sign-in history", () => {
 
     it("tells the admins who is attacking: addresses, places and how many emails were tried", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
-        const ip = `213.180.${100 + Math.floor(Math.random() * 100)}.${1 + Math.floor(Math.random() * 200)}`;
+        const ip = "213.180.193.1";
         for (let i = 0; i < 4; i++) await failure(ip, `target${i}@example.com`, "password", "2 minutes");
         await pool().query("INSERT INTO security_events (type, ip_address, bucket, count) VALUES ('admin_login_failed', $1, date_trunc('minute', now()), 4)", [ip]);
         const notify = jest.spyOn(appService.getNotifier(), "notify").mockResolvedValue(true);

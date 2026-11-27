@@ -150,6 +150,7 @@ describe("inactive accounts preview", () => {
         await age(users.far.userCode, 2);
         await age(users.disabled.userCode, 40);
         await pool().query("UPDATE users SET disabled = TRUE WHERE code = $1", [users.disabled.userCode]);
+        await admin.reauth();
         await setSettings(admin, {SMTP_HOST: "smtp.example.invalid", SMTP_FROM: "a@example.com"});
         await setSettings(admin, {ACCOUNT_INACTIVITY_DAYS: "30", ACCOUNT_DELETION_NOTICE_DAYS: "7"});
         try {
@@ -184,6 +185,7 @@ describe("inactive accounts preview", () => {
             expect((await readonly.agent.get("/api/admin/inactivity")).status).toBe(200);
             expect((await readonly.agent.post(`/api/admin/inactivity/${id}/keep`).send({})).status).toBe(403);
         } finally {
+            await admin.reauth();
             await setSettings(admin, {ACCOUNT_INACTIVITY_DAYS: null, ACCOUNT_DELETION_NOTICE_DAYS: null, SMTP_HOST: null, SMTP_FROM: null});
         }
         const off = (await admin.agent.get("/api/admin/inactivity")).body;

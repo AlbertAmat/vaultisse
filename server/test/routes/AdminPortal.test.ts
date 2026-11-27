@@ -130,14 +130,17 @@ describe("admin portal: settings without env vars", () => {
         const admin = await createLoggedInAdmin(apps.admin());
         expect(appService.getMailService().isEnabled()).toBe(false);
 
+        await admin.reauth();
         const half = await admin.agent.put("/api/admin/settings").send({changes: {SMTP_HOST: "smtp.example.invalid"}});
         expect(half.status).toBe(400);
         expect(appService.getMailService().isEnabled()).toBe(false);
 
+        await admin.reauth();
         const full = await admin.agent.put("/api/admin/settings").send({changes: {SMTP_HOST: "smtp.example.invalid", SMTP_FROM: "Vaultisse <a@example.com>"}});
         expect(full.status).toBe(200);
         expect(appService.getMailService().isEnabled()).toBe(true);
 
+        await admin.reauth();
         await admin.agent.put("/api/admin/settings").send({changes: {SMTP_HOST: null, SMTP_FROM: null}});
         expect(appService.getMailService().isEnabled()).toBe(false);
     });
