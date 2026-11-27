@@ -93,7 +93,7 @@ const dialog = computed({
 	set: (val: boolean) => emit('update:modelValue', val),
 });
 
-const form = reactive<ICardSettings>({field1_label: null, field1_value: null, field2_label: null, field2_value: null, background: null});
+const form = reactive<ICardSettings>({field1_label: null, field1_value: null, field2_label: null, field2_value: null, background: null, photos_allowed: false});
 const loading = ref(true);
 let backgroundFile: File | null = null;
 let backgroundRemoved = false;

@@ -6,6 +6,8 @@ export interface ICardSettings {
     field2_value: string | null;
     /** Background image as a data URI, or null. */
     background: string | null;
+    /** False for a public institution: cards carry no photo and no space for one. */
+    photos_allowed: boolean;
 }
 
 /** One customer's card data. */

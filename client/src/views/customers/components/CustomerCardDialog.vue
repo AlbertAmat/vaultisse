@@ -22,6 +22,7 @@
 				<v-row v-else>
 					<v-col cols="12" md="4">
 						<v-file-input
+							v-if="settings?.photos_allowed"
 							:label="t(AppLabels.CARD_PHOTO)"
 							accept="image/png,image/jpeg"
 							density="compact"
@@ -30,7 +31,7 @@
 							@update:model-value="pickPhoto"
 						/>
 						<v-btn
-							v-if="card.photo"
+							v-if="settings?.photos_allowed && card.photo"
 							@click="removePhoto()"
 							variant="text"
 							color="error"
@@ -84,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-/** One customer's library card: set the photo and member-since date, preview it, download it for printing. */
+/** One customer's library card: set the photo (not for public institutions) and member-since date, preview it, download it for printing. */
 import {computed, onMounted, ref, Ref} from "vue";
 import {useI18n} from "vue-i18n";
 import {ICardSettings, ICustomerCard} from "@vaultisse/types/customer/ICustomerCard";

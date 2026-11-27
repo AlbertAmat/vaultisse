@@ -9,7 +9,7 @@ import {LoanHistoryRepository} from "../repositories/LoanHistoryRepository";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {withTransaction} from "../repositories/withTransaction";
 import {CardSettingsFields, CustomerCardRow} from "../types/customerCard";
-import {ConflictError, NotFoundError, ValidationError} from "../errors/DomainError";
+import {ConflictError, ForbiddenError, NotFoundError, ValidationError} from "../errors/DomainError";
 import {FileSignature} from "../utils/FileSignature";
 
 /** Longest label/value that still fits on a card (matches the column sizes). */
@@ -54,18 +54,30 @@ export class CustomerCardService {
     /**
      * Converts a stored card row to the response shape.
      * @param row Card row.
+     * @param photosAllowed False for a public institution, which never gets a stored photo back.
      * @returns The card, with the photo as a data URI.
      */
-    private toCard(row: CustomerCardRow) {
-        return {...row, photo: this.dataUri(row.photo)};
+    private toCard(row: CustomerCardRow, photosAllowed: boolean) {
+        return {...row, photo: photosAllowed ? this.dataUri(row.photo) : null};
+    }
+
+    /**
+     * Whether customer photos may be used.
+     * @param vaultId Vault id.
+     * @param userId Caller's id.
+     * @returns False for a public institution.
+     */
+    private async photosAllowed(vaultId: number, userId: number): Promise<boolean> {
+        return !(await new CustomerCardRepository(this.pool).isPublicInstitution(vaultId, userId));
     }
 
     /**
      * Reads a vault's card settings.
      * @param vaultId Vault id.
-     * @returns The two fields and background (all null when never set up).
+     * @param userId Caller's id.
+     * @returns The two fields and background (all null when never set up), and whether cards carry photos.
      */
-    public async getSettings(vaultId: number) {
+    public async getSettings(vaultId: number, userId: number) {
         const row = await new CustomerCardRepository(this.pool).findSettings(vaultId);
         return {
             field1_label: row?.field1_label ?? null,
@@ -73,19 +85,21 @@ export class CustomerCardService {
             field2_label: row?.field2_label ?? null,
             field2_value: row?.field2_value ?? null,
             background: this.dataUri(row?.background ?? null),
+            photos_allowed: await this.photosAllowed(vaultId, userId),
         };
     }
 
     /**
      * Saves a vault's card settings.
      * @param vaultId Vault id.
+     * @param userId Caller's id.
      * @param body Form fields; blank values are stored as empty.
      * @param background Uploaded background, if any.
      * @param removeBackground Whether to drop the current background.
      * @returns The saved settings.
      * @throws ValidationError on a too-long field or a bad image.
      */
-    public async saveSettings(vaultId: number, body: Record<string, unknown>, background: Buffer | undefined, removeBackground: boolean) {
+    public async saveSettings(vaultId: number, userId: number, body: Record<string, unknown>, background: Buffer | undefined, removeBackground: boolean) {
         const read = (name: keyof CardSettingsFields, max: number): string | null => {
             const value = typeof body[name] === "string" ? (body[name] as string).trim() : "";
             if (value.length > max) {
@@ -100,35 +114,41 @@ export class CustomerCardService {
             field2_value: read("field2_value", MAX_VALUE),
         };
         await new CustomerCardRepository(this.pool).saveSettings(vaultId, fields, this.imageChange(background, removeBackground));
-        return this.getSettings(vaultId);
+        return this.getSettings(vaultId, userId);
     }
 
     /**
      * Reads one customer's card.
      * @param vaultId Vault id.
+     * @param userId Caller's id.
      * @param customerId Customer id.
      * @returns The card.
      * @throws NotFoundError if the customer isn't in this vault.
      */
-    public async getCard(vaultId: number, customerId: number) {
+    public async getCard(vaultId: number, userId: number, customerId: number) {
         const row = await new CustomerCardRepository(this.pool).findCard(vaultId, {id: customerId});
         if (!row) {
             throw new NotFoundError("Customer not found");
         }
-        return this.toCard(row);
+        return this.toCard(row, await this.photosAllowed(vaultId, userId));
     }
 
     /**
      * Updates a customer's photo and/or member-since date.
      * @param vaultId Vault id.
+     * @param userId Caller's id.
      * @param customerId Customer id.
      * @param memberSince YYYY-MM-DD, or undefined/empty to keep it.
      * @param photo Uploaded photo, if any.
      * @param removePhoto Whether to drop the current photo.
      * @returns The updated card.
-     * @throws ValidationError on a bad date or image, NotFoundError if the customer isn't in this vault.
+     * @throws ValidationError on a bad date or image, ForbiddenError on a photo upload by a public institution, NotFoundError if the customer isn't in this vault.
      */
-    public async updateCard(vaultId: number, customerId: number, memberSince: unknown, photo: Buffer | undefined, removePhoto: boolean) {
+    public async updateCard(vaultId: number, userId: number, customerId: number, memberSince: unknown, photo: Buffer | undefined, removePhoto: boolean) {
+        if (photo && !(await this.photosAllowed(vaultId, userId))) {
+            throw new ForbiddenError("Public institutions can't store customer photos");
+        }
+
         let date: string | undefined;
         if (typeof memberSince === "string" && memberSince) {
             const parsed = new Date(`${memberSince}T00:00:00Z`);
@@ -142,47 +162,50 @@ export class CustomerCardService {
         if (!updated) {
             throw new NotFoundError("Customer not found");
         }
-        return this.getCard(vaultId, customerId);
+        return this.getCard(vaultId, userId, customerId);
     }
 
     /**
      * Everything the card-scan screen shows.
      * @param vaultId Vault id.
+     * @param userId Caller's id.
      * @param row The customer's card row.
      * @returns The card, current loans and history.
      */
-    private async activity(vaultId: number, row: CustomerCardRow) {
+    private async activity(vaultId: number, userId: number, row: CustomerCardRow) {
         const repo = new CustomerCardRepository(this.pool);
         const [loans, history] = await Promise.all([repo.listLoans(vaultId, row.id), repo.listHistory(vaultId, row.id)]);
-        return {customer: this.toCard(row), loans, history};
+        return {customer: this.toCard(row, await this.photosAllowed(vaultId, userId)), loans, history};
     }
 
     /**
      * Resolves a scanned card.
      * @param vaultId Vault id.
+     * @param userId Caller's id.
      * @param code The barcode content: the customer's uuid, with or without hyphens.
      * @returns The card, current loans and history.
      * @throws NotFoundError if it isn't a card of this vault.
      */
-    public async scan(vaultId: number, code: string) {
+    public async scan(vaultId: number, userId: number, code: string) {
         const hex = code.trim().replace(/-/g, "").toLowerCase();
         const row = /^[0-9a-f]{32}$/.test(hex) ? await new CustomerCardRepository(this.pool).findCard(vaultId, {uuid: hex}) : null;
         if (!row) {
             throw new NotFoundError("Card not found");
         }
-        return this.activity(vaultId, row);
+        return this.activity(vaultId, userId, row);
     }
 
     /**
      * Lends one scanned copy to a customer. Unlike the batch lend, only an
      * available copy is accepted, so a scan can never take over a loan.
      * @param vaultId Vault id.
+     * @param userId Caller's id.
      * @param customerId Customer id.
      * @param code Scanned stock code.
      * @returns The card, current loans and history.
      * @throws ValidationError if loans are off or no code was sent, NotFoundError for an unknown customer or copy, ConflictError if the copy isn't available.
      */
-    public async lend(vaultId: number, customerId: number, code: unknown) {
+    public async lend(vaultId: number, userId: number, customerId: number, code: unknown) {
         if (typeof code !== "string" || !code.trim()) {
             throw new ValidationError("No book code provided");
         }
@@ -207,6 +230,6 @@ export class CustomerCardService {
             await new LoanHistoryRepository(client).recordLoan(vaultId, stockCode, customerId);
         });
 
-        return this.activity(vaultId, row);
+        return this.activity(vaultId, userId, row);
     }
 }

@@ -83,24 +83,27 @@ export async function drawCustomerCard(canvas: HTMLCanvasElement, content: CardC
 	ctx.fillStyle = "rgba(255, 255, 255, 0.82)";
 	ctx.fillRect(30, 50, WIDTH - 60, 360);
 
-	// Photo, or a plain silhouette placeholder.
-	const box = {x: 50, y: 70, w: 250, h: 320};
-	if (photo) {
-		drawCover(ctx, photo, box.x, box.y, box.w, box.h);
-	} else {
-		ctx.fillStyle = "#e7ddcb";
-		ctx.fillRect(box.x, box.y, box.w, box.h);
-		ctx.fillStyle = "#b9ab90";
-		ctx.beginPath();
-		ctx.arc(box.x + box.w / 2, box.y + 120, 60, 0, Math.PI * 2);
-		ctx.fill();
-		// A new path, or a stray line would join the head to the shoulders.
-		ctx.beginPath();
-		ctx.ellipse(box.x + box.w / 2, box.y + box.h, 105, 110, 0, Math.PI, Math.PI * 2);
-		ctx.fill();
+	// Public institutions get no photo and no placeholder: the text takes the space.
+	if (settings.photos_allowed) {
+		// Photo, or a plain silhouette placeholder.
+		const box = {x: 50, y: 70, w: 250, h: 320};
+		if (photo) {
+			drawCover(ctx, photo, box.x, box.y, box.w, box.h);
+		} else {
+			ctx.fillStyle = "#e7ddcb";
+			ctx.fillRect(box.x, box.y, box.w, box.h);
+			ctx.fillStyle = "#b9ab90";
+			ctx.beginPath();
+			ctx.arc(box.x + box.w / 2, box.y + 120, 60, 0, Math.PI * 2);
+			ctx.fill();
+			// A new path, or a stray line would join the head to the shoulders.
+			ctx.beginPath();
+			ctx.ellipse(box.x + box.w / 2, box.y + box.h, 105, 110, 0, Math.PI, Math.PI * 2);
+			ctx.fill();
+		}
 	}
 
-	const x = 330;
+	const x = settings.photos_allowed ? 330 : 50;
 	const textWidth = WIDTH - x - 50;
 	ctx.textAlign = "left";
 	ctx.textBaseline = "top";

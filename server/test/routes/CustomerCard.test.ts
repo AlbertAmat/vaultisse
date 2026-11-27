@@ -56,6 +56,24 @@ describe("library cards", () => {
         await user.agent.put(`/api/rest/customer/${customerId}/card`).field("member_since", "2026-02-31").expect(400);
     });
 
+    it("refuses and hides photos for a public institution", async () => {
+        const url = `/api/rest/customer/${customerId}/card`;
+        const upload = () => user.agent.put(url).attach("photo", PNG, {filename: "me.png", contentType: "image/png"});
+        const flag = (on: boolean) => appService.getDatabasePool().query("UPDATE users SET is_public_institution = $1 WHERE code = $2", [on, user.userCode]);
+        await upload().expect(200);
+        expect((await user.agent.get("/api/rest/customer/card/settings")).body.photos_allowed).toBe(true);
+
+        await flag(true);
+        try {
+            expect((await user.agent.get("/api/rest/customer/card/settings")).body.photos_allowed).toBe(false);
+            expect((await user.agent.get(url)).body.photo).toBeNull();
+            await upload().expect(403);
+            await user.agent.put(url).field("member_since", "2025-01-01").expect(200);
+        } finally {
+            await flag(false);
+        }
+    });
+
     it("resolves a scanned card and lends only available copies", async () => {
         const {uuid} = (await user.agent.get(`/api/rest/customer/${customerId}/card`)).body;
         const scan = await user.agent.get(`/api/rest/customer/card/scan/${uuid.replace(/-/g, "").toUpperCase()}`);

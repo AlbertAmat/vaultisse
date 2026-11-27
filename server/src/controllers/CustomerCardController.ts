@@ -36,7 +36,7 @@ export class CustomerCardController {
      * @param res Express response.
      */
     public async getSettings(req: Request, res: Response): Promise<void> {
-        await this.respond(res, (service) => service.getSettings(appService.getSessionVault(req)));
+        await this.respond(res, (service) => service.getSettings(appService.getSessionVault(req), appService.getSessionUser(req)));
     }
 
     /**
@@ -46,7 +46,7 @@ export class CustomerCardController {
      */
     public async saveSettings(req: Request, res: Response): Promise<void> {
         await this.respond(res, (service) => service.saveSettings(
-            appService.getSessionVault(req), req.body ?? {}, req.file?.buffer, req.body?.remove_background === "true"));
+            appService.getSessionVault(req), appService.getSessionUser(req), req.body ?? {}, req.file?.buffer, req.body?.remove_background === "true"));
     }
 
     /**
@@ -55,7 +55,7 @@ export class CustomerCardController {
      * @param res Express response.
      */
     public async scan(req: Request, res: Response): Promise<void> {
-        await this.respond(res, (service) => service.scan(appService.getSessionVault(req), String(req.params.code)));
+        await this.respond(res, (service) => service.scan(appService.getSessionVault(req), appService.getSessionUser(req), String(req.params.code)));
     }
 
     /**
@@ -64,7 +64,7 @@ export class CustomerCardController {
      * @param res Express response.
      */
     public async getCard(req: Request, res: Response): Promise<void> {
-        await this.respond(res, (service) => service.getCard(appService.getSessionVault(req), Number(req.params.id) || 0));
+        await this.respond(res, (service) => service.getCard(appService.getSessionVault(req), appService.getSessionUser(req), Number(req.params.id) || 0));
     }
 
     /**
@@ -74,7 +74,7 @@ export class CustomerCardController {
      */
     public async updateCard(req: Request, res: Response): Promise<void> {
         await this.respond(res, (service) => service.updateCard(
-            appService.getSessionVault(req), Number(req.params.id) || 0, req.body?.member_since, req.file?.buffer, req.body?.remove_photo === "true"));
+            appService.getSessionVault(req), appService.getSessionUser(req), Number(req.params.id) || 0, req.body?.member_since, req.file?.buffer, req.body?.remove_photo === "true"));
     }
 
     /**
@@ -83,6 +83,6 @@ export class CustomerCardController {
      * @param res Express response.
      */
     public async lend(req: Request, res: Response): Promise<void> {
-        await this.respond(res, (service) => service.lend(appService.getSessionVault(req), Number(req.params.id) || 0, req.body?.code));
+        await this.respond(res, (service) => service.lend(appService.getSessionVault(req), appService.getSessionUser(req), Number(req.params.id) || 0, req.body?.code));
     }
 }

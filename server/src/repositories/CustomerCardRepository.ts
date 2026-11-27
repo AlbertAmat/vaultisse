@@ -5,6 +5,8 @@
  */
 import {Pool, PoolClient} from "pg";
 import {CardSettingsFields, CustomerCardRow} from "../types/customerCard";
+import {VaultRoleCode} from "../types/vault";
+import {VaultUserStatus} from "@vaultisse/types/vault/IVaultUser";
 
 /** Data access for library cards. */
 export class CustomerCardRepository {
@@ -12,6 +14,27 @@ export class CustomerCardRepository {
      * @param db Pool for a standalone call, or a transaction's checked-out client.
      */
     public constructor(private readonly db: Pool | PoolClient) {
+    }
+
+    /**
+     * Whether customer photos are off: the caller, or any admin of the
+     * vault, is a public-institution account.
+     * @param vaultId Vault id.
+     * @param userId Caller's id.
+     * @returns Whether photos are blocked.
+     */
+    public async isPublicInstitution(vaultId: number, userId: number): Promise<boolean> {
+        const result = await this.db.query(
+            `SELECT EXISTS (
+                 SELECT 1
+                   FROM users u
+                   LEFT JOIN vault_users vu ON vu.user_id = u.id AND vu.vault_id = $1
+                  WHERE u.is_public_institution
+                    AND (u.id = $2 OR (vu.role = $3 AND vu.status = $4))
+             ) AS blocked`,
+            [vaultId, userId, VaultRoleCode.ADMIN, VaultUserStatus.ACCEPTED]
+        );
+        return result.rows[0].blocked;
     }
 
     /**

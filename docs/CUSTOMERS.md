@@ -156,6 +156,10 @@ PDF. "Card setup" sets what every card of the vault shows: up to two custom
 label/value pairs (for example "School:" and its name) and a background
 image, stored in `customer_card_settings`.
 
+For public institutions (`users.is_public_institution` on the person acting or
+on any admin of the vault) customers can't have photos: uploads are refused,
+stored photos aren't returned, and the card has no photo area.
+
 "Scan card" resolves a scanned barcode to the customer's current loans and
 history, and lends further copies by scanning them. Only available copies are
 accepted. All card endpoints are under `/customer` (see `CustomerRoute.ts`)

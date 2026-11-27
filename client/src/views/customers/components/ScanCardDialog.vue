@@ -29,9 +29,8 @@
 
 				<template v-if="activity">
 					<div class="d-flex align-center my-4" style="gap: 14px">
-						<v-avatar size="64" rounded="lg" color="grey-lighten-2">
-							<v-img v-if="activity.customer.photo" :src="activity.customer.photo" cover/>
-							<v-icon v-else>mdi-account-outline</v-icon>
+						<v-avatar v-if="activity.customer.photo" size="64" rounded="lg">
+							<v-img :src="activity.customer.photo" cover/>
 						</v-avatar>
 						<div>
 							<div style="font-weight: 600">{{activity.customer.name}}</div>
