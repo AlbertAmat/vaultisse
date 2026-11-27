@@ -172,11 +172,14 @@ export class AdminNotifier {
     }
 
     private async record(type: string, subject: string, recipients: number, status: "sent" | "failed" | "skipped", detail: string | null, dedupeKey: string | null): Promise<void> {
-        if (dedupeKey) {
+        // Only an alert that was really attempted starts its cooldown. One that was skipped (email not set
+        // up yet, nobody subscribed) must not swallow the first real alert after that is fixed.
+        const counts = status !== "skipped";
+        if (dedupeKey && counts) {
             this.memoryCooldown.set(dedupeKey, Date.now());
         }
         try {
-            await this.history.add({type, subject, recipients, status, detail, dedupeKey});
+            await this.history.add({type, subject, recipients, status, detail, dedupeKey: counts ? dedupeKey : null});
         } catch (error) {
             this.logger.error(`Recording an admin notification failed: ${error instanceof Error ? error.message : String(error)}`);
         }

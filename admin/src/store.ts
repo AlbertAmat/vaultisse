@@ -15,6 +15,8 @@ export const state = reactive({
     ready: false,
     snack: {show: false, text: "", color: "success"},
     reauth: null as ReauthRequest | null,
+    /** The first-run setup guide is open. */
+    onboardingOpen: false,
     theme: (() => {
         try {
             return localStorage.getItem("admin-theme") === "library" ? "library" : "beige";

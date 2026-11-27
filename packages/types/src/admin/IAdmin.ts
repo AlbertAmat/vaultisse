@@ -72,6 +72,10 @@ export interface ISetting {
     defaultValue: string | null;
     /** Whether the key can be tested against its provider (`POST /settings/test-key`). */
     testable: boolean;
+    /** The environment variable is also set; it is ignored while a value is saved in the console. */
+    envSet: boolean;
+    /** The env var's value; null when not set, and always null for secrets. */
+    envValue: string | null;
     /** A stored secret that can't be decrypted any more (the encryption key changed): enter it again. */
     unreadable: boolean;
 }
@@ -407,4 +411,9 @@ export interface INotificationEntry {
     status: "sent" | "failed" | "skipped";
     detail: string | null;
     createdDate: string;
+}
+
+export interface IOnboardingStatus {
+    completed: boolean;
+    completedAt: string | null;
 }

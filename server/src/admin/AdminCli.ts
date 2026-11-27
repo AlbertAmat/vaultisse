@@ -15,7 +15,7 @@ import {ConflictError, ValidationError} from "../errors/DomainError";
 import {runMigrations} from "../migrate";
 import {AdminAuthService} from "./services/AdminAuthService";
 
-export const ADMIN_COMMANDS = ["admin:create", "admin:reset"];
+export const ADMIN_COMMANDS = ["admin:create", "admin:reset", "config:reset"];
 
 /**
  * @param args Arguments after the command.
@@ -51,12 +51,35 @@ function askHidden(question: string): Promise<string> {
 }
 
 /**
- * Runs an `admin:*` command.
+ * `config:reset`: removes every setting saved in the admin portal, so the environment variables apply
+ * again. The same as the console's Danger zone, for when the console can't be used (no email to send the
+ * code to, or no admin can sign in). Whoever can run it on the server has that authority already, so it
+ * asks for a typed confirmation instead of an emailed code.
+ */
+async function runConfigReset(args: string[]): Promise<number> {
+    await runMigrations(appService.getDatabasePool(), appService.getLogger());
+    if (!args.includes("--yes")) {
+        const answer = await askHidden("This removes every setting saved in the admin portal; the environment variables apply again.\nType RESET to continue: ");
+        if (answer.trim() !== "RESET") {
+            console.error("Cancelled.");
+            return 1;
+        }
+    }
+    const removed = await appService.getSettings().resetAll();
+    console.log(`${removed} saved ${removed === 1 ? "setting was" : "settings were"} removed. Restart the server for the environment variables to apply.`);
+    return 0;
+}
+
+/**
+ * Runs an `admin:*` or `config:*` command.
  * @param command The command name.
  * @param args The arguments after it.
  * @returns The process exit code.
  */
 export async function runAdminCli(command: string, args: string[]): Promise<number> {
+    if (command === "config:reset") {
+        return runConfigReset(args);
+    }
     const email = flag(args, "email");
     if (!email) {
         console.error(`Usage: node index.js ${command} --email <address>${command === "admin:create" ? ' [--name "<name>"]' : ""}`);

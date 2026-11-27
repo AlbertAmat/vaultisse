@@ -15,6 +15,7 @@ import {Logger} from "../../utils/Logger";
 import {SettingsRepository} from "../repositories/SettingsRepository";
 import {SETTING_GROUPS, SETTINGS_CATALOG, SettingDefinition, SettingGroupId, findSetting} from "./settingsCatalog";
 import {SettingsCrypto} from "./SettingsCrypto";
+import {ConfigRow} from "./ConfigReport";
 
 /** Where a setting's current value comes from. */
 export type SettingSource = "database" | "env" | "default";
@@ -34,6 +35,10 @@ export interface SettingView {
     defaultValue: string | null;
     /** Whether the key can be tested against its provider. */
     testable: boolean;
+    /** The environment variable is also set (and ignored while a value is saved here). */
+    envSet: boolean;
+    /** Its value; null when not set, and always null for secrets. */
+    envValue: string | null;
     /** A stored secret that could not be decrypted (the encryption key changed): enter it again. */
     unreadable: boolean;
 }
@@ -158,8 +163,48 @@ export class SettingsService {
             source,
             defaultValue: secret ? null : (definition.defaultValue ?? null),
             testable: definition.testable === true,
+            envSet: envValue !== undefined && envValue !== "",
+            envValue: secret || envValue === undefined || envValue === "" ? null : envValue,
             unreadable: this.unreadable.has(definition.key),
         };
+    }
+
+    /**
+     * @returns For every setting, what the env var and the admin portal say and which one is applied.
+     */
+    public comparison(): ConfigRow[] {
+        return SETTINGS_CATALOG.map((definition) => {
+            const secret = definition.type === "secret";
+            const envRaw = process.env[definition.key];
+            const envSet = envRaw !== undefined && envRaw !== "";
+            const panelRaw = this.enabled ? this.overrides_.get(definition.key) : undefined;
+            const panelSet = panelRaw !== undefined;
+            const show = (raw: string) => (secret ? "(set)" : raw);
+            return {
+                key: definition.key,
+                envValue: envSet ? show(envRaw as string) : null,
+                panelValue: panelSet ? (this.unreadable.has(definition.key) ? "(unreadable)" : show(panelRaw as string)) : this.unreadable.has(definition.key) ? "(unreadable)" : null,
+                applied: panelSet ? "panel" : envSet ? "env" : "default",
+                conflict: panelSet && envSet && panelRaw !== envRaw,
+            } as ConfigRow;
+        });
+    }
+
+    /**
+     * Removes every setting saved in the portal, so the env vars (and defaults) apply again. Only
+     * editable settings are touched: the instance id and other plain rows stay.
+     * @returns How many saved settings were removed.
+     */
+    public async resetAll(): Promise<number> {
+        const removed = await this.repo.removeMany(SETTINGS_CATALOG.map((definition) => definition.key));
+        this.overrides_ = new Map();
+        this.unreadable = new Set();
+        return removed;
+    }
+
+    /** @returns The plain-row storage (onboarding flag etc.). */
+    public plain(): SettingsRepository {
+        return this.repo;
     }
 
     /**

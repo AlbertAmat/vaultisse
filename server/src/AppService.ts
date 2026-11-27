@@ -30,6 +30,7 @@ import {SecurityEventService} from "./admin/services/SecurityEventService";
 import {TrafficMonitor} from "./admin/services/TrafficMonitor";
 import {BlockedIpService} from "./admin/services/BlockedIpService";
 import {AdminApp} from "./admin/AdminApp";
+import {formatConfigTable} from "./admin/services/ConfigReport";
 import {AdminNotifier} from "./admin/services/AdminNotifier";
 import {SystemInfoService} from "./admin/services/SystemInfoService";
 import {UpdateChecker} from "./admin/services/UpdateChecker";
@@ -188,6 +189,9 @@ export class AppService {
      */
     private readonly m_allowHttp: boolean;
 
+    /** True when FRONT_END_URL wasn't set and defaulted to localhost; warned about at start. */
+    private m_frontEndUrlDefaulted = false;
+
     /** See getInstanceUuid(). */
     private m_instanceUuid = "";
 
@@ -225,6 +229,24 @@ export class AppService {
      */
     public constructor() {
         dotenv.config(); // Load environment variables from .env
+
+        // Sensible defaults for the settings that used to turn into NaN or the text "undefined" when
+        // missing, so the minimum a deployer has to configure is small (see docs/ADMIN.md).
+        const portText = (process.env.API_PORT ?? "").trim();
+        if (portText === "") {
+            process.env.API_PORT = "3000";
+        }
+        if (!(process.env.SESSION_TIME ?? "").trim()) {
+            process.env.SESSION_TIME = String(60 * 60 * 1000);
+        }
+        if (!(process.env.LOGGER_PATH ?? "").trim()) {
+            process.env.LOGGER_PATH = "./logs";
+        }
+        const frontEndUrlGiven = (process.env.FRONT_END_URL ?? "").trim() !== "";
+        if (!frontEndUrlGiven) {
+            process.env.FRONT_END_URL = `http://localhost:${process.env.API_PORT}`;
+        }
+        this.m_frontEndUrlDefaulted = !frontEndUrlGiven;
 
         const frontEndUrl = String(process.env.FRONT_END_URL);
 
@@ -416,6 +438,7 @@ export class AppService {
             } catch (e) {
                 this.m_logger.error(`Applying the admin portal settings failed, using the env vars: ${e instanceof Error ? e.message : String(e)}`);
             }
+            this.__printConfiguration();
             await this.m_blockedIps.start();
             this.m_securityEvents.start();
             this.m_notifier.start(bootTime);
@@ -726,6 +749,18 @@ export class AppService {
             clearTimeout(first);
             clearInterval(daily);
         });
+    }
+
+    /**
+     * Prints, in the container output, which settings come from the environment and which from the admin
+     * portal, and which one is applied (the portal wins). Also warns about a missing FRONT_END_URL.
+     * @private
+     */
+    private __printConfiguration(): void {
+        console.log(formatConfigTable(this.m_settings.comparison()).join("\n"));
+        if (this.m_frontEndUrlDefaulted) {
+            this.m_logger.warn(`FRONT_END_URL is not set: using ${process.env.FRONT_END_URL}. Set it to the address your users open (it is used for CORS, security headers and the links in emails).`);
+        }
     }
 
     /**

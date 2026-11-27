@@ -193,6 +193,20 @@ describe("admin notifications", () => {
         expect(send).not.toHaveBeenCalled();
     });
 
+    it("doesn't let a skipped alert block the first real one once email works", async () => {
+        const admin = await createLoggedInAdmin(apps.admin());
+        const key = `skip${Date.now()}`;
+        await mailOff(admin);
+        expect(await notifier().notify("updates", {title: "First", lines: ["a"], dedupeKey: key, cooldownMs: 60 * 60 * 1000})).toBe(false);
+        await mailOn(admin);
+        try {
+            expect(await notifier().notify("updates", {title: "Second", lines: ["a"], dedupeKey: key, cooldownMs: 60 * 60 * 1000})).toBe(true);
+            expect(send).toHaveBeenCalled();
+        } finally {
+            await mailOff(admin);
+        }
+    });
+
     it("raises an alert when failed logins and rate limiting pass the threshold", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
         await mailOn(admin);

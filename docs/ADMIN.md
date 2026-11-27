@@ -15,6 +15,9 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 ## Contents
 
 - [Turning it on](#turning-it-on)
+- [Minimum configuration](#minimum-configuration)
+- [Environment variables or the console: which wins](#environment-variables-or-the-console-which-wins)
+- [The setup guide](#the-setup-guide)
 - [How it is built](#how-it-is-built)
 - [What it can and can't see](#what-it-can-and-cant-see)
 - [Settings without env vars](#settings-without-env-vars)
@@ -84,6 +87,88 @@ allowlist and the security page.
 
 Turning it off again hands configuration back to the env vars. Anything saved in the
 portal stays in the database, dormant, and applies again if you turn the portal back on.
+
+## Minimum configuration
+
+With the console you only need the variables that must exist *before* the database can be
+reached or that decide where and how the server runs. Everything else is set in the console.
+`.env.minimal.example` is a ready-to-copy file with exactly these:
+
+| Variable | Why it can't live in the console |
+|---|---|
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD` | The server needs the database to read any saved setting. (With the compose file, `DB_HOST` and `DB_PORT` are set for you.) |
+| `JWT_SECRET` | Signs sessions; needed before anything runs. `openssl rand -hex 32` |
+| `FRONT_END_URL` | The address users open: used for CORS, security headers and the links in emails, all fixed at start-up. Defaults to `http://localhost:<API_PORT>` with a warning. |
+| `ADMIN_ENABLED=true` | Switches the console on. |
+
+Strongly recommended: `ADMIN_URL` (the console's own address, so other origins are refused),
+`SETTINGS_ENCRYPTION_KEY` (a dedicated key for the secrets you save), and, when relevant,
+`TRUST_PROXY=true` behind a reverse proxy or `ALLOW_HTTP=true` on plain HTTP.
+
+Optional with safe defaults: `API_PORT` (3000), `ADMIN_PORT` (3001), `SESSION_TIME` (1 hour),
+`LOGGER_PATH`. **Everything else** (SMTP, registration and approval, single sign-on, API keys,
+upload limits, inactive-account deletion, notifications) can be left out of `.env` and set in
+the console.
+
+## Environment variables or the console: which wins
+
+**The console wins.** For every setting the value used is, in order: what is saved in the
+console, then the environment variable, then the built-in default. So if you configured
+`SMTP_HOST` in `.env` and later change it in the console, the console's value is used and the
+environment variable is ignored. (Settings that exist only as environment variables, such as the
+database connection, are unaffected: the console can't edit them.)
+
+You can always see which applies:
+
+- **In the container output at every start**, a table of each setting that is configured anywhere:
+
+  ```
+  SETTING                  ENV VAR          ADMIN PANEL      APPLIED      NOTE
+  SMTP_HOST                smtp.old.com     smtp.new.com     admin panel  env var IGNORED (the admin panel overrides it)
+  REGISTRATION_ENABLED     true             -                env var
+  REGISTRATION_REQUIRES_.. -                true             admin panel
+  MAX_IMPORT_FILE_SIZE_MB  20               50               admin panel  env var IGNORED (the admin panel overrides it)
+
+  2 environment variables are being ignored because the admin panel sets those values.
+  ```
+
+  Secrets are never printed, only "(set)". With the portal off, nothing is printed because only
+  the environment applies.
+- **In Settings**, a setting that overrides an environment variable says so under the field
+  ("The environment variable ... is ignored while this is set here"), and "Use env" removes
+  just that override.
+
+### Danger zone: go back to the environment variables
+
+*Settings > Danger zone > Reset configuration* removes **every** setting saved in the console,
+so the environment variables apply again at once. Accounts, vaults, plans, admins and logs are
+untouched; features configured only in the console (say email) switch off. It takes three
+steps, because it can't be undone:
+
+1. A fresh password + code check (as for any dangerous action).
+2. A confirmation dialog where you type `RESET`.
+3. A one-time **code emailed to your admin address** (6 digits, valid 10 minutes, works once,
+   locked after five wrong tries), which you type back.
+
+It is recorded in the audit trail and emailed to the admins (security notifications). If email
+isn't set up there is nobody to send the code to, so use the command line instead, which needs
+shell access to the server (that access already is the authority):
+
+```bash
+docker compose exec -it app node index.js config:reset      # asks you to type RESET
+```
+
+Restart the server afterwards so it reloads the environment.
+
+## The setup guide
+
+The first time a superadmin gets into the console, a short guide opens on top of it, so nothing
+has to be found in the menu: **Welcome** (it lists what the environment already configured),
+**Email** (with a test button that tries the values before you save), **Sign-up** (who can
+register, and whether you approve accounts), **API keys** (optional, each with a test),
+**Alerts** (which problems to be emailed about) and **Done** (a summary). Every step can be
+skipped, and "Skip the guide" closes it for good. It appears once per installation, and
+*Settings > Run the setup guide* opens it again.
 
 ## How it is built
 

@@ -22,6 +22,8 @@ ecosystem-config.js
 # Local env files and backups - never commit (they hold secrets)
 .env*
 !.env.example
+!.env.minimal.example
 **/.env*
 !**/.env.example
+!**/.env.minimal.example
 *.zip

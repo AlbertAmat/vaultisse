@@ -58,6 +58,39 @@ export class SettingsRepository {
     }
 
     /**
+     * Removes the overrides of the given settings in one go (the portal's "reset to environment variables").
+     * Other rows, such as the instance id, are left alone.
+     * @param keys Setting keys to remove.
+     * @returns How many rows were removed.
+     */
+    public async removeMany(keys: string[]): Promise<number> {
+        const result = await this.db.query("DELETE FROM app_settings WHERE key = ANY($1::text[])", [keys]);
+        return result.rowCount ?? 0;
+    }
+
+    /**
+     * @param key Key of a plain (non-setting) row such as `ONBOARDING_COMPLETED_AT`.
+     * @returns Its value, or null.
+     */
+    public async getPlain(key: string): Promise<string | null> {
+        const result = await this.db.query("SELECT value FROM app_settings WHERE key = $1", [key]);
+        return result.rows[0]?.value ?? null;
+    }
+
+    /**
+     * Stores a plain row that isn't an editable setting (not loaded into the configuration).
+     * @param key Row key.
+     * @param value Row value.
+     */
+    public async putPlain(key: string, value: string): Promise<void> {
+        await this.db.query(
+            `INSERT INTO app_settings (key, value) VALUES ($1, $2)
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
+            [key, value]
+        );
+    }
+
+    /**
      * Removes an override, so the env var (or default) applies again.
      * @param key Setting key.
      */

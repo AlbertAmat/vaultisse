@@ -16,7 +16,7 @@ import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from "axios";
 import type {
     AdminLoginStep, AdminRole, IAccountDetail, IAccount, IAdminSelf, IAdminUser, IAdminVault, IAuditEntry, IBlockedIp, IDeletionRequestResult,
     IEnrollConfirm, IEnrollStart, ILockout, IOverview, IPaged, IPlan, IPlanInput, IScheduledDeletion, ISecurityEvent, ISecuritySummary,
-    IMailEntry, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
+    IMailEntry, IOnboardingStatus, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
 } from "@vaultisse/types/admin/IAdmin";
 
 export interface AdminClientOptions {
@@ -52,6 +52,10 @@ export interface AdminApiClient {
     };
     overview(): Promise<IOverview>;
     system(): Promise<ISystemInfo>;
+    onboarding: {
+        status(): Promise<IOnboardingStatus>;
+        complete(): Promise<void>;
+    };
     /** The System page: version and updates, database, migrations, runtime. */
     systemDetails(): Promise<ISystemDetails>;
     checkUpdates(): Promise<IVersionStatus>;
@@ -68,6 +72,10 @@ export interface AdminApiClient {
         /** `unsaved`: SMTP_* values typed in the form but not saved yet; a secret left out keeps the saved one. */
         /** Tries an API key against its provider: the typed value, or the saved one when omitted. */
         testKey(key: string, value?: string): Promise<{ok: boolean; message: string}>;
+        /** Danger zone, step 1: emails a one-time code to the signed-in admin. Needs a fresh verification. */
+        resetRequest(): Promise<{sentTo: string; expiresAt: string}>;
+        /** Danger zone, step 2: with the emailed code and the word RESET, removes every saved setting. */
+        resetConfirm(code: string): Promise<{removed: number; groups: ISettingGroup[]}>;
         testEmail(to: string, unsaved?: Record<string, string>): Promise<{ok: boolean; error: string | null}>;
     };
     users: {
@@ -181,6 +189,10 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
         },
         overview: () => get("/overview"),
         system: () => get("/system"),
+        onboarding: {
+            status: () => get("/onboarding"),
+            complete: () => post("/onboarding/complete"),
+        },
         systemDetails: () => get("/system/details"),
         checkUpdates: () => post("/system/check-updates"),
         notifications: {
@@ -193,6 +205,9 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             list: async () => (await get<{groups: ISettingGroup[]}>("/settings")).groups,
             update: async (changes) => (await put<{groups: ISettingGroup[]}>("/settings", {changes})).groups,
             testKey: (key, value) => post("/settings/test-key", {key, value}),
+            resetRequest: () => post("/settings/reset/request"),
+            // A wrong code is explained inline by the dialog, so no extra toast.
+            resetConfirm: async (code) => (await http.post("/settings/reset/confirm", {code, confirm: "RESET"}, {suppressErrorDialog: true})).data,
             testEmail: (to, unsaved) => post("/settings/test-email", {to, settings: unsaved}),
         },
         users: {

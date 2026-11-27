@@ -42,16 +42,18 @@
 	</v-main>
 
 	<password-dialog v-model="passwordDialog"/>
+	<onboarding-dialog v-model="state.onboardingOpen"/>
 </template>
 
 <script setup lang="ts">
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {useDisplay} from "vuetify";
 import {api} from "@/api";
 import {canWrite, setTheme, state} from "@/store";
 import BrandMark from "@/components/BrandMark.vue";
 import PasswordDialog from "@/components/PasswordDialog.vue";
+import OnboardingDialog from "@/components/OnboardingDialog.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -73,6 +75,20 @@ const items = [
 	{to: "/system", title: "System", icon: "mdi-server-outline"},
 	{to: "/admins", title: "Admins", icon: "mdi-account-key-outline"},
 ];
+
+// The first time a superadmin gets in (and nobody has finished or skipped it before), the setup guide opens by itself.
+onMounted(async () => {
+	if (!canWrite()) {
+		return;
+	}
+	try {
+		if (!(await api.onboarding.status()).completed) {
+			state.onboardingOpen = true;
+		}
+	} catch {
+		// Not essential; the guide can be opened from Settings.
+	}
+});
 
 async function logout() {
 	try {

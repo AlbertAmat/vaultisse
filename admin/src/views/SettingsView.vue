@@ -81,6 +81,9 @@
 							<v-alert v-if="keyResults[item.key]" :type="keyResults[item.key].ok ? 'success' : 'error'" variant="tonal" density="compact" class="mt-2" closable @click:close="delete keyResults[item.key]">
 								{{ keyResults[item.key].message }}
 							</v-alert>
+							<v-alert v-if="item.source === 'database' && item.envSet" type="warning" variant="tonal" density="compact" class="mt-2" icon="mdi-swap-horizontal">
+								The environment variable <span class="mono">{{ item.key }}</span><template v-if="item.envValue"> ({{ item.envValue }})</template> is ignored while this is set here. "Use env" switches back to it.
+							</v-alert>
 							<p v-if="item.description" class="text-caption text-medium-emphasis mt-1">{{ item.description }}</p>
 						</div>
 
@@ -109,6 +112,17 @@
 		</v-card>
 
 		<v-card class="pa-4 mt-4">
+			<div class="d-flex flex-wrap align-center ga-3">
+				<div>
+					<div class="font-weight-medium">Setup guide</div>
+					<p class="text-body-2 text-medium-emphasis">The step-by-step first-run guide: email, registration, API keys and notifications.</p>
+				</div>
+				<v-spacer/>
+				<v-btn variant="tonal" prepend-icon="mdi-auto-fix" :disabled="!canWrite()" @click="state.onboardingOpen = true">Run the setup guide</v-btn>
+			</div>
+		</v-card>
+
+		<v-card class="pa-4 mt-4">
 			<div class="font-weight-medium mb-2">Not editable here</div>
 			<p class="text-body-2 text-medium-emphasis">
 				The database connection, ports, JWT secret, proxy trust, and whether this portal exists at all stay in environment variables:
@@ -124,6 +138,26 @@
 				<v-chip size="small" variant="tonal">Admin IP allowlist {{ system.bootstrap.adminAllowedIps ? `${system.bootstrap.adminAllowedIps} addresses` : "off" }}</v-chip>
 			</div>
 		</v-card>
+
+		<!-- Danger zone -->
+		<v-card v-if="canWrite()" class="pa-5 mt-4 danger" border="error md">
+			<div class="d-flex align-center ga-2 mb-1 text-error">
+				<v-icon>mdi-alert-octagon-outline</v-icon>
+				<div class="text-subtitle-1 font-weight-medium">Danger zone</div>
+			</div>
+			<div class="d-flex flex-wrap align-center ga-4">
+				<div style="max-width: 640px">
+					<div class="font-weight-medium">Reset configuration to environment variables</div>
+					<p class="text-body-2 text-medium-emphasis mt-1">
+						Settings saved here take priority over environment variables. This removes all of them so the environment variables apply again.
+						Needs your password and a code, and a confirmation code we email you.
+					</p>
+				</div>
+				<v-spacer/>
+				<v-btn color="error" variant="tonal" prepend-icon="mdi-restore-alert" @click="resetting = true">Reset configuration…</v-btn>
+			</div>
+		</v-card>
+		<reset-config-dialog v-model="resetting" @done="reloadAfterReset"/>
 	</div>
 </template>
 
@@ -131,7 +165,8 @@
 import {onMounted, reactive, ref} from "vue";
 import type {ISettingGroup, ISystemInfo, SettingChanges, SettingSource} from "@vaultisse/types/admin/IAdmin";
 import {api} from "@/api";
-import {canWrite, notify} from "@/store";
+import {canWrite, notify, state} from "@/store";
+import ResetConfigDialog from "@/components/ResetConfigDialog.vue";
 import PageHeader from "@/components/PageHeader.vue";
 
 const groups = ref<ISettingGroup[]>([]);
@@ -144,6 +179,7 @@ const resets = reactive(new Set<string>());
 const saving = ref(false);
 const testTo = ref("");
 const testing = ref(false);
+const resetting = ref(false);
 const keyTesting = ref("");
 const keyResults = reactive<Record<string, { ok: boolean; message: string }>>({});
 const testResult = ref<{ ok: boolean; error: string | null } | null>(null);
@@ -178,6 +214,11 @@ function changesFor(group: ISettingGroup): { changes: SettingChanges; count: num
 		}
 	}
 	return {changes, count: Object.keys(changes).length};
+}
+
+async function reloadAfterReset() {
+	fill(await api.settings.list());
+	system.value = await api.system();
 }
 
 function resetKey(key: string) {

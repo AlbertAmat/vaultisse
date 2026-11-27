@@ -13,6 +13,7 @@ import {handle} from "../http";
 import {requireFreshAuth, requireSuperadmin} from "../middleware";
 import {AdminAuditService} from "../services/AdminAuditService";
 import {MailService} from "../../services/MailService";
+import {ConfigResetService} from "../services/ConfigResetService";
 import {ApiKeyTester} from "../services/ApiKeyTester";
 import {findSetting} from "../services/settingsCatalog";
 
@@ -46,6 +47,41 @@ export function settingsRoutes(audit: AdminAuditService): Router {
         // Names only, never values: secrets must not end up in the audit trail.
         await audit.record(req, "settings.update", {entityType: "settings", metadata: {keys}});
         res.json({groups: appService.getSettings().describe()});
+    }));
+
+    // --- Danger zone: reset every saved setting so the environment variables apply again. Three guards:
+    // a fresh password+code check, a typed confirmation, and a one-time code emailed to the admin.
+    const reset = new ConfigResetService();
+
+    router.post("/settings/reset/request", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {
+        res.json(await reset.request({id: req.admin!.id, email: req.admin!.email}));
+    }));
+
+    router.post("/settings/reset/confirm", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {
+        if (req.body?.confirm !== "RESET") {
+            throw new ValidationError("Type RESET to confirm.");
+        }
+        reset.verify(req.admin!.id, req.body?.code);
+        const removed = await appService.getSettings().resetAll();
+        await appService.applyPortalSettings();
+        await audit.record(req, "settings.reset_all", {entityType: "settings", metadata: {removed}});
+        void appService.getNotifier().notify("security", {
+            title: "The admin configuration was reset to environment variables",
+            lines: [`${req.admin!.email} reset ${removed} saved ${removed === 1 ? "setting" : "settings"}. The environment variables apply again.`],
+        });
+        res.json({removed, groups: appService.getSettings().describe()});
+    }));
+
+    // --- First-run guide: shown once per installation until completed or skipped.
+    router.get("/onboarding", handle(async (_req, res) => {
+        const completedAt = await appService.getSettings().plain().getPlain("ONBOARDING_COMPLETED_AT");
+        res.json({completed: completedAt !== null, completedAt});
+    }));
+
+    router.post("/onboarding/complete", requireSuperadmin, handle(async (req, res) => {
+        await appService.getSettings().plain().putPlain("ONBOARDING_COMPLETED_AT", new Date().toISOString());
+        await audit.record(req, "onboarding.complete", {entityType: "settings"});
+        res.json({completed: true});
     }));
 
     // Checks an API key against its provider: the typed value, or the saved one when none is given.
