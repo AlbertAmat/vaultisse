@@ -24,7 +24,7 @@ export interface SettingDefinition {
     testable?: boolean;
 }
 
-export type SettingGroupId = "email" | "registration" | "sso" | "metadata" | "limits" | "inactivity" | "admin";
+export type SettingGroupId = "notifications" | "email" | "registration" | "sso" | "metadata" | "limits" | "inactivity" | "admin";
 
 export const SETTING_GROUPS: {id: SettingGroupId; label: string; description: string}[] = [
     {id: "email", label: "Email (SMTP)", description: "Outgoing mail for verification links and notifications. Leave host and from empty to run without email."},
@@ -33,6 +33,7 @@ export const SETTING_GROUPS: {id: SettingGroupId; label: string; description: st
     {id: "metadata", label: "API keys", description: "Keys for the services that look up book details and covers by ISBN. Each one can be tested before you save it."},
     {id: "limits", label: "Upload limits", description: "Largest files users can upload."},
     {id: "inactivity", label: "Inactive accounts", description: "Permanently deletes accounts nobody has used for a while. Leave the days empty to never delete."},
+    {id: "notifications", label: "Admin notifications", description: "Which events email the admins. Edited on the Notifications page."},
     {id: "admin", label: "Admin portal", description: "Behaviour of the portal itself."},
 ];
 
@@ -67,6 +68,16 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     {key: "ACCOUNT_INACTIVITY_DAYS", group: "inactivity", label: "Delete after (days)", description: "Permanently deletes inactive accounts, and libraries only they belong to.", type: "number", min: 1},
     {key: "ACCOUNT_DELETION_NOTICE_DAYS", group: "inactivity", label: "Warn before deletion (days)", description: "Needs email, and must be smaller than the days above. Empty = no warning.", type: "number", min: 1},
 
+    {key: "ADMIN_UPDATE_CHECK", group: "admin", label: "Check for new versions", description: "Asks GitHub for the latest release now and then, so the System page can say whether an update exists. Nothing about this installation is sent.", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_NOTIFY_USER_PENDING", group: "notifications", label: "A new account is waiting for approval", description: "Sent when someone registers while approval is required.", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_NOTIFY_SECURITY", group: "notifications", label: "Unusual security activity", description: "Many failed logins, lockouts or rate-limit hits in a short time, or failed admin logins.", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_NOTIFY_SECURITY_THRESHOLD", group: "notifications", label: "Security alert threshold", description: "Failed logins + lockouts + rate-limit hits within 10 minutes that count as unusual.", type: "number", defaultValue: "50", min: 1},
+    {key: "ADMIN_NOTIFY_DATABASE", group: "notifications", label: "Database problems", description: "The database can't be reached, or it is running out of connections or space.", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_NOTIFY_DB_SIZE_MB", group: "notifications", label: "Database size limit (MB)", description: "Alert when the database grows past this size. Empty = no size alert.", type: "number", min: 1},
+    {key: "ADMIN_NOTIFY_MAIL_FAILURES", group: "notifications", label: "Emails failing to send", description: "Five or more emails to users were refused by the mail server within an hour.", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_NOTIFY_DELETIONS", group: "notifications", label: "Accounts and vaults deleted", description: "A scheduled deletion was carried out, or failed.", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_NOTIFY_UPDATES", group: "notifications", label: "A new version is available", description: "Needs the version check (Settings > Admin portal).", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_NOTIFY_STARTUP", group: "notifications", label: "The server started", description: "Sent on every start, including which database migrations were applied.", type: "boolean", defaultValue: "false"},
     {key: "ADMIN_DELETION_GRACE_DAYS", group: "admin", label: "Deletion grace period (days)", description: "Deleting an account or vault from the portal locks it out first and only deletes it after this many days, so it can be cancelled. 0 = delete immediately.", type: "number", defaultValue: "7", min: 0},
 ];
 

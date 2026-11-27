@@ -68,6 +68,27 @@ export class EmailNotVerifiedError extends ForbiddenError {
  */
 export class AuthService {
     /**
+     * Emails the admins (admin portal) that a new account waits for approval. Batched: one email per ten
+     * minutes, saying how many are waiting. Never throws.
+     * @param pool Database pool.
+     * @param name Display name of the new account.
+     * @param userName Its username.
+     */
+    private static async tellAdminsAboutPendingAccount(pool: Pool, name: string, userName: string): Promise<void> {
+        try {
+            const waiting = (await pool.query("SELECT COUNT(*)::int AS total FROM users WHERE disabled = TRUE AND disabled_reason = 'pending_approval'")).rows[0].total;
+            await appService.getNotifier().notify("user_pending", {
+                title: waiting > 1 ? `${waiting} accounts are waiting for approval` : "A new account is waiting for approval",
+                lines: [`${name} (${userName}) just registered. ${waiting} ${waiting === 1 ? "account is" : "accounts are"} waiting for approval in total.`, "Review them under Accounts in the admin console."],
+                dedupeKey: "pending",
+                cooldownMs: 10 * 60 * 1000,
+            });
+        } catch (error) {
+            console.error("Notifying the admins about a pending account failed", error);
+        }
+    }
+
+    /**
      * @param pool Database connection pool, forwarded to fresh repositories/services on every call.
      */
     public constructor(private readonly pool: Pool) {
@@ -318,6 +339,10 @@ export class AuthService {
                 throw new ValidationError("Unable to register with the provided information.");
             }
             throw err;
+        }
+
+        if (requiresApproval) {
+            void AuthService.tellAdminsAboutPendingAccount(this.pool, fields.name, fields.userName);
         }
 
         // After the commit: a delivery failure leaves the account in place, and

@@ -15,6 +15,7 @@ import {ConflictError, NotFoundError} from "../../errors/DomainError";
 import {withTransaction} from "../../repositories/withTransaction";
 import {VaultRepository} from "../../repositories/VaultRepository";
 import {UserService} from "../../services/UserService";
+import {appService} from "../../AppService";
 import {Logger} from "../../utils/Logger";
 import {DeletionEntity, DeletionRepository, DeletionRow} from "../repositories/DeletionRepository";
 import {PlatformRepository} from "../repositories/PlatformRepository";
@@ -166,12 +167,23 @@ export class DeletionService {
                 await this.execute(deletion.id);
                 done++;
                 this.logger.warn(`Deleted ${deletion.entityType} id=${deletion.entityId} (scheduled from the admin portal)`);
+                void appService.getNotifier().notify("deletions", {
+                    title: `A scheduled ${deletion.entityType === "user" ? "account" : "vault"} deletion was carried out`,
+                    lines: [`${deletion.entityLabel} was deleted after its grace period.`, `Requested by: ${deletion.requestedBy ?? "unknown"}.`],
+                });
                 await this.audit.recordAs("deletion.executed", {id: null, email: null}, null, {
                     entityType: deletion.entityType, entityId: deletion.entityId, entityLabel: deletion.entityLabel,
                     metadata: {deletionId: deletion.id, requestedBy: deletion.requestedBy},
                 });
             } catch (error) {
-                this.logger.error(`Scheduled deletion ${deletion.id} failed: ${error instanceof Error ? error.message : String(error)}`);
+                const reason = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Scheduled deletion ${deletion.id} failed: ${reason}`);
+                void appService.getNotifier().notify("deletions", {
+                    title: "A scheduled deletion failed",
+                    lines: [`${deletion.entityLabel} (${deletion.entityType}) could not be deleted: ${reason}`, "It stays locked. See Deletions in the console."],
+                    dedupeKey: `failed-${deletion.id}`,
+                    cooldownMs: 24 * 60 * 60 * 1000,
+                });
             }
         }
         return done;

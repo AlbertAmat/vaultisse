@@ -20,6 +20,8 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 - [Settings without env vars](#settings-without-env-vars)
 - [Accounts, vaults and deletions](#accounts-vaults-and-deletions)
 - [Plans and quotas](#plans-and-quotas)
+- [System page](#system-page)
+- [Notifications to admins](#notifications-to-admins)
 - [Security, logs and audit](#security-logs-and-audit)
 - [Admin accounts](#admin-accounts)
 - [Securing it](#securing-it)
@@ -134,7 +136,8 @@ and a test checks that a book title never appears in the admin API's output.
 | API keys | Google Books and LibraryThing keys, each with a **Test key** button that makes one real request to the provider (with the key typed in the field, or the saved one) and says whether it was accepted, refused, out of quota, or unreachable |
 | Upload limits | ebook and import file size |
 | Inactive accounts | delete after N days, warn M days before |
-| Admin portal | deletion grace period |
+| Admin portal | deletion grace period, version check on/off |
+| Notifications | which events email the admins (edited on the Notifications page) |
 
 **Precedence:** database (set in the portal) → env var → built-in default. Each
 setting shows where its value comes from, and "Use env" removes the override.
@@ -194,6 +197,51 @@ unlimited). A vault uses the plan assigned to it, or the default plan, or no lim
   request, an ebook file. A vault already over a lowered limit keeps what it has.
 - Enforced **only while the portal is enabled**.
 - There is no billing. Plans are assigned by hand. Payment integration is out of scope.
+
+## System page
+
+*System* answers "what am I running and is it healthy":
+
+- **Version.** The installed version (`APP_VERSION`, set by the Docker image) and whether
+  a newer release exists, from GitHub's public list of releases (cached 6 hours, "Check
+  now" to refresh). Nothing about your installation is sent, and it can be switched off
+  (*Settings > Admin portal*). A development build says so instead of guessing.
+- **Database.** How the server connects (name, host, port, user, TCP or socket, from the
+  environment, never the password), what the database itself reports (its address and
+  port, PostgreSQL version, how long it has been up, response time), **its size on disk**,
+  connections in use against `max_connections` plus the app's connection pool, and the
+  largest tables. The status is *Healthy*, *Needs attention* (nearly out of connections,
+  requests waiting, slow answers, over the size limit set for alerts) or *Not reachable*.
+- **Database conversions.** Every upgrade step (migration) that was applied and when,
+  newest first. The server applies them on its own at start, once each.
+- **This server.** Instance id, uptime, Node.js, system, memory, whether it runs in Docker.
+
+## Notifications to admins
+
+*Notifications* is where the console emails its admins, so problems reach you without
+anyone watching the console. It needs email to be set up (*Settings > Email*); without it,
+events are listed in the history as *not sent*.
+
+| Event | When |
+|---|---|
+| New account waiting for approval | Someone registers while approval is required (batched: one email per ten minutes, with the count) |
+| Unusual security activity | Failed logins, lockouts and rate-limit hits pass a threshold (default 50 in 10 minutes), or three or more failed admin logins |
+| Database problems | The database is unreachable, nearly out of connections, or over a size limit you set |
+| Emails failing to send | Five or more emails to users refused by the mail server within an hour |
+| Accounts and vaults deleted | A scheduled deletion was carried out, or failed |
+| A new version is available | A newer release exists (needs the version check) |
+| The server started | Every start, with the migrations it applied (off by default) |
+
+Each event can be switched off. The same alert isn't repeated within its cooldown (an
+hour for security and an unreachable database, longer for the rest), so a problem that
+lasts doesn't fill inboxes. Problems are checked every five minutes. During a database
+outage the last known list of recipients is used, since that is when you most need to
+hear about it.
+
+Each admin chooses for themselves whether they receive them (a superadmin can also
+change it for others); they go to the address used to sign in. *Send me a test* checks
+that it reaches you, and *What was sent* lists everything attempted, including what was
+skipped and why (90 days). Notification emails also show up under *Logs > Emails sent*.
 
 ## Security, logs and audit
 
@@ -285,7 +333,9 @@ Everything is under `/api/admin` on the admin port and needs an admin session ex
 |---|---|
 | Auth | `POST /auth/login`, `/auth/2fa`, `/auth/enroll/start`, `/auth/enroll/confirm`, `/auth/reauth`, `/auth/password`, `/auth/logout`; `GET /auth/me` |
 | Overview | `GET /overview`, `GET /system` |
-| Settings | `GET/PUT /settings`, `POST /settings/test-email` |
+| Settings | `GET/PUT /settings`, `POST /settings/test-email`, `POST /settings/test-key` |
+| System | `GET /system`, `GET /system/details`, `POST /system/check-updates` |
+| Notifications | `GET /notifications`, `GET /notifications/history`, `PUT /notifications/me`, `PATCH /notifications/recipients/:id`, `POST /notifications/test` |
 | Accounts | `GET /users`, `GET /users/:id`, `POST /users/:id/{approve,disable,enable,force-logout,reset-2fa}`, `DELETE /users/:id` |
 | Vaults | `GET /vaults`, `GET /vaults/:id`, `POST /vaults/:id/{suspend,unsuspend}`, `PUT /vaults/:id/plan`, `DELETE /vaults/:id` |
 | Plans | `GET/POST /plans`, `PUT/DELETE /plans/:id`, `PUT /plans/default` |

@@ -13,6 +13,8 @@ const router = createRouter({
             component: () => import("@/layouts/AdminLayout.vue"),
             children: [
                 {path: "", name: "overview", component: () => import("@/views/OverviewView.vue"), meta: {title: "Overview"}},
+                {path: "system", name: "system", component: () => import("@/views/SystemView.vue"), meta: {title: "System"}},
+                {path: "notifications", name: "notifications", component: () => import("@/views/NotificationsView.vue"), meta: {title: "Notifications"}},
                 {path: "settings", name: "settings", component: () => import("@/views/SettingsView.vue"), meta: {title: "Settings"}},
                 {path: "users", name: "users", component: () => import("@/views/UsersView.vue"), meta: {title: "Accounts"}},
                 {path: "vaults", name: "vaults", component: () => import("@/views/VaultsView.vue"), meta: {title: "Vaults"}},

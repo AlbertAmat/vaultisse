@@ -16,7 +16,7 @@ import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from "axios";
 import type {
     AdminLoginStep, AdminRole, IAccountDetail, IAccount, IAdminSelf, IAdminUser, IAdminVault, IAuditEntry, IBlockedIp, IDeletionRequestResult,
     IEnrollConfirm, IEnrollStart, ILockout, IOverview, IPaged, IPlan, IPlanInput, IScheduledDeletion, ISecurityEvent, ISecuritySummary,
-    IMailEntry, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
+    IMailEntry, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
 } from "@vaultisse/types/admin/IAdmin";
 
 export interface AdminClientOptions {
@@ -52,6 +52,16 @@ export interface AdminApiClient {
     };
     overview(): Promise<IOverview>;
     system(): Promise<ISystemInfo>;
+    /** The System page: version and updates, database, migrations, runtime. */
+    systemDetails(): Promise<ISystemDetails>;
+    checkUpdates(): Promise<IVersionStatus>;
+    notifications: {
+        overview(): Promise<INotificationsOverview>;
+        history(query: {page?: number; pageSize?: number}): Promise<IPaged<INotificationEntry>>;
+        /** Subscribe/unsubscribe yourself (`adminId` omitted) or, as a superadmin, another admin. */
+        setSubscription(notifyEmail: boolean, adminId?: number): Promise<void>;
+        test(): Promise<{ok: boolean; error: string | null; to: string}>;
+    };
     settings: {
         list(): Promise<ISettingGroup[]>;
         update(changes: SettingChanges): Promise<ISettingGroup[]>;
@@ -171,6 +181,14 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
         },
         overview: () => get("/overview"),
         system: () => get("/system"),
+        systemDetails: () => get("/system/details"),
+        checkUpdates: () => post("/system/check-updates"),
+        notifications: {
+            overview: () => get("/notifications"),
+            history: (query) => get("/notifications/history", query),
+            setSubscription: (notifyEmail, adminId) => adminId === undefined ? put("/notifications/me", {notifyEmail}) : patch(`/notifications/recipients/${adminId}`, {notifyEmail}),
+            test: () => post("/notifications/test"),
+        },
         settings: {
             list: async () => (await get<{groups: ISettingGroup[]}>("/settings")).groups,
             update: async (changes) => (await put<{groups: ISettingGroup[]}>("/settings", {changes})).groups,

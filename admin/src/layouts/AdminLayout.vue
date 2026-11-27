@@ -68,7 +68,9 @@ const items = [
 	{to: "/security", title: "Security", icon: "mdi-shield-alert-outline"},
 	{to: "/logs", title: "Logs", icon: "mdi-text-box-search-outline"},
 	{to: "/audit", title: "Audit trail", icon: "mdi-clipboard-text-clock-outline"},
+	{to: "/notifications", title: "Notifications", icon: "mdi-bell-outline"},
 	{to: "/settings", title: "Settings", icon: "mdi-cog-outline"},
+	{to: "/system", title: "System", icon: "mdi-server-outline"},
 	{to: "/admins", title: "Admins", icon: "mdi-account-key-outline"},
 ];
 

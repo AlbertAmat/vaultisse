@@ -11,6 +11,7 @@ export interface AdminUserRow {
     role: AdminRole;
     disabled: boolean;
     mustChangePassword: boolean;
+    notifyEmail: boolean;
     tokenVersion: number;
     totpEnabled: boolean;
     createdDate: Date;
@@ -34,7 +35,7 @@ export interface AdminSessionRow {
     reauthUntil: Date | null;
 }
 
-const PUBLIC_COLUMNS = `id, email, name, role, disabled, must_change_password AS "mustChangePassword", token_version AS "tokenVersion", totp_enabled AS "totpEnabled",
+const PUBLIC_COLUMNS = `id, email, name, role, disabled, must_change_password AS "mustChangePassword", notify_email AS "notifyEmail", token_version AS "tokenVersion", totp_enabled AS "totpEnabled",
                         created_date AS "createdDate", last_login_date AS "lastLoginDate"`;
 
 /** Hash stored for a backup code. */
@@ -141,6 +142,20 @@ export class AdminUserRepository {
     public async delete(id: number): Promise<boolean> {
         const result = await this.db.query("DELETE FROM admin_users WHERE id = $1", [id]);
         return (result.rowCount ?? 0) > 0;
+    }
+
+    /**
+     * @param id Admin id.
+     * @param notifyEmail Whether they get the notification emails.
+     */
+    public async setNotifyEmail(id: number, notifyEmail: boolean): Promise<void> {
+        await this.db.query("UPDATE admin_users SET notify_email = $2 WHERE id = $1", [id, notifyEmail]);
+    }
+
+    /** @returns Email addresses of the enabled admins who want the notification emails. */
+    public async notificationRecipients(): Promise<string[]> {
+        const result = await this.db.query("SELECT email FROM admin_users WHERE disabled = FALSE AND notify_email = TRUE ORDER BY id");
+        return result.rows.map((row: {email: string}) => row.email);
     }
 
     /** @returns Number of admin accounts of any kind. */

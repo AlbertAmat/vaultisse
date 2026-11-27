@@ -338,3 +338,73 @@ export interface IServerLog {
     lines: string[];
     scannedLines: number;
 }
+
+// --- System ------------------------------------------------------------------------------------------
+
+export interface IVersionStatus {
+    installed: string;
+    /** A build that isn't a release (no version number). */
+    isDevBuild: boolean;
+    checkEnabled: boolean;
+    latest: string | null;
+    /** Null when it can't be told (check off, failed, or a development build). */
+    updateAvailable: boolean | null;
+    releaseUrl: string | null;
+    publishedAt: string | null;
+    checkedAt: string | null;
+    error: string | null;
+}
+
+export interface IDatabaseInfo {
+    status: "ok" | "warning" | "down";
+    problems: string[];
+    /** How this server was told to connect (from its environment). */
+    connection: {mode: "tcp" | "socket"; host: string | null; port: number | null; name: string | null; user: string | null};
+    /** What the database itself reports. */
+    server: {address: string | null; port: number | null; version: string | null; startedAt: string | null; uptimeSeconds: number | null} | null;
+    latencyMs: number | null;
+    sizeBytes: number | null;
+    connections: {current: number; max: number; poolTotal: number; poolIdle: number; poolWaiting: number} | null;
+    largestTables: {name: string; bytes: number; rows: number}[];
+}
+
+export interface IMigration {
+    filename: string;
+    appliedAt: string;
+}
+
+export interface ISystemDetails {
+    instanceUuid: string;
+    version: IVersionStatus;
+    database: IDatabaseInfo;
+    migrations: {items: IMigration[]; total: number};
+    runtime: {node: string; platform: string; arch: string; hostname: string; uptimeSeconds: number; memoryMb: number; environment: string; inDocker: boolean};
+}
+
+// --- Notifications ----------------------------------------------------------------------------------
+
+export interface INotificationRecipient {
+    id: number;
+    email: string;
+    name: string;
+    role: AdminRole;
+    disabled: boolean;
+    notifyEmail: boolean;
+}
+
+export interface INotificationsOverview {
+    mailEnabled: boolean;
+    /** The signed-in admin's id. */
+    me: number;
+    recipients: INotificationRecipient[];
+}
+
+export interface INotificationEntry {
+    id: number;
+    type: string;
+    subject: string;
+    recipients: number;
+    status: "sent" | "failed" | "skipped";
+    detail: string | null;
+    createdDate: string;
+}

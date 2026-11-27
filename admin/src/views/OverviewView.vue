@@ -37,7 +37,11 @@
 		</v-row>
 
 		<v-card v-if="system" class="pa-4 mt-4">
-			<div class="text-subtitle-1 font-weight-medium mb-3">System</div>
+			<div class="d-flex align-center mb-3">
+				<div class="text-subtitle-1 font-weight-medium">System</div>
+				<v-spacer/>
+				<v-btn size="small" variant="text" to="/system" append-icon="mdi-arrow-right">Details</v-btn>
+			</div>
 			<v-row dense>
 				<v-col cols="6" md="3"><div class="text-caption text-medium-emphasis">Version</div><div class="mono">{{ system.version }}</div></v-col>
 				<v-col cols="12" md="6"><div class="text-caption text-medium-emphasis">Instance id</div><div class="mono" style="word-break: break-all">{{ system.instanceUuid }}</div></v-col>

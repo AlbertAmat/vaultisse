@@ -30,6 +30,9 @@ import {SecurityEventService} from "./admin/services/SecurityEventService";
 import {TrafficMonitor} from "./admin/services/TrafficMonitor";
 import {BlockedIpService} from "./admin/services/BlockedIpService";
 import {AdminApp} from "./admin/AdminApp";
+import {AdminNotifier} from "./admin/services/AdminNotifier";
+import {SystemInfoService} from "./admin/services/SystemInfoService";
+import {UpdateChecker} from "./admin/services/UpdateChecker";
 import {MailLogRepository} from "./admin/repositories/MailLogRepository";
 import {SettingsRepository} from "./admin/repositories/SettingsRepository";
 import {OidcRepository} from "./repositories/OidcRepository";
@@ -208,6 +211,11 @@ export class AppService {
     private readonly m_traffic = new TrafficMonitor();
     private m_blockedIps!: BlockedIpService;
 
+    /** Admin notification emails and the health checks behind them. */
+    private m_notifier!: AdminNotifier;
+    private m_systemInfo!: SystemInfoService;
+    private m_updateChecker!: UpdateChecker;
+
     /** The admin portal's own HTTP listener; null while the portal is off or not yet started. */
     private m_adminApp: AdminApp | null = null;
 
@@ -354,6 +362,13 @@ export class AppService {
         this.m_securityEvents = new SecurityEventService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
         this.m_blockedIps = new BlockedIpService(this.m_databasePool, this.m_logger, this.m_securityEvents, this.m_adminConfig.enabled);
 
+        this.m_notifier = new AdminNotifier(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
+        this.m_systemInfo = new SystemInfoService(this.m_databasePool, () => this.m_notifier.databaseSizeLimitMb());
+        this.m_updateChecker = new UpdateChecker(
+            () => process.env.APP_VERSION || "dev",
+            () => this.m_adminConfig.enabled && (this.m_settings.get("ADMIN_UPDATE_CHECK") ?? "true") !== "false"
+        );
+
         // The admin portal's log of sent mail (recipient, subject, outcome; never the body).
         if (this.m_adminConfig.enabled) {
             const mailLog = new MailLogRepository(this.m_databasePool);
@@ -379,6 +394,7 @@ export class AppService {
      */
     public async init() {
         AppService.__printBanner();
+        const bootTime = new Date();
 
         try {
             await runMigrations(this.m_databasePool, this.m_logger);
@@ -402,6 +418,7 @@ export class AppService {
             }
             await this.m_blockedIps.start();
             this.m_securityEvents.start();
+            this.m_notifier.start(bootTime);
         }
 
         const server = http.createServer(this.m_app);
@@ -497,6 +514,21 @@ export class AppService {
         return this.m_instanceUuid;
     }
 
+    /** Sends the notification emails to admins (a no-op while the portal is off). */
+    public getNotifier(): AdminNotifier {
+        return this.m_notifier;
+    }
+
+    /** Database and runtime facts for the System page. */
+    public getSystemInfo(): SystemInfoService {
+        return this.m_systemInfo;
+    }
+
+    /** "Is there a newer version" lookup. */
+    public getUpdateChecker(): UpdateChecker {
+        return this.m_updateChecker;
+    }
+
     /** Bootstrap config of the optional admin portal. */
     public getAdminConfig(): AdminConfig {
         return this.m_adminConfig;
@@ -540,6 +572,7 @@ export class AppService {
     /** Stops the admin portal's background work and listener (used on shutdown and by the tests). */
     public async stopAdmin(): Promise<void> {
         this.m_blockedIps.stop();
+        this.m_notifier.stop();
         await this.m_securityEvents.stop();
         await this.m_adminApp?.stop();
         this.m_adminApp = null;

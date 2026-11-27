@@ -3033,6 +3033,8 @@ CREATE TABLE admin_users
     -- TRUE for the generated first admin and for admins created by another admin: the console makes
     -- them choose their own password before anything else.
     must_change_password BOOLEAN           NOT NULL DEFAULT FALSE,
+    -- Whether this admin gets the portal's notification emails (new accounts to approve, problems, ...).
+    notify_email       BOOLEAN             NOT NULL DEFAULT TRUE,
     token_version      INT                 NOT NULL DEFAULT 0,
     -- Two-factor auth is mandatory: an admin without totp_enabled must enrol at first login.
     totp_secret        TEXT,
@@ -3212,3 +3214,23 @@ CREATE INDEX idx_mail_log_created ON mail_log (created_date DESC);
 -- whether or not the portal is enabled; the server also recreates it on start if it is missing.
 INSERT INTO app_settings (key, value) VALUES ('INSTANCE_UUID', gen_random_uuid()::text)
 ON CONFLICT (key) DO NOTHING;
+
+-- ============================================================
+-- Notifications sent to admins (shown in the admin portal)
+-- ============================================================
+
+-- What the portal told its admins by email and how it went. 'skipped' = nothing was sent (email not
+-- configured, or no admin subscribed). dedupe_key stops the same alert from being sent over and over.
+CREATE TABLE admin_notifications
+(
+    id           BIGSERIAL PRIMARY KEY,
+    type         VARCHAR(30)  NOT NULL,
+    subject      VARCHAR(200) NOT NULL,
+    recipients   INT          NOT NULL DEFAULT 0,
+    status       VARCHAR(10)  NOT NULL CHECK (status IN ('sent', 'failed', 'skipped')),
+    detail       TEXT,
+    dedupe_key   VARCHAR(100),
+    created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_admin_notifications_created ON admin_notifications (created_date DESC);
+CREATE INDEX idx_admin_notifications_dedupe ON admin_notifications (dedupe_key, created_date DESC);

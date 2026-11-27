@@ -27,6 +27,8 @@ import {blockUntilPasswordChanged, ipAllowlist, requireAdmin, sameOriginOnly} fr
 import {authRoutes} from "./routes/AuthRoutes";
 import {deletionsRoutes} from "./routes/DeletionsRoutes";
 import {logsRoutes} from "./routes/LogsRoutes";
+import {notificationsRoutes} from "./routes/NotificationsRoutes";
+import {systemRoutes} from "./routes/SystemRoutes";
 import {overviewAndAdminsRoutes} from "./routes/OverviewAndAdminsRoutes";
 import {securityRoutes} from "./routes/SecurityRoutes";
 import {settingsRoutes} from "./routes/SettingsRoutes";
@@ -119,6 +121,8 @@ export class AdminApp {
         app.use("/api/admin/deletions", deletionsRoutes(this.audit, this.deletions));
         app.use("/api/admin/security", securityRoutes(this.pool, this.audit));
         app.use("/api/admin/logs", logsRoutes(this.pool, this.audit));
+        app.use("/api/admin/system", systemRoutes());
+        app.use("/api/admin/notifications", notificationsRoutes(this.pool, this.audit));
         app.use("/api/admin", (_req, res) => {
             res.status(404).json({message: "Not found"});
         });
@@ -238,6 +242,7 @@ export class AdminApp {
         try {
             await this.deletions.executeDue();
             await appService.getSecurityEvents().purgeOld();
+            await appService.getNotifier().purgeOld();
             await new MailLogRepository(this.pool).purge(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
             await this.auth.purgeSessions();
         } catch (error) {

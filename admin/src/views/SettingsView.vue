@@ -152,7 +152,8 @@ const sourceLabel = (source: SettingSource) => ({database: "Set here", env: "Fro
 const sourceColor = (source: SettingSource) => ({database: "primary", env: "info", default: undefined}[source]);
 
 function fill(next: ISettingGroup[]) {
-	groups.value = next;
+	// The notification switches have their own page.
+	groups.value = next.filter((group) => group.id !== "notifications");
 	resets.clear();
 	for (const group of next) {
 		for (const item of group.items) {
