@@ -65,6 +65,7 @@ export function settingsRoutes(audit: AdminAuditService): Router {
             }
             try {
                 mail = new MailService(MailService.readConfig(appService.getSettings().effectiveEnv(new Map([...appService.getSettings().overrides(), ...overrides]))), appService.getLogger());
+                mail.setRecorder(appService.getMailService().getRecorder());
             } catch (error) {
                 throw new ValidationError(error instanceof Error ? error.message : String(error));
             }

@@ -30,6 +30,7 @@ import {SecurityEventService} from "./admin/services/SecurityEventService";
 import {TrafficMonitor} from "./admin/services/TrafficMonitor";
 import {BlockedIpService} from "./admin/services/BlockedIpService";
 import {AdminApp} from "./admin/AdminApp";
+import {MailLogRepository} from "./admin/repositories/MailLogRepository";
 import {OidcRepository} from "./repositories/OidcRepository";
 import {rateLimited} from "./middlewares/RateLimitHandler";
 
@@ -348,6 +349,15 @@ export class AppService {
         this.m_settings = new SettingsService(this.m_databasePool, new SettingsCrypto(settingsSecret), this.m_logger, this.m_adminConfig.enabled);
         this.m_securityEvents = new SecurityEventService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
         this.m_blockedIps = new BlockedIpService(this.m_databasePool, this.m_logger, this.m_securityEvents, this.m_adminConfig.enabled);
+
+        // The admin portal's log of sent mail (recipient, subject, outcome; never the body).
+        if (this.m_adminConfig.enabled) {
+            const mailLog = new MailLogRepository(this.m_databasePool);
+            this.m_mailService.setRecorder((entry) => {
+                mailLog.add(entry.to, entry.subject, entry.error)
+                    .catch((error) => this.m_logger.error(`Recording sent mail failed: ${error instanceof Error ? error.message : String(error)}`));
+            });
+        }
 
         // Everything derived from env vars / portal settings; throws on an invalid configuration.
         this.__applyEnv(process.env);

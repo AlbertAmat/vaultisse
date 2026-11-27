@@ -452,6 +452,22 @@ describe("admin portal: audit trail and logs", () => {
         expect(Array.isArray(log.body.lines)).toBe(true);
     });
 
+    it("lists the emails sent to users, with the outcome but never the message", async () => {
+        const admin = await createLoggedInAdmin(apps.admin());
+        // A test email to an unreachable server is recorded as failed.
+        await admin.agent.post("/api/admin/settings/test-email").send({
+            to: "recipient-log@example.com",
+            settings: {SMTP_HOST: "127.0.0.1", SMTP_PORT: "1", SMTP_FROM: "Vaultisse <a@example.com>"},
+        });
+        const list = await admin.agent.get("/api/admin/logs/mail").query({q: "recipient-log@example.com"});
+        expect(list.status).toBe(200);
+        expect(list.body.items).toHaveLength(1);
+        expect(list.body.items[0]).toMatchObject({toAddress: "recipient-log@example.com", subject: "Vaultisse test email", status: "failed"});
+        expect(list.body.items[0].error).toBeTruthy();
+        expect(JSON.stringify(list.body)).not.toContain("admin portal. If you can read it");
+        expect((await admin.agent.get("/api/admin/logs/mail").query({status: "sent", q: "recipient-log@example.com"})).body.items).toHaveLength(0);
+    });
+
     it("reports overview numbers and system information", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
         const overview = await admin.agent.get("/api/admin/overview");

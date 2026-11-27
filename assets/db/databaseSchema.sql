@@ -3182,3 +3182,20 @@ CREATE TABLE plans
 CREATE UNIQUE INDEX idx_plans_single_default ON plans (is_default) WHERE is_default;
 
 ALTER TABLE vault ADD COLUMN plan_id INT REFERENCES plans (id) ON DELETE SET NULL;
+
+-- ============================================================
+-- Log of emails sent to users (shown in the admin portal)
+-- ============================================================
+
+-- Who was mailed, what subject, and whether the SMTP server accepted it. The message body is
+-- deliberately NOT stored: it carries verification links.
+CREATE TABLE mail_log
+(
+    id           BIGSERIAL PRIMARY KEY,
+    to_address   VARCHAR(255) NOT NULL,
+    subject      VARCHAR(255) NOT NULL,
+    status       VARCHAR(10)  NOT NULL CHECK (status IN ('sent', 'failed')),
+    error        TEXT,
+    created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_mail_log_created ON mail_log (created_date DESC);

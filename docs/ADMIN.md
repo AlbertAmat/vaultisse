@@ -185,8 +185,11 @@ unlimited). A vault uses the plan assigned to it, or the default plan, or no lim
 Recording is cheap by design: events are aggregated in memory per (type, address,
 minute) and flushed in batches, so an attack costs a few rows, not one write per request.
 
-*Logs* has the accounts' sign-in activity (`activity_log`) and the tail of the server
-log file. Both can contain user names and addresses; they are admin-only.
+*Logs* has the accounts' sign-in activity (`activity_log`), **the emails sent to users**
+and the tail of the server log file. The mail log shows when, to whom, which subject
+(verification link, approval, deletion warning, vault request, test email) and whether
+the SMTP server accepted it or why it refused. It never stores the message itself, since
+those carry verification links; entries are kept 90 days. Both can contain user names and addresses; they are admin-only.
 
 *Audit trail* records every admin action: who, what, to what, from which address,
 and details. **The database refuses to update or delete these rows** (triggers on

@@ -16,7 +16,7 @@ import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from "axios";
 import type {
     AdminLoginStep, AdminRole, IAccountDetail, IAccount, IAdminSelf, IAdminUser, IAdminVault, IAuditEntry, IBlockedIp, IDeletionRequestResult,
     IEnrollConfirm, IEnrollStart, ILockout, IOverview, IPaged, IPlan, IPlanInput, IScheduledDeletion, ISecurityEvent, ISecuritySummary,
-    IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
+    IMailEntry, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
 } from "@vaultisse/types/admin/IAdmin";
 
 export interface AdminClientOptions {
@@ -104,6 +104,7 @@ export interface AdminApiClient {
     logs: {
         activity(query: {action?: string; actorId?: number; ip?: string; page?: number; pageSize?: number}): Promise<IPaged<IActivityEntry>>;
         server(query: {lines?: number; level?: string; q?: string}): Promise<IServerLog>;
+        mail(query: {status?: string; q?: string; page?: number; pageSize?: number}): Promise<IPaged<IMailEntry>>;
         audit(query: {action?: string; adminId?: number; entityType?: string; page?: number; pageSize?: number}): Promise<IPaged<IAuditEntry>>;
     };
     admins: {
@@ -219,6 +220,7 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
         logs: {
             activity: (query) => get("/logs/activity", query),
             server: (query) => get("/logs/server", query),
+            mail: (query) => get("/logs/mail", query),
             audit: (query) => get("/logs/audit", query),
         },
         admins: {

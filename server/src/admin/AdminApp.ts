@@ -21,6 +21,7 @@ import {rateLimited} from "../middlewares/RateLimitHandler";
 import {Logger} from "../utils/Logger";
 import {ADMIN_DIST_DIR} from "../utils/Paths";
 import {AdminConfig} from "./AdminConfig";
+import {MailLogRepository} from "./repositories/MailLogRepository";
 import {ipAllowlist, requireAdmin, sameOriginOnly} from "./middleware";
 import {authRoutes} from "./routes/AuthRoutes";
 import {deletionsRoutes} from "./routes/DeletionsRoutes";
@@ -166,6 +167,7 @@ export class AdminApp {
         try {
             await this.deletions.executeDue();
             await appService.getSecurityEvents().purgeOld();
+            await new MailLogRepository(this.pool).purge(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
             await this.auth.purgeSessions();
         } catch (error) {
             this.logger.error(`Admin maintenance failed: ${error instanceof Error ? error.message : String(error)}`);

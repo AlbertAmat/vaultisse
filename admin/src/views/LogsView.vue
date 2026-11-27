@@ -1,10 +1,11 @@
 <template>
 	<div class="page">
-		<page-header title="Logs" subtitle="Sign-in activity of the accounts, and the server's own log. Both can contain names and addresses."/>
+		<page-header title="Logs" subtitle="Sign-in activity, the emails sent to users, and the server's own log. They can contain names and addresses."/>
 
 		<v-card>
 			<v-tabs v-model="tab" color="primary">
 				<v-tab value="activity">Sign-ins</v-tab>
+				<v-tab value="mail">Emails sent</v-tab>
 				<v-tab value="server">Server log</v-tab>
 			</v-tabs>
 			<v-divider/>
@@ -34,6 +35,33 @@
 					<pager :page="page" :page-size="25" :total="total" @update:page="page = $event; loadActivity(false)"/>
 				</v-tabs-window-item>
 
+				<v-tabs-window-item value="mail">
+					<div class="d-flex flex-wrap ga-3 pa-4">
+						<v-select v-model="mailStatus" :items="[{title: 'Delivered', value: 'sent'}, {title: 'Failed', value: 'failed'}]" clearable placeholder="Any result" style="max-width: 200px" @update:model-value="loadMail(true)"/>
+						<v-text-field v-model="mailQuery" prepend-inner-icon="mdi-magnify" placeholder="Search recipient or subject" clearable style="max-width: 340px" @update:model-value="debouncedMail"/>
+						<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" @click="loadMail(false)"/>
+					</div>
+					<div class="table-wrap">
+						<v-table density="compact">
+							<thead><tr><th>When</th><th>To</th><th>Subject</th><th>Result</th></tr></thead>
+							<tbody>
+								<tr v-for="mail in mails" :key="mail.id">
+									<td class="text-no-wrap">{{ dateTime(mail.createdDate) }}</td>
+									<td>{{ mail.toAddress }}</td>
+									<td>{{ mail.subject }}</td>
+									<td>
+										<v-chip size="x-small" variant="tonal" :color="mail.status === 'sent' ? 'success' : 'error'">{{ mail.status === "sent" ? "Delivered to the mail server" : "Failed" }}</v-chip>
+										<div v-if="mail.error" class="text-caption text-error mt-1" style="max-width: 360px">{{ mail.error }}</div>
+									</td>
+								</tr>
+								<tr v-if="!mails.length"><td colspan="4" class="text-center text-medium-emphasis pa-6">No emails sent yet.</td></tr>
+							</tbody>
+						</v-table>
+					</div>
+					<pager :page="mailPage" :page-size="25" :total="mailTotal" @update:page="mailPage = $event; loadMail(false)"/>
+					<p class="text-caption text-medium-emphasis px-4 pb-4">Verification links, account approvals, deletion warnings and vault requests. Only the recipient, subject and outcome are kept (90 days), never the message. "Delivered" means the mail server accepted it, not that it reached the inbox.</p>
+				</v-tabs-window-item>
+
 				<v-tabs-window-item value="server">
 					<div class="d-flex flex-wrap ga-3 pa-4">
 						<v-select v-model="level" :items="levels" clearable placeholder="All levels" style="max-width: 180px" @update:model-value="loadLog"/>
@@ -51,7 +79,7 @@
 
 <script setup lang="ts">
 import {nextTick, onMounted, ref, watch} from "vue";
-import type {IActivityEntry} from "@vaultisse/types/admin/IAdmin";
+import type {IActivityEntry, IMailEntry} from "@vaultisse/types/admin/IAdmin";
 import {api} from "@/api";
 import {dateTime} from "@/utils/format";
 import PageHeader from "@/components/PageHeader.vue";
@@ -63,6 +91,11 @@ const total = ref(0);
 const page = ref(1);
 const action = ref<string | null>(null);
 const ip = ref("");
+const mails = ref<IMailEntry[]>([]);
+const mailTotal = ref(0);
+const mailPage = ref(1);
+const mailStatus = ref<string | null>(null);
+const mailQuery = ref("");
 const log = ref<string[]>([]);
 const level = ref<string | null>(null);
 const query = ref("");
@@ -84,6 +117,15 @@ async function loadActivity(reset: boolean) {
 	total.value = result.total;
 }
 
+async function loadMail(reset: boolean) {
+	if (reset) {
+		mailPage.value = 1;
+	}
+	const result = await api.logs.mail({status: mailStatus.value ?? undefined, q: mailQuery.value ?? "", page: mailPage.value});
+	mails.value = result.items;
+	mailTotal.value = result.total;
+}
+
 async function loadLog() {
 	const result = await api.logs.server({lines: lines.value, level: level.value ?? undefined, q: query.value ?? ""});
 	log.value = result.lines;
@@ -98,12 +140,16 @@ const debounced = () => {
 	clearTimeout(timer);
 	timer = setTimeout(() => loadActivity(true), 300);
 };
+const debouncedMail = () => {
+	clearTimeout(timer);
+	timer = setTimeout(() => loadMail(true), 300);
+};
 const debouncedLog = () => {
 	clearTimeout(timer);
 	timer = setTimeout(loadLog, 300);
 };
 
-watch(tab, (value) => (value === "server" ? loadLog() : loadActivity(false)));
+watch(tab, (value) => (value === "server" ? loadLog() : value === "mail" ? loadMail(false) : loadActivity(false)));
 onMounted(() => loadActivity(false));
 </script>
 

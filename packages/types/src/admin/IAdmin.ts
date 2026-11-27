@@ -318,6 +318,15 @@ export interface IAuditEntry {
     createdDate: string;
 }
 
+export interface IMailEntry {
+    id: number;
+    toAddress: string;
+    subject: string;
+    status: "sent" | "failed";
+    error: string | null;
+    createdDate: string;
+}
+
 export interface IServerLog {
     lines: string[];
     scannedLines: number;

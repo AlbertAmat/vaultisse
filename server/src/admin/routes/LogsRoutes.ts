@@ -3,6 +3,7 @@
  *
  *  GET /activity   sign-in activity of the regular users (`activity_log`)  ?action=&actorId=&ip=&page=
  *  GET /server     tail of the server log file  ?lines=&level=info|warn|error&q=
+ *  GET /mail       emails sent to users (recipient, subject, delivery result; never the body)  ?status=sent|failed&q=&page=
  *  GET /audit      what the admins did (`admin_audit_log`)  ?action=&adminId=&entityType=&page=
  *
  * The server log can contain user names and addresses (and, with DEBUG_LOGGING on, more): it is admin-only.
@@ -13,6 +14,7 @@ import {Pool} from "pg";
 import {ValidationError} from "../../errors/DomainError";
 import {appService} from "../../AppService";
 import {handle, paging, text} from "../http";
+import {MailLogRepository} from "../repositories/MailLogRepository";
 import {PlatformRepository} from "../repositories/PlatformRepository";
 import {AdminAuditService} from "../services/AdminAuditService";
 
@@ -70,6 +72,12 @@ export function logsRoutes(pool: Pool, audit: AdminAuditService): Router {
         const all = await readTail(appService.getLogger().getLogFilePath());
         const filtered = all.filter((line) => (!level || line.includes(`[${level}]`)) && (!query || line.toLowerCase().includes(query)));
         res.json({lines: filtered.slice(-lines), scannedLines: all.length});
+    }));
+
+    router.get("/mail", handle(async (req, res) => {
+        const {page, pageSize, limit, offset} = paging(req);
+        const {rows, total} = await new MailLogRepository(pool).list({status: text(req.query.status), search: text(req.query.q)}, limit, offset);
+        res.json({items: rows, total, page, pageSize});
     }));
 
     router.get("/audit", handle(async (req, res) => {

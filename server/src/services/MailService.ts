@@ -19,10 +19,14 @@ export interface SmtpConfig {
     publicUrl: string;
 }
 
+/** Told about every delivery attempt (recipient, subject, outcome) - the admin portal's sent-mail log. Never gets the body. */
+export type MailRecorder = (entry: {to: string; subject: string; error: string | null}) => void;
+
 /** Sends plain-text mail through the configured SMTP server, or does nothing when there is none. */
 export class MailService {
     private transporter: Transporter | null = null;
     private config: SmtpConfig | null = null;
+    private recorder: MailRecorder | null = null;
 
     /**
      * @param config SMTP settings, or null to disable mail.
@@ -30,6 +34,16 @@ export class MailService {
      */
     public constructor(config: SmtpConfig | null, private readonly logger: Logger) {
         this.reconfigure(config);
+    }
+
+    /** @param recorder Callback told about every delivery attempt, or null. */
+    public setRecorder(recorder: MailRecorder | null): void {
+        this.recorder = recorder;
+    }
+
+    /** @returns The current delivery recorder. */
+    public getRecorder(): MailRecorder | null {
+        return this.recorder;
     }
 
     /**
@@ -132,10 +146,12 @@ export class MailService {
                 subject,
                 text,
             });
+            this.recorder?.({to, subject, error: null});
             return null;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             this.logger.error(`Sending mail "${subject}" failed: ${message}`);
+            this.recorder?.({to, subject, error: message});
             return message;
         }
     }
