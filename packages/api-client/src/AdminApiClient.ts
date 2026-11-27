@@ -14,6 +14,7 @@
  */
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from "axios";
 import type {
+    IChartsData, IAccountNote, IAdminSession, IDataRequest, DataRequestKind, IWebhook, IWebhookDelivery, IWebhookEvent, IWebhookInput,
     AdminLoginStep, AdminRole, IAccountDetail, IAccount, IAdminSelf, IAdminUser, IAdminVault, IAuditEntry, IBlockedIp, IDeletionRequestResult,
     IEnrollConfirm, IEnrollStart, ILockout, IOverview, IPaged, IPlan, IPlanInput, IScheduledDeletion, ISecurityEvent, ISecuritySummary,
     ILoginMap, IComplianceOverview, IControlInput, IRegisterEntry, IRegisterInput, RegisterKind, IIncident, IIncidentInput, IAccessReview, IAnnouncement, IBroadcast, IBroadcastAudience, IBroadcastPreview, IBulkResult, IInactivityPreview, IMaintenance, ITermsCounts, ITermsRow, AnnouncementLevel, BroadcastAudience, BulkAccountAction, TermsDocument, TermsStatus, IMailEntry, IOnboardingStatus, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
@@ -51,6 +52,7 @@ export interface AdminApiClient {
         changePassword(currentPassword: string, newPassword: string): Promise<void>;
     };
     overview(): Promise<IOverview>;
+    overviewCharts(days: number): Promise<IChartsData>;
     system(): Promise<ISystemInfo>;
     announcements: {
         list(): Promise<{items: IAnnouncement[]; maintenance: IMaintenance}>;
@@ -122,8 +124,13 @@ export interface AdminApiClient {
         testEmail(to: string, unsaved?: Record<string, string>): Promise<{ok: boolean; error: string | null}>;
     };
     users: {
-        list(query: {search?: string; status?: UserStatus; sort?: string; page?: number; pageSize?: number}): Promise<IPaged<IAccount>>;
+        list(query: {search?: string; status?: UserStatus; tag?: string; sort?: string; page?: number; pageSize?: number}): Promise<IPaged<IAccount>>;
         get(id: number): Promise<IAccountDetail>;
+        /** Private admin notes and tags (never shown to the user). */
+        tags(): Promise<{tag: string; count: number}[]>;
+        setTags(id: number, tags: string[]): Promise<string[]>;
+        addNote(id: number, body: string): Promise<IAccountNote[]>;
+        removeNote(id: number, noteId: number): Promise<IAccountNote[]>;
         approve(id: number): Promise<void>;
         disable(id: number, reason?: string): Promise<void>;
         enable(id: number): Promise<void>;
@@ -178,6 +185,30 @@ export interface AdminApiClient {
         update(id: number, input: {role?: AdminRole; disabled?: boolean}): Promise<void>;
         resetTwoFactor(id: number): Promise<void>;
         remove(id: number): Promise<void>;
+        /** Live admin sessions (a read-only admin sees only their own). */
+        sessions(): Promise<IAdminSession[]>;
+        /** Ends another admin's session. Needs a fresh verification (handled by the client). */
+        revokeSession(id: number): Promise<void>;
+    };
+    dataRequests: {
+        list(status?: string): Promise<{items: IDataRequest[]; counts: {open: number; overdue: number}}>;
+        create(input: {kind: DataRequestKind; userId?: number; email?: string; name?: string; receivedAt?: string; notes?: string}): Promise<IDataRequest>;
+        extend(id: number, reason: string): Promise<IDataRequest>;
+        close(id: number, outcome: "completed" | "rejected", resolution: string): Promise<IDataRequest>;
+        /** Carries out an erasure request through the deletion flow. */
+        erase(id: number, immediate?: boolean): Promise<{executed: boolean; executeAfter: string | null; item: IDataRequest}>;
+        /** A one-minute link that downloads the personal-data export (ZIP) of an account. Needs a fresh verification. */
+        exportLink(userId: number): Promise<string>;
+    };
+    webhooks: {
+        list(): Promise<{items: IWebhook[]; events: IWebhookEvent[]}>;
+        create(input: IWebhookInput): Promise<IWebhook>;
+        /** Without a target (`url`, `token`+`chatId`) the saved one stays. */
+        update(id: number, input: {name: string; events: string[]; url?: string; token?: string; chatId?: string; secret?: string}): Promise<IWebhook>;
+        setEnabled(id: number, enabled: boolean): Promise<void>;
+        remove(id: number): Promise<void>;
+        test(id: number): Promise<{ok: boolean; error: string | null}>;
+        deliveries(id: number): Promise<IWebhookDelivery[]>;
     };
 }
 
@@ -233,6 +264,7 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             changePassword: async (currentPassword, newPassword) => { await http.post("/auth/password", {currentPassword, newPassword}, {suppressErrorDialog: true}); },
         },
         overview: () => get("/overview"),
+        overviewCharts: (days) => get("/overview/charts", {days}),
         system: () => get("/system"),
         announcements: {
             list: () => get("/announcements"),
@@ -306,6 +338,10 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             resetTwoFactor: (id) => post(`/users/${id}/reset-2fa`),
             remove: (id, confirm, immediate = false) => del(`/users/${id}`, {confirm, immediate}),
             bulk: (action, target, extra) => post("/users/bulk", {action, ...target, ...extra}),
+            tags: async () => (await get<{items: {tag: string; count: number}[]}>("/users/tags")).items,
+            setTags: async (id, tags) => (await put<{tags: string[]}>(`/users/${id}/tags`, {tags})).tags,
+            addNote: async (id, body) => (await post<{notes: IAccountNote[]}>(`/users/${id}/notes`, {body})).notes,
+            removeNote: async (id, noteId) => (await del<{notes: IAccountNote[]}>(`/users/${id}/notes/${noteId}`)).notes,
         },
         vaults: {
             list: (query) => get("/vaults", query),
@@ -352,6 +388,25 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             update: (id, input) => patch(`/admins/${id}`, input),
             resetTwoFactor: (id) => post(`/admins/${id}/reset-2fa`),
             remove: (id) => del(`/admins/${id}`),
+            sessions: async () => (await get<{items: IAdminSession[]}>("/admins/sessions")).items,
+            revokeSession: (id) => post(`/admins/sessions/${id}/revoke`),
+        },
+        dataRequests: {
+            list: (status) => get("/data-requests", {status}),
+            create: async (input) => (await post<{item: IDataRequest}>("/data-requests", input)).item,
+            extend: async (id, reason) => (await post<{item: IDataRequest}>(`/data-requests/${id}/extend`, {reason})).item,
+            close: async (id, outcome, resolution) => (await post<{item: IDataRequest}>(`/data-requests/${id}/close`, {outcome, resolution})).item,
+            erase: (id, immediate = false) => post(`/data-requests/${id}/erase`, {immediate}),
+            exportLink: async (userId) => (await post<{url: string}>(`/data-requests/export/${userId}`)).url,
+        },
+        webhooks: {
+            list: () => get("/webhooks"),
+            create: async (input) => (await post<{item: IWebhook}>("/webhooks", input)).item,
+            update: async (id, input) => (await put<{item: IWebhook}>(`/webhooks/${id}`, input)).item,
+            setEnabled: (id, enabled) => patch(`/webhooks/${id}`, {enabled}),
+            remove: (id) => del(`/webhooks/${id}`),
+            test: (id) => post(`/webhooks/${id}/test`),
+            deliveries: async (id) => (await get<{items: IWebhookDelivery[]}>(`/webhooks/${id}/deliveries`)).items,
         },
     };
 }

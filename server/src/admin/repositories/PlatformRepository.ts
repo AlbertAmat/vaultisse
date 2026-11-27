@@ -24,6 +24,8 @@ export interface UserListRow {
     lastActivityDate: Date | null;
     vaultCount: number;
     deletionScheduledFor: Date | null;
+    tags: string[];
+    noteCount: number;
 }
 
 export interface UserMembership {
@@ -61,7 +63,7 @@ export interface VaultMember {
 }
 
 /** SQL for the bytes a vault stores: ebook files, data-URI covers, customer photos and the card background. */
-const VAULT_STORAGE_SQL = `
+export const VAULT_STORAGE_SQL = `
     COALESCE((SELECT SUM(file_size) FROM book_files WHERE vault_id = v.id), 0)
   + COALESCE((SELECT SUM(octet_length(image_url)) FROM books WHERE vault_id = v.id AND image_url LIKE 'data:%'), 0)
   + COALESCE((SELECT SUM(octet_length(image)) FROM customers WHERE vault_id = v.id), 0)
@@ -144,7 +146,7 @@ export class PlatformRepository {
      * @param offset Rows to skip.
      * @returns A page of accounts and the total number matching.
      */
-    public async listUsers(filters: {search?: string; status?: UserStatusFilter}, sort: "created" | "lastLogin" | "name", limit: number, offset: number): Promise<{rows: UserListRow[]; total: number}> {
+    public async listUsers(filters: {search?: string; status?: UserStatusFilter; tag?: string}, sort: "created" | "lastLogin" | "name", limit: number, offset: number): Promise<{rows: UserListRow[]; total: number}> {
         const params: unknown[] = [];
         const where: string[] = [];
         if (filters.search) {
@@ -153,6 +155,10 @@ export class PlatformRepository {
         }
         if (filters.status) {
             where.push(USER_STATUS_SQL[filters.status]);
+        }
+        if (filters.tag) {
+            params.push(filters.tag);
+            where.push(`EXISTS (SELECT 1 FROM account_tags t WHERE t.user_id = u.id AND t.tag = $${params.length})`);
         }
         const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
         const orderBy = sort === "lastLogin" ? "u.last_login_date DESC NULLS LAST, u.id DESC" : sort === "name" ? "LOWER(u.name), u.id" : "u.id DESC";
@@ -165,7 +171,9 @@ export class PlatformRepository {
                     u.last_login_date AS "lastLoginDate", u.last_activity_date AS "lastActivityDate",
                     (SELECT COUNT(*)::int FROM vault_users vu WHERE vu.user_id = u.id AND vu.status = 1) AS "vaultCount",
                     (SELECT d.execute_after FROM scheduled_deletions d WHERE d.entity_type = 'user' AND d.entity_id = u.id
-                        AND d.cancelled_at IS NULL AND d.executed_at IS NULL) AS "deletionScheduledFor"
+                        AND d.cancelled_at IS NULL AND d.executed_at IS NULL) AS "deletionScheduledFor",
+                    COALESCE((SELECT ARRAY_AGG(t.tag ORDER BY t.tag) FROM account_tags t WHERE t.user_id = u.id), '{}') AS tags,
+                    (SELECT COUNT(*)::int FROM account_notes n WHERE n.user_id = u.id) AS "noteCount"
                FROM users u ${clause}
               ORDER BY ${orderBy} LIMIT $${params.length - 1} OFFSET $${params.length}`,
             params
@@ -189,7 +197,9 @@ export class PlatformRepository {
                     u.last_login_date AS "lastLoginDate", u.last_activity_date AS "lastActivityDate",
                     (SELECT COUNT(*)::int FROM vault_users vu WHERE vu.user_id = u.id AND vu.status = 1) AS "vaultCount",
                     (SELECT d.execute_after FROM scheduled_deletions d WHERE d.entity_type = 'user' AND d.entity_id = u.id
-                        AND d.cancelled_at IS NULL AND d.executed_at IS NULL) AS "deletionScheduledFor"
+                        AND d.cancelled_at IS NULL AND d.executed_at IS NULL) AS "deletionScheduledFor",
+                    COALESCE((SELECT ARRAY_AGG(t.tag ORDER BY t.tag) FROM account_tags t WHERE t.user_id = u.id), '{}') AS tags,
+                    (SELECT COUNT(*)::int FROM account_notes n WHERE n.user_id = u.id) AS "noteCount"
                FROM users u WHERE u.id = $1`,
             [id]
         );

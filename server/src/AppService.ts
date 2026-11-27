@@ -35,6 +35,7 @@ import {AdminAuditService} from "./admin/services/AdminAuditService";
 import {AutoBlocker} from "./admin/services/AutoBlocker";
 import {NoticeService} from "./admin/services/NoticeService";
 import {AdminNotifier} from "./admin/services/AdminNotifier";
+import {WebhookService} from "./admin/services/WebhookService";
 import {SystemInfoService} from "./admin/services/SystemInfoService";
 import {UpdateChecker} from "./admin/services/UpdateChecker";
 import {MailLogRepository} from "./admin/repositories/MailLogRepository";
@@ -227,6 +228,7 @@ export class AppService {
 
     /** Admin notification emails and the health checks behind them. */
     private m_notifier!: AdminNotifier;
+    private m_webhooks!: WebhookService;
     private m_systemInfo!: SystemInfoService;
     private m_updateChecker!: UpdateChecker;
 
@@ -403,6 +405,7 @@ export class AppService {
         this.m_securityEvents.setObserver((type, ip, detail) => this.m_autoBlocker.observe(type, ip, detail));
         this.m_notices = new NoticeService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
         this.m_notifier = new AdminNotifier(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
+        this.m_webhooks = new WebhookService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled, settingsSecret);
         this.m_systemInfo = new SystemInfoService(this.m_databasePool, () => this.m_notifier.databaseSizeLimitMb());
         this.m_updateChecker = new UpdateChecker(
             () => process.env.APP_VERSION || "dev",
@@ -569,6 +572,11 @@ export class AppService {
     /** Announcements and maintenance mode. */
     public getNotices(): NoticeService {
         return this.m_notices;
+    }
+
+    /** Sends the portal's events to Slack, Discord, Telegram or a URL (a no-op while the portal is off). */
+    public getWebhooks(): WebhookService {
+        return this.m_webhooks;
     }
 
     /** Sends the notification emails to admins (a no-op while the portal is off). */

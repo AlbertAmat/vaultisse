@@ -108,6 +108,8 @@ export class ComplianceService {
         for (const row of reg) {
             register[row.kind as keyof Facts["register"]] = {active: row.active, overdue: row.overdue};
         }
+        const dataRequests = (await this.pool.query(
+            `SELECT COUNT(*)::int AS open, COUNT(*) FILTER (WHERE due_at < CURRENT_TIMESTAMP)::int AS overdue FROM data_requests WHERE status IN ('open', 'processing')`)).rows[0];
         const highRisks = await this.scalar("SELECT COUNT(*)::int FROM compliance_register WHERE kind = 'risk' AND status = 'active' AND rating = 'high'");
 
         const value = (key: string): string => {
@@ -143,6 +145,7 @@ export class ComplianceService {
             incidents,
             register,
             highRisks,
+            dataRequests,
         };
     }
 
@@ -184,6 +187,9 @@ export class ComplianceService {
         }
         if (facts.incidents.open > 0) {
             attention.push({kind: "incident", text: `${facts.incidents.open} incident(s) still open.`, link: "incidents"});
+        }
+        if (facts.dataRequests.overdue > 0) {
+            attention.push({kind: "request", text: `${facts.dataRequests.overdue} data request(s) are past their deadline.`, link: "controls"});
         }
         if (facts.admins.neverReviewed + facts.admins.staleReview > 0) {
             attention.push({kind: "access", text: `${facts.admins.neverReviewed + facts.admins.staleReview} admin(s) need an access review.`, link: "access"});

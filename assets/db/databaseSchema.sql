@@ -3333,3 +3333,81 @@ CREATE TABLE security_incidents
     created_by       INT REFERENCES admin_users (id) ON DELETE SET NULL,
     created_date     TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================
+-- Support notes, data requests and webhooks of the admin portal
+-- ============================================================
+
+-- Private notes and tags admins keep on accounts ("VIP", "abuse warning", ...). Never shown to the user.
+CREATE TABLE account_notes
+(
+    id           SERIAL PRIMARY KEY,
+    user_id      INT         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    body         TEXT        NOT NULL,
+    created_by   INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    created_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_account_notes_user ON account_notes (user_id);
+
+CREATE TABLE account_tags
+(
+    user_id      INT         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    tag          VARCHAR(30) NOT NULL,
+    created_by   INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    created_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, tag)
+);
+CREATE INDEX idx_account_tags_tag ON account_tags (tag);
+
+-- GDPR requests from the people the app holds data about (art. 15 access, art. 17 erasure). The answer is due
+-- within one month (art. 12(3)), extendable once by up to two more months for complex requests. The request
+-- stays on record after the account is erased: that record is the proof it was answered.
+CREATE TABLE data_requests
+(
+    id               SERIAL PRIMARY KEY,
+    kind             VARCHAR(10)  NOT NULL CHECK (kind IN ('access', 'erasure')),
+    user_id          INT REFERENCES users (id) ON DELETE SET NULL,
+    subject_name     VARCHAR(100),
+    subject_email    VARCHAR(100) NOT NULL,
+    received_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    due_at           TIMESTAMPTZ  NOT NULL,
+    extended_at      TIMESTAMPTZ,
+    extension_reason TEXT,
+    status           VARCHAR(12)  NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'processing', 'completed', 'rejected')),
+    completed_at     TIMESTAMPTZ,
+    resolution       TEXT,
+    notes            TEXT,
+    created_by       INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    handled_by       INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    created_date     TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_data_requests_status ON data_requests (status, due_at);
+
+-- Where the portal sends events (Slack, Discord, Telegram or any URL). `target` holds the secret part
+-- (webhook URL, bot token, signing secret) encrypted like the other secrets of the portal.
+CREATE TABLE webhooks
+(
+    id           SERIAL PRIMARY KEY,
+    name         VARCHAR(60)  NOT NULL,
+    kind         VARCHAR(10)  NOT NULL CHECK (kind IN ('slack', 'discord', 'telegram', 'generic')),
+    target       TEXT         NOT NULL,
+    events       TEXT[]       NOT NULL DEFAULT '{}',
+    enabled      BOOLEAN      NOT NULL DEFAULT TRUE,
+    last_status  VARCHAR(10),
+    last_error   TEXT,
+    last_at      TIMESTAMPTZ,
+    created_by   INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE webhook_deliveries
+(
+    id           BIGSERIAL PRIMARY KEY,
+    webhook_id   INT          NOT NULL REFERENCES webhooks (id) ON DELETE CASCADE,
+    event        VARCHAR(40)  NOT NULL,
+    status       VARCHAR(10)  NOT NULL CHECK (status IN ('sent', 'failed')),
+    http_status  INT,
+    error        TEXT,
+    created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_webhook_deliveries_hook ON webhook_deliveries (webhook_id, created_date DESC);

@@ -13,6 +13,7 @@
 import {Router} from "express";
 import {Pool} from "pg";
 import {NotFoundError, ValidationError} from "../../errors/DomainError";
+import {appService} from "../../AppService";
 import {handle, idParam, text} from "../http";
 import {requireSuperadmin} from "../middleware";
 import {ComplianceRepository, ControlStatus, IncidentInput, IncidentStatus, RegisterInput, RegisterKind, Severity} from "../repositories/ComplianceRepository";
@@ -186,6 +187,7 @@ export function complianceRoutes(pool: Pool, audit: AdminAuditService): Router {
         const input = parseIncident(req.body);
         const id = await repo.createIncident(input, req.admin!.id);
         await audit.record(req, "compliance.incident_create", {entityType: "incident", entityId: id, entityLabel: input.title, metadata: {severity: input.severity, personalData: input.personalData}});
+        void appService.getWebhooks().emit("incident.opened", {title: `Security incident (${input.severity}): ${input.title}`, lines: [input.personalData ? "Personal data is involved: the authority must be told within 72 hours." : "No personal data involved.", `Recorded by ${req.admin!.email}.`]});
         res.status(201).json({item: await repo.findIncident(id)});
     }));
 

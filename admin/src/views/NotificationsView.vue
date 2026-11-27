@@ -119,7 +119,7 @@ const saving = ref(false);
 const testing = ref(false);
 
 const typeLabel: Record<string, string> = {
-	user_pending: "Approval", security: "Security", database: "Database", mail_failures: "Email", deletions: "Deletion", updates: "Update", startup: "Start", test: "Test",
+	user_pending: "Approval", security: "Security", database: "Database", mail_failures: "Email", deletions: "Deletion", updates: "Update", startup: "Start", anomaly: "Anomaly", data_requests: "Data request", test: "Test",
 };
 
 const switches = computed(() => settings.value.filter((item) => item.type === "boolean"));

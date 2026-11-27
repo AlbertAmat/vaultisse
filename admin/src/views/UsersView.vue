@@ -6,6 +6,7 @@
 			<div class="d-flex flex-wrap ga-3 pa-4">
 				<v-text-field v-model="search" prepend-inner-icon="mdi-magnify" placeholder="Search by name, username or email" clearable style="max-width: 360px" @update:model-value="debounced"/>
 				<v-select v-model="status" :items="statuses" clearable placeholder="Any status" style="max-width: 220px" @update:model-value="reload"/>
+				<v-select v-if="allTags.length" v-model="tag" :items="allTags.map((t) => ({title: `${t.tag} (${t.count})`, value: t.tag}))" clearable placeholder="Any tag" prepend-inner-icon="mdi-tag-outline" style="max-width: 220px" @update:model-value="reload"/>
 				<v-select v-model="sort" :items="sorts" style="max-width: 200px" @update:model-value="reload"/>
 				<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" @click="load"/>
 				<v-btn v-if="canWrite() && status === 'pending' && total > 0" color="success" variant="flat" prepend-icon="mdi-check-all" @click="approveAllOpen = true">Approve all {{ total }}</v-btn>
@@ -37,8 +38,9 @@
 						<tr v-for="user in items" :key="user.id" class="row-click" :class="{picked: selected.has(user.id)}" @click="open(user.id)">
 							<td @click.stop><v-checkbox-btn :model-value="selected.has(user.id)" :aria-label="`Select ${user.name}`" @update:model-value="toggle(user.id)"/></td>
 							<td>
-								<div class="font-weight-medium">{{ user.name }}</div>
+								<div class="font-weight-medium">{{ user.name }}<v-icon v-if="user.noteCount" size="14" class="ml-1 text-medium-emphasis" title="Has private notes">mdi-note-text-outline</v-icon></div>
 								<div class="text-caption text-medium-emphasis">{{ user.code }} · {{ user.email }}</div>
+								<div v-if="user.tags.length" class="mt-1"><v-chip v-for="t in user.tags" :key="t" size="x-small" variant="tonal" color="primary" class="mr-1" @click.stop="tag = t; reload()">{{ t }}</v-chip></div>
 							</td>
 							<td><status-chips :user="user"/></td>
 							<td>{{ user.vaultCount }}</td>
@@ -86,6 +88,29 @@
 					<v-btn v-else-if="detail.user.disabledReason !== 'pending_deletion'" variant="tonal" prepend-icon="mdi-account-check-outline" @click="act(() => api.users.enable(detail!.user.id), 'Account enabled.')">Enable</v-btn>
 					<v-btn variant="tonal" prepend-icon="mdi-logout-variant" @click="act(() => api.users.forceLogout(detail!.user.id), 'Every session was ended.')">Sign out everywhere</v-btn>
 					<v-btn v-if="detail.user.totpEnabled" variant="tonal" prepend-icon="mdi-shield-off-outline" @click="act(() => api.users.resetTwoFactor(detail!.user.id), 'Two-factor removed.')">Reset two-factor</v-btn>
+				</div>
+
+				<div class="text-subtitle-2 mt-6 mb-2">Tags <span class="text-caption text-medium-emphasis">only admins see these</span></div>
+				<v-combobox v-if="canWrite()" v-model="editTags" :items="allTags.map((t) => t.tag)" multiple chips closable-chips density="compact" placeholder="vip, abuse warning, pending refund…" hide-details @update:model-value="saveTags"/>
+				<div v-else-if="detail.user.tags.length"><v-chip v-for="t in detail.user.tags" :key="t" size="small" variant="tonal" class="mr-1">{{ t }}</v-chip></div>
+				<p v-else class="text-body-2 text-medium-emphasis">No tags.</p>
+
+				<div class="text-subtitle-2 mt-6 mb-2">Notes <span class="text-caption text-medium-emphasis">private, never shown to the user</span></div>
+				<div v-if="canWrite()" class="d-flex ga-2 align-start">
+					<v-textarea v-model="newNote" rows="2" auto-grow maxlength="2000" placeholder="What should the next admin know?" hide-details/>
+					<v-btn color="primary" variant="flat" :disabled="!newNote.trim()" :loading="savingNote" @click="addNote">Add</v-btn>
+				</div>
+				<div v-for="n in detail.notes" :key="n.id" class="note mt-3">
+					<div class="text-body-2" style="white-space: pre-wrap">{{ n.body }}</div>
+					<div class="text-caption text-medium-emphasis d-flex align-center">{{ n.createdBy ?? "an admin who was since removed" }} · {{ relative(n.createdDate) }}<v-spacer/>
+						<v-btn v-if="canWrite()" size="x-small" variant="text" icon="mdi-close" aria-label="Remove note" @click="removeNote(n.id)"/></div>
+				</div>
+				<p v-if="!detail.notes.length" class="text-body-2 text-medium-emphasis mt-2">No notes.</p>
+
+				<div class="text-subtitle-2 mt-6 mb-2">Personal data (GDPR)</div>
+				<div class="d-flex flex-wrap ga-2">
+					<v-btn variant="tonal" prepend-icon="mdi-folder-zip-outline" :loading="exporting" @click="exportData">Download their data</v-btn>
+					<v-btn v-if="canWrite()" variant="tonal" prepend-icon="mdi-clipboard-text-clock-outline" :to="`/data-requests?new=1&user=${detail.user.id}`">Log a request…</v-btn>
 				</div>
 
 				<div class="text-subtitle-2 mt-6 mb-2">Vaults</div>
@@ -205,6 +230,12 @@ const drawer = ref(false);
 const detail = ref<IAccountDetail | null>(null);
 const removing = ref(false);
 const selected = ref(new Set<number>());
+const tag = ref<string | null>(null);
+const allTags = ref<{tag: string; count: number}[]>([]);
+const editTags = ref<string[]>([]);
+const newNote = ref("");
+const savingNote = ref(false);
+const exporting = ref(false);
 const approveAllOpen = ref(false);
 const bulkDeleteOpen = ref(false);
 const working = ref(false);
@@ -279,11 +310,58 @@ async function load() {
 	loading.value = true;
 	selected.value = new Set();
 	try {
-		const result = await api.users.list({search: search.value ?? "", status: status.value ?? undefined, sort: sort.value, page: page.value, pageSize});
+		const result = await api.users.list({search: search.value ?? "", status: status.value ?? undefined, tag: tag.value ?? undefined, sort: sort.value, page: page.value, pageSize});
 		items.value = result.items;
 		total.value = result.total;
+		allTags.value = await api.users.tags();
 	} finally {
 		loading.value = false;
+	}
+}
+
+async function saveTags(value: string[]) {
+	const id = detail.value!.user.id;
+	try {
+		editTags.value = await api.users.setTags(id, value.map((t) => String(t)));
+	} catch {
+		editTags.value = detail.value!.user.tags;
+		return;
+	}
+	detail.value = await api.users.get(id);
+	await load();
+}
+
+async function addNote() {
+	savingNote.value = true;
+	try {
+		detail.value!.notes = await api.users.addNote(detail.value!.user.id, newNote.value.trim());
+		detail.value!.user.noteCount = detail.value!.notes.length;
+		newNote.value = "";
+		await load();
+	} finally {
+		savingNote.value = false;
+	}
+}
+
+async function removeNote(noteId: number) {
+	detail.value!.notes = await api.users.removeNote(detail.value!.user.id, noteId);
+	await load();
+}
+
+/** A fresh verification buys a one-minute link; following it downloads the ZIP. */
+async function exportData() {
+	exporting.value = true;
+	try {
+		const url = await api.dataRequests.exportLink(detail.value!.user.id);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = "";
+		document.body.append(link);
+		link.click();
+		link.remove();
+		notify("The download started.");
+	} finally {
+		exporting.value = false;
 	}
 }
 
@@ -294,6 +372,8 @@ function reload() {
 
 async function open(id: number) {
 	detail.value = await api.users.get(id);
+	editTags.value = [...detail.value.user.tags];
+	newNote.value = "";
 	drawer.value = true;
 }
 
@@ -303,6 +383,7 @@ async function act(work: () => Promise<unknown>, message: string) {
 	await work();
 	notify(message);
 	detail.value = await api.users.get(id);
+	editTags.value = [...detail.value.user.tags];
 	await load();
 }
 
@@ -335,5 +416,12 @@ tr.picked {
 
 .facts dt {
 	opacity: 0.65;
+}
+
+.note {
+	padding: 8px 12px;
+	border: 1px solid var(--pb-border);
+	border-radius: 10px;
+	background: var(--pb-surface-alt);
 }
 </style>

@@ -341,6 +341,10 @@ export class AuthService {
             throw err;
         }
 
+        void appService.getWebhooks().emit("account.created", {
+            title: `New account: ${fields.name} (${fields.userName})`,
+            lines: [requiresApproval ? "It is waiting for approval." : "It can sign in."],
+        });
         if (requiresApproval) {
             void AuthService.tellAdminsAboutPendingAccount(this.pool, fields.name, fields.userName);
         }

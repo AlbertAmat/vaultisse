@@ -147,6 +147,9 @@ export interface IAccount {
     lastActivityDate: string | null;
     vaultCount: number;
     deletionScheduledFor: string | null;
+    /** Private labels admins put on the account. */
+    tags: string[];
+    noteCount: number;
 }
 
 export interface IAccountMembership {
@@ -172,6 +175,7 @@ export interface IAccountDetail {
     memberships: IAccountMembership[];
     sessionCount: number;
     recentActivity: IActivityEntry[];
+    notes: IAccountNote[];
 }
 
 export interface IAdminVault {
@@ -664,4 +668,112 @@ export interface IAccessReview {
     lastLoginDate: string | null;
     accessReviewedAt: string | null;
     reviewedBy: string | null;
+}
+
+// ---- Overview charts ----
+
+export interface IChartsData {
+    days: number;
+    accountStatus: {active: number; pending: number; disabled: number; unverified: number};
+    plans: {name: string; vaults: number}[];
+    topByStorage: {id: number; name: string; books: number; bytes: number}[];
+    topByBooks: {id: number; name: string; books: number; bytes: number}[];
+    growth: {day: string; added: number; total: number}[];
+    signups: {day: string; count: number}[];
+    logins: {day: string; count: number}[];
+    failedLogins: {day: string; users: number; admins: number}[];
+    emails: {day: string; sent: number; failed: number}[];
+    securityByType: {type: string; total: number}[];
+    quota: {id: number; name: string; plan: string; percent: number; limiting: "books" | "storage" | "members"}[];
+}
+
+// ---- Support notes ----
+
+export interface IAccountNote {
+    id: number;
+    body: string;
+    createdBy: string | null;
+    createdDate: string;
+}
+
+// ---- Admin sessions ----
+
+export interface IAdminSession {
+    id: number;
+    adminId: number;
+    adminEmail: string;
+    adminName: string;
+    userAgent: string | null;
+    ipAddress: string | null;
+    country: string | null;
+    city: string | null;
+    createdDate: string;
+    lastSeenDate: string;
+    current: boolean;
+}
+
+// ---- Data requests (GDPR) ----
+
+export type DataRequestKind = "access" | "erasure";
+export type DataRequestStatus = "open" | "processing" | "completed" | "rejected";
+
+export interface IDataRequest {
+    id: number;
+    kind: DataRequestKind;
+    userId: number | null;
+    userCode: string | null;
+    subjectName: string | null;
+    subjectEmail: string;
+    receivedAt: string;
+    dueAt: string;
+    extendedAt: string | null;
+    extensionReason: string | null;
+    status: DataRequestStatus;
+    completedAt: string | null;
+    resolution: string | null;
+    notes: string | null;
+    deletionScheduledFor: string | null;
+    /** Days to the deadline (negative once overdue); null for a closed request. */
+    daysLeft: number | null;
+    overdue: boolean;
+}
+
+// ---- Webhooks ----
+
+export type WebhookKind = "slack" | "discord" | "telegram" | "generic";
+
+export interface IWebhookEvent {
+    id: string;
+    label: string;
+}
+
+export interface IWebhook {
+    id: number;
+    name: string;
+    kind: WebhookKind;
+    targetHint: string;
+    events: string[];
+    enabled: boolean;
+    lastStatus: "sent" | "failed" | null;
+    lastError: string | null;
+    lastAt: string | null;
+}
+
+export interface IWebhookDelivery {
+    id: number;
+    event: string;
+    status: "sent" | "failed";
+    httpStatus: number | null;
+    error: string | null;
+    createdDate: string;
+}
+
+export interface IWebhookInput {
+    name: string;
+    kind: WebhookKind;
+    events: string[];
+    url?: string;
+    token?: string;
+    chatId?: string;
+    secret?: string;
 }

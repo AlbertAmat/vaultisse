@@ -282,6 +282,29 @@ export class AdminUserRepository {
         return result.rows[0] ?? null;
     }
 
+    /**
+     * @param cutoff Only sessions seen after this time.
+     * @param adminId Limit to one admin, or undefined for everybody.
+     * @returns Live (not revoked) sessions, most recently seen first.
+     */
+    public async listLiveSessions(cutoff: Date, adminId?: number): Promise<{id: number; adminId: number; adminEmail: string; adminName: string; userAgent: string | null; ipAddress: string | null; createdDate: Date; lastSeenDate: Date}[]> {
+        const result = await this.db.query(
+            `SELECT s.id, s.admin_id AS "adminId", a.email AS "adminEmail", a.name AS "adminName", s.user_agent AS "userAgent",
+                    s.ip_address AS "ipAddress", s.created_date AS "createdDate", s.last_seen_date AS "lastSeenDate"
+               FROM admin_sessions s JOIN admin_users a ON a.id = s.admin_id
+              WHERE s.revoked_date IS NULL AND s.last_seen_date > $1 ${adminId === undefined ? "" : "AND s.admin_id = $2"}
+              ORDER BY s.last_seen_date DESC LIMIT 200`, adminId === undefined ? [cutoff] : [cutoff, adminId]);
+        return result.rows;
+    }
+
+    /** @param sessionId Session id. @returns Whether a live session was revoked, and whose it was. */
+    public async revokeSessionById(sessionId: number): Promise<{adminId: number; email: string} | null> {
+        const result = await this.db.query(
+            `UPDATE admin_sessions s SET revoked_date = CURRENT_TIMESTAMP FROM admin_users a
+              WHERE s.id = $1 AND s.revoked_date IS NULL AND a.id = s.admin_id RETURNING a.id AS "adminId", a.email`, [sessionId]);
+        return result.rows[0] ?? null;
+    }
+
     /** @param sessionId Session id. */
     public async touchSession(sessionId: number): Promise<void> {
         await this.db.query("UPDATE admin_sessions SET last_seen_date = CURRENT_TIMESTAMP WHERE id = $1", [sessionId]);

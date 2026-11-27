@@ -21,17 +21,87 @@
 			<v-col cols="6" md="3"><stat-card label="Pending deletions" :value="num(counts.pendingDeletions)" icon="mdi-delete-clock-outline" to="/deletions" :color="counts.pendingDeletions ? 'warning' : undefined"/></v-col>
 		</v-row>
 
-		<v-row v-if="overview">
+		<div class="d-flex flex-wrap align-center ga-3 mt-2 mb-1">
+			<div class="text-subtitle-1 font-weight-medium">Trends</div>
+			<v-chip-group v-model="days" mandatory selected-class="text-primary" @update:model-value="loadCharts">
+				<v-chip v-for="p in periods" :key="p.value" :value="p.value" variant="text" filter>{{ p.label }}</v-chip>
+			</v-chip-group>
+		</div>
+
+		<v-row v-if="charts">
 			<v-col cols="12" md="6">
-				<v-card class="pa-4">
-					<div class="text-subtitle-1 font-weight-medium mb-2">New accounts, last 30 days</div>
-					<chart-panel :labels="overview.signups.map((p) => shortDay(p.day))" :series="[{label: 'Sign-ups', data: overview.signups.map((p) => p.count), color: 'primary'}]"/>
+				<v-card class="pa-4 h-100">
+					<div class="text-subtitle-1 font-weight-medium mb-2">New accounts</div>
+					<chart-panel :labels="charts.signups.map((p) => shortDay(p.day))" :series="[{label: 'Sign-ups', data: charts.signups.map((p) => p.count), color: 'primary'}]"/>
 				</v-card>
 			</v-col>
 			<v-col cols="12" md="6">
-				<v-card class="pa-4">
-					<div class="text-subtitle-1 font-weight-medium mb-2">Sign-ins, last 14 days</div>
-					<chart-panel type="line" :labels="overview.logins.map((p) => shortDay(p.day))" :series="[{label: 'Sign-ins', data: overview.logins.map((p) => p.count), color: 'secondary'}]"/>
+				<v-card class="pa-4 h-100">
+					<div class="text-subtitle-1 font-weight-medium mb-2">Sign-ins</div>
+					<chart-panel type="line" :labels="charts.logins.map((p) => shortDay(p.day))" :series="[{label: 'Sign-ins', data: charts.logins.map((p) => p.count), color: 'secondary'}]"/>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="4">
+				<v-card class="pa-4 h-100">
+					<div class="text-subtitle-1 font-weight-medium mb-2">Accounts by status</div>
+					<chart-panel type="doughnut" :labels="['Active', 'Awaiting approval', 'Disabled', 'Email not verified']" :colors="['success', 'info', 'error', 'warning']"
+						:series="[{label: 'Accounts', data: [charts.accountStatus.active, charts.accountStatus.pending, charts.accountStatus.disabled, charts.accountStatus.unverified], color: 'primary'}]"/>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="4">
+				<v-card class="pa-4 h-100">
+					<div class="text-subtitle-1 font-weight-medium mb-2">Vaults by plan</div>
+					<chart-panel v-if="charts.plans.length" type="doughnut" :labels="charts.plans.map((p) => p.name)" :series="[{label: 'Vaults', data: charts.plans.map((p) => p.vaults), color: 'primary'}]"/>
+					<p v-else class="text-body-2 text-medium-emphasis">No vaults yet.</p>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="4">
+				<v-card class="pa-4 h-100">
+					<div class="d-flex align-center mb-2"><div class="text-subtitle-1 font-weight-medium">Security events by type</div><v-spacer/><v-btn size="x-small" variant="text" to="/security">Security</v-btn></div>
+					<chart-panel v-if="charts.securityByType.length" horizontal :labels="charts.securityByType.map((t) => eventNames[t.type] ?? t.type)" :series="[{label: 'Events', data: charts.securityByType.map((t) => t.total), color: 'warning'}]"/>
+					<p v-else class="text-body-2 text-medium-emphasis">No security events in this period.</p>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="6">
+				<v-card class="pa-4 h-100">
+					<div class="text-subtitle-1 font-weight-medium mb-2">Library growth <span class="text-caption text-medium-emphasis">books in all vaults</span></div>
+					<chart-panel type="line" :labels="charts.growth.map((p) => shortDay(p.day))" :series="[{label: 'Books', data: charts.growth.map((p) => p.total), color: 'primary'}]"/>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="6">
+				<v-card class="pa-4 h-100">
+					<div class="text-subtitle-1 font-weight-medium mb-2">Failed sign-ins</div>
+					<chart-panel stacked :labels="charts.failedLogins.map((p) => shortDay(p.day))" :series="[{label: 'Users', data: charts.failedLogins.map((p) => p.users), color: 'warning'}, {label: 'Admins', data: charts.failedLogins.map((p) => p.admins), color: 'error'}]"/>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="6">
+				<v-card class="pa-4 h-100">
+					<div class="d-flex align-center mb-2"><div class="text-subtitle-1 font-weight-medium">Emails sent</div><v-spacer/><v-btn size="x-small" variant="text" to="/logs">Logs</v-btn></div>
+					<chart-panel stacked :labels="charts.emails.map((p) => shortDay(p.day))" :series="[{label: 'Delivered', data: charts.emails.map((p) => p.sent), color: 'success'}, {label: 'Failed', data: charts.emails.map((p) => p.failed), color: 'error'}]"/>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="6">
+				<v-card class="pa-4 h-100">
+					<div class="d-flex align-center mb-2"><div class="text-subtitle-1 font-weight-medium">Closest to their plan limit</div><v-spacer/><v-btn size="x-small" variant="text" to="/plans">Plans</v-btn></div>
+					<div v-for="q in charts.quota" :key="q.id" class="mb-3">
+						<div class="d-flex text-body-2"><router-link :to="`/vaults?search=${encodeURIComponent(q.name)}`" class="vault-link">{{ q.name }}</router-link><span class="text-medium-emphasis ml-2">{{ q.plan }} · {{ q.limiting }}</span><v-spacer/><strong :class="q.percent >= 100 ? 'text-error' : q.percent >= 80 ? 'text-warning' : ''">{{ q.percent }}%</strong></div>
+						<v-progress-linear :model-value="Math.min(q.percent, 100)" :color="q.percent >= 100 ? 'error' : q.percent >= 80 ? 'warning' : 'primary'" height="6" rounded/>
+					</div>
+					<p v-if="!charts.quota.length" class="text-body-2 text-medium-emphasis">No vault has a plan with limits yet.</p>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="6">
+				<v-card class="pa-4 h-100">
+					<div class="text-subtitle-1 font-weight-medium mb-2">Biggest vaults by storage <span class="text-caption text-medium-emphasis">MB</span></div>
+					<chart-panel v-if="charts.topByStorage.length" horizontal :labels="charts.topByStorage.map((v) => v.name)" :series="[{label: 'MB', data: charts.topByStorage.map((v) => Math.round(v.bytes / 1048576 * 10) / 10), color: 'secondary'}]"/>
+					<p v-else class="text-body-2 text-medium-emphasis">Nothing stored yet.</p>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="6">
+				<v-card class="pa-4 h-100">
+					<div class="text-subtitle-1 font-weight-medium mb-2">Biggest vaults by books</div>
+					<chart-panel v-if="charts.topByBooks.length" horizontal :labels="charts.topByBooks.map((v) => v.name)" :series="[{label: 'Books', data: charts.topByBooks.map((v) => v.books), color: 'primary'}]"/>
+					<p v-else class="text-body-2 text-medium-emphasis">No books yet.</p>
 				</v-card>
 			</v-col>
 		</v-row>
@@ -67,7 +137,7 @@
 
 <script setup lang="ts">
 import {computed, onMounted, ref} from "vue";
-import type {IOverview, ISystemInfo} from "@vaultisse/types/admin/IAdmin";
+import type {IChartsData, IOverview, ISystemInfo} from "@vaultisse/types/admin/IAdmin";
 import {api} from "@/api";
 import {bytes, duration, num} from "@/utils/format";
 import ChartPanel from "@/components/ChartPanel.vue";
@@ -75,6 +145,10 @@ import PageHeader from "@/components/PageHeader.vue";
 import StatCard from "@/components/StatCard.vue";
 
 const overview = ref<IOverview | null>(null);
+const charts = ref<IChartsData | null>(null);
+const days = ref(30);
+const periods = [{label: "7 days", value: 7}, {label: "30 days", value: 30}, {label: "90 days", value: 90}];
+const eventNames: Record<string, string> = {rate_limited: "Rate limited", login_failed: "Failed sign-in", login_locked: "Account locked", admin_login_failed: "Failed admin sign-in", blocked_ip_hit: "Blocked address"};
 const system = ref<ISystemInfo | null>(null);
 const loading = ref(false);
 const counts = computed(() => overview.value?.counts ?? null);
@@ -82,10 +156,14 @@ const counts = computed(() => overview.value?.counts ?? null);
 /** "2026-11-27" -> "27 Nov" in the local language. */
 const shortDay = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString(undefined, {day: "numeric", month: "short"});
 
+async function loadCharts() {
+	charts.value = await api.overviewCharts(days.value);
+}
+
 async function load() {
 	loading.value = true;
 	try {
-		[overview.value, system.value] = await Promise.all([api.overview(), api.system()]);
+		[overview.value, system.value, charts.value] = await Promise.all([api.overview(), api.system(), api.overviewCharts(days.value)]);
 	} finally {
 		loading.value = false;
 	}
@@ -93,3 +171,15 @@ async function load() {
 
 onMounted(load);
 </script>
+
+<style scoped>
+.vault-link {
+	color: inherit;
+	font-weight: 500;
+	text-decoration: none;
+}
+
+.vault-link:hover {
+	text-decoration: underline;
+}
+</style>

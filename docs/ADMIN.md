@@ -29,10 +29,16 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 - [Bulk actions on accounts](#bulk-actions-on-accounts)
 - [Terms acceptance report](#terms-acceptance-report)
 - [Automatic IP blocking](#automatic-ip-blocking)
+- [Overview charts](#overview-charts)
+- [Support notes and tags](#support-notes-and-tags)
+- [Data requests (GDPR)](#data-requests-gdpr)
 - [Login map](#login-map)
 - [Compliance](#compliance)
 - [System page](#system-page)
 - [Notifications to admins](#notifications-to-admins)
+- [Anomaly alerts](#anomaly-alerts)
+- [Webhooks](#webhooks)
+- [Admin sessions](#admin-sessions)
 - [Security, logs and audit](#security-logs-and-audit)
 - [Admin accounts](#admin-accounts)
 - [Securing it](#securing-it)
@@ -373,6 +379,46 @@ Because a wrong block would lock real people out, it **never** blocks:
 
 Behind a reverse proxy, set `TRUST_PROXY=true` so real visitor addresses are seen.
 
+## Overview charts
+
+The Overview page has a 7 / 30 / 90-day switch for its trends: new accounts, sign-ins, library growth (books in all
+vaults), failed sign-ins (users and admins), emails delivered and failed, and security events by type. Beside them:
+accounts by status (a donut: active, awaiting approval, disabled, email not verified), vaults by plan, the vaults
+closest to their plan limit (books, storage or members, whichever is closest) and the biggest vaults by storage and
+by books. They show counts, sizes and vault names only, never what is inside a vault. History comes from what the
+database already holds (creation dates, the sign-in log, the security events, the mail log), so nothing is
+recorded just for the charts.
+
+## Support notes and tags
+
+Open an account (*Accounts*) to put **tags** on it (`vip`, `abuse-warning`, `pending-refund`, ...) and to write
+**notes** for the next admin. Tags show next to the account in the list and can be used to filter it. Both are private
+to the admins: the user never sees them, and every change goes to the audit trail. A note is personal data about
+the account holder, so notes and tags are included in the personal-data export (below) and deleted with the account.
+
+## Data requests (GDPR)
+
+*Data requests* tracks the two requests people can make about their data and the deadline that comes with them:
+
+- **Access** (art. 15): they want to see what is held about them. The account drawer and the request both have a
+  **Download their data** button that builds a ZIP: profile and settings, vault memberships, sign-in sessions,
+  the activity log, terms acceptances, the emails sent to them (subject and outcome, not the text), the admin
+  notes and their data requests, plus a README that explains it. It needs a fresh verification (password and
+  code), which buys a one-minute, one-time download link, and the export is written to the audit trail.
+  **Not included:** the contents of a vault (books, loans, borrowers, files), because the portal never reads them, and
+  credentials (password hash, two-factor secret, tokens). Say so when you answer; the user can see their vault
+  content in the application.
+- **Erasure** (art. 17): the guided flow checks identity and legal duties to keep data, shows their vaults, then
+  **Erase the account** goes through the normal deletion flow (grace period, protection for shared vaults). The request
+  closes by itself once the account is gone.
+
+Log a request (*Log a request*, or from the account drawer) and the clock starts: the answer is due **one month**
+later (art. 12(3)). You can extend it **once**, up to three months from receipt, for a complex request, with a written reason
+(the person must be told within the first month). A refusal needs a reason, which is kept. The admins are emailed
+(*Notifications > Data requests*) when a request is logged and daily from five days before the deadline; an overdue
+request also turns *Compliance* control A.5.34 red. A request stays on record after the account is erased, with the
+email address it came from: that is your proof that it was answered. Tables: `data_requests`.
+
 ## Login map
 
 *Login map* shows where people sign in from. It plots the successful sign-ins of the regular users, and the
@@ -506,6 +552,50 @@ and details. **The database refuses to update or delete these rows** (triggers o
 `admin_audit_log`), so it can't be rewritten from the portal. Secrets are never put in
 it, only which settings changed.
 
+## Anomaly alerts
+
+Switched on by default (*Notifications > Anomalies*); sent to the admins by email, to webhooks, and recorded in the
+notification history. Three checks:
+
+- **An admin signs in from a country that admin never used.** Judged from the addresses of that admin's earlier sessions.
+  The first sign-in, and addresses that can't be placed (private, unknown), never trigger it. It also goes to the audit trail
+  (`admin.login_new_country`). Once per admin and country every 30 days.
+- **Users signing in from a country nobody has used in 180 days** (checked hourly). A young installation with no history
+  to compare with stays quiet. Once per country every 14 days.
+- **A burst of new accounts**: more than *New accounts per hour that count as a burst* (default 20) within an hour. It
+  suggests a bot; consider approval for new accounts or closing registration. At most once every three hours.
+
+Countries come from the same offline database as the login map, with the same accuracy limits.
+
+## Webhooks
+
+*Webhooks* sends the portal's events to **Slack**, **Discord**, **Telegram** or any **URL**. Add a webhook, pick the
+events, press **Test**. Events: a new account registered, an account waits for approval, an incident was recorded,
+an address was blocked (by hand or automatically), security alerts, anomalies, an admin signed in from a new
+country, a data request was logged or is near its deadline, an account or vault was deleted, system alerts
+(database, email failures, new version, restart).
+
+- Webhooks work on their own: they don't need email, and they ignore the email on/off switches. The same alert is not
+  repeated within its cooldown.
+- A message is a title and a few short lines (a username, an address, a count). It never contains an email address
+  or library content. Slack messages are escaped so a name can't ping a channel; Discord mentions are disabled.
+- A generic URL receives `POST {event, title, lines, instance, sentAt}` as JSON. With a signing secret each request carries
+  `X-Vaultisse-Signature: sha256=<HMAC-SHA256 of the body>`.
+- **Safety:** the URL, bot token and secret are stored encrypted (like the other secrets of the portal) and never shown
+  again. Slack, Discord and Telegram can only reach their own hosts. A generic URL must be HTTPS and must resolve to a
+  public address, so the portal can't be turned into a way to probe your internal network (set
+  `ADMIN_WEBHOOKS_ALLOW_PRIVATE=true` to reach an internal service on purpose; `ALLOW_HTTP=true` also allows `http://`).
+  Creating a webhook or changing where it points needs a fresh verification.
+- One attempt per event, 8-second timeout, no redirects. The last 30 deliveries (30 days) are in the webhook's menu.
+  Tables: `webhooks`, `webhook_deliveries`.
+
+## Admin sessions
+
+*Admins > Active sessions* lists where admins are signed in now: who, device, address, the place of the address
+(from the offline database), when they signed in and when they were last active. A superadmin can **End session**
+on anyone else's (needs a fresh verification); a read-only admin sees only their own. If you suspect a stolen session, end it, then reset that admin's
+two-factor and password. Idle sessions expire by themselves after 30 minutes.
+
 ## Admin accounts
 
 - **Roles.** `superadmin` can change things; `readonly` can only look (useful for
@@ -551,6 +641,7 @@ Only these stay env-only for the portal:
 | `ADMIN_URL` | empty | Public origin of the console, for origin checks |
 | `ADMIN_ALLOWED_IPS` | empty | Comma-separated client IPs allowed to reach it |
 | `SETTINGS_ENCRYPTION_KEY` | derived from `JWT_SECRET` | Key encrypting secrets saved in the portal |
+| `ADMIN_WEBHOOKS_ALLOW_PRIVATE` | `false` | Let a generic webhook reach private/internal addresses (see [Webhooks](#webhooks)) |
 
 Command line: `node index.js admin:create --email <e> [--name <n>]`,
 `node index.js admin:reset --email <e>` (`ADMIN_PASSWORD` for non-interactive use).
@@ -578,6 +669,11 @@ Everything is under `/api/admin` on the admin port and needs an admin session ex
 | Security | `GET /security/{summary,traffic,events,top-ips,lockouts,blocked-ips,sessions}`, plus unlock, block/unblock, end session |
 | Logs | `GET /logs/{activity,server,audit}` |
 | Login map | `GET /map/logins?days=` |
+| Overview charts | `GET /overview/charts?days=7|30|90` |
+| Notes and tags | `GET /users/tags`, `PUT /users/:id/tags`, `POST /users/:id/notes`, `DELETE /users/:id/notes/:noteId` |
+| Data requests | `GET/POST /data-requests`, `POST /data-requests/:id/{extend,close,erase}`, `POST /data-requests/export/:userId`, `GET /data-requests/export/:userId/:token` |
+| Webhooks | `GET/POST /webhooks`, `PUT/PATCH/DELETE /webhooks/:id`, `POST /webhooks/:id/test`, `GET /webhooks/:id/deliveries` |
+| Admin sessions | `GET /admins/sessions`, `POST /admins/sessions/:id/revoke` |
 | Compliance | `GET /compliance`, `PUT /compliance/controls/:id`, `GET /compliance/export.csv`, `GET/POST /compliance/register`, `PUT/DELETE /compliance/register/:id`, `GET/POST /compliance/incidents`, `PUT /compliance/incidents/:id`, `GET/POST /compliance/access` |
 | Admins | `GET/POST /admins`, `PATCH/DELETE /admins/:id`, `POST /admins/:id/reset-2fa` |
 

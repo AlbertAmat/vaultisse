@@ -31,6 +31,10 @@ import {inactivityRoutes} from "./routes/InactivityRoutes";
 import {termsRoutes} from "./routes/TermsRoutes";
 import {broadcastRoutes} from "./routes/BroadcastRoutes";
 import {BroadcastService} from "./services/BroadcastService";
+import {dataRequestsRoutes} from "./routes/DataRequestsRoutes";
+import {webhooksRoutes} from "./routes/WebhooksRoutes";
+import {AnomalyService} from "./services/AnomalyService";
+import {DataRequestService} from "./services/DataRequestService";
 import {complianceRoutes} from "./routes/ComplianceRoutes";
 import {mapRoutes} from "./routes/MapRoutes";
 import {announcementsRoutes} from "./routes/AnnouncementsRoutes";
@@ -53,6 +57,8 @@ export class AdminApp {
     private server: Server | null = null;
     private timers: NodeJS.Timeout[] = [];
     private readonly auth: AdminAuthService;
+    private readonly anomalies: AnomalyService;
+    public readonly dataRequests: DataRequestService;
     private readonly audit: AdminAuditService;
     private readonly deletions: DeletionService;
     private readonly broadcasts: BroadcastService;
@@ -66,10 +72,13 @@ export class AdminApp {
         this.app = express();
         this.audit = new AdminAuditService(pool);
         this.auth = new AdminAuthService(pool, logger, appService.getJwtSecret());
+        this.anomalies = new AnomalyService(pool, logger);
+        this.auth.setSignInObserver((admin, ip, startedAt) => void this.anomalies.adminSignedIn(admin, ip, startedAt));
         this.deletions = new DeletionService(pool, this.audit, logger, () => {
             const days = Number(appService.getSettings().get("ADMIN_DELETION_GRACE_DAYS"));
             return Number.isFinite(days) && days >= 0 ? days : 7;
         });
+        this.dataRequests = new DataRequestService(pool, this.deletions);
         this.broadcasts = new BroadcastService(pool, logger);
         this.configure();
     }
@@ -137,6 +146,8 @@ export class AdminApp {
         app.use("/api/admin/inactivity", inactivityRoutes(this.pool, this.audit));
         app.use("/api/admin/terms", termsRoutes(this.pool));
         app.use("/api/admin/compliance", complianceRoutes(this.pool, this.audit));
+        app.use("/api/admin/data-requests", dataRequestsRoutes(this.pool, this.audit, this.dataRequests));
+        app.use("/api/admin/webhooks", webhooksRoutes(this.audit));
         app.use("/api/admin/map", mapRoutes(this.pool));
         app.use("/api/admin/notifications", notificationsRoutes(this.pool, this.audit));
         app.use("/api/admin", (_req, res) => {
@@ -257,15 +268,21 @@ export class AdminApp {
 
     /** Hourly housekeeping: carry out deletions whose grace period is over, drop old events and sessions. */
     public async maintain(): Promise<void> {
-        try {
-            await this.deletions.executeDue();
-            await appService.getSecurityEvents().purgeOld();
-            await appService.getNotifier().purgeOld();
-            await new MailLogRepository(this.pool).purge(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
-            await this.auth.purgeSessions();
-        } catch (error) {
-            this.logger.error(`Admin maintenance failed: ${error instanceof Error ? error.message : String(error)}`);
-        }
+        const step = async (name: string, work: () => Promise<unknown>) => {
+            try {
+                await work();
+            } catch (error) {
+                this.logger.error(`Admin maintenance (${name}) failed: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        };
+        await step("deletions", () => this.deletions.executeDue());
+        await step("security events", () => appService.getSecurityEvents().purgeOld());
+        await step("notifications", () => appService.getNotifier().purgeOld());
+        await step("mail log", () => new MailLogRepository(this.pool).purge(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)));
+        await step("sessions", () => this.auth.purgeSessions());
+        await step("webhook log", () => appService.getWebhooks().purge(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)));
+        await step("data requests", () => this.dataRequests.remind());
+        await step("anomalies", () => this.anomalies.check());
     }
 
     /** Stops the timers and the listener. */

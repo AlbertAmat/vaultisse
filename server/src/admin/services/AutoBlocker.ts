@@ -131,6 +131,7 @@ export class AutoBlocker {
             void appService.getNotifier().notify("security", {
                 title: `An address was blocked automatically: ${ip}`,
                 lines: [`${ip} failed to sign in ${count} times within ${windowMin} minutes and is blocked for ${hours} hours.`, "You can unblock it earlier under Security > Blocked addresses."],
+                event: "ip.blocked",
                 dedupeKey: "autoblock",
                 cooldownMs: 30 * 60 * 1000,
             });

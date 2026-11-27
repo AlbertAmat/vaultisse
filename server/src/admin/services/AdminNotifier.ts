@@ -18,8 +18,9 @@ import {AdminNotificationRepository} from "../repositories/AdminNotificationRepo
 import {AdminUserRepository} from "../repositories/AdminUserRepository";
 import {SecurityRepository} from "../repositories/SecurityRepository";
 import {findSetting} from "./settingsCatalog";
+import {WebhookEvent} from "./WebhookService";
 
-export type NotificationType = "user_pending" | "security" | "database" | "mail_failures" | "deletions" | "updates" | "startup" | "test";
+export type NotificationType = "user_pending" | "security" | "database" | "mail_failures" | "deletions" | "updates" | "startup" | "anomaly" | "data_requests" | "test";
 
 /** Setting that switches each event type on or off. */
 export const NOTIFICATION_SWITCH: Record<Exclude<NotificationType, "test">, string> = {
@@ -30,6 +31,14 @@ export const NOTIFICATION_SWITCH: Record<Exclude<NotificationType, "test">, stri
     deletions: "ADMIN_NOTIFY_DELETIONS",
     updates: "ADMIN_NOTIFY_UPDATES",
     startup: "ADMIN_NOTIFY_STARTUP",
+    anomaly: "ADMIN_NOTIFY_ANOMALY",
+    data_requests: "ADMIN_NOTIFY_DATA_REQUESTS",
+};
+
+/** The webhook event an email notification type corresponds to, unless the request names one. */
+const DEFAULT_EVENT: Record<Exclude<NotificationType, "test">, WebhookEvent> = {
+    user_pending: "account.pending", security: "security.alert", database: "system.alert", mail_failures: "system.alert",
+    deletions: "deletion.done", updates: "system.alert", startup: "system.alert", anomaly: "anomaly.detected", data_requests: "data_request.due",
 };
 
 export interface NotificationRequest {
@@ -40,6 +49,8 @@ export interface NotificationRequest {
     dedupeKey?: string;
     /** Don't raise the same alert again within this time. */
     cooldownMs?: number;
+    /** The webhook event to send (defaults to the one of the notification type). */
+    event?: WebhookEvent;
 }
 
 const HOUR = 60 * 60 * 1000;
@@ -106,7 +117,12 @@ export class AdminNotifier {
      * @returns Whether an email attempt was made.
      */
     public async notify(type: Exclude<NotificationType, "test">, request: NotificationRequest): Promise<boolean> {
-        if (!this.enabled || !this.isOn(type)) {
+        if (!this.enabled) {
+            return false;
+        }
+        // Webhooks follow their own subscriptions and cooldown, independent of the email switches.
+        void appService.getWebhooks().emit(request.event ?? DEFAULT_EVENT[type], {title: request.title, lines: request.lines, dedupeKey: request.dedupeKey, cooldownMs: request.cooldownMs});
+        if (!this.isOn(type)) {
             return false;
         }
         const subject = `[Vaultisse] ${request.title}`;

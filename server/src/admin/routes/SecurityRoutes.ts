@@ -100,6 +100,7 @@ export function securityRoutes(pool: Pool, audit: AdminAuditService): Router {
         await repo.blockIp(ip, reason, req.admin!.id, hours === null ? null : new Date(Date.now() + hours * HOUR_MS));
         await appService.getBlockedIps().refresh();
         await audit.record(req, "security.block_ip", {entityType: "ip", entityLabel: ip, metadata: {reason, hours}});
+        void appService.getWebhooks().emit("ip.blocked", {title: `Address blocked: ${ip}`, lines: [`${req.admin!.email} blocked it ${hours === null ? "with no end" : `for ${hours} hours`}.`, ...(reason ? [`Reason: ${reason}`] : [])]});
         res.status(201).json({items: await repo.listBlockedIps()});
     }));
 

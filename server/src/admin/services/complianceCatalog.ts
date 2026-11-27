@@ -38,6 +38,7 @@ export interface Facts {
     incidents: {total: number; open: number; overdueNotification: number};
     register: Record<"policy" | "supplier" | "risk" | "asset", {active: number; overdue: number}>;
     highRisks: number;
+    dataRequests: {open: number; overdue: number};
 }
 
 export interface ControlDef {
@@ -162,8 +163,10 @@ export const COMPLIANCE_CATALOG: ControlDef[] = [
         summary: "Personal data is protected as the law and contracts require.",
         howTo: "Keep the record of processing activities (GDPR art. 30) as a policy document, and answer access and erasure requests within a month.",
         refs: {gdpr: "Art. 5, 25, 30"},
-        check: (f) => f.config.inactivityDays > 0
-            ? pass(`Accounts unused for ${f.config.inactivityDays} days are removed (storage limitation). Admins can't read the libraries of the users.`)
+        check: (f) => f.dataRequests.overdue > 0
+            ? fail(`${plural(f.dataRequests.overdue, "data request")} past the one-month deadline (GDPR art. 12). See Data requests.`)
+            : f.config.inactivityDays > 0
+            ? pass(`Accounts unused for ${f.config.inactivityDays} days are removed (storage limitation). Admins can't read the libraries of the users. Access and erasure requests are tracked against their deadline${f.dataRequests.open ? ` (${f.dataRequests.open} open)` : ""}.`)
             : warn("Inactive accounts are kept forever. Set ACCOUNT_INACTIVITY_DAYS to apply storage limitation (Settings > Inactive accounts)."),
     },
     {

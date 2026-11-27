@@ -83,6 +83,9 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     {key: "ADMIN_NOTIFY_DELETIONS", group: "notifications", label: "Accounts and vaults deleted", description: "A scheduled deletion was carried out, or failed.", type: "boolean", defaultValue: "true"},
     {key: "ADMIN_NOTIFY_UPDATES", group: "notifications", label: "A new version is available", description: "Needs the version check (Settings > Admin portal).", type: "boolean", defaultValue: "true"},
     {key: "ADMIN_NOTIFY_STARTUP", group: "notifications", label: "The server started", description: "Sent on every start, including which database migrations were applied.", type: "boolean", defaultValue: "false"},
+    {key: "ADMIN_NOTIFY_ANOMALY", group: "notifications", label: "Anomalies", description: "Sign-ins from a country never seen before, a burst of new accounts, or an admin signing in from a new country.", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_NOTIFY_ANOMALY_SIGNUPS_PER_HOUR", group: "notifications", label: "New accounts per hour that count as a burst", description: "More sign-ups than this within an hour raises an anomaly alert.", type: "number", defaultValue: "20", min: 1},
+    {key: "ADMIN_NOTIFY_DATA_REQUESTS", group: "notifications", label: "Data requests (GDPR)", description: "A request to access or erase personal data was logged, or its deadline is near.", type: "boolean", defaultValue: "true"},
     {key: "ADMIN_DELETION_GRACE_DAYS", group: "admin", label: "Deletion grace period (days)", description: "Deleting an account or vault from the portal locks it out first and only deletes it after this many days, so it can be cancelled. 0 = delete immediately.", type: "number", defaultValue: "7", min: 0},
 ];
 

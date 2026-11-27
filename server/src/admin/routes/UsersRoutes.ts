@@ -4,6 +4,8 @@
  * Only account metadata is ever exposed - never what is inside someone's libraries.
  *
  *  GET    /               ?search=&status=active|pending|disabled|pending_deletion|unverified&sort=&page=&pageSize=
+ *  GET    /tags           every tag in use
+ *  PUT    /:id/tags       `{tags}` replace the tags;  POST /:id/notes `{body}`;  DELETE /:id/notes/:noteId   (private admin notes)
  *  GET    /:id            account, vault memberships, live sessions, recent sign-in activity
  *  POST   /:id/approve    enable an account waiting for approval (and tell its owner if mail is on)
  *  POST   /:id/disable    lock an account out and end its sessions
@@ -18,6 +20,7 @@ import {appService} from "../../AppService";
 import {Pool} from "pg";
 import {handle, idParam, paging, text} from "../http";
 import {requireFreshAuth, requireSuperadmin} from "../middleware";
+import {AccountNotesRepository} from "../repositories/AccountNotesRepository";
 import {PlatformRepository, UserStatusFilter} from "../repositories/PlatformRepository";
 import {AdminAuditService} from "../services/AdminAuditService";
 import {DeletionService} from "../services/DeletionService";
@@ -36,6 +39,7 @@ export function usersRoutes(pool: Pool, audit: AdminAuditService, deletions: Del
     const router = Router();
     const platform = new PlatformRepository(pool);
     const actions = new AccountActions(pool, audit, deletions);
+    const notes = new AccountNotesRepository(pool);
 
     const requireUser = async (id: number) => {
         const user = await platform.findUser(id);
@@ -53,19 +57,63 @@ export function usersRoutes(pool: Pool, audit: AdminAuditService, deletions: Del
         }
         const sortParam = text(req.query.sort);
         const sort = sortParam === "lastLogin" || sortParam === "name" ? sortParam : "created";
-        const {rows, total} = await platform.listUsers({search: text(req.query.search), status: status as UserStatusFilter | undefined}, sort, limit, offset);
+        const {rows, total} = await platform.listUsers({search: text(req.query.search), status: status as UserStatusFilter | undefined, tag: text(req.query.tag)}, sort, limit, offset);
         res.json({items: rows, total, page, pageSize});
+    }));
+
+    router.get("/tags", handle(async (_req, res) => {
+        res.json({items: await notes.allTags()});
     }));
 
     router.get("/:id", handle(async (req, res) => {
         const id = idParam(req);
         const user = await requireUser(id);
-        const [memberships, sessionCount, activity] = await Promise.all([
+        const [memberships, sessionCount, activity, accountNotes] = await Promise.all([
             platform.userMemberships(id),
             platform.userSessionCount(id),
             platform.listActivity({actorId: id}, 20, 0),
+            notes.notes(id),
         ]);
-        res.json({user, memberships, sessionCount, recentActivity: activity.rows});
+        res.json({user, memberships, sessionCount, recentActivity: activity.rows, notes: accountNotes});
+    }));
+
+    router.post("/:id/notes", requireSuperadmin, handle(async (req, res) => {
+        const id = idParam(req);
+        const user = await requireUser(id);
+        const body = typeof req.body?.body === "string" ? req.body.body.trim() : "";
+        if (!body || body.length > 2000) {
+            throw new ValidationError("Write a note of up to 2000 characters.");
+        }
+        const noteId = await notes.addNote(id, body, req.admin!.id);
+        await audit.record(req, "user.note_add", {entityType: "user", entityId: id, entityLabel: user.code, metadata: {noteId}});
+        res.status(201).json({notes: await notes.notes(id)});
+    }));
+
+    router.delete("/:id/notes/:noteId", requireSuperadmin, handle(async (req, res) => {
+        const id = idParam(req);
+        const user = await requireUser(id);
+        const noteId = Number(req.params.noteId);
+        if (!Number.isInteger(noteId) || !(await notes.removeNote(id, noteId))) {
+            throw new NotFoundError("Note not found.");
+        }
+        await audit.record(req, "user.note_remove", {entityType: "user", entityId: id, entityLabel: user.code, metadata: {noteId}});
+        res.json({notes: await notes.notes(id)});
+    }));
+
+    router.put("/:id/tags", requireSuperadmin, handle(async (req, res) => {
+        const id = idParam(req);
+        const user = await requireUser(id);
+        const raw = req.body?.tags;
+        if (!Array.isArray(raw) || raw.length > 12) {
+            throw new ValidationError("Give up to 12 tags.");
+        }
+        const tags = [...new Set(raw.map((tag: unknown) => (typeof tag === "string" ? tag.trim().toLowerCase().replace(/\s+/g, "-") : "")))];
+        if (tags.some((tag) => !/^[\p{L}\p{N}][\p{L}\p{N}_-]{0,29}$/u.test(tag))) {
+            throw new ValidationError("A tag is 1 to 30 letters, digits, dashes or underscores.");
+        }
+        await notes.setTags(id, tags, req.admin!.id);
+        await audit.record(req, "user.tags", {entityType: "user", entityId: id, entityLabel: user.code, metadata: {tags}});
+        res.json({tags});
     }));
 
     router.post("/:id/approve", requireSuperadmin, handle(async (req, res) => {

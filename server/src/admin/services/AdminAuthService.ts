@@ -199,9 +199,18 @@ export class AdminAuthService {
         throw new UnauthorizedError("That code is not valid.");
     }
 
+    private signInObserver?: (admin: {id: number; email: string}, ip: string | undefined, startedAt: Date) => void;
+
+    /** @param observer Called (without waiting) after every successful admin sign-in. */
+    public setSignInObserver(observer: (admin: {id: number; email: string}, ip: string | undefined, startedAt: Date) => void): void {
+        this.signInObserver = observer;
+    }
+
     private async openSession(admin: AdminLoginRow, userAgent: string | undefined, ip: string | undefined): Promise<SessionResult> {
+        const startedAt = new Date(Date.now() - 1000);
         const {sessionKey} = await this.repo.createSession(admin.id, userAgent, ip);
         await this.repo.touchLastLogin(admin.id);
+        this.signInObserver?.({id: admin.id, email: admin.email}, ip, startedAt);
         return {token: this.createSessionToken(admin.id, admin.tokenVersion, sessionKey), admin};
     }
 
