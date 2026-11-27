@@ -1,0 +1,238 @@
+{
+  "slug": "first-steps",
+  "topic": "Library",
+  "title": "Find your way around",
+  "search": "How to use Vaultisse: a first tour",
+  "coverWords": "A first tour",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/getting-started",
+  "start": "/app/dashboard",
+  "tags": [
+    "how to use vaultisse",
+    "vaultisse tutorial",
+    "vaultisse tour",
+    "home library software",
+    "library catalog app",
+    "book collection manager",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to use Vaultisse: a first tour",
+      "description": "Learn how to use Vaultisse with a first tour of the menu, the search bar and your account."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo usar Vaultisse: primer recorrido",
+      "description": "Aprende a usar Vaultisse con un primer recorrido por el menú, el buscador y tu cuenta."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com fer servir Vaultisse: primer recorregut",
+      "description": "Aprèn a fer servir Vaultisse amb un primer recorregut pel menú, el cercador i el teu compte."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Vaultisse benutzen: der erste Rundgang",
+      "description": "Lerne Vaultisse mit einem ersten Rundgang durch Menü, Suche und Konto kennen."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "The menu",
+      "The search bar",
+      "Your library and account"
+    ],
+    "narration": {
+      "en": "Here is how to use Vaultisse, starting with a first tour. You will learn where everything is.",
+      "es": "Así se usa Vaultisse, empezando por un primer recorrido. Aprenderás dónde está cada cosa.",
+      "ca": "Així es fa servir Vaultisse, començant per un primer recorregut. Aprendràs on és cada cosa.",
+      "de": "So benutzt du Vaultisse, angefangen mit einem Rundgang. Du lernst, wo alles zu finden ist."
+    }
+  },
+  "steps": [
+    {
+      "id": "menu",
+      "title": {
+        "en": "The menu",
+        "es": "El menú",
+        "ca": "El menú",
+        "de": "Das Menü"
+      },
+      "narration": {
+        "en": "The menu on the left takes you everywhere. The Dashboard sums up your library. Library holds every book, with a count next to it.",
+        "es": "El menú de la izquierda te lleva a todas partes. El Panel de control resume tu biblioteca. Biblioteca reúne todos los libros, con su número al lado.",
+        "ca": "El menú de l'esquerra et porta a tot arreu. El Panell de control resumeix la biblioteca. Biblioteca reuneix tots els llibres, amb el recompte al costat.",
+        "de": "Das Menü links führt überallhin. Die Übersicht fasst deine Bibliothek zusammen. Unter Bibliothek stehen alle Bücher, mit ihrer Anzahl daneben."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "highlight": {
+            "within": "nav",
+            "text": "Dashboard",
+            "exact": true,
+            "seconds": 2.2
+          }
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Library",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "organise",
+      "title": {
+        "en": "Organise and lend",
+        "es": "Organizar y prestar",
+        "ca": "Organitzar i prestar",
+        "de": "Ordnen und verleihen"
+      },
+      "narration": {
+        "en": "Locations says where books live. Customers and Loans are for lending. Categories and Authors keep the catalogue tidy.",
+        "es": "Ubicaciones indica dónde están los libros. Clientes y Préstamos sirven para prestar. Categorías y Autores mantienen el catálogo ordenado.",
+        "ca": "Ubicacions diu on són els llibres. Clients i Préstecs serveixen per prestar. Categories i Autors mantenen el catàleg endreçat.",
+        "de": "Standorte zeigt, wo die Bücher stehen. Kunden und Ausleihen sind für den Verleih. Kategorien und Autoren halten den Katalog ordentlich."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Locations",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Customers",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Loans",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Categories",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Authors",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "title": {
+        "en": "Search",
+        "es": "Buscar",
+        "ca": "Cercar",
+        "de": "Suchen"
+      },
+      "narration": {
+        "en": "The search bar at the top is on every page. Type part of a title and press Enter.",
+        "es": "El buscador de arriba está en todas las páginas. Escribe parte de un título y pulsa Intro.",
+        "ca": "El cercador de dalt és a totes les pàgines. Escriu part d'un títol i prem Retorn.",
+        "de": "Die Suchleiste oben gibt es auf jeder Seite. Tippe einen Teil des Titels und drücke Enter."
+      },
+      "actions": [
+        {
+          "type": {
+            "into": {
+              "placeholder": "Search books"
+            },
+            "text": "lantern"
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "account",
+      "title": {
+        "en": "Library and account",
+        "es": "Biblioteca y cuenta",
+        "ca": "Biblioteca i compte",
+        "de": "Bibliothek und Konto"
+      },
+      "narration": {
+        "en": "At the top left you switch between libraries. Your name on the right opens your settings. The printer queue collects labels to print.",
+        "es": "Arriba a la izquierda cambias de biblioteca. Tu nombre, a la derecha, abre la configuración. La cola de impresión reúne las etiquetas pendientes.",
+        "ca": "A dalt a l'esquerra canvies de biblioteca. El teu nom, a la dreta, obre la configuració. La cua d'impressió recull les etiquetes per imprimir.",
+        "de": "Oben links wechselst du die Bibliothek. Dein Name rechts öffnet die Einstellungen. Die Druckwarteschlange sammelt die Etiketten zum Drucken."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "Riverside School L",
+            "seconds": 2.2
+          }
+        },
+        {
+          "highlight": {
+            "text": "Sam Rivera",
+            "seconds": 2.2
+          }
+        },
+        {
+          "highlight": {
+            "within": "nav",
+            "text": "Printer queue",
+            "seconds": 2.2
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Read the dashboard",
+    "narration": {
+      "en": "That is the tour of Vaultisse.",
+      "es": "Ese es el recorrido por Vaultisse.",
+      "ca": "Aquest és el recorregut per Vaultisse.",
+      "de": "Das war der Rundgang durch Vaultisse."
+    }
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "slug": "unprinted-labels",
+  "topic": "Library",
+  "title": "Print only new labels",
+  "search": "How to print only unprinted barcode labels in Vaultisse",
+  "coverWords": "Print only new labels",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/printing-labels",
+  "start": "/app/dashboard",
+  "tags": [
+    "print unprinted labels",
+    "library barcode labels",
+    "vaultisse print labels",
+    "book barcode pdf",
+    "label printing library",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to print only unprinted barcode labels in Vaultisse",
+      "description": "Learn how to print only unprinted barcode labels in Vaultisse, without printing any twice."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo imprimir solo las etiquetas pendientes en Vaultisse",
+      "description": "Aprende a imprimir solo las etiquetas pendientes en Vaultisse, sin repetir ninguna."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com imprimir només les etiquetes pendents a Vaultisse",
+      "description": "Aprèn a imprimir només les etiquetes pendents a Vaultisse, sense repetir-ne cap."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Nur ungedruckte Etiketten in Vaultisse drucken",
+      "description": "Drucke in Vaultisse nur die noch ungedruckten Etiketten, ohne Doppeldrucke."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Open the printer queue",
+      "Add what was never printed",
+      "Create the PDF"
+    ],
+    "narration": {
+      "en": "Here is how to print only unprinted barcode labels in Vaultisse. It remembers which copies already have one.",
+      "es": "Así se imprimen solo las etiquetas pendientes en Vaultisse. Recuerda qué ejemplares ya tienen la suya.",
+      "ca": "Així s'imprimeixen només les etiquetes pendents a Vaultisse. Recorda quins exemplars ja en tenen.",
+      "de": "So druckst du in Vaultisse nur ungedruckte Etiketten. Es merkt sich, welche Exemplare schon eine haben."
+    }
+  },
+  "steps": [
+    {
+      "id": "queue",
+      "title": {
+        "en": "Open the queue",
+        "es": "Abre la cola",
+        "ca": "Obre la cua",
+        "de": "Warteschlange öffnen"
+      },
+      "narration": {
+        "en": "Click Printer queue, at the bottom of the menu.",
+        "es": "Pulsa Cola de impresión, al final del menú.",
+        "ca": "Prem Cua d'impressió, al final del menú.",
+        "de": "Klicke unten im Menü auf Druckwarteschlange."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Printer queue",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1
+        }
+      ]
+    },
+    {
+      "id": "add",
+      "title": {
+        "en": "Add pending labels",
+        "es": "Añade las pendientes",
+        "ca": "Afegeix les pendents",
+        "de": "Offene Etiketten hinzufügen"
+      },
+      "narration": {
+        "en": "Click Add unprinted labels. Every copy that never had its label printed joins the queue.",
+        "es": "Pulsa Añadir etiquetas sin imprimir. Todos los ejemplares sin etiqueta impresa entran en la cola.",
+        "ca": "Prem Afegeix les etiquetes no impreses. Tots els exemplars sense etiqueta impresa entren a la cua.",
+        "de": "Klicke auf Ungedruckte Etiketten hinzufügen. Alle Exemplare ohne gedruckte Etikette kommen in die Warteschlange."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Add unprinted labels"
+          }
+        },
+        {
+          "pause": 2.5
+        }
+      ]
+    },
+    {
+      "id": "print",
+      "title": {
+        "en": "Print",
+        "es": "Imprimir",
+        "ca": "Imprimir",
+        "de": "Drucken"
+      },
+      "narration": {
+        "en": "Then click Print. You get a PDF with one barcode per copy, ready for your label sheets.",
+        "es": "Después pulsa Imprimir. Obtienes un PDF con un código de barras por ejemplar, listo para tus hojas.",
+        "ca": "Després prem Imprimir. Obtens un PDF amb un codi de barres per exemplar, a punt per als fulls.",
+        "de": "Dann klicke auf Drucken. Du erhältst ein PDF mit einem Barcode je Exemplar für deine Etikettenbögen."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Print"
+          }
+        },
+        {
+          "pause": 3
+        }
+      ]
+    },
+    {
+      "id": "again",
+      "title": {
+        "en": "Next time",
+        "es": "La próxima vez",
+        "ca": "El pròxim cop",
+        "de": "Beim nächsten Mal"
+      },
+      "narration": {
+        "en": "Those copies are now marked as printed. Next time, only new ones are added.",
+        "es": "Esos ejemplares quedan marcados como impresos. La próxima vez solo se añadirán los nuevos.",
+        "ca": "Aquests exemplars queden marcats com a impresos. El pròxim cop només s'afegiran els nous.",
+        "de": "Diese Exemplare gelten nun als gedruckt. Beim nächsten Mal kommen nur neue dazu."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Printer queue",
+            "exact": true
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add unprinted labels"
+          }
+        },
+        {
+          "pause": 2.5
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Design your library card",
+    "narration": {
+      "en": "No label printed twice.",
+      "es": "Ninguna etiqueta repetida.",
+      "ca": "Cap etiqueta repetida.",
+      "de": "Keine Etikette doppelt."
+    }
+  }
+}

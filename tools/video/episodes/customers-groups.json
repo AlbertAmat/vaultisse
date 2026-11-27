@@ -1,0 +1,188 @@
+{
+  "slug": "customers-groups",
+  "topic": "Loans",
+  "title": "Customers and groups",
+  "search": "How to add customers and groups in Vaultisse",
+  "coverWords": "Add your borrowers",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/customers-and-groups",
+  "start": "/app/customers",
+  "tags": [
+    "add borrowers",
+    "vaultisse customers",
+    "class groups library",
+    "school library members",
+    "library patrons",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Loans",
+      "title": "How to add customers and groups in Vaultisse",
+      "description": "Learn how to add customers and groups in Vaultisse, ready for lending books."
+    },
+    "es": {
+      "topic": "Préstamos",
+      "title": "Cómo añadir clientes y grupos en Vaultisse",
+      "description": "Aprende a añadir clientes y grupos en Vaultisse para empezar a prestar libros."
+    },
+    "ca": {
+      "topic": "Préstecs",
+      "title": "Com afegir clients i grups a Vaultisse",
+      "description": "Aprèn a afegir clients i grups a Vaultisse per començar a prestar llibres."
+    },
+    "de": {
+      "topic": "Ausleihen",
+      "title": "Kunden und Gruppen in Vaultisse anlegen",
+      "description": "Lege Kunden und Gruppen in Vaultisse an, damit du Bücher verleihen kannst."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Add a customer",
+      "Put them in a group",
+      "Manage groups"
+    ],
+    "narration": {
+      "en": "Here is how to add customers and groups in Vaultisse. Customers are the people who borrow books.",
+      "es": "Así se añaden clientes y grupos en Vaultisse. Los clientes son quienes se llevan libros.",
+      "ca": "Així s'afegeixen clients i grups a Vaultisse. Els clients són qui s'emporta llibres.",
+      "de": "So legst du Kunden und Gruppen in Vaultisse an. Kunden sind alle, die Bücher ausleihen."
+    }
+  },
+  "steps": [
+    {
+      "id": "add",
+      "title": {
+        "en": "Add a customer",
+        "es": "Añadir un cliente",
+        "ca": "Afegir un client",
+        "de": "Kunden hinzufügen"
+      },
+      "narration": {
+        "en": "Open Customers and click Add. Type the name and pick a group, such as a class. Confirm with Add.",
+        "es": "Abre Clientes y pulsa Agregar. Escribe el nombre y elige un grupo, por ejemplo una clase. Confirma con Agregar.",
+        "ca": "Obre Clients i prem Afegir. Escriu el nom i tria un grup, per exemple una classe. Confirma amb Afegir.",
+        "de": "Öffne Kunden und klicke auf Hinzufügen. Gib den Namen ein und wähle eine Gruppe, etwa eine Klasse. Bestätige mit Hinzufügen."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add"
+          }
+        },
+        {
+          "type": {
+            "text": "Nico Valls"
+          }
+        },
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "selector": ".v-select"
+          }
+        },
+        {
+          "click": {
+            "within": ".v-overlay-container .v-list",
+            "text": "Class 4B"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "list",
+      "title": {
+        "en": "The customer list",
+        "es": "La lista",
+        "ca": "La llista",
+        "de": "Die Liste"
+      },
+      "narration": {
+        "en": "Each line shows the group and how many books the person has. Open it to see which ones.",
+        "es": "Cada línea muestra el grupo y cuántos libros tiene la persona. Ábrela para ver cuáles.",
+        "ca": "Cada línia mostra el grup i quants llibres té la persona. Obre-la per veure quins.",
+        "de": "Jede Zeile zeigt die Gruppe und wie viele Bücher die Person hat. Öffne sie, um die Titel zu sehen."
+      },
+      "actions": [
+        {
+          "click": {
+            "text": "Alex Morgan"
+          }
+        },
+        {
+          "pause": 3
+        },
+        {
+          "click": {
+            "text": "Alex Morgan"
+          }
+        }
+      ]
+    },
+    {
+      "id": "groups",
+      "title": {
+        "en": "Groups",
+        "es": "Grupos",
+        "ca": "Grups",
+        "de": "Gruppen"
+      },
+      "narration": {
+        "en": "The Groups tab lists every group. You can drag customers from one group to another.",
+        "es": "La pestaña Grupos los muestra todos. Puedes arrastrar clientes de un grupo a otro.",
+        "ca": "La pestanya Grups els mostra tots. Pots arrossegar clients d'un grup a un altre.",
+        "de": "Der Reiter Gruppen listet alle Gruppen auf. Du kannst Kunden von einer Gruppe in eine andere ziehen."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "tab",
+            "name": "Groups"
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "within": "tbody tr",
+            "hasText": "Class 3A",
+            "selector": "button",
+            "nth": 0
+          }
+        },
+        {
+          "pause": 2.5
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Lend and return a book",
+    "narration": {
+      "en": "Your borrowers are ready.",
+      "es": "Ya tienes a tus lectores.",
+      "ca": "Ja tens els teus lectors.",
+      "de": "Deine Ausleiher sind angelegt."
+    }
+  }
+}

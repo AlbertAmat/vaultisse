@@ -1,0 +1,173 @@
+{
+  "slug": "categories-authors",
+  "topic": "Library",
+  "title": "Categories and authors",
+  "search": "How to manage categories and authors in Vaultisse",
+  "coverWords": "Categories and authors",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/categories-and-authors",
+  "start": "/app/categories",
+  "tags": [
+    "manage book categories",
+    "manage authors",
+    "vaultisse categories",
+    "organise book collection",
+    "library catalogue",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to manage categories and authors in Vaultisse",
+      "description": "Learn how to manage categories and authors in Vaultisse to keep your catalogue tidy."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo gestionar categorías y autores en Vaultisse",
+      "description": "Aprende a gestionar categorías y autores en Vaultisse para tener el catálogo ordenado."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com gestionar categories i autors a Vaultisse",
+      "description": "Aprèn a gestionar categories i autors a Vaultisse per tenir el catàleg endreçat."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Kategorien und Autoren in Vaultisse verwalten",
+      "description": "Verwalte Kategorien und Autoren in Vaultisse und halte deinen Katalog ordentlich."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Add a category",
+      "Edit or delete",
+      "Keep authors tidy"
+    ],
+    "narration": {
+      "en": "Here is how to manage categories and authors in Vaultisse. They make books easy to find.",
+      "es": "Así se gestionan categorías y autores en Vaultisse. Gracias a ellos los libros se encuentran fácil.",
+      "ca": "Així es gestionen categories i autors a Vaultisse. Gràcies a ells els llibres es troben fàcilment.",
+      "de": "So verwaltest du Kategorien und Autoren in Vaultisse. Damit findest du Bücher leicht wieder."
+    }
+  },
+  "steps": [
+    {
+      "id": "add",
+      "title": {
+        "en": "Add a category",
+        "es": "Añadir una categoría",
+        "ca": "Afegir una categoria",
+        "de": "Kategorie hinzufügen"
+      },
+      "narration": {
+        "en": "Open Categories and click Add. Type the name and confirm.",
+        "es": "Abre Categorías y pulsa Agregar. Escribe el nombre y confirma.",
+        "ca": "Obre Categories i prem Afegir. Escriu el nom i confirma.",
+        "de": "Öffne Kategorien und klicke auf Hinzufügen. Gib den Namen ein und bestätige."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add"
+          }
+        },
+        {
+          "type": {
+            "text": "Comics"
+          }
+        },
+        {
+          "pause": 0.6
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "edit",
+      "title": {
+        "en": "Edit or delete",
+        "es": "Editar o borrar",
+        "ca": "Editar o esborrar",
+        "de": "Bearbeiten oder löschen"
+      },
+      "narration": {
+        "en": "The pencil renames a category. The red bin deletes it, and its books simply lose that label.",
+        "es": "El lápiz cambia el nombre. La papelera roja la borra, y sus libros simplemente pierden esa etiqueta.",
+        "ca": "El llapis canvia el nom. La paperera vermella l'esborra, i els llibres simplement perden l'etiqueta.",
+        "de": "Der Stift benennt eine Kategorie um. Der rote Papierkorb löscht sie, und ihre Bücher verlieren nur die Zuordnung."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "selector": ".mdi-pencil",
+            "nth": 0,
+            "seconds": 2.2
+          }
+        },
+        {
+          "highlight": {
+            "selector": ".mdi-delete",
+            "nth": 0,
+            "seconds": 2.2
+          }
+        }
+      ]
+    },
+    {
+      "id": "authors",
+      "title": {
+        "en": "Authors",
+        "es": "Autores",
+        "ca": "Autors",
+        "de": "Autoren"
+      },
+      "narration": {
+        "en": "Authors works the same way. New authors are also created when you add books.",
+        "es": "Autores funciona igual. Los autores nuevos también se crean al añadir libros.",
+        "ca": "Autors funciona igual. Els autors nous també es creen quan afegeixes llibres.",
+        "de": "Autoren funktioniert genauso. Neue Autoren entstehen auch beim Hinzufügen von Büchern."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Authors",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "scroll": 300
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Organise with locations",
+    "narration": {
+      "en": "Your catalogue stays tidy.",
+      "es": "Tu catálogo queda ordenado.",
+      "ca": "El teu catàleg queda endreçat.",
+      "de": "So bleibt dein Katalog ordentlich."
+    }
+  }
+}

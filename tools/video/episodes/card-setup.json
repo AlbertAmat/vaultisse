@@ -1,0 +1,200 @@
+{
+  "slug": "card-setup",
+  "topic": "Loans",
+  "title": "Design your library card",
+  "search": "How to design a library card in Vaultisse",
+  "coverWords": "Design your library card",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/customers-and-groups#library-cards",
+  "start": "/app/customers",
+  "tags": [
+    "design library card",
+    "library card maker",
+    "vaultisse library card",
+    "student library card",
+    "barcode library card",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Loans",
+      "title": "How to design a library card in Vaultisse",
+      "description": "Learn how to design a library card in Vaultisse and download it as a PDF."
+    },
+    "es": {
+      "topic": "Préstamos",
+      "title": "Cómo diseñar un carné de biblioteca en Vaultisse",
+      "description": "Aprende a diseñar un carné de biblioteca en Vaultisse y a descargarlo en PDF."
+    },
+    "ca": {
+      "topic": "Préstecs",
+      "title": "Com dissenyar un carnet de biblioteca a Vaultisse",
+      "description": "Aprèn a dissenyar un carnet de biblioteca a Vaultisse i a descarregar-lo en PDF."
+    },
+    "de": {
+      "topic": "Ausleihen",
+      "title": "Bibliotheksausweis in Vaultisse gestalten",
+      "description": "Gestalte in Vaultisse einen Bibliotheksausweis und lade ihn als PDF herunter."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Two fields of your own",
+      "Live preview",
+      "Download a customer card"
+    ],
+    "narration": {
+      "en": "Here is how to design a library card in Vaultisse. Every customer gets one, with a barcode.",
+      "es": "Así se diseña un carné de biblioteca en Vaultisse. Cada cliente tiene el suyo, con código de barras.",
+      "ca": "Així es dissenya un carnet de biblioteca a Vaultisse. Cada client té el seu, amb codi de barres.",
+      "de": "So gestaltest du in Vaultisse einen Bibliotheksausweis. Jeder Kunde bekommt einen mit Barcode."
+    }
+  },
+  "steps": [
+    {
+      "id": "open",
+      "title": {
+        "en": "Open card setup",
+        "es": "Configurar el carné",
+        "ca": "Configurar el carnet",
+        "de": "Ausweis einrichten"
+      },
+      "narration": {
+        "en": "In Customers, click Card setup. The fields are on the left and a preview is on the right.",
+        "es": "En Clientes, pulsa Configurar carné. Los campos están a la izquierda y la vista previa a la derecha.",
+        "ca": "A Clients, prem Configura el carnet. Els camps són a l'esquerra i la previsualització a la dreta.",
+        "de": "Klicke unter Kunden auf Ausweis einrichten. Links stehen die Felder, rechts die Vorschau."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Card setup"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "fields",
+      "title": {
+        "en": "Your own fields",
+        "es": "Tus campos",
+        "ca": "Els teus camps",
+        "de": "Eigene Felder"
+      },
+      "narration": {
+        "en": "There are two free fields, each with a label and a value, such as school and year. The preview updates as you type.",
+        "es": "Hay dos campos libres, con etiqueta y valor, como escuela y curso. La vista previa cambia mientras escribes.",
+        "ca": "Hi ha dos camps lliures, amb etiqueta i valor, com escola i curs. La previsualització canvia mentre escrius.",
+        "de": "Es gibt zwei freie Felder mit Bezeichnung und Wert, etwa Schule und Schuljahr. Die Vorschau ändert sich beim Tippen."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "selector": "input",
+            "nth": 1
+          }
+        },
+        {
+          "press": "Control+A"
+        },
+        {
+          "type": {
+            "text": "Riverside School"
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "save",
+      "title": {
+        "en": "Background and save",
+        "es": "Fondo y guardar",
+        "ca": "Fons i desar",
+        "de": "Hintergrund und speichern"
+      },
+      "narration": {
+        "en": "You can also upload a background image. Click Save when it looks right.",
+        "es": "También puedes subir una imagen de fondo. Pulsa Guardar cuando te guste.",
+        "ca": "També pots pujar una imatge de fons. Prem Desa quan t'agradi.",
+        "de": "Du kannst auch ein Hintergrundbild hochladen. Klicke auf Speichern, wenn alles passt."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "text": "Background image",
+            "nth": 0,
+            "seconds": 2.2
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Save",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 1
+        }
+      ]
+    },
+    {
+      "id": "card",
+      "title": {
+        "en": "A customer's card",
+        "es": "El carné de un cliente",
+        "ca": "El carnet d'un client",
+        "de": "Der Ausweis eines Kunden"
+      },
+      "narration": {
+        "en": "Click the card icon next to a customer. Add a photo if you wish, then download the PDF.",
+        "es": "Pulsa el icono del carné junto a un cliente. Añade una foto si quieres y descarga el PDF.",
+        "ca": "Prem la icona del carnet al costat d'un client. Afegeix una foto si vols i descarrega el PDF.",
+        "de": "Klicke neben einem Kunden auf das Ausweissymbol. Füge bei Bedarf ein Foto hinzu und lade das PDF herunter."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": ".entity-card",
+            "hasText": "Alex Morgan",
+            "selector": ".mdi-card-account-details-outline"
+          }
+        },
+        {
+          "pause": 2.5
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Download card (PDF)"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Scan a card to lend books",
+    "narration": {
+      "en": "Your cards are ready to print.",
+      "es": "Tus carnés están listos para imprimir.",
+      "ca": "Els carnets ja es poden imprimir.",
+      "de": "Deine Ausweise sind druckfertig."
+    }
+  }
+}

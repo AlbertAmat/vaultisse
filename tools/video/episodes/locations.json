@@ -1,0 +1,173 @@
+{
+  "slug": "locations",
+  "topic": "Library",
+  "title": "Organise with locations",
+  "search": "How to organise books by location in Vaultisse",
+  "coverWords": "Where is that book?",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/locations",
+  "start": "/app/locations",
+  "tags": [
+    "organise books by location",
+    "vaultisse locations",
+    "where is my book",
+    "shelf inventory",
+    "classroom library",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to organise books by location in Vaultisse",
+      "description": "Learn how to organise books by location in Vaultisse, so you always know where each copy is."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo organizar libros por ubicación en Vaultisse",
+      "description": "Aprende a organizar libros por ubicación en Vaultisse y sabrás siempre dónde está cada ejemplar."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com organitzar llibres per ubicació a Vaultisse",
+      "description": "Aprèn a organitzar llibres per ubicació a Vaultisse i sabràs sempre on és cada exemplar."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Bücher in Vaultisse nach Standort ordnen",
+      "description": "Ordne Bücher in Vaultisse nach Standort und du weißt immer, wo jedes Exemplar ist."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "See what is on each shelf",
+      "Add a location",
+      "Choose the default one"
+    ],
+    "narration": {
+      "en": "Here is how to organise books by location in Vaultisse. A location is a room, a shelf or a box.",
+      "es": "Así se organizan los libros por ubicación en Vaultisse. Una ubicación es una sala, un estante o una caja.",
+      "ca": "Així s'organitzen els llibres per ubicació a Vaultisse. Una ubicació és una sala, un prestatge o una capsa.",
+      "de": "So ordnest du Bücher in Vaultisse nach Standort. Ein Standort ist ein Raum, ein Regal oder eine Kiste."
+    }
+  },
+  "steps": [
+    {
+      "id": "list",
+      "title": {
+        "en": "Your locations",
+        "es": "Tus ubicaciones",
+        "ca": "Les ubicacions",
+        "de": "Deine Standorte"
+      },
+      "narration": {
+        "en": "Open Locations. Each line shows how many copies are kept there. Click one to see them all.",
+        "es": "Abre Ubicaciones. Cada línea muestra cuántos ejemplares hay allí. Pulsa una para verlos todos.",
+        "ca": "Obre Ubicacions. Cada línia mostra quants exemplars hi ha. Prem-ne una per veure'ls tots.",
+        "de": "Öffne Standorte. Jede Zeile zeigt, wie viele Exemplare dort stehen. Klicke eine an, um alle zu sehen."
+      },
+      "actions": [
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "text": "Science lab"
+          }
+        },
+        {
+          "pause": 2.5
+        },
+        {
+          "click": {
+            "text": "Science lab"
+          }
+        }
+      ]
+    },
+    {
+      "id": "add",
+      "title": {
+        "en": "Add a location",
+        "es": "Añadir una ubicación",
+        "ca": "Afegir una ubicació",
+        "de": "Standort hinzufügen"
+      },
+      "narration": {
+        "en": "To create one, click Add. Give it a name, and a short description if you like. Confirm with Add.",
+        "es": "Para crear una, pulsa Agregar. Ponle un nombre y, si quieres, una breve descripción. Confirma con Agregar.",
+        "ca": "Per crear-ne una, prem Afegir. Posa-hi un nom i, si vols, una breu descripció. Confirma amb Afegir.",
+        "de": "Für einen neuen Standort klickst du auf Hinzufügen. Gib ihm einen Namen und auf Wunsch eine Beschreibung. Bestätige mit Hinzufügen."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Add"
+          }
+        },
+        {
+          "type": {
+            "text": "Hall display"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "label": "Description",
+              "within": "[role=dialog]"
+            },
+            "text": "New arrivals"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "default",
+      "title": {
+        "en": "The default location",
+        "es": "La ubicación por defecto",
+        "ca": "La ubicació per defecte",
+        "de": "Der Standardstandort"
+      },
+      "narration": {
+        "en": "The star marks the default location. New copies go there unless you choose another one.",
+        "es": "La estrella marca la ubicación por defecto. Los ejemplares nuevos van allí si no eliges otra.",
+        "ca": "L'estrella marca la ubicació per defecte. Els exemplars nous hi van si no en tries cap altra.",
+        "de": "Der Stern markiert den Standardstandort. Neue Exemplare landen dort, wenn du nichts anderes wählst."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "within": ".entity-card",
+            "hasText": "Reading room",
+            "selector": ".mdi-star",
+            "seconds": 3
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Categories and authors",
+    "narration": {
+      "en": "Now every copy has a place.",
+      "es": "Ahora cada ejemplar tiene su sitio.",
+      "ca": "Ara cada exemplar té el seu lloc.",
+      "de": "So hat jedes Exemplar seinen Platz."
+    }
+  }
+}

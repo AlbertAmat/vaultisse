@@ -1,0 +1,176 @@
+{
+  "slug": "dashboard",
+  "topic": "Library",
+  "title": "Read the dashboard",
+  "search": "What the Vaultisse dashboard shows",
+  "coverWords": "Your library at a glance",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/dashboard",
+  "start": "/app/dashboard",
+  "tags": [
+    "vaultisse dashboard",
+    "library statistics",
+    "books on loan overview",
+    "new books this month",
+    "reading tracker",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "What the Vaultisse dashboard shows",
+      "description": "See what the Vaultisse dashboard shows: new books, categories, your reading and what is on loan."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Qué muestra el panel de Vaultisse",
+      "description": "Descubre qué muestra el panel de Vaultisse: novedades, categorías, tus lecturas y lo prestado."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Què mostra el panell de Vaultisse",
+      "description": "Descobreix què mostra el panell de Vaultisse: novetats, categories, les teves lectures i el que és en préstec."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Was die Vaultisse-Übersicht zeigt",
+      "description": "Sieh, was die Vaultisse-Übersicht zeigt: Neues, Kategorien, deine Lektüre und Verliehenes."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "New books this month",
+      "Browse by category",
+      "Loans and growth"
+    ],
+    "narration": {
+      "en": "This is what the Vaultisse dashboard shows. In one page you see how your library is doing.",
+      "es": "Esto es lo que muestra el panel de Vaultisse. En una página ves cómo va tu biblioteca.",
+      "ca": "Això és el que mostra el panell de Vaultisse. En una pàgina veus com va la biblioteca.",
+      "de": "Das zeigt die Übersicht von Vaultisse. Auf einer Seite siehst du, wie es deiner Bibliothek geht."
+    }
+  },
+  "steps": [
+    {
+      "id": "new",
+      "title": {
+        "en": "New this month",
+        "es": "Novedades del mes",
+        "ca": "Novetats del mes",
+        "de": "Neu in diesem Monat"
+      },
+      "narration": {
+        "en": "At the top you see the books added this month. Each category button opens just those books.",
+        "es": "Arriba ves los libros añadidos este mes. Cada botón de categoría abre solo esos libros.",
+        "ca": "A dalt veus els llibres afegits aquest mes. Cada botó de categoria obre només aquells llibres.",
+        "de": "Oben stehen die Bücher, die diesen Monat dazugekommen sind. Jede Kategorie-Schaltfläche öffnet nur diese Bücher."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "highlight": {
+            "text": "new books this month",
+            "seconds": 2.2
+          }
+        },
+        {
+          "pause": 0.5
+        },
+        {
+          "highlight": {
+            "text": "Fantasy",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "browse",
+      "title": {
+        "en": "Browse by category",
+        "es": "Por categorías",
+        "ca": "Per categories",
+        "de": "Nach Kategorie"
+      },
+      "narration": {
+        "en": "Below, your shelves are grouped by category. Click any cover to open the book.",
+        "es": "Debajo, los libros aparecen agrupados por categoría. Pulsa una portada para abrir el libro.",
+        "ca": "A sota, els llibres surten agrupats per categoria. Prem una coberta per obrir el llibre.",
+        "de": "Darunter sind die Bücher nach Kategorien gruppiert. Ein Klick auf ein Cover öffnet das Buch."
+      },
+      "actions": [
+        {
+          "scroll": 450
+        },
+        {
+          "pause": 2.5
+        }
+      ]
+    },
+    {
+      "id": "reading",
+      "title": {
+        "en": "Reading and loans",
+        "es": "Lectura y préstamos",
+        "ca": "Lectura i préstecs",
+        "de": "Lektüre und Ausleihen"
+      },
+      "narration": {
+        "en": "Further down you find your reading, and the books currently on loan.",
+        "es": "Más abajo están tus lecturas y los libros que ahora mismo están prestados.",
+        "ca": "Més avall hi ha les teves lectures i els llibres que ara mateix són en préstec.",
+        "de": "Weiter unten findest du deine Lektüre und die gerade verliehenen Bücher."
+      },
+      "actions": [
+        {
+          "scroll": 600
+        },
+        {
+          "pause": 2
+        },
+        {
+          "scroll": 500
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "growth",
+      "title": {
+        "en": "Growth over time",
+        "es": "Evolución",
+        "ca": "Evolució",
+        "de": "Entwicklung"
+      },
+      "narration": {
+        "en": "At the bottom, a chart shows how the collection has grown.",
+        "es": "Al final, un gráfico muestra cómo ha crecido la colección.",
+        "ca": "Al final, un gràfic mostra com ha crescut la col·lecció.",
+        "de": "Ganz unten zeigt ein Diagramm, wie die Sammlung gewachsen ist."
+      },
+      "actions": [
+        {
+          "scroll": 900
+        },
+        {
+          "pause": 3
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Search and filter your books",
+    "narration": {
+      "en": "That is your dashboard.",
+      "es": "Ese es tu panel.",
+      "ca": "Aquest és el teu panell.",
+      "de": "Das ist deine Übersicht."
+    }
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "slug": "scan-card",
+  "topic": "Loans",
+  "title": "Scan a card to lend",
+  "search": "How to lend books by scanning a library card in Vaultisse",
+  "coverWords": "Scan a card, lend a book",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/customers-and-groups#library-cards",
+  "start": "/app/customers",
+  "tags": [
+    "scan library card",
+    "barcode book lending",
+    "vaultisse scan card",
+    "self checkout school library",
+    "lend books by barcode",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Loans",
+      "title": "How to lend books by scanning a library card in Vaultisse",
+      "description": "Learn how to lend books by scanning a library card in Vaultisse with a barcode reader."
+    },
+    "es": {
+      "topic": "Préstamos",
+      "title": "Cómo prestar libros escaneando el carné en Vaultisse",
+      "description": "Aprende a prestar libros escaneando el carné en Vaultisse con un lector de códigos de barras."
+    },
+    "ca": {
+      "topic": "Préstecs",
+      "title": "Com prestar llibres escanejant el carnet a Vaultisse",
+      "description": "Aprèn a prestar llibres escanejant el carnet a Vaultisse amb un lector de codis de barres."
+    },
+    "de": {
+      "topic": "Ausleihen",
+      "title": "Bücher per Ausweis-Scan in Vaultisse verleihen",
+      "description": "Verleihe in Vaultisse Bücher, indem du den Ausweis mit einem Barcodeleser scannst."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Scan the card",
+      "Scan a book to lend it",
+      "Check the history"
+    ],
+    "narration": {
+      "en": "Here is how to lend books by scanning a library card in Vaultisse. A barcode reader makes it very quick.",
+      "es": "Así se prestan libros escaneando el carné en Vaultisse. Con un lector de códigos es muy rápido.",
+      "ca": "Així es presten llibres escanejant el carnet a Vaultisse. Amb un lector de codis és molt ràpid.",
+      "de": "So verleihst du in Vaultisse Bücher per Ausweis-Scan. Mit einem Barcodeleser geht das sehr schnell."
+    }
+  },
+  "steps": [
+    {
+      "id": "scan",
+      "title": {
+        "en": "Scan the card",
+        "es": "Escanea el carné",
+        "ca": "Escaneja el carnet",
+        "de": "Ausweis scannen"
+      },
+      "narration": {
+        "en": "In Customers, click Scan card. Then scan the barcode, or type the card code and press Enter.",
+        "es": "En Clientes, pulsa Escanear carné. Escanea el código, o escríbelo y pulsa Intro.",
+        "ca": "A Clients, prem Escaneja carnet. Escaneja el codi, o escriu-lo i prem Retorn.",
+        "de": "Klicke unter Kunden auf Ausweis scannen. Scanne den Barcode oder tippe den Code ein und drücke Enter."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Scan card"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "type": {
+            "sql": "SELECT replace(uuid::text,'-','') FROM customers WHERE name='Alex Morgan'"
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "loans",
+      "title": {
+        "en": "What they have",
+        "es": "Lo que tiene",
+        "ca": "El que té",
+        "de": "Was ausgeliehen ist"
+      },
+      "narration": {
+        "en": "You see the person and the books they have now.",
+        "es": "Ves a la persona y los libros que tiene ahora.",
+        "ca": "Veus la persona i els llibres que té ara.",
+        "de": "Du siehst die Person und die Bücher, die sie gerade hat."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "text": "Alex Morgan",
+            "nth": 0,
+            "seconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "lend",
+      "title": {
+        "en": "Lend by scanning",
+        "es": "Presta escaneando",
+        "ca": "Presta escanejant",
+        "de": "Per Scan verleihen"
+      },
+      "narration": {
+        "en": "Now scan a book label. The copy is lent to this person right away.",
+        "es": "Ahora escanea la etiqueta de un libro. El ejemplar queda prestado a esta persona al momento.",
+        "ca": "Ara escaneja l'etiqueta d'un llibre. L'exemplar queda prestat a aquesta persona a l'instant.",
+        "de": "Scanne jetzt die Etikette eines Buches. Das Exemplar ist sofort an diese Person verliehen."
+      },
+      "actions": [
+        {
+          "type": {
+            "into": {
+              "label": "Scan a book to lend it",
+              "within": "[role=dialog]"
+            },
+            "sql": "SELECT s.code FROM book_stocks s JOIN books b ON b.id=s.book_id WHERE s.status=0 AND b.name='Seven Maps of Winter' ORDER BY s.id LIMIT 1"
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "pause": 2.5
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "title": {
+        "en": "Loan history",
+        "es": "Historial",
+        "ca": "Historial",
+        "de": "Verlauf"
+      },
+      "narration": {
+        "en": "The history tab shows everything this person has borrowed before.",
+        "es": "La pestaña de historial muestra todo lo que esta persona se ha llevado antes.",
+        "ca": "La pestanya d'historial mostra tot el que aquesta persona s'ha emportat abans.",
+        "de": "Der Verlauf zeigt alles, was diese Person früher ausgeliehen hat."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "role": "tab",
+            "name": "Loan history"
+          }
+        },
+        {
+          "pause": 3
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Lend and return a book",
+    "narration": {
+      "en": "Lending takes two scans.",
+      "es": "Prestar son dos escaneos.",
+      "ca": "Prestar són dos escanejos.",
+      "de": "Zwei Scans, und das Buch ist verliehen."
+    }
+  }
+}
