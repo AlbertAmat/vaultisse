@@ -1,7 +1,8 @@
 import {Pool} from "pg";
-import {Request, Response} from "express";
+import {ErrorRequestHandler, Request, RequestHandler, Response} from "express";
 import multer from "multer";
 import {appService} from "../AppService";
+import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
 import {BookService} from "../services/BookService";
 import {DomainError} from "../errors/DomainError";
 import {SearchFilter} from "@vaultisse/types/search/SearchFilter";
@@ -22,28 +23,45 @@ export const upload = multer({
 });
 export {maxCoverImageSizeMb};
 
-// Max size for the ebook-file backups, configurable via MAX_EBOOK_FILE_SIZE_MB
-// so deployers can raise (or lower) the limit without a code change.
-// Defaults to 10MB when unset or not a valid positive number.
-const parsedMaxEbookFileSizeMb = Number(process.env.MAX_EBOOK_FILE_SIZE_MB);
-export const maxEbookFileSizeMb = Number.isFinite(parsedMaxEbookFileSizeMb) && parsedMaxEbookFileSizeMb > 0
-    ? parsedMaxEbookFileSizeMb
-    : 10;
+// Max size for the ebook-file backups, configurable via MAX_EBOOK_FILE_SIZE_MB (or the admin portal)
+// so deployers can raise (or lower) the limit without a code change. Defaults to 10MB.
+// The limit is read per request - it can change while the server runs - so the multer instance
+// is rebuilt whenever it does. See also the lazy-evaluation note in ImportController.ts.
+let ebookUploadMiddleware: { limitMb: number; single: RequestHandler } | null = null;
 
-// Multer setup for the book ebook-file backups (epub/pdf/Kindle) - also stored
-// in memory, validated by extension since browsers report inconsistent
-// mimetypes for .epub/.mobi/.azw3.
-export const fileUpload = multer({
-    storage,
-    limits: {fileSize: maxEbookFileSizeMb * 1024 * 1024},
-    fileFilter: (req: Request, file: Express.Multer.File, cb: (error: any, acceptFile: boolean) => void) => {
-        const name = file.originalname.toLowerCase();
-        if (!name.endsWith(".epub") && !name.endsWith(".pdf") && !name.endsWith(".mobi") && !name.endsWith(".azw3")) {
-            return cb(new Error("Only EPUB, PDF or Kindle files are allowed"), false);
-        }
-        cb(null, true);
+/** Multer for the book ebook-file backups (epub/pdf/Kindle) - stored in memory, validated by extension since browsers report inconsistent mimetypes for .epub/.mobi/.azw3. */
+export const fileUpload = {
+    /**
+     * @param field Name of the multipart field holding the file.
+     * @returns Middleware accepting one ebook file under the current size limit.
+     */
+    single(field: string): RequestHandler {
+        return (req, res, next) => {
+            const limitMb = appService.getMaxEbookFileSizeMb();
+            if (!ebookUploadMiddleware || ebookUploadMiddleware.limitMb !== limitMb) {
+                ebookUploadMiddleware = {
+                    limitMb,
+                    single: multer({
+                        storage,
+                        limits: {fileSize: limitMb * 1024 * 1024},
+                        fileFilter: (fileFilterReq: Request, file: Express.Multer.File, cb: (error: any, acceptFile: boolean) => void) => {
+                            const name = file.originalname.toLowerCase();
+                            if (!name.endsWith(".epub") && !name.endsWith(".pdf") && !name.endsWith(".mobi") && !name.endsWith(".azw3")) {
+                                return cb(new Error("Only EPUB, PDF or Kindle files are allowed"), false);
+                            }
+                            cb(null, true);
+                        }
+                    }).single(field),
+                };
+            }
+            ebookUploadMiddleware.single(req, res, next);
+        };
     }
-});
+};
+
+/** Upload error handler for the ebook upload, reporting the limit in force right now. */
+export const handleEbookUploadError: ErrorRequestHandler = (err, req, res, next) =>
+    handleUploadError(appService.getMaxEbookFileSizeMb())(err, req, res, next);
 
 /** Thin HTTP<->service glue for the Book resource. Constructed once per process (see BooksRoute.ts) and reused across requests. Multer config (`upload`/`fileUpload`/size limits above) stays module-level, not on the class, since it's Express middleware wiring consumed directly by BooksRoute.ts, not request-handling logic. */
 export class BookController {

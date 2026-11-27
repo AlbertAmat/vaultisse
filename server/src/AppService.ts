@@ -23,6 +23,15 @@ import {runMigrations} from "./migrate";
 import {MailService} from "./services/MailService";
 import {InactivityConfig, InactivityService} from "./services/InactivityService";
 import {ASSETS_DIR} from "./utils/Paths";
+import {AdminConfig, readAdminConfig} from "./admin/AdminConfig";
+import {SettingsService} from "./admin/services/SettingsService";
+import {SettingsCrypto} from "./admin/services/SettingsCrypto";
+import {SecurityEventService} from "./admin/services/SecurityEventService";
+import {TrafficMonitor} from "./admin/services/TrafficMonitor";
+import {BlockedIpService} from "./admin/services/BlockedIpService";
+import {AdminApp} from "./admin/AdminApp";
+import {OidcRepository} from "./repositories/OidcRepository";
+import {rateLimited} from "./middlewares/RateLimitHandler";
 
 /** Present only when every required OIDC env var is set. See isOidcEnabled(). */
 export interface OidcConfig {
@@ -85,7 +94,7 @@ export class AppService {
      * Inactive-account deletion settings, or null when off
      * @private
      */
-    private readonly m_inactivityConfig: InactivityConfig | null;
+    private m_inactivityConfig: InactivityConfig | null = null;
 
     /**
      * Secret key for JWT
@@ -122,13 +131,13 @@ export class AppService {
      * stop further public sign-ups (issue #36).
      * @private
      */
-    private readonly m_registrationEnabled: boolean;
+    private m_registrationEnabled = true;
 
     /**
      * The google books PI key, if not present, it will use open library
      * @private
      */
-    private readonly m_googleApiKey: string | undefined;
+    private m_googleApiKey: string | undefined;
 
     /**
      * LibraryThing devkey, used as a third cover-lookup fallback (after
@@ -137,7 +146,7 @@ export class AppService {
      * other two providers, so this fallback is simply skipped when unset.
      * @private
      */
-    private readonly m_libraryThingApiKey: string | undefined;
+    private m_libraryThingApiKey: string | undefined;
 
     /**
      * Max size (in MB) accepted for a library import CSV (see ImportRoute.ts),
@@ -145,14 +154,14 @@ export class AppService {
      * or not a valid positive number.
      * @private
      */
-    private readonly m_maxImportFileSizeMb: number;
+    private m_maxImportFileSizeMb = 10;
 
     /**
      * OIDC client config, or null when the required env vars are unset.
      * Presence alone does not mean SSO is offered - see isOidcEnabled().
      * @private
      */
-    private readonly m_oidcConfig: OidcConfig | null;
+    private m_oidcConfig: OidcConfig | null = null;
 
     /**
      * Extra origins appended to the CSP `img-src` directive, configured via
@@ -174,6 +183,29 @@ export class AppService {
      */
     private readonly m_allowHttp: boolean;
 
+    /** Max size (in MB) accepted for an ebook file upload; see MAX_EBOOK_FILE_SIZE_MB. */
+    private m_maxEbookFileSizeMb = 10;
+
+    /** REGISTRATION_REQUIRES_APPROVAL: new accounts start disabled until an admin approves them. */
+    private m_requiresApproval = false;
+
+    /** SSO_ONLY as configured; only effective while OIDC is enabled, see isSsoOnly(). */
+    private m_ssoOnlyRequested = false;
+
+    /** Bootstrap config of the optional admin portal (ADMIN_ENABLED, ADMIN_PORT, ...). */
+    private readonly m_adminConfig: AdminConfig;
+
+    /** Settings edited from the admin portal, merged over the env vars. Inert while the portal is off. */
+    private m_settings!: SettingsService;
+
+    /** Security event recording, request statistics and IP blocklist of the admin portal. */
+    private m_securityEvents!: SecurityEventService;
+    private readonly m_traffic = new TrafficMonitor();
+    private m_blockedIps!: BlockedIpService;
+
+    /** The admin portal's own HTTP listener; null while the portal is off or not yet started. */
+    private m_adminApp: AdminApp | null = null;
+
     /**
      * Application constructor
      * Initializes environment variables, database, middleware, and logging
@@ -194,6 +226,14 @@ export class AppService {
         if (process.env.TRUST_PROXY === "true") {
             this.m_app.set("trust proxy", 1);
         }
+
+        this.m_adminConfig = readAdminConfig(process.env);
+
+        // Admin portal only: count requests for the security page and refuse blocked addresses.
+        // Registered first so a blocked address costs as little as possible. Both are thin wrappers
+        // because the services behind them are created below, once the pool and logger exist.
+        this.m_app.use((req, res, next) => this.m_traffic.middleware(req, res, next));
+        this.m_app.use((req, res, next) => this.m_blockedIps.middleware(req, res, next));
 
         // ===========================================
         // BODY PARSER
@@ -258,6 +298,7 @@ export class AppService {
         const limiter = rateLimit({
             windowMs: 10 * 60 * 1000, // 10 minutes
             max: 500, // max 300 requests per IP in the window
+            handler: rateLimited("global"),
         });
         this.m_app.use(limiter);
 
@@ -295,27 +336,21 @@ export class AppService {
 
         this.m_allowDevAuth = process.env.ALLOW_DEV_AUTH == "true";
 
-        this.m_registrationEnabled = process.env.REGISTRATION_ENABLED !== "false";
-
-        this.m_googleApiKey = BookMetadataRepository.normalizeGoogleApiKey(process.env.GOOGLE_BOOKS_API_KEY);
-
-        this.m_libraryThingApiKey = process.env.LIBRARYTHING_API_KEY || undefined;
-
-        const parsedMaxImportFileSizeMb = Number(process.env.MAX_IMPORT_FILE_SIZE_MB);
-        this.m_maxImportFileSizeMb = Number.isFinite(parsedMaxImportFileSizeMb) && parsedMaxImportFileSizeMb > 0
-            ? parsedMaxImportFileSizeMb
-            : 10;
-
-        this.m_oidcConfig = AppService.__readOidcConfig();
-
         this.m_server       = null;
 
         // Initialize logger
         this.m_logger       = new Logger(String(process.env.LOGGER_PATH));
 
-        this.m_mailService  = new MailService(MailService.readConfig(process.env), this.m_logger);
+        this.m_mailService  = new MailService(null, this.m_logger);
 
-        this.m_inactivityConfig = InactivityService.readConfig(process.env, this.m_mailService.isEnabled());
+        // Portal-managed settings sit on top of the env vars (and only exist while the portal is enabled).
+        const settingsSecret = process.env.SETTINGS_ENCRYPTION_KEY?.trim() || this.m_jwtSecret;
+        this.m_settings = new SettingsService(this.m_databasePool, new SettingsCrypto(settingsSecret), this.m_logger, this.m_adminConfig.enabled);
+        this.m_securityEvents = new SecurityEventService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
+        this.m_blockedIps = new BlockedIpService(this.m_databasePool, this.m_logger, this.m_securityEvents, this.m_adminConfig.enabled);
+
+        // Everything derived from env vars / portal settings; throws on an invalid configuration.
+        this.__applyEnv(process.env);
 
         // Route console.error (used by the controllers' catch blocks, stack traces
         // included) into the log file too; it used to reach stderr only.
@@ -340,6 +375,19 @@ export class AppService {
             process.exit(1);
         }
 
+        if (this.m_adminConfig.enabled) {
+            // Portal-managed settings take effect from here on. A bad stored value must not stop the
+            // server from starting - it keeps the env-var configuration and says so in the log.
+            try {
+                await this.m_settings.load();
+                this.__applyEnv(this.m_settings.effectiveEnv());
+            } catch (e) {
+                this.m_logger.error(`Applying the admin portal settings failed, using the env vars: ${e instanceof Error ? e.message : String(e)}`);
+            }
+            await this.m_blockedIps.start();
+            this.m_securityEvents.start();
+        }
+
         const server = http.createServer(this.m_app);
 
         // Load all routes into Express
@@ -353,6 +401,11 @@ export class AppService {
         this.m_server = server;
 
         this.__scheduleInactivityCleanup(server);
+
+        if (this.m_adminConfig.enabled) {
+            this.m_adminApp = new AdminApp(this.m_adminConfig, this.m_databasePool, this.m_logger);
+            await this.m_adminApp.start();
+        }
 
         // Log server start
         this.m_logger.info(`Server running on port ${this.m_port};`)
@@ -413,24 +466,148 @@ export class AppService {
         return this.m_databasePool;
     }
 
+    /** Max size (in MB) accepted for an ebook file upload, see MAX_EBOOK_FILE_SIZE_MB. */
+    public getMaxEbookFileSizeMb(): number {
+        return this.m_maxEbookFileSizeMb;
+    }
+
+    /** Whether a new account must be approved by an admin before it can log in (REGISTRATION_REQUIRES_APPROVAL). */
+    public requiresRegistrationApproval(): boolean {
+        return this.m_requiresApproval;
+    }
+
+    /** Bootstrap config of the optional admin portal. */
+    public getAdminConfig(): AdminConfig {
+        return this.m_adminConfig;
+    }
+
+    /** Whether the optional admin portal is on (ADMIN_ENABLED=true). */
+    public isAdminEnabled(): boolean {
+        return this.m_adminConfig.enabled;
+    }
+
+    /** Settings edited from the admin portal. */
+    public getSettings(): SettingsService {
+        return this.m_settings;
+    }
+
+    /** Records security events for the admin portal (a no-op while it is off). */
+    public getSecurityEvents(): SecurityEventService {
+        return this.m_securityEvents;
+    }
+
+    /** Live request statistics for the admin portal. */
+    public getTrafficMonitor(): TrafficMonitor {
+        return this.m_traffic;
+    }
+
+    /** The IP blocklist managed from the admin portal. */
+    public getBlockedIps(): BlockedIpService {
+        return this.m_blockedIps;
+    }
+
+    /** The admin portal's Express app, or null while it is off or not started (used by the tests). */
+    public getAdminApp(): Express | null {
+        return this.m_adminApp?.getApp() ?? null;
+    }
+
+    /** The admin portal's HTTP server, or null while it is off or not started. */
+    public getAdminServer(): Server<any, any> | null {
+        return this.m_adminApp?.getServer() ?? null;
+    }
+
+    /** Stops the admin portal's background work and listener (used on shutdown and by the tests). */
+    public async stopAdmin(): Promise<void> {
+        this.m_blockedIps.stop();
+        await this.m_securityEvents.stop();
+        await this.m_adminApp?.stop();
+        this.m_adminApp = null;
+    }
+
+    /**
+     * Re-reads the portal settings from the database and applies them, so a change takes effect
+     * without restarting the server.
+     * @throws Error when the resulting configuration is invalid (the previous one stays in place).
+     */
+    public async applyPortalSettings(): Promise<void> {
+        await this.m_settings.load();
+        this.__applyEnv(this.m_settings.effectiveEnv());
+    }
+
+    /**
+     * Checks that a configuration is acceptable before it is saved: what the env readers reject at start-up
+     * (half-configured SMTP, a notice period longer than the inactivity period) is rejected here too, and
+     * a partly filled-in SSO setup is reported instead of silently leaving SSO off.
+     * @param env The configuration to check.
+     * @param touchedKeys The settings being changed.
+     * @throws Error with a message fit for the admin.
+     */
+    public static validateEnv(env: NodeJS.ProcessEnv, touchedKeys: string[] = []): void {
+        const mail = MailService.readConfig(env);
+        InactivityService.readConfig(env, mail !== null);
+        if (touchedKeys.some((key) => key.startsWith("OIDC_") || key === "SSO_ONLY")) {
+            const required = ["OIDC_ISSUER", "OIDC_CLIENT_ID", "OIDC_CLIENT_SECRET", "OIDC_REDIRECT_URI"];
+            const filled = required.filter((key) => (env[key] ?? "").trim() !== "");
+            if (filled.length > 0 && filled.length < required.length) {
+                throw new Error("Single sign-on needs the issuer, client id, client secret and redirect URI all together (or none of them).");
+            }
+            if (env.SSO_ONLY === "true" && filled.length === 0) {
+                throw new Error("\"SSO only\" needs single sign-on to be configured first.");
+            }
+        }
+    }
+
+    /**
+     * Derives every setting that can come from the portal out of an env-shaped object and makes it the
+     * live configuration. All-or-nothing: a throwing reader leaves the previous configuration untouched.
+     * @param env `process.env`, or `process.env` with the portal overrides on top.
+     * @private
+     */
+    private __applyEnv(env: NodeJS.ProcessEnv): void {
+        const mailConfig = MailService.readConfig(env);
+        const inactivityConfig = InactivityService.readConfig(env, mailConfig !== null);
+
+        this.m_mailService.reconfigure(mailConfig);
+        this.m_inactivityConfig = inactivityConfig;
+        this.m_registrationEnabled = env.REGISTRATION_ENABLED !== "false";
+        this.m_requiresApproval = env.REGISTRATION_REQUIRES_APPROVAL === "true";
+        this.m_ssoOnlyRequested = env.SSO_ONLY === "true";
+        this.m_googleApiKey = BookMetadataRepository.normalizeGoogleApiKey(env.GOOGLE_BOOKS_API_KEY);
+        this.m_libraryThingApiKey = env.LIBRARYTHING_API_KEY || undefined;
+        this.m_maxImportFileSizeMb = AppService.__positiveNumber(env.MAX_IMPORT_FILE_SIZE_MB, 10);
+        this.m_maxEbookFileSizeMb = AppService.__positiveNumber(env.MAX_EBOOK_FILE_SIZE_MB, 10);
+        this.m_oidcConfig = AppService.__readOidcConfig(env);
+        OidcRepository.resetOidcClientCache();
+    }
+
+    /**
+     * @param raw Raw env value.
+     * @param fallback Used when `raw` isn't a positive number.
+     * @private
+     */
+    private static __positiveNumber(raw: string | undefined, fallback: number): number {
+        const parsed = Number(raw);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+    }
+
     /**
      * Read OIDC client config from env vars. Returns null when any of the
      * required vars is unset - see OidcConfig / isOidcEnabled().
      * @private
      */
-    private static __readOidcConfig(): OidcConfig | null {
-        const issuer = (process.env.OIDC_ISSUER ?? "").trim();
-        const clientId = (process.env.OIDC_CLIENT_ID ?? "").trim();
-        const clientSecret = (process.env.OIDC_CLIENT_SECRET ?? "").trim();
-        const redirectUri = (process.env.OIDC_REDIRECT_URI ?? "").trim();
+    private static __readOidcConfig(env: NodeJS.ProcessEnv): OidcConfig | null {
+        const issuer = (env.OIDC_ISSUER ?? "").trim();
+        const clientId = (env.OIDC_CLIENT_ID ?? "").trim();
+        const clientSecret = (env.OIDC_CLIENT_SECRET ?? "").trim();
+        const redirectUri = (env.OIDC_REDIRECT_URI ?? "").trim();
         if (!issuer || !clientId || !clientSecret || !redirectUri) {
             return null;
         }
 
-        const scopes = (process.env.OIDC_SCOPES ?? "").trim() || "openid profile email";
-        const buttonLabel = (process.env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
+        const scopes = (env.OIDC_SCOPES ?? "").trim() || "openid profile email";
+        const buttonLabel = (env.OIDC_BUTTON_LABEL ?? "").trim() || "Sign in with SSO";
 
-        return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel, groupsClaim: (process.env.OIDC_GROUPS_CLAIM ?? "").trim() || "groups", personalVault: (process.env.OIDC_PERSONAL_VAULT ?? "").trim().toLowerCase() !== "false"};
+        return {issuer, clientId, clientSecret, redirectUri, scopes, buttonLabel, groupsClaim: (env.OIDC_GROUPS_CLAIM ?? "").trim() || "groups", personalVault: (env.OIDC_PERSONAL_VAULT ?? "").trim().toLowerCase() !== "false"};
     }
 
     /**
@@ -473,15 +650,19 @@ export class AppService {
      * @private
      */
     private __scheduleInactivityCleanup(server: Server) {
-        const config = this.m_inactivityConfig;
-        if (!config || process.env.DEMO_MODE === "true" || this.m_allowDevAuth) {
+        if (process.env.DEMO_MODE === "true" || this.m_allowDevAuth) {
             return;
         }
 
-        this.m_logger.warn(`Inactive accounts are deleted after ${config.inactivityDays} days (`
-            + (config.noticeDays > 0 ? `warned ${config.noticeDays} days ahead).` : "with no warning)."));
-
+        // The settings can change while the server runs (admin portal), so the config is read on every
+        // pass rather than once here; with none set a pass does nothing.
         const run = () => {
+            const config = this.m_inactivityConfig;
+            if (!config) {
+                return;
+            }
+            this.m_logger.warn(`Inactive accounts are deleted after ${config.inactivityDays} days (`
+                + (config.noticeDays > 0 ? `warned ${config.noticeDays} days ahead).` : "with no warning)."));
             new InactivityService(this.m_databasePool, config).run()
                 .catch((error) => console.error("Inactive-account cleanup failed:", error));
         };
@@ -541,7 +722,7 @@ export class AppService {
      * can't lock everyone out.
      */
     public isSsoOnly(): boolean {
-        return process.env.SSO_ONLY === "true" && this.isOidcEnabled();
+        return this.m_ssoOnlyRequested && this.isOidcEnabled();
     }
 
     /**

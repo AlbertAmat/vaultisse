@@ -1,4 +1,5 @@
 import {Pool} from "pg";
+import {QuotaService} from "../admin/services/QuotaService";
 import {VaultRepository} from "../repositories/VaultRepository";
 import {UserRepository} from "../repositories/UserRepository";
 import {withTransaction} from "../repositories/withTransaction";
@@ -207,6 +208,11 @@ export class VaultService {
         const vault = await repo.findByInvitationUuid(invitationUuid);
         if (!vault) {
             throw new NotFoundError("Invitation not found");
+        }
+
+        // A plan's member limit: a pending request counts, someone already on the list doesn't.
+        if (!(await repo.getMembership(vault.id, userId))) {
+            await QuotaService.assertCanAddMember(this.pool, vault.id);
         }
 
         const inserted = await repo.requestJoin(vault.id, userId);

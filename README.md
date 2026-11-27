@@ -202,11 +202,13 @@ vaultisse/
 │       ├── router/        # Vue Router configuration
 │       ├── components/    # Shared UI components
 │       └── plugins/       # i18n, Vuetify, API client setup (api.ts)
-├── packages/              # Shared workspace packages (client + future browser extensions)
+├── admin/                 # Vue 3 + Vuetify admin portal (optional, see docs/ADMIN.md)
+├── packages/              # Shared workspace packages (client, admin + future browser extensions)
 │   ├── types/             # @vaultisse/types: API request/response types
-│   └── api-client/        # @vaultisse/api-client: axios client, one service per resource
+│   └── api-client/        # @vaultisse/api-client: axios clients (user API and admin API)
 ├── server/                # Express + TypeScript REST API
 │   └── src/
+│       ├── admin/         # The admin portal's API, auth, settings, security (own port, off by default)
 │       ├── routes/        # One Express router per resource
 │       ├── middlewares/   # requireAuth (JWT) middleware
 │       ├── types/         # Server-side types (DB rows, route inputs)
@@ -214,7 +216,7 @@ vaultisse/
 │       └── assets/        # Static login/register pages, prod client bundle
 ├── assets/
 │   └── db/                # SQL schema (databaseSchema.sql) + upgrade/ (dated upgrade files)
-├── package.json           # npm workspaces root (client, server, packages/*) + release version anchor
+├── package.json           # npm workspaces root (client, admin, server, packages/*) + release version anchor
 ├── package-lock.json      # the single lockfile for all workspaces
 ├── Dockerfile             # production image, built from the repo root
 └── LICENSE

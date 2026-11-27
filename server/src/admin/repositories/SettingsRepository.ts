@@ -1,0 +1,54 @@
+/** Data access for `app_settings`. Values are stored exactly as given (secrets already encrypted by the service). */
+import {Pool} from "pg";
+
+export interface StoredSetting {
+    key: string;
+    value: string;
+    isSecret: boolean;
+    updatedAt: Date;
+}
+
+/** Data access for the `app_settings` table. */
+export class SettingsRepository {
+    /**
+     * @param db Connection pool.
+     */
+    public constructor(private readonly db: Pool) {
+    }
+
+    /**
+     * @returns Every stored override.
+     */
+    public async loadAll(): Promise<StoredSetting[]> {
+        const result = await this.db.query(
+            `SELECT key, value, is_secret AS "isSecret", updated_at AS "updatedAt" FROM app_settings`
+        );
+        return result.rows;
+    }
+
+    /**
+     * Inserts or replaces one override.
+     * @param key Setting key.
+     * @param value Stored value (encrypted for secrets).
+     * @param isSecret Whether `value` is an encrypted secret.
+     * @param adminId Admin making the change.
+     */
+    public async upsert(key: string, value: string, isSecret: boolean, adminId: number): Promise<void> {
+        await this.db.query(
+            `INSERT INTO app_settings (key, value, is_secret, updated_by, updated_at)
+             VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+             ON CONFLICT (key) DO UPDATE
+                SET value = EXCLUDED.value, is_secret = EXCLUDED.is_secret,
+                    updated_by = EXCLUDED.updated_by, updated_at = CURRENT_TIMESTAMP`,
+            [key, value, isSecret, adminId]
+        );
+    }
+
+    /**
+     * Removes an override, so the env var (or default) applies again.
+     * @param key Setting key.
+     */
+    public async remove(key: string): Promise<void> {
+        await this.db.query("DELETE FROM app_settings WHERE key = $1", [key]);
+    }
+}

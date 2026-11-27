@@ -72,5 +72,10 @@ jobs:
       - name: Build client
         run: npm run build -w @vaultisse/client
 
+      - name: Type-check and build the admin portal
+        run: |
+          npm run type-check -w @vaultisse/admin
+          npm run build -w @vaultisse/admin
+
       - name: Run server tests
         run: npm test

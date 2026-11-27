@@ -1,6 +1,8 @@
 export {createApiClient} from "./ApiClient";
 export type {ApiClient} from "./ApiClient";
 export {createHttpClient, API_PATH_PREFIX} from "./http";
+export {createAdminApiClient} from "./AdminApiClient";
+export type {AdminApiClient, AdminClientOptions} from "./AdminApiClient";
 export type {HttpClientOptions} from "./http";
 export {AppService} from "./AppService";
 export {AuthorsService} from "./AuthorsService";

@@ -29,6 +29,10 @@ services:
       DB_PORT: 5432
     ports:
       - "${API_PORT:-3000}:${API_PORT:-3000}"
+      # The optional admin portal (ADMIN_ENABLED=true in .env) listens on its own port. Published on
+      # the loopback address only: put a reverse proxy or tunnel in front for adm.example.com, or
+      # reach it over an SSH tunnel. Nothing listens here while ADMIN_ENABLED is false.
+      - "127.0.0.1:${ADMIN_PORT:-3001}:${ADMIN_PORT:-3001}"
     volumes:
       - app-logs:/app/logs
 

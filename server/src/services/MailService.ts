@@ -21,13 +21,24 @@ export interface SmtpConfig {
 
 /** Sends plain-text mail through the configured SMTP server, or does nothing when there is none. */
 export class MailService {
-    private readonly transporter: Transporter | null;
+    private transporter: Transporter | null = null;
+    private config: SmtpConfig | null = null;
 
     /**
      * @param config SMTP settings, or null to disable mail.
      * @param logger Server logger, for delivery failures.
      */
-    public constructor(private readonly config: SmtpConfig | null, private readonly logger: Logger) {
+    public constructor(config: SmtpConfig | null, private readonly logger: Logger) {
+        this.reconfigure(config);
+    }
+
+    /**
+     * Switches to new SMTP settings without recreating the service, so callers holding it
+     * (and the admin portal's "save") take effect immediately.
+     * @param config New settings, or null to disable mail.
+     */
+    public reconfigure(config: SmtpConfig | null): void {
+        this.config = config;
         this.transporter = config === null ? null : nodemailer.createTransport({
             host: config.host,
             port: config.port,
@@ -98,6 +109,21 @@ export class MailService {
         if (!this.transporter || !this.config) {
             return false;
         }
+        const failure = await this.sendReportingError(to, subject, text);
+        return failure === null;
+    }
+
+    /**
+     * Like {@link send}, but reports why delivery failed - for the admin portal's "send test email".
+     * @param to Recipient address.
+     * @param subject Subject line.
+     * @param text Plain-text body.
+     * @returns null when the SMTP server accepted the message, otherwise a description of what went wrong.
+     */
+    public async sendReportingError(to: string, subject: string, text: string): Promise<string | null> {
+        if (!this.transporter || !this.config) {
+            return "Email is not configured.";
+        }
         try {
             await this.transporter.sendMail({
                 from: this.config.from,
@@ -106,10 +132,11 @@ export class MailService {
                 subject,
                 text,
             });
-            return true;
+            return null;
         } catch (error) {
-            this.logger.error(`Sending mail "${subject}" failed: ${error instanceof Error ? error.message : String(error)}`);
-            return false;
+            const message = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Sending mail "${subject}" failed: ${message}`);
+            return message;
         }
     }
 }

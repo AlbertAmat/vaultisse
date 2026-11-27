@@ -25,6 +25,11 @@ export class Logger {
         this.logFilePath = path.join(this.logDir, `bookStorage.log`);
     }
 
+    /** @returns Absolute path of the log file (read by the admin portal's log viewer). */
+    public getLogFilePath(): string {
+        return this.logFilePath;
+    }
+
     // Ensure the log directory exists
     private ensureLogDirectoryExists(): void {
         if (!fs.existsSync(this.logDir)) {

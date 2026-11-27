@@ -1,6 +1,6 @@
 ARG NODE_VERSION=22-alpine
 
-# The repo is an npm workspaces monorepo (client, server, packages/*) with a
+# The repo is an npm workspaces monorepo (client, admin, server, packages/*) with a
 # single root lockfile, so every install runs from the repo root and the build
 # context is the whole repo. Only the manifests are copied before `npm ci` so the
 # dependency layers stay cached until a package.json / the lockfile changes.
@@ -13,6 +13,7 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY client/package.json client/
+COPY admin/package.json admin/
 COPY server/package.json server/
 COPY packages/types/package.json packages/types/
 COPY packages/api-client/package.json packages/api-client/
@@ -25,6 +26,15 @@ FROM deps AS client-build
 COPY client/ client/
 COPY packages/ packages/
 RUN npm run build -w @vaultisse/client
+
+# ---------------------------------------------------------------------------
+# 2b) Build the Vue admin portal (Vite). Always built and shipped, but only
+#     served when ADMIN_ENABLED=true (see docs/ADMIN.md).
+# ---------------------------------------------------------------------------
+FROM deps AS admin-build
+COPY admin/ admin/
+COPY packages/ packages/
+RUN npm run build -w @vaultisse/admin
 
 # ---------------------------------------------------------------------------
 # 3) Bundle the Express/TypeScript server into server/dist/index.js
@@ -43,6 +53,7 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY client/package.json client/
+COPY admin/package.json admin/
 COPY server/package.json server/
 COPY packages/types/package.json packages/types/
 COPY packages/api-client/package.json packages/api-client/
@@ -83,7 +94,7 @@ LABEL org.opencontainers.image.title="vaultisse" \
 
 # Runtime layout: everything sits next to the bundled server (index.js) - these
 # are the locations server/src/utils/Paths.ts resolves in production:
-#   /app/index.js  /app/node_modules  /app/assets  /app/client  /app/db/upgrade  /app/logs
+#   /app/index.js  /app/node_modules  /app/assets  /app/client  /app/admin  /app/db/upgrade  /app/logs
 WORKDIR /app
 
 COPY --from=server-deps  /app/node_modules        ./node_modules
@@ -102,13 +113,15 @@ RUN apk add --no-cache libxml2 libxslt icu-libs readline openssl \
 # prior stage, so copied straight from the build context.
 COPY assets/db ./db
 COPY --from=client-build /app/client/dist          ./client
+COPY --from=admin-build  /app/admin/dist           ./admin
 
 RUN mkdir -p /app/logs \
     && chown -R node:node /app
 
 USER node
 
-EXPOSE 3000
+# 3000 = the app. 3001 = the optional admin portal (only listens when ADMIN_ENABLED=true).
+EXPOSE 3000 3001
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD node -e "require('http').get({host:'127.0.0.1',port:process.env.API_PORT||3000,path:'/api/rest/app/version'},r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"

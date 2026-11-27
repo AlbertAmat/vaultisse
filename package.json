@@ -2,9 +2,10 @@
   "name": "vaultisse",
   "version": "1.3.8",
   "private": true,
-  "description": "Vaultisse - self-hosted personal/library book tracker. npm workspaces monorepo: client/ (Vue web app), server/ (Express API) and packages/* (shared wire types and API client). The root version is the release anchor for the Docker pipeline.",
+  "description": "Vaultisse - self-hosted personal/library book tracker. npm workspaces monorepo: client/ (Vue web app), admin/ (Vue admin portal), server/ (Express API) and packages/* (shared wire types and API client). The root version is the release anchor for the Docker pipeline.",
   "workspaces": [
     "client",
+    "admin",
     "server",
     "packages/*"
   ],
@@ -20,7 +21,8 @@
     "dev:server": "npm run dev -w @vaultisse/server",
     "dev:client": "npm run dev -w @vaultisse/client",
     "build": "npm run build --workspaces --if-present",
-    "test": "npm test -w @vaultisse/server"
+    "test": "npm test -w @vaultisse/server",
+    "dev:admin": "npm run dev -w @vaultisse/admin"
   },
   "overrides": {
     "@xmldom/xmldom": "^0.9.12",

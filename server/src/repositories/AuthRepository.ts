@@ -165,10 +165,11 @@ export class AuthRepository {
      */
     public async register(fields: NewUserFields): Promise<number> {
         const result = await this.db.query(
-            `INSERT INTO users (name, code, email, password, disabled, email_verified)
-             VALUES ($1, $2, $3, $4, $5, $6)
+            `INSERT INTO users (name, code, email, password, disabled, disabled_reason, email_verified)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING id`,
-            [fields.name, fields.code, fields.email, fields.passwordHash, fields.disabled, fields.emailVerified]
+            // A new account is only ever disabled while it waits for an admin's approval.
+            [fields.name, fields.code, fields.email, fields.passwordHash, fields.disabled, fields.disabled ? "pending_approval" : null, fields.emailVerified]
         );
         return result.rows[0].id;
     }
@@ -237,8 +238,10 @@ export class AuthRepository {
                    SELECT vu.vault_id, vr.can_borrow, vr.can_edit_catalog, vr.can_manage_members, vr.can_manage_settings
                      FROM vault_users vu
                      JOIN vault_roles vr ON vr.code = vu.role
+                     JOIN vault v ON v.id = vu.vault_id
                     WHERE vu.user_id = u.id
                       AND vu.status = $2
+                      AND v.suspended_at IS NULL
                     ORDER BY (vu.vault_id = u.last_used_vault_id) DESC NULLS LAST, vu.vault_id
                     LIMIT 1
                ) m ON TRUE

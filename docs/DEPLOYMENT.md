@@ -441,7 +441,8 @@ real `JWT_SECRET` — every other production hardening step above still applies.
 
 - **Approving a new registration**: with `REGISTRATION_REQUIRES_APPROVAL=true` (see
   `.env.example`), new accounts are created disabled and can't log in until you
-  enable them - there's no admin UI for this, run:
+  enable them. With the [admin portal](ADMIN.md) turned on, approve them under
+  *Accounts*. Without it, run:
   ```bash
   docker compose exec -T db psql -U <DB_USER> -d <DB_NAME> \
     -c "UPDATE users SET disabled = FALSE WHERE code = '<their username>';"
@@ -458,6 +459,9 @@ real `JWT_SECRET` — every other production hardening step above still applies.
 - [ ] `ALLOW_HTTP=true` only for plain-HTTP LAN access (A/D with a `http://` LAN IP
       in `FRONT_END_URL`); `false` whenever a TLS proxy/tunnel is in front
 - [ ] `APP_TAG` pinned to a version, not tracking `latest` unattended
+- [ ] Admin portal (only if `ADMIN_ENABLED=true`): reached on its own domain over HTTPS, `ADMIN_URL`
+      set to it, `ADMIN_PORT` not published to the internet (the compose file binds it to
+      `127.0.0.1`), `SETTINGS_ENCRYPTION_KEY` set - see [ADMIN.md](ADMIN.md#securing-it)
 - [ ] Scenario A: port not forwarded on your router
 - [ ] Scenario B: app port bound to `127.0.0.1`, only 80/443 open on the firewall
 - [ ] Scenario C: `TRUST_PROXY=true` is set (easy to forget since Cloudflare "just

@@ -1,4 +1,5 @@
 import {Pool} from "pg";
+import {QuotaService} from "../admin/services/QuotaService";
 import {ImportRepository} from "../repositories/ImportRepository";
 import {BookRepository} from "../repositories/BookRepository";
 import {BookService} from "./BookService";
@@ -100,6 +101,10 @@ export class ImportService {
         let skipped = 0;
         const errors: ImportError[] = [];
         const importedIds: number[] = [];
+
+        // A plan's book limit refuses the whole import up front rather than stopping half way through.
+        await QuotaService.assertCanAddBooks(this.pool, vaultId, books.filter((book) => book.name).length);
+
         const client = await this.pool.connect();
 
         try {

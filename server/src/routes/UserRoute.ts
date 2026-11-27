@@ -15,6 +15,7 @@ import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
 import multer from "multer";
 import rateLimit from "express-rate-limit";
+import {rateLimited} from "../middlewares/RateLimitHandler";
 import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
 import {UserController} from "../controllers/UserController";
 import {OpdsController} from "../controllers/OpdsController";
@@ -31,6 +32,7 @@ const passwordChangeLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 5,
     message: "Too many attempts, please try again later.",
+    handler: rateLimited("password"),
 });
 
 // Same shape, dedicated to the 2FA enable code check - a stolen session
@@ -39,6 +41,7 @@ const twoFaLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 5,
     message: "Too many attempts, please try again later.",
+    handler: rateLimited("2fa"),
 });
 
 // Multer setup - store in memory

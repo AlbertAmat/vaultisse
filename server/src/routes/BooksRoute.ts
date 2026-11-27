@@ -29,7 +29,7 @@ import {
     upload,
     fileUpload,
     maxCoverImageSizeMb,
-    maxEbookFileSizeMb
+    handleEbookUploadError
 } from "../controllers/BookController";
 import {lazy} from "./lazySingleton";
 
@@ -149,7 +149,7 @@ router.post('/:id/cover/find', requireAuth, requireVaultPermission("canEditCatal
  * Example response (200): { "id": 1, "file_type": "epub", "file_name": "hobbit.epub", "file_size": 512000, "date_created": "2026-01-05T10:00:00.000Z" }
  * Responses: 400 file content doesn't match a valid EPUB/PDF/Kindle file | 404 "Book not found" | 413 file too large.
  */
-router.post('/:id/file', requireAuth, requireVaultPermission("canEditCatalog"), fileUpload.single("file"), handleUploadError(maxEbookFileSizeMb), (req: Request, res: Response) => getBookController().uploadFile(req, res));
+router.post('/:id/file', requireAuth, requireVaultPermission("canEditCatalog"), fileUpload.single("file"), handleEbookUploadError, (req: Request, res: Response) => getBookController().uploadFile(req, res));
 
 /**
  * GET /book/:id/file/:fileId/download

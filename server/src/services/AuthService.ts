@@ -99,6 +99,7 @@ export class AuthService {
             await appService.comparePassword(password, DUMMY_PASSWORD_HASH);
             appService.getLogger().warn(`Login failed: stage=password reason=unknown account user=- ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(null, ActivityAction.LOGIN_FAILED, {metadata: {attemptedUsername: usernameOrEmail, ip}});
+            appService.getSecurityEvents().record("login_failed", {ip}, "unknown account");
             throw new UnauthorizedError("Invalid username or password.");
         }
 
@@ -110,6 +111,7 @@ export class AuthService {
             appService.getLogger().debug("Account locked out, rejecting login for:" + usernameOrEmail);
             appService.getLogger().warn(`Login failed: stage=password reason=locked user=${candidate.id} ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(candidate.id, ActivityAction.LOGIN_FAILED, {metadata: {ip, reason: "locked"}});
+            appService.getSecurityEvents().record("login_locked", {ip}, "password");
             throw new UnauthorizedError("Too many failed attempts. Please try again later.");
         }
 
@@ -118,6 +120,7 @@ export class AuthService {
             await authRepo.recordFailedLoginAttempt(candidate.id, MAX_FAILED_LOGIN_ATTEMPTS, new Date(Date.now() + LOCKOUT_DURATION_MS));
             appService.getLogger().warn(`Login failed: stage=password reason=bad password user=${candidate.id} ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(candidate.id, ActivityAction.LOGIN_FAILED, {metadata: {ip}});
+            appService.getSecurityEvents().record("login_failed", {ip}, "bad password");
             throw new UnauthorizedError("Invalid username or password.");
         }
 
@@ -205,6 +208,7 @@ export class AuthService {
         if (user.totpLockoutUntil && user.totpLockoutUntil.getTime() > Date.now()) {
             appService.getLogger().warn(`Login failed: stage=2fa reason=locked user=${user.id} ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(user.id, ActivityAction.LOGIN_FAILED, {metadata: {stage: "2fa", ip, reason: "locked"}});
+            appService.getSecurityEvents().record("login_locked", {ip}, "2fa");
             throw new PendingLoginExpiredError("Too many failed attempts. Please log in again.");
         }
 
@@ -225,6 +229,7 @@ export class AuthService {
             await authRepo.recordFailedTwoFactorAttempt(user.id, MAX_FAILED_TOTP_ATTEMPTS, new Date(Date.now() + LOCKOUT_DURATION_MS));
             appService.getLogger().warn(`Login failed: stage=2fa reason=bad code user=${user.id} ip=${ip}`);
             await new ActivityLogRepository(this.pool).recordActivity(user.id, ActivityAction.LOGIN_FAILED, {metadata: {stage: "2fa", ip}});
+            appService.getSecurityEvents().record("login_failed", {ip}, "bad 2fa code");
             throw new UnauthorizedError("Invalid verification code.");
         }
 
@@ -266,7 +271,7 @@ export class AuthService {
         }
 
         const hashedPassword = await appService.hashPassword(fields.password);
-        const requiresApproval = process.env.REGISTRATION_REQUIRES_APPROVAL === "true";
+        const requiresApproval = appService.requiresRegistrationApproval();
 
         const requiresVerification = appService.getMailService().isEnabled();
         let userId: number;

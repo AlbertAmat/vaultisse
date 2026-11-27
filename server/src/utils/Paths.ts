@@ -21,3 +21,6 @@ export const CLIENT_DIST_DIR = production ? path.join(__dirname, "client") : pat
 export const UPGRADE_SQL_DIR = production
     ? path.join(__dirname, "db", "upgrade")
     : path.join(__dirname, "..", "..", "..", "assets", "db", "upgrade");
+
+/** Compiled admin web app: alongside the server in production (`/app/admin`), under `admin/dist` during local development. */
+export const ADMIN_DIST_DIR = production ? path.join(__dirname, "admin") : path.join(__dirname, "..", "..", "..", "admin", "dist");

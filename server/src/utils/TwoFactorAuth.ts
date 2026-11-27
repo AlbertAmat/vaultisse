@@ -44,10 +44,11 @@ export class TwoFactorAuth {
      * Builds the `otpauth://` URI an authenticator app scans/imports to add the account.
      * @param accountName Account label shown in the authenticator app.
      * @param secret TOTP secret.
+     * @param issuer Service name shown in the authenticator app; defaults to "Vaultisse".
      * @returns The `otpauth://` URI.
      */
-    public static buildOtpAuthUrl(accountName: string, secret: string): string {
-        return generateURI({issuer: ISSUER, label: accountName, secret});
+    public static buildOtpAuthUrl(accountName: string, secret: string, issuer: string = ISSUER): string {
+        return generateURI({issuer, label: accountName, secret});
     }
 
     /**

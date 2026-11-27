@@ -18,7 +18,7 @@ import {DomainError} from "../errors/DomainError";
  * issue `routes/lazySingleton.ts` exists for, kept as its own local variable
  * here since this builds a `RequestHandler`, not a controller instance.
  */
-let uploadCsvMiddleware: RequestHandler | null = null;
+let uploadCsvMiddleware: { limitMb: number; handler: RequestHandler } | null = null;
 
 /**
  * Multer middleware for the CSV upload field - builds the multer instance lazily (see `uploadCsvMiddleware` above), then delegates to it.
@@ -27,19 +27,24 @@ let uploadCsvMiddleware: RequestHandler | null = null;
  * @param next Express next-middleware callback.
  */
 export function uploadCsv(req: Request, res: Response, next: NextFunction) {
-    if (!uploadCsvMiddleware) {
-        uploadCsvMiddleware = multer({
-            storage: multer.memoryStorage(),
-            limits: {fileSize: appService.getMaxImportFileSizeMb() * 1024 * 1024},
-            fileFilter: (fileFilterReq: Request, file: Express.Multer.File, cb: (error: any, acceptFile: boolean) => void) => {
-                if (!file.originalname.toLowerCase().endsWith(".csv")) {
-                    return cb(new Error("Only CSV files are allowed"), false);
+    // The limit can change while the server runs (admin portal), so rebuild when it does.
+    const limitMb = appService.getMaxImportFileSizeMb();
+    if (!uploadCsvMiddleware || uploadCsvMiddleware.limitMb !== limitMb) {
+        uploadCsvMiddleware = {
+            limitMb,
+            handler: multer({
+                storage: multer.memoryStorage(),
+                limits: {fileSize: limitMb * 1024 * 1024},
+                fileFilter: (fileFilterReq: Request, file: Express.Multer.File, cb: (error: any, acceptFile: boolean) => void) => {
+                    if (!file.originalname.toLowerCase().endsWith(".csv")) {
+                        return cb(new Error("Only CSV files are allowed"), false);
+                    }
+                    cb(null, true);
                 }
-                cb(null, true);
-            }
-        }).single("file");
+            }).single("file"),
+        };
     }
-    uploadCsvMiddleware(req, res, next);
+    uploadCsvMiddleware.handler(req, res, next);
 }
 
 /** Same lazy-evaluation reasoning as `uploadCsv` above - read the limit at request time, not module load time. */

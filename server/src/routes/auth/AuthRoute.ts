@@ -23,6 +23,7 @@
 import express from "express";
 import path from "path";
 import rateLimit from "express-rate-limit";
+import {rateLimited} from "../../middlewares/RateLimitHandler";
 import {appService} from "../../AppService";
 import {requireAuth, requireAuthPage} from "../../middlewares/AuthMiddleware";
 import {AuthController, clientDistPath} from "../../controllers/AuthController";
@@ -37,6 +38,7 @@ const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 5, // only allow 5 requests per IP per window
     message: "Too many attempts, please try again after 15 minutes.",
+    handler: rateLimited("login"),
 });
 
 // Separate from authLimiter so a legitimate user isn't left with too few
@@ -47,6 +49,7 @@ const twoFaLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 5,
     message: "Too many attempts, please try again after 15 minutes.",
+    handler: rateLimited("2fa"),
 });
 
 /**
@@ -237,6 +240,7 @@ const verifyLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 5,
     message: {message: "Too many attempts, please try again later."},
+    handler: rateLimited("verify"),
 });
 
 /**

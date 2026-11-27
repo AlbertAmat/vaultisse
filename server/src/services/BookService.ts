@@ -7,6 +7,7 @@ import {VaultRepository} from "../repositories/VaultRepository";
 import {BookMetadataRepository} from "../repositories/BookMetadataRepository";
 import {LoanHistoryRepository} from "../repositories/LoanHistoryRepository";
 import {withTransaction} from "../repositories/withTransaction";
+import {QuotaService} from "../admin/services/QuotaService";
 import {IsbnVerification} from "../utils/IsbnVerification";
 import {FileSignature} from "../utils/FileSignature";
 import {ReadingStatusEnum} from "@vaultisse/types/book/IReadingStatus";
@@ -247,6 +248,7 @@ export class BookService {
         if (!found) {
             throw new NotFoundError("Book not found");
         }
+        await QuotaService.assertCanAddStorage(this.pool, vaultId, file.size);
 
         return repo.upsertFile(id, vaultId, fileType, file.originalname, file.size, file.buffer);
     }
@@ -291,6 +293,8 @@ export class BookService {
         userId: number,
         fields: {name: string; description: string; isbn: string; file: Express.Multer.File | undefined}
     ): Promise<number> {
+        await QuotaService.assertCanAddBooks(this.pool, vaultId);
+
         let imageUrl = "";
         if (fields.file) {
             const base64 = fields.file.buffer.toString("base64");
@@ -444,6 +448,7 @@ export class BookService {
         if (!isbnCode) {
             throw new ValidationError("No ISBN code provided");
         }
+        await QuotaService.assertCanAddBooks(this.pool, vaultId);
 
         let bookData;
         try {

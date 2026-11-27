@@ -394,7 +394,8 @@ and the only admin of a vault shared with others. Nothing runs with
 ## Registration approval
 
 By default, `POST /register` creates an account that can log in immediately.
-Setting `REGISTRATION_REQUIRES_APPROVAL=true` (`.env`, default `false`)
+Setting `REGISTRATION_REQUIRES_APPROVAL=true` (`.env`, or *Settings > Registration* in the
+[admin portal](ADMIN.md), default `false`)
 switches new accounts to `users.disabled = TRUE` instead - the row exists,
 but every login lookup filters on `disabled = FALSE` (see
 [Validating a request](#validating-a-request) and `POST /login` in
