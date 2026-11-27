@@ -24,6 +24,8 @@ export default interface IPolicyResponse {
     vaultPermissions: {canBorrow: boolean; canEditCatalog: boolean; canManageMembers: boolean; canManageSettings: boolean};
     /** Whether the caller's active vault uses loans (Loans/Customers pages, booked stock status, borrower role). */
     loansEnabled: boolean;
+    /** Whether the caller is in a single vault and is its only member ("My loans" is hidden then). */
+    soloUser: boolean;
     /** Every category belonging to the user. */
     categories: ICategory[];
     /** Every language option (global, not user-scoped). */

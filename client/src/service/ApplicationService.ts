@@ -90,6 +90,12 @@ export class ApplicationService {
     private m_loansEnabled = ref(false);
 
     /**
+     * Whether the caller is in a single vault and is its only member.
+     * @private
+     */
+    private m_soloUser = false;
+
+    /**
      * List of available languages in the application.
      * @private
      */
@@ -150,6 +156,7 @@ export class ApplicationService {
             this.m_canEditCatalog = data.vaultPermissions?.canEditCatalog ?? false;
             this.m_canBorrow = data.vaultPermissions?.canBorrow ?? false;
             this.m_loansEnabled.value = data.loansEnabled ?? false;
+            this.m_soloUser = data.soloUser ?? false;
             this.m_categories = data.categories.map((category) => new Category(category));
             this.m_languages = data.languages.map((lang) => new Language(lang));
             this.m_formats = data.formats.map((format) => new Format(format));
@@ -239,6 +246,13 @@ export class ApplicationService {
      */
     public setLoansEnabled(loansEnabled: boolean): void {
         this.m_loansEnabled.value = loansEnabled;
+    }
+
+    /**
+     * Whether the "My loans" page is offered: loans are on, the caller can borrow, and they share a library with someone.
+     */
+    public hasMyLoans(): boolean {
+        return this.canBorrow() && this.isLoansEnabled() && !this.m_soloUser;
     }
 
     /**

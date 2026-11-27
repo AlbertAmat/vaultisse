@@ -52,6 +52,8 @@ export interface AppPolicy {
     vaultPermissions: AppPolicyVaultPermissions;
     /** Whether the caller's active vault uses loans (Loans/Customers pages, booked stock status, borrower role). */
     loansEnabled: boolean;
+    /** Whether the caller is in a single vault and is its only member, so member-facing pages like "My loans" are pointless. */
+    soloUser: boolean;
     labels: Record<string, string>;
     maxImportFileSizeMb: number;
 }

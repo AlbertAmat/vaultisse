@@ -310,7 +310,7 @@ const items = computed(() => [
 			path: loansRoute.getPath()
 		}
 	] : []),
-	...(applicationService.canBorrow() && loansEnabled.value ? [
+	...(applicationService.hasMyLoans() ? [
 		{
 			name: t(AppLabels.MY_LOANS),
 			icon: "mdi-book-arrow-left-outline",

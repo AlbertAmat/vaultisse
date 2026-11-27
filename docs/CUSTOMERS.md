@@ -60,6 +60,9 @@ What each role sees in the app:
 - **`normal` / `admin`** - everything above; both can also be lent books and
   have a "My loans" page of their own.
 
+"My loans" is hidden for someone who belongs to a single vault and is its only
+accepted member, since there is nobody to borrow from.
+
 **Reading status** (want to read / currently reading / read) is personal: it
 lives in `book_reading_status (book_id, user_id, status)`, so every member of a
 shared vault has their own shelves, and any role - including `borrower` - can

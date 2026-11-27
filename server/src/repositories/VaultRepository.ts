@@ -45,6 +45,22 @@ export class VaultRepository {
     }
 
     /**
+     * Whether the caller has no one to share a library with: they're an accepted member of exactly one vault, and its only accepted member.
+     * @param userId Caller's id.
+     */
+    public async isSoloUser(userId: number): Promise<boolean> {
+        const result = await this.db.query(
+            `SELECT COUNT(DISTINCT own.vault_id) = 1 AND COUNT(*) = 1 AS solo
+               FROM vault_users own
+               JOIN vault_users member ON member.vault_id = own.vault_id AND member.status = $2
+              WHERE own.user_id = $1
+                AND own.status = $2`,
+            [userId, VaultUserStatus.ACCEPTED]
+        );
+        return result.rows[0]?.solo ?? false;
+    }
+
+    /**
      * Get the extended fields (beyond id/name/description) needed to assemble a VaultInfo, scoped to an accepted membership.
      * @param vaultId Vault id.
      * @param userId Caller's id - must be an accepted member.

@@ -573,3 +573,29 @@ describe("PUT /vault/:id/sso-groups", () => {
         expect(get.body.ssoGroups).toEqual([{group_name: "family-users", role: 0}, {group_name: "library-admins", role: 1}]);
     });
 });
+
+describe("policy soloUser flag", () => {
+    const soloUser = async (user: ITestUser) => (await user.agent.get("/api/rest/app/policy")).body.soloUser;
+
+    it("is true for the only member of a single vault, and false once they have a second vault", async () => {
+        const user = await createAuthenticatedUser(app);
+        expect(await soloUser(user)).toBe(true);
+
+        await user.agent.post("/api/rest/vault").send({name: "Second Library"});
+        expect(await soloUser(user)).toBe(false);
+    });
+
+    it("turns false when someone else is accepted into the vault, not while their request is pending", async () => {
+        const owner = await createAuthenticatedUser(app);
+        const guest = await createAuthenticatedUser(app);
+        const vaultId = (await owner.agent.get("/api/rest/vault")).body[0].id;
+        const uuid = (await owner.agent.get(`/api/rest/vault/${vaultId}`)).body.invitationUuid;
+
+        await guest.agent.post(`/api/rest/vault/join/${uuid}`);
+        expect(await soloUser(owner)).toBe(true);
+
+        const guestId = (await guest.agent.get("/api/rest/app/policy")).body.user.id;
+        await owner.agent.put(`/api/rest/vault/${vaultId}/members/${guestId}`).send({status: 1});
+        expect(await soloUser(owner)).toBe(false);
+    });
+});

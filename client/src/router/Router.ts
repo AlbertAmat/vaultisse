@@ -85,7 +85,7 @@ router.beforeEach(async (to, from, next) => {
         next(DashboardRoute.PATH);
         return;
     }
-    if (to.path === myLoansRoute.getPath() && (!applicationService.canBorrow() || !applicationService.isLoansEnabled())) {
+    if (to.path === myLoansRoute.getPath() && !applicationService.hasMyLoans()) {
         next(DashboardRoute.PATH);
         return;
     }
