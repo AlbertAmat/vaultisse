@@ -1,5 +1,5 @@
 <template>
-	<v-app :theme="state.dark ? 'console-dark' : 'console-light'">
+	<v-app :theme="state.theme">
 		<router-view v-if="state.ready"/>
 		<div v-else class="boot">
 			<v-progress-circular indeterminate color="primary" size="28" width="3"/>
@@ -22,12 +22,12 @@ import ReauthDialog from "@/components/ReauthDialog.vue";
 </script>
 
 <style>
-html {
-	font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+.v-application {
+	font-family: var(--pb-font-body) !important;
 }
 
-.v-application {
-	font-family: inherit !important;
+h1, h2, .text-h5, .text-h6 {
+	font-family: var(--pb-font-display);
 }
 
 .boot {
@@ -37,7 +37,12 @@ html {
 }
 
 .mono {
-	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-family: var(--pb-font-mono);
+}
+
+.v-card {
+	border: 1px solid var(--pb-border);
+	box-shadow: var(--pb-shadow);
 }
 
 .page {

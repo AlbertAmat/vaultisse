@@ -1,27 +1,27 @@
 <template>
-	<v-navigation-drawer v-model="drawer" :permanent="mdAndUp" width="248">
-		<div class="d-flex align-center ga-3 pa-4">
-			<v-avatar color="primary" size="34" rounded="lg"><v-icon color="background">mdi-shield-key-outline</v-icon></v-avatar>
-			<div>
-				<div class="font-weight-bold">Vaultisse</div>
-				<div class="text-caption text-medium-emphasis">Admin console</div>
+	<v-navigation-drawer v-model="drawer" :permanent="mdAndUp" :temporary="!mdAndUp" width="240" class="app-menu" :dark="true">
+		<div class="d-flex align-center pt-4 pb-3 pl-5 pr-2 ga-2">
+			<brand-mark/>
+			<div class="ml-1">
+				<div class="app-menu-title pb-display">Vaultisse</div>
+				<div class="pb-eyebrow">Admin console</div>
 			</div>
 		</div>
-		<v-list nav density="comfortable" class="px-2">
-			<v-list-item v-for="item in items" :key="item.to" :to="item.to" :prepend-icon="item.icon" :title="item.title" rounded="lg" exact/>
+		<v-list nav density="compact" slim class="app-menu-list">
+			<v-list-item v-for="item in items" :key="item.to" :to="item.to" :prepend-icon="item.icon" :title="item.title" density="compact" class="app-menu-item" exact/>
 		</v-list>
 		<template #append>
-			<div class="pa-3 text-caption text-medium-emphasis">
+			<div class="pa-4 text-caption app-menu-foot">
 				<span v-if="!canWrite()" class="d-block mb-1"><v-icon size="14">mdi-eye-outline</v-icon> Read-only account</span>
 				Instance admin portal
 			</div>
 		</template>
 	</v-navigation-drawer>
 
-	<v-app-bar flat border="b" color="surface">
+	<v-app-bar app density="compact" class="app-bar" border :elevation="0">
 		<v-app-bar-nav-icon v-if="!mdAndUp" aria-label="Menu" @click="drawer = !drawer"/>
 		<v-app-bar-title>{{ route.meta.title }}</v-app-bar-title>
-		<v-btn :icon="state.dark ? 'mdi-weather-sunny' : 'mdi-weather-night'" aria-label="Switch theme" @click="setDark(!state.dark)"/>
+		<v-btn :icon="state.theme === 'beige' ? 'mdi-weather-night' : 'mdi-weather-sunny'" aria-label="Switch theme" @click="setTheme(state.theme === 'beige' ? 'library' : 'beige')"/>
 		<v-menu>
 			<template #activator="{ props }">
 				<v-btn v-bind="props" variant="text" class="text-none" prepend-icon="mdi-account-circle-outline" append-icon="mdi-menu-down">
@@ -49,7 +49,8 @@ import {ref} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {useDisplay} from "vuetify";
 import {api} from "@/api";
-import {canWrite, setDark, state} from "@/store";
+import {canWrite, setTheme, state} from "@/store";
+import BrandMark from "@/components/BrandMark.vue";
 import PasswordDialog from "@/components/PasswordDialog.vue";
 
 const route = useRoute();
@@ -80,3 +81,64 @@ async function logout() {
 	}
 }
 </script>
+
+<style scoped>
+/* The client's "shelf frame" navigation (client/src/components/app/AppMenu.vue). */
+.app-menu {
+	background: var(--pb-nav-bg) !important;
+	color: var(--pb-nav-text);
+	border-right: 1px solid var(--pb-nav-border-strong) !important;
+}
+
+.app-menu :deep(.v-navigation-drawer__border) {
+	display: none;
+}
+
+.app-menu :deep(.v-navigation-drawer__content) {
+	display: flex;
+	flex-direction: column;
+}
+
+.app-menu-title {
+	font-weight: 600;
+	font-size: 17px;
+	line-height: 1.1;
+	color: var(--pb-nav-text);
+}
+
+.app-menu .pb-eyebrow {
+	color: var(--pb-nav-text-muted);
+	font-size: 10px;
+}
+
+.app-menu-list {
+	flex: 1;
+	padding-top: 4px;
+}
+
+.app-menu-item {
+	border-radius: 10px;
+	margin: 2px 8px;
+	color: var(--pb-nav-text-muted);
+}
+
+.app-menu :deep(.v-list-item--active) {
+	background: var(--pb-nav-active-bg);
+	color: var(--pb-nav-accent);
+	font-weight: 600;
+	box-shadow: inset 3px 0 0 0 var(--pb-nav-accent);
+}
+
+.app-menu :deep(.v-list-item--active .v-icon) {
+	color: var(--pb-nav-accent);
+}
+
+.app-menu-foot {
+	color: var(--pb-nav-text-muted);
+}
+
+.app-bar {
+	background: var(--pb-surface) !important;
+	border-color: var(--pb-border) !important;
+}
+</style>

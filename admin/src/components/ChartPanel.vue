@@ -48,7 +48,7 @@ const data = computed<any>(() => ({
 
 const options = computed<any>(() => {
 	const text = color("on-surface");
-	const grid = `${text}22`;
+	const grid = "rgba(128, 128, 128, 0.18)";
 	return {
 		responsive: true,
 		maintainAspectRatio: false,

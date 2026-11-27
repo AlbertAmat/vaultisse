@@ -2,10 +2,10 @@
 	<div class="login">
 		<v-card class="pa-4" width="100%" max-width="440" border>
 			<div class="d-flex align-center ga-3 mb-4">
-				<v-avatar color="primary" size="40" rounded="lg"><v-icon color="background">mdi-shield-key-outline</v-icon></v-avatar>
+				<brand-mark :size="40"/>
 				<div>
-					<div class="text-h6 font-weight-bold">Vaultisse Admin</div>
-					<div class="text-caption text-medium-emphasis">Instance administration</div>
+					<div class="text-h6 font-weight-bold pb-display">Vaultisse</div>
+					<div class="pb-eyebrow">Admin console</div>
 				</div>
 			</div>
 
@@ -77,6 +77,7 @@ import {useRouter} from "vue-router";
 import type {IEnrollStart} from "@vaultisse/types/admin/IAdmin";
 import {api, errorMessage} from "@/api";
 import {notify, state} from "@/store";
+import BrandMark from "@/components/BrandMark.vue";
 
 const router = useRouter();
 const step = ref<"credentials" | "totp" | "enroll" | "backup">("credentials");

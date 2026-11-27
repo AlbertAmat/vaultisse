@@ -1,0 +1,134 @@
+/**
+ * "Reading Room" design tokens: two switchable themes - "beige" (warm/light,
+ * beige & terracotta throughout, no blue) and "library" (dark/blue) -
+ * selected by `data-theme` on <html> (see client/src/plugins/theme.ts).
+ *
+ * Vuetify's own theme (plugins/vuetify.ts) carries the same two color sets
+ * for its components; these custom properties back the CSS we hand-write
+ * on top (cards, nav, empty states, markdown, etc.) and are what actually
+ * flips instantly when `data-theme` changes, since Vuetify's theme switch
+ * and this attribute are set together by `applyTheme()`.
+ */
+
+:root {
+	--pb-radius: 14px;
+	--pb-radius-sm: 10px;
+	--pb-font-body: 'Inter', system-ui, sans-serif;
+	--pb-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Default (and explicit) beige "Reading Room" theme */
+:root,
+[data-theme="beige"] {
+	/* A warm literary serif for headings/titles - the "book" feel. */
+	--pb-font-display: 'Fraunces', 'Georgia', serif;
+	--pb-bg: #f7f2ea;
+	--pb-bg-alt: #f1e9da;
+	--pb-surface: #ffffff;
+	--pb-surface-alt: #f1e9da;
+	--pb-border: #e7ddcb;
+	--pb-border-strong: #d9c9ac;
+	--pb-text: #2f2a22;
+	--pb-text-muted: #7d7364;
+	--pb-primary: #c97b3d;
+	--pb-secondary: #c97b3d;
+	--pb-accent: #c97b3d;
+	--pb-accent-soft: #f5e3d0;
+	--pb-shadow: 0 1px 2px rgba(47, 42, 34, 0.06), 0 8px 24px -12px rgba(47, 42, 34, 0.18);
+
+	/* Nav "shelf" frame - a dark wood tone in both themes, like the frame of
+	   a bookshelf standing in a bright room. */
+	--pb-nav-bg: #2b2318;
+	--pb-nav-bg-alt: #241c13;
+	--pb-nav-text: #f3ede1;
+	--pb-nav-text-muted: #b9ab90;
+	--pb-nav-active-bg: rgba(201, 123, 61, 0.22);
+	--pb-nav-border: rgba(255, 255, 255, 0.08);
+	/* Stronger edge for the drawer's outer border, where it needs to read
+	   as a hard boundary rather than a subtle divider line. */
+	--pb-nav-border-strong: rgba(255, 255, 255, 0.14);
+	/* Selected-item highlight color, independent from --pb-accent (which
+	   stays this theme's decorative yellow/orange elsewhere) so the nav
+	   always reads as this theme's brand color. */
+	--pb-nav-accent: #c97b3d;
+}
+
+[data-theme="library"] {
+	/* A modern geometric sans for headings/titles - a cooler, more
+	   technical feel than the beige theme's literary serif. */
+	--pb-font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+	--pb-bg: #0a0e17;
+	--pb-bg-alt: #0b111c;
+	--pb-surface: #0d1420;
+	--pb-surface-alt: #111a2b;
+	--pb-border: rgba(255, 255, 255, 0.09);
+	--pb-border-strong: rgba(255, 255, 255, 0.16);
+	--pb-text: #e8ecf3;
+	--pb-text-muted: #8b94a7;
+	--pb-primary: #1c7ff1;
+	--pb-secondary: #78dcf6;
+	--pb-accent: #1c7ff1;
+	--pb-accent-soft: rgba(120, 220, 246, 0.14);
+	--pb-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+
+	--pb-nav-bg: #0a0e17;
+	--pb-nav-bg-alt: #070a11;
+	--pb-nav-text: #e8ecf3;
+	--pb-nav-text-muted: #8b94a7;
+	--pb-nav-active-bg: rgba(120, 220, 246, 0.14);
+	--pb-nav-border: rgba(255, 255, 255, 0.08);
+	/* Slightly stronger than beige's: the nav and the page background are
+	   the exact same dark navy here, so the drawer needs more edge contrast
+	   to still read as its own panel. */
+	--pb-nav-border-strong: rgba(255, 255, 255, 0.18);
+	--pb-nav-accent: #78dcf6;
+}
+
+html,
+body {
+	background: var(--pb-bg);
+}
+
+body {
+	font-family: var(--pb-font-body);
+	color: var(--pb-text);
+}
+
+/* Shared motifs, usable from any component's scoped/global styles */
+
+.pb-display {
+	font-family: var(--pb-font-display) !important;
+}
+
+.pb-mono {
+	font-family: var(--pb-font-mono) !important;
+}
+
+.pb-eyebrow {
+	font-family: var(--pb-font-mono);
+	font-weight: 500;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	font-size: 11px;
+	color: var(--pb-secondary);
+}
+
+/* Colored "spine" accent used on cards/list rows to nod to books on a shelf */
+.pb-spine {
+	border-left: 3px solid var(--pb-accent);
+}
+
+.pb-spine-top {
+	border-top: 3px solid var(--pb-accent);
+}
+
+.pb-card {
+	background: var(--pb-surface);
+	border: 1px solid var(--pb-border);
+	border-radius: var(--pb-radius);
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.pb-card:hover {
+	border-color: var(--pb-border-strong);
+}

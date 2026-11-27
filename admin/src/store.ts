@@ -2,6 +2,9 @@
 import {reactive} from "vue";
 import type {IAdminSelf} from "@vaultisse/types/admin/IAdmin";
 
+/** The same two themes as the client app. */
+export type AppTheme = "beige" | "library";
+
 interface ReauthRequest {
     resolve: (ok: boolean) => void;
 }
@@ -12,13 +15,13 @@ export const state = reactive({
     ready: false,
     snack: {show: false, text: "", color: "success"},
     reauth: null as ReauthRequest | null,
-    dark: (() => {
+    theme: (() => {
         try {
-            return localStorage.getItem("admin-theme") !== "light";
+            return localStorage.getItem("admin-theme") === "library" ? "library" : "beige";
         } catch {
-            return true;
+            return "beige";
         }
-    })(),
+    })() as AppTheme,
 });
 
 /** Late-bound so the API client doesn't have to import the router (which imports the views, which import the API). */
@@ -51,11 +54,12 @@ export function askReauth(): Promise<boolean> {
     });
 }
 
-/** @param dark Whether to use the dark theme. */
-export function setDark(dark: boolean): void {
-    state.dark = dark;
+/** @param theme Theme to use; remembered in this browser. */
+export function setTheme(theme: AppTheme): void {
+    state.theme = theme;
+    document.documentElement.dataset.theme = theme;
     try {
-        localStorage.setItem("admin-theme", dark ? "dark" : "light");
+        localStorage.setItem("admin-theme", theme);
     } catch {
         // Private mode etc.: the choice just isn't remembered.
     }

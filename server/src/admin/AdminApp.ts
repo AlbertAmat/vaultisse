@@ -87,9 +87,10 @@ export class AdminApp {
                 directives: {
                     defaultSrc: ["'self'"],
                     scriptSrc: ["'self'"],
-                    styleSrc: ["'self'", "'unsafe-inline'"],
+                    // The same Google Fonts the client app uses, so both look alike.
+                    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
                     imgSrc: ["'self'", "data:"],
-                    fontSrc: ["'self'", "data:"],
+                    fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
                     connectSrc: ["'self'", ...(this.config.url ? [this.config.url] : [])],
                     frameAncestors: ["'none'"],
                     ...(process.env.ALLOW_HTTP === "true" ? {upgradeInsecureRequests: null} : {}),
