@@ -16,7 +16,10 @@ import {appService} from "../../AppService";
 import {Logger} from "../../utils/Logger";
 import {AdminNotificationRepository} from "../repositories/AdminNotificationRepository";
 import {AdminUserRepository} from "../repositories/AdminUserRepository";
+import {AdminSignInsRepository} from "../repositories/AdminSignInsRepository";
 import {SecurityRepository} from "../repositories/SecurityRepository";
+import {countryName} from "./AnomalyService";
+import {locate} from "./GeoLocator";
 import {findSetting} from "./settingsCatalog";
 import {WebhookEvent} from "./WebhookService";
 
@@ -290,9 +293,15 @@ export class AdminNotifier {
         }
         const adminFailures = total("admin_login_failed");
         if (adminFailures >= ADMIN_LOGIN_FAILURE_THRESHOLD) {
+            const sources = (await new AdminSignInsRepository(this.pool).sources(new Date(Date.now() - 10 * 60 * 1000))).filter((row) => row.failed > 0 || row.limited > 0).slice(0, 4)
+                .map((row) => {
+                    const place = locate(row.ip);
+                    const where = place ? `${place.city ? `${place.city}, ` : ""}${countryName(place.country)}` : "unknown place";
+                    return `  ${row.ip} (${where}): ${row.failed} failed${row.limited > 0 ? `, ${row.limited} refused by the limiter` : ""}${row.emails > 1 ? `, ${row.emails} different emails tried` : ""}`;
+                });
             await this.notify("security", {
                 title: "Failed logins to the admin console",
-                lines: [`${adminFailures} failed attempts to sign in to the admin console in the last 10 minutes.`, "If that wasn't you, check Security and the Audit trail."],
+                lines: [`${adminFailures} failed attempts to sign in to the admin console in the last 10 minutes.`, ...(sources.length > 0 ? ["From:", ...sources] : []), "See Admin sign-ins in the console; block an address under Security > Blocked addresses."],
                 dedupeKey: "admin-logins",
                 cooldownMs: HOUR,
             });

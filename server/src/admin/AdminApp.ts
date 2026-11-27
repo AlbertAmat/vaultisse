@@ -31,6 +31,7 @@ import {inactivityRoutes} from "./routes/InactivityRoutes";
 import {termsRoutes} from "./routes/TermsRoutes";
 import {broadcastRoutes} from "./routes/BroadcastRoutes";
 import {BroadcastService} from "./services/BroadcastService";
+import {adminSignInsRoutes} from "./routes/AdminSignInsRoutes";
 import {jobsRoutes} from "./routes/JobsRoutes";
 import {retentionRoutes} from "./routes/RetentionRoutes";
 import {dataRequestsRoutes} from "./routes/DataRequestsRoutes";
@@ -236,6 +237,7 @@ export class AdminApp {
         app.use("/api/admin/data-requests", dataRequestsRoutes(this.pool, this.audit, this.dataRequests));
         app.use("/api/admin/webhooks", webhooksRoutes(this.audit));
         app.use("/api/admin/jobs", jobsRoutes(this.audit));
+        app.use("/api/admin/admin-signins", adminSignInsRoutes(this.pool));
         app.use("/api/admin/retention", retentionRoutes(this.retention));
         app.use("/api/admin/map", mapRoutes(this.pool));
         app.use("/api/admin/notifications", notificationsRoutes(this.pool, this.audit));

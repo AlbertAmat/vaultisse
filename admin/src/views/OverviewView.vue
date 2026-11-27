@@ -19,6 +19,11 @@
 			<template #append><v-btn variant="text" to="/users?status=pending">Review</v-btn></template>
 		</v-alert>
 		<!-- A background job failed on its last run: see Jobs. -->
+		<!-- Attacks on this console: failed sign-in attempts in the last 24 hours (from three), with a link to who and from where. -->
+		<v-alert v-if="counts && counts.adminFailed24h >= 3" type="warning" variant="tonal" class="mb-4" icon="mdi-shield-alert-outline">
+			{{ counts.adminFailed24h }} failed attempts to sign in to this console in the last 24 hours, from {{ counts.adminFailedIps24h }} {{ counts.adminFailedIps24h === 1 ? "address" : "addresses" }}.
+			<template #append><v-btn variant="text" to="/admin-signins">See who</v-btn></template>
+		</v-alert>
 		<v-alert v-if="counts && counts.failedJobs > 0" type="error" variant="tonal" class="mb-4" icon="mdi-timer-alert-outline">
 			{{ counts.failedJobs }} background {{ counts.failedJobs === 1 ? "job" : "jobs" }} failed on the last run.
 			<template #append><v-btn variant="text" to="/jobs">See jobs</v-btn></template>
@@ -63,25 +68,18 @@
 					<chart-panel type="line" :labels="charts.logins.map((p) => shortDay(p.day))" :series="[{label: 'Sign-ins', data: charts.logins.map((p) => p.count), color: 'secondary'}]"/>
 				</v-card>
 			</v-col>
-			<v-col cols="12" md="4">
+			<v-col cols="12" md="6">
 				<v-card class="pa-4 h-100">
 					<div class="text-subtitle-1 font-weight-medium mb-2">Accounts by status</div>
 					<chart-panel type="doughnut" :labels="['Active', 'Awaiting approval', 'Disabled', 'Email not verified']" :colors="['success', 'info', 'error', 'warning']"
 						:series="[{label: 'Accounts', data: [charts.accountStatus.active, charts.accountStatus.pending, charts.accountStatus.disabled, charts.accountStatus.unverified], color: 'primary'}]"/>
 				</v-card>
 			</v-col>
-			<v-col cols="12" md="4">
+			<v-col cols="12" md="6">
 				<v-card class="pa-4 h-100">
 					<div class="text-subtitle-1 font-weight-medium mb-2">Vaults by plan</div>
 					<chart-panel v-if="charts.plans.length" type="doughnut" :labels="charts.plans.map((p) => p.name)" :series="[{label: 'Vaults', data: charts.plans.map((p) => p.vaults), color: 'primary'}]"/>
 					<p v-else class="text-body-2 text-medium-emphasis">No vaults yet.</p>
-				</v-card>
-			</v-col>
-			<v-col cols="12" md="4">
-				<v-card class="pa-4 h-100">
-					<div class="d-flex align-center mb-2"><div class="text-subtitle-1 font-weight-medium">Security events by type</div><v-spacer/><v-btn size="x-small" variant="text" to="/security">Security</v-btn></div>
-					<chart-panel v-if="charts.securityByType.length" horizontal :labels="charts.securityByType.map((t) => eventNames[t.type] ?? t.type)" :series="[{label: 'Events', data: charts.securityByType.map((t) => t.total), color: 'warning'}]"/>
-					<p v-else class="text-body-2 text-medium-emphasis">No security events in this period.</p>
 				</v-card>
 			</v-col>
 			<v-col cols="12" md="6">
@@ -124,6 +122,20 @@
 					<div class="text-subtitle-1 font-weight-medium mb-2">Biggest vaults by books</div>
 					<chart-panel v-if="charts.topByBooks.length" horizontal :labels="charts.topByBooks.map((v) => v.name)" :series="[{label: 'Books', data: charts.topByBooks.map((v) => v.books), color: 'primary'}]"/>
 					<p v-else class="text-body-2 text-medium-emphasis">No books yet.</p>
+				</v-card>
+			</v-col>
+			<!-- Sign-ins to THIS console: green = successful (password and code), red = failed. A red spike is someone guessing; Admin sign-ins shows who. -->
+			<v-col cols="12" md="6">
+				<v-card class="pa-4 h-100">
+					<div class="d-flex align-center mb-2"><div class="text-subtitle-1 font-weight-medium">Admin sign-ins</div><v-spacer/><v-btn size="x-small" variant="text" to="/admin-signins">Who</v-btn></div>
+					<chart-panel stacked :labels="charts.adminSignIns.map((p) => shortDay(p.day))" :series="[{label: 'Successful', data: charts.adminSignIns.map((p) => p.ok), color: 'success'}, {label: 'Failed', data: charts.adminSignIns.map((p) => p.failed), color: 'error'}]"/>
+				</v-card>
+			</v-col>
+			<v-col cols="12" md="6">
+				<v-card class="pa-4 h-100">
+					<div class="d-flex align-center mb-2"><div class="text-subtitle-1 font-weight-medium">Security events by type</div><v-spacer/><v-btn size="x-small" variant="text" to="/security">Security</v-btn></div>
+					<chart-panel v-if="charts.securityByType.length" horizontal :labels="charts.securityByType.map((t) => eventNames[t.type] ?? t.type)" :series="[{label: 'Events', data: charts.securityByType.map((t) => t.total), color: 'warning'}]"/>
+					<p v-else class="text-body-2 text-medium-emphasis">No security events in this period.</p>
 				</v-card>
 			</v-col>
 		</v-row>

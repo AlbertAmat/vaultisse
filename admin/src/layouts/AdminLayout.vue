@@ -94,6 +94,7 @@ const groups = [
 	]},
 	{title: "Security & compliance", items: [
 		{to: "/security", title: "Security", icon: "mdi-shield-alert-outline"},
+		{to: "/admin-signins", title: "Admin sign-ins", icon: "mdi-shield-key-outline"},
 		{to: "/map", title: "Login map", icon: "mdi-map-marker-radius-outline"},
 		{to: "/compliance", title: "Compliance", icon: "mdi-clipboard-check-outline"},
 		{to: "/data-requests", title: "Data requests", icon: "mdi-account-search-outline"},

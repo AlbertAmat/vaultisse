@@ -14,7 +14,7 @@
  */
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from "axios";
 import type {
-    IJob, IJobRun, IRetentionItem, ClearScope, PreviousAdmins, IClearCounts, IMergeResult, IChartsData, IAccountNote, IAdminSession, IDataRequest, DataRequestKind, IWebhook, IWebhookDelivery, IWebhookEvent, IWebhookInput,
+    IAdminSignIns, IAdminSignInAttempt, IJob, IJobRun, IRetentionItem, ClearScope, PreviousAdmins, IClearCounts, IMergeResult, IChartsData, IAccountNote, IAdminSession, IDataRequest, DataRequestKind, IWebhook, IWebhookDelivery, IWebhookEvent, IWebhookInput,
     AdminLoginStep, AdminRole, IAccountDetail, IAccount, IAdminSelf, IAdminUser, IAdminVault, IAuditEntry, IBlockedIp, IDeletionRequestResult,
     IEnrollConfirm, IEnrollStart, ILockout, IOverview, IPaged, IPlan, IPlanInput, IScheduledDeletion, ISecurityEvent, ISecuritySummary,
     ILoginMap, IComplianceOverview, IControlInput, IRegisterEntry, IRegisterInput, RegisterKind, IIncident, IIncidentInput, IAccessReview, IAnnouncement, IBroadcast, IBroadcastAudience, IBroadcastPreview, IBulkResult, IInactivityPreview, IMaintenance, ITermsCounts, ITermsRow, AnnouncementLevel, BroadcastAudience, BulkAccountAction, TermsDocument, TermsStatus, IMailEntry, IOnboardingStatus, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
@@ -208,6 +208,11 @@ export interface AdminApiClient {
     };
     retention: {
         list(): Promise<{items: IRetentionItem[]; auditFloorDays: number}>;
+    };
+    /** Who tried to sign in to this console: a timeline, one row per address with its place, and the attempts themselves. */
+    adminSignIns: {
+        overview(days: number): Promise<IAdminSignIns>;
+        attempts(query: {days: number; result?: "ok" | "failed"; ip?: string; page?: number; pageSize?: number}): Promise<IPaged<IAdminSignInAttempt>>;
     };
     dataRequests: {
         list(status?: string): Promise<{items: IDataRequest[]; counts: {open: number; overdue: number}}>;
@@ -422,6 +427,10 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
         },
         retention: {
             list: () => get("/retention"),
+        },
+        adminSignIns: {
+            overview: (days) => get("/admin-signins", {days}),
+            attempts: (query) => get("/admin-signins/attempts", query),
         },
         dataRequests: {
             list: (status) => get("/data-requests", {status}),

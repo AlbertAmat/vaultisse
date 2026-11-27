@@ -24,6 +24,7 @@ const router = createRouter({
                 {path: "broadcast", name: "broadcast", component: () => import("@/views/BroadcastView.vue"), meta: {title: "Email users"}},
                 {path: "terms", name: "terms", component: () => import("@/views/TermsView.vue"), meta: {title: "Terms & notices"}},
                 {path: "security", name: "security", component: () => import("@/views/SecurityView.vue"), meta: {title: "Security"}},
+                {path: "admin-signins", name: "admin-signins", component: () => import("@/views/AdminSignInsView.vue"), meta: {title: "Admin sign-ins"}},
                 {path: "map", name: "map", component: () => import("@/views/MapView.vue"), meta: {title: "Login map"}},
                 {path: "compliance", name: "compliance", component: () => import("@/views/ComplianceView.vue"), meta: {title: "Compliance"}},
                 {path: "data-requests", name: "data-requests", component: () => import("@/views/DataRequestsView.vue"), meta: {title: "Data requests"}},

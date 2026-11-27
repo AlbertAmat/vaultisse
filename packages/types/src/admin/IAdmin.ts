@@ -133,6 +133,8 @@ export interface IOverview {
         activeNow: number; activeDay: number; activeWeek: number; activeMonth: number; signupsWeek: number;
         vaults: number; vaultsSuspended: number; vaultsShared: number;
         books: number; stocks: number; fileBytes: number; pendingDeletions: number; failedJobs: number;
+        /** Failed sign-in attempts to this console in the last 24 hours, and from how many addresses. */
+        adminFailed24h: number; adminFailedIps24h: number;
     };
     signups: {day: string; count: number}[];
     logins: {day: string; count: number}[];
@@ -694,6 +696,8 @@ export interface IChartsData {
     logins: {day: string; count: number}[];
     failedLogins: {day: string; users: number; admins: number}[];
     emails: {day: string; sent: number; failed: number}[];
+    /** Sign-ins to this console per day. */
+    adminSignIns: {day: string; ok: number; failed: number}[];
     securityByType: {type: string; total: number}[];
     quota: {id: number; name: string; plan: string; percent: number; limiting: "books" | "storage" | "members"}[];
 }
@@ -856,4 +860,48 @@ export interface IMergeResult {
     vaultsMoved: number;
     vaultsCombined: number;
     rowsReassigned: number;
+}
+
+// ---- Sign-ins to this console ----
+
+export interface IAdminSignInSource {
+    ip: string;
+    /** ISO 3166-1 country code from the offline location database; null for a private or unknown address. */
+    country: string | null;
+    city: string;
+    failed: number;
+    ok: number;
+    /** Attempts the login rate limiter refused before they were checked. */
+    limited: number;
+    /** Different emails tried from this address. */
+    emails: number;
+    /** Where the failures happened: "password", "second factor", ... */
+    stages: string[];
+    firstSeen: string;
+    lastSeen: string;
+    blocked: boolean;
+    /** Three or more failures, any refused by the limiter, or three different emails tried. */
+    suspicious: boolean;
+}
+
+export interface IAdminSignIns {
+    days: number;
+    /** Size of a timeline bucket. */
+    unit: "hour" | "day";
+    summary: {ok: number; failed: number; failedIps: number; countries: number; limited: number};
+    timeline: {bucket: string; ok: number; failed: number}[];
+    sources: IAdminSignInSource[];
+    countries: {country: string; failed: number; ok: number}[];
+}
+
+export interface IAdminSignInAttempt {
+    id: number;
+    at: string;
+    result: "ok" | "failed";
+    /** What was typed in the email field. */
+    email: string | null;
+    ip: string | null;
+    stage: string | null;
+    country: string | null;
+    city: string;
 }

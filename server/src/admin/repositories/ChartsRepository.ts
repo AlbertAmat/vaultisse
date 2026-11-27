@@ -18,6 +18,8 @@ export interface ChartsData {
     logins: DayCount[];
     failedLogins: {day: string; users: number; admins: number}[];
     emails: {day: string; sent: number; failed: number}[];
+    /** Sign-ins to this console: successful and failed attempts per day. */
+    adminSignIns: {day: string; ok: number; failed: number}[];
     securityByType: {type: string; total: number}[];
     quota: {id: number; name: string; plan: string; percent: number; limiting: string}[];
 }
@@ -75,6 +77,9 @@ export class ChartsRepository {
         const emails = await this.perDay(days,
             `SELECT created_date::date AS day, COUNT(*) FILTER (WHERE status = 'sent') AS sent, COUNT(*) FILTER (WHERE status = 'failed') AS failed
                FROM mail_log WHERE created_date >= ${since} GROUP BY 1`, ["sent", "failed"]);
+        const adminSignIns = await this.perDay(days,
+            `SELECT created_date::date AS day, COUNT(*) FILTER (WHERE action = 'auth.login') AS ok, COUNT(*) FILTER (WHERE action = 'auth.login_failed') AS failed
+               FROM admin_audit_log WHERE action IN ('auth.login', 'auth.login_failed') AND created_date >= ${since} GROUP BY 1`, ["ok", "failed"]);
         const securityByType = (await this.db.query(
             `SELECT type, SUM(count)::int AS total FROM security_events WHERE bucket >= ${since} GROUP BY type ORDER BY total DESC`, [days])).rows;
 
@@ -89,6 +94,6 @@ export class ChartsRepository {
                   FROM vault v JOIN plans p ON p.id = COALESCE(v.plan_id, (SELECT id FROM plans WHERE is_default))
                ) q WHERE GREATEST(b, s, m) > 0 ORDER BY GREATEST(b, s, m) DESC LIMIT 8`)).rows;
 
-        return {days, accountStatus: status, plans, topByStorage, topByBooks, growth, signups, logins, failedLogins, emails, securityByType, quota};
+        return {days, accountStatus: status, plans, topByStorage, topByBooks, growth, signups, logins, failedLogins, emails, adminSignIns, securityByType, quota};
     }
 }

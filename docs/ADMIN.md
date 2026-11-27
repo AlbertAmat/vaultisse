@@ -35,6 +35,7 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 - [Jobs](#jobs)
 - [Support notes and tags](#support-notes-and-tags)
 - [Data requests (GDPR)](#data-requests-gdpr)
+- [Admin sign-ins](#admin-sign-ins)
 - [Login map](#login-map)
 - [Compliance](#compliance)
 - [System page](#system-page)
@@ -533,6 +534,30 @@ shown in red here and on the Overview, makes *Compliance* control A.8.16 warn, a
 failed*, at most every six hours per job) and your webhooks (`system.alert`). Run history is in `job_runs`. Without the portal
 the jobs run on their old timers, unrecorded.
 
+## Admin sign-ins
+
+*Security & compliance > Admin sign-ins* answers "is somebody attacking the console?". Every attempt to sign in to the console is recorded
+(in the audit trail, plus the attempts the login rate limiter refused), and this page shows them:
+
+- **Numbers and a timeline** for the last 24 hours (per hour), 7, 30 or 90 days (per day): successful sign-ins, failed attempts, from how many addresses, how many
+  were refused by the limiter, how many countries.
+- **One row per address**, the most failures first: where it is (country and city, from the offline location database, so nothing is sent to anyone), how many
+  failed and succeeded, how many were refused by the limiter, **how many different emails were tried** (a bot spraying many is the sign of an attack), at which step it
+  failed (password, second factor) and when it last tried. An address with three or more failures, any limiter refusal or three different emails is marked *suspicious*;
+  five or more failures that nobody has blocked also raise a red notice at the top.
+  Example: `95.173.136.70 · Russia · 5 failed · 3 refused · 2 emails tried · suspicious  [Block]`.
+- **Block** an address for 24 hours with one click (it is refused by the whole app; unblock it under Security > Blocked addresses). The dialog warns when somebody also signed
+  in successfully from that address, so you don't block yourself.
+- **Every attempt**, newest first, with the email that was typed (it can be a guess, a typo or someone else's address), the address, the place and the step; filter by
+  result or click an address to see only its attempts.
+- On the **Overview**: a chart of admin sign-ins per day, and a warning when there are three or more failed attempts in the last 24 hours.
+- **Alerts**: from three failed attempts in ten minutes the admins get the "Failed logins to the admin console" email (and your webhooks the `security.alert` event), and it now names
+  the addresses: `95.173.136.70 (Russia): 5 failed, 3 refused by the limiter, 2 different emails tried`. A sign-in from a country an admin has never used also raises an alert
+  (see Anomaly alerts). With *Automatic IP blocking* on, an address that keeps failing is blocked by itself.
+
+What to do when you see one: if it is a single address, block it; if it keeps coming from many, put the console behind `ADMIN_ALLOWED_IPS`, a VPN or your proxy's access rules
+(see Securing it). The history is the audit trail, so it is kept as long as you keep that (Data retention).
+
 ## Login map
 
 <p align="center"><img src="images/admin/17-login-map.png" alt="Sign-ins and failed attempts by place (the map background loads from OpenStreetMap in your browser; this screenshot uses a plain placeholder)." width="92%"><br><sub>Sign-ins and failed attempts by place (the map background loads from OpenStreetMap in your browser; this screenshot uses a plain placeholder).</sub></p>
@@ -859,6 +884,7 @@ Everything is under `/api/admin` on the admin port and needs an admin session ex
 | Deletions | `GET /deletions`, `POST /deletions/:id/{cancel,execute}` |
 | Security | `GET /security/{summary,traffic,events,top-ips,lockouts,blocked-ips,sessions}`, plus unlock, block/unblock, end session |
 | Logs | `GET /logs/{activity,server,audit}` |
+| Admin sign-ins | `GET /admin-signins?days=1|7|30|90`, `GET /admin-signins/attempts?result=&ip=&page=` |
 | Login map | `GET /map/logins?days=` |
 | Overview charts | `GET /overview/charts?days=7|30|90` |
 | Notes and tags | `GET /users/tags`, `PUT /users/:id/tags`, `POST /users/:id/notes`, `DELETE /users/:id/notes/:noteId` |

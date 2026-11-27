@@ -13,7 +13,7 @@ const PROTECTED_GETS = [
     "/deletions", "/security/summary", "/security/events", "/security/blocked-ips", "/logs/activity", "/logs/server", "/logs/mail", "/logs/audit", "/system",
     "/system/details", "/settings", "/announcements", "/broadcast/audiences", "/inactivity", "/terms/summary", "/terms/export.csv", "/compliance",
     "/compliance/export.csv", "/compliance/register", "/compliance/incidents", "/compliance/access", "/data-requests", "/data-requests/export/1/abc",
-    "/webhooks", "/jobs", "/jobs/anomalies/history", "/retention", "/map/logins", "/notifications",
+    "/webhooks", "/jobs", "/jobs/anomalies/history", "/retention", "/map/logins", "/notifications", "/admin-signins", "/admin-signins/attempts",
 ];
 const PROTECTED_WRITES: [string, string][] = [
     ["post", "/users/1/email"], ["post", "/users/1/merge"], ["post", "/users/bulk"], ["delete", "/users/1"], ["post", "/vaults/1/clear"], ["post", "/vaults/1/transfer"],
