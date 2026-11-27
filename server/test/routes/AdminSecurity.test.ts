@@ -200,3 +200,33 @@ describe("admin sign-in", () => {
         await appService.getDatabasePool().query("UPDATE admin_users SET failed_login_count = 0, lockout_until = NULL WHERE email = $1", [admin.email]);
     });
 });
+
+describe("admin console: how exposed it is", () => {
+    it("tells the console when the admin is connecting from the internet, and from a private network", async () => {
+        const admin = await createLoggedInAdmin(apps.admin());
+        // A private address (the supertest default and any local network): not the internet.
+        const local = (await admin.agent.get("/api/admin/auth/me").set("X-Forwarded-For", "192.168.1.20")).body.connection;
+        expect(local).toMatchObject({fromInternet: false, address: "192.168.1.20", restrictedByIp: false, https: false});
+        // A public address seen through a trusted proxy: the internet.
+        const remote = (await admin.agent.get("/api/admin/auth/me").set("X-Forwarded-For", "203.0.113.4")).body.connection;
+        expect(remote).toMatchObject({fromInternet: true, address: "203.0.113.4", restrictedByIp: false});
+        const secure = (await admin.agent.get("/api/admin/auth/me").set("X-Forwarded-For", "203.0.113.4").set("X-Forwarded-Proto", "https")).body.connection;
+        expect(secure.https).toBe(true);
+    });
+
+    it("shows the System page who can reach the console, without revealing any allowlisted address", async () => {
+        const admin = await createLoggedInAdmin(apps.admin());
+        const details = (await admin.agent.get("/api/admin/system/details").set("X-Forwarded-For", "203.0.113.4")).body;
+        expect(details.exposure).toMatchObject({restrictedByIp: false, allowedCount: 0, publicUrl: null, fromInternet: true, yourAddress: "203.0.113.4", trustProxy: true});
+        expect(Object.keys(details.exposure)).not.toContain("allowedIps");
+        const reader = await createLoggedInAdmin(apps.admin(), "readonly");
+        expect((await reader.agent.get("/api/admin/system/details")).body.exposure).toBeDefined();
+    });
+
+    it("says in the settings that the console should stay off the internet", async () => {
+        const admin = await createLoggedInAdmin(apps.admin());
+        const groups = (await admin.agent.get("/api/admin/settings")).body.groups;
+        const group = groups.find((g: any) => g.id === "admin");
+        expect(group.description).toMatch(/we recommend using it locally/);
+    });
+});

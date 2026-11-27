@@ -36,7 +36,7 @@ export const SETTING_GROUPS: {id: SettingGroupId; label: string; description: st
     {id: "retention", label: "Data retention", description: "How long each kind of log is kept. Edited on the Data retention page."},
     {id: "security", label: "Automatic IP blocking", description: "Blocks an address that keeps failing to sign in. Edited on the Security page."},
     {id: "notifications", label: "Admin notifications", description: "Which events email the admins. Edited on the Notifications page."},
-    {id: "admin", label: "Admin portal", description: "Behaviour of the portal itself."},
+    {id: "admin", label: "Admin portal", description: "Behaviour of the portal itself. Keep the portal off the internet: it can be exposed, but we recommend using it locally or over a VPN."},
 ];
 
 export const SETTINGS_CATALOG: SettingDefinition[] = [

@@ -19,6 +19,7 @@ import {ADMIN_COOKIE, ADMIN_PENDING_COOKIE, clearAdminCookies, clearPendingCooki
 import {requireAdmin} from "../middleware";
 import {AdminAuditService} from "../services/AdminAuditService";
 import {AdminAuthService, SESSION_IDLE_MS} from "../services/AdminAuthService";
+import {describeConnection} from "../services/Exposure";
 
 /**
  * @param auth Admin auth service.
@@ -118,6 +119,7 @@ export function authRoutes(auth: AdminAuthService, audit: AdminAuditService): Ro
             passwordExpiresAt: admin.passwordExpiresAt ?? null,
             passwordDaysLeft: admin.passwordDaysLeft ?? null,
             passwordExpiryWarning: admin.passwordExpiryWarning ?? false,
+            connection: describeConnection(req),
             reauthUntil: admin.reauthUntil && admin.reauthUntil.getTime() > Date.now() ? admin.reauthUntil : null,
         });
     }));

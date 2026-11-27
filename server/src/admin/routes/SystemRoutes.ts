@@ -8,12 +8,13 @@
 import {Router} from "express";
 import {appService} from "../../AppService";
 import {handle} from "../http";
+import {describeExposure} from "../services/Exposure";
 
 /** @returns The router. */
 export function systemRoutes(): Router {
     const router = Router();
 
-    router.get("/details", handle(async (_req, res) => {
+    router.get("/details", handle(async (req, res) => {
         const info = appService.getSystemInfo();
         const [version, database, migrations] = await Promise.all([
             appService.getUpdateChecker().status(),
@@ -26,6 +27,7 @@ export function systemRoutes(): Router {
             database,
             migrations: {items: migrations, total: migrations.length},
             runtime: info.runtime(),
+            exposure: describeExposure(req),
         });
     }));
 
