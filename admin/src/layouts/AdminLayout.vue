@@ -46,6 +46,13 @@
 	</v-app-bar>
 
 	<v-main>
+		<!-- Password expiry: shown on every page from ADMIN_PASSWORD_WARN_DAYS (default 5) days before the password expires.
+		     Once it has expired the router sends the admin to the change-password page instead. -->
+		<v-alert v-if="state.admin?.passwordExpiryWarning && !state.admin.passwordExpired" type="warning" variant="tonal" class="mx-6 mt-4 mb-0" icon="mdi-lock-clock">
+			Your password expires {{ state.admin.passwordDaysLeft === 0 ? "today" : state.admin.passwordDaysLeft === 1 ? "tomorrow" : `in ${state.admin.passwordDaysLeft} days` }}
+			({{ dateOnly(state.admin.passwordExpiresAt) }}). Choose a new one now to avoid being interrupted.
+			<template #append><v-btn variant="text" @click="passwordDialog = true">Change password</v-btn></template>
+		</v-alert>
 		<router-view/>
 	</v-main>
 
@@ -59,6 +66,7 @@ import {useRoute, useRouter} from "vue-router";
 import {useDisplay} from "vuetify";
 import {api} from "@/api";
 import {canWrite, setTheme, state} from "@/store";
+import {dateOnly} from "@/utils/format";
 import BrandMark from "@/components/BrandMark.vue";
 import PasswordDialog from "@/components/PasswordDialog.vue";
 import OnboardingDialog from "@/components/OnboardingDialog.vue";

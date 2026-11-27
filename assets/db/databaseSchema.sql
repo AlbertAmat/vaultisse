@@ -3049,6 +3049,11 @@ CREATE TABLE admin_users
     -- still needs its access, and who did.
     access_reviewed_at TIMESTAMPTZ,
     access_reviewed_by INT,
+    -- Password lifetime: when it was last set, the hashes of the last five (so they can't be reused) and the day an
+    -- expiry reminder was last emailed (at most one a day).
+    password_changed_at TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    password_history   TEXT[]          NOT NULL DEFAULT '{}',
+    password_warned_on DATE,
     created_date       TIMESTAMPTZ         NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

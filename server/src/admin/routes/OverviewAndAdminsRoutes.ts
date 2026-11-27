@@ -71,7 +71,10 @@ export function overviewAndAdminsRoutes(pool: Pool, auth: AdminAuthService, audi
     }));
 
     router.get("/admins", handle(async (_req, res) => {
-        res.json({items: await auth.list()});
+        res.json({items: (await auth.list()).map((admin) => {
+            const expiry = auth.passwordExpiry(admin.passwordChangedAt);
+            return {...admin, passwordExpiresAt: expiry.expiresAt, passwordDaysLeft: expiry.daysLeft, passwordExpired: expiry.expired};
+        })});
     }));
 
     router.post("/admins", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {

@@ -673,6 +673,16 @@ export class AppService {
     public static validateEnv(env: NodeJS.ProcessEnv, touchedKeys: string[] = []): void {
         const mail = MailService.readConfig(env);
         InactivityService.readConfig(env, mail !== null);
+        if (touchedKeys.some((key) => key === "ADMIN_PASSWORD_MAX_AGE_DAYS" || key === "ADMIN_PASSWORD_WARN_DAYS")) {
+            const max = Number(env.ADMIN_PASSWORD_MAX_AGE_DAYS ?? 60);
+            const warn = Number(env.ADMIN_PASSWORD_WARN_DAYS ?? 5);
+            if (max > 0 && max < 7) {
+                throw new Error("A password lifetime under 7 days isn't practical: choose 0 (never) or at least 7.");
+            }
+            if (max > 0 && warn >= max) {
+                throw new Error("The reminder period must be shorter than the password lifetime.");
+            }
+        }
         if (touchedKeys.includes("RETENTION_AUDIT_DAYS")) {
             const days = Number(env.RETENTION_AUDIT_DAYS);
             if (env.RETENTION_AUDIT_DAYS !== undefined && env.RETENTION_AUDIT_DAYS !== "" && days !== 0 && !(Number.isInteger(days) && days >= 90)) {

@@ -10,10 +10,13 @@
 				<brand-mark :size="40"/>
 				<div>
 					<div class="text-h6 font-weight-bold pb-display">Choose a new password</div>
-					<div class="pb-eyebrow">First sign-in</div>
+					<div class="pb-eyebrow">{{ state.admin?.passwordExpired ? "Password expired" : "First sign-in" }}</div>
 				</div>
 			</div>
-			<v-alert type="warning" variant="tonal" density="compact" class="mb-4">
+			<v-alert v-if="state.admin?.passwordExpired" type="warning" variant="tonal" density="compact" class="mb-4">
+				Your password has expired{{ state.admin.passwordExpiresAt ? ` (on ${dateOnly(state.admin.passwordExpiresAt)})` : "" }}. Admin passwords are replaced regularly: choose a new one, different from your last five, to continue.
+			</v-alert>
+			<v-alert v-else type="warning" variant="tonal" density="compact" class="mb-4">
 				You signed in with a password that was generated for you (it was shown in the server's output). Replace it with your own before you continue.
 			</v-alert>
 			<v-form @submit.prevent="save">
@@ -40,6 +43,7 @@ import {computed, ref} from "vue";
 import {useRouter} from "vue-router";
 import {api, errorMessage} from "@/api";
 import {notify, state} from "@/store";
+import {dateOnly} from "@/utils/format";
 import BrandMark from "@/components/BrandMark.vue";
 
 const router = useRouter();

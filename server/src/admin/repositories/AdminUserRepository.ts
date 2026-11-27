@@ -16,11 +16,15 @@ export interface AdminUserRow {
     totpEnabled: boolean;
     createdDate: Date;
     lastLoginDate: Date | null;
+    /** When the password was last set (the start of its lifetime). */
+    passwordChangedAt: Date;
 }
 
 /** An admin including the credentials needed to log in. */
 export interface AdminLoginRow extends AdminUserRow {
     password: string;
+    /** Hashes of the previous passwords, newest first (at most five). */
+    passwordHistory: string[];
     totpSecret: string | null;
     totpLastUsedStep: number | null;
     failedLoginCount: number;
@@ -36,7 +40,7 @@ export interface AdminSessionRow {
 }
 
 const PUBLIC_COLUMNS = `id, email, name, role, disabled, must_change_password AS "mustChangePassword", notify_email AS "notifyEmail", token_version AS "tokenVersion", totp_enabled AS "totpEnabled",
-                        created_date AS "createdDate", last_login_date AS "lastLoginDate"`;
+                        created_date AS "createdDate", last_login_date AS "lastLoginDate", password_changed_at AS "passwordChangedAt"`;
 
 /** Hash stored for a backup code. */
 /**
@@ -76,7 +80,7 @@ export class AdminUserRepository {
      */
     public async findForLogin(email: string): Promise<AdminLoginRow | null> {
         const result = await this.db.query(
-            `SELECT ${PUBLIC_COLUMNS}, password, totp_secret AS "totpSecret", totp_last_used_step AS "totpLastUsedStep",
+            `SELECT ${PUBLIC_COLUMNS}, password, password_history AS "passwordHistory", totp_secret AS "totpSecret", totp_last_used_step AS "totpLastUsedStep",
                     failed_login_count AS "failedLoginCount", lockout_until AS "lockoutUntil"
                FROM admin_users WHERE LOWER(email) = LOWER($1)`,
             [email]
@@ -90,7 +94,7 @@ export class AdminUserRepository {
      */
     public async findLoginById(id: number): Promise<AdminLoginRow | null> {
         const result = await this.db.query(
-            `SELECT ${PUBLIC_COLUMNS}, password, totp_secret AS "totpSecret", totp_last_used_step AS "totpLastUsedStep",
+            `SELECT ${PUBLIC_COLUMNS}, password, password_history AS "passwordHistory", totp_secret AS "totpSecret", totp_last_used_step AS "totpLastUsedStep",
                     failed_login_count AS "failedLoginCount", lockout_until AS "lockoutUntil"
                FROM admin_users WHERE id = $1`,
             [id]
@@ -132,11 +136,26 @@ export class AdminUserRepository {
      */
     public async setPassword(id: number, passwordHash: string, mustChangePassword: boolean = false): Promise<number> {
         const result = await this.db.query(
-            `UPDATE admin_users SET password = $2, must_change_password = $3, token_version = token_version + 1, failed_login_count = 0, lockout_until = NULL
+            // The right-hand sides see the row as it was, so the history gets the OLD hash and keeps the five latest.
+            `UPDATE admin_users SET password_history = (ARRAY[password] || password_history)[1:5], password = $2, password_changed_at = CURRENT_TIMESTAMP,
+                    password_warned_on = NULL, must_change_password = $3, token_version = token_version + 1, failed_login_count = 0, lockout_until = NULL
               WHERE id = $1 RETURNING token_version AS "tokenVersion"`,
             [id, passwordHash, mustChangePassword]
         );
         return result.rows[0].tokenVersion;
+    }
+
+    /** @returns The enabled admins with what the password-expiry reminder needs. */
+    public async listForExpiry(): Promise<{id: number; email: string; name: string; passwordChangedAt: Date; warnedToday: boolean}[]> {
+        const result = await this.db.query(
+            `SELECT id, email, name, password_changed_at AS "passwordChangedAt", (password_warned_on = CURRENT_DATE) AS "warnedToday"
+               FROM admin_users WHERE NOT disabled ORDER BY id`);
+        return result.rows.map((row) => ({...row, warnedToday: row.warnedToday === true}));
+    }
+
+    /** Notes that today's expiry reminder was emailed to this admin. @param id Admin id. */
+    public async markPasswordWarned(id: number): Promise<void> {
+        await this.db.query("UPDATE admin_users SET password_warned_on = CURRENT_DATE WHERE id = $1", [id]);
     }
 
     /**

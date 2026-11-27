@@ -35,6 +35,8 @@ import {jobsRoutes} from "./routes/JobsRoutes";
 import {retentionRoutes} from "./routes/RetentionRoutes";
 import {dataRequestsRoutes} from "./routes/DataRequestsRoutes";
 import {webhooksRoutes} from "./routes/WebhooksRoutes";
+import {PasswordExpiryService} from "./services/PasswordExpiryService";
+import {passwordPolicy} from "./services/PasswordPolicy";
 import {RetentionService} from "./services/RetentionService";
 import {AnomalyService} from "./services/AnomalyService";
 import {DataRequestService} from "./services/DataRequestService";
@@ -61,6 +63,7 @@ export class AdminApp {
     private timers: NodeJS.Timeout[] = [];
     private readonly auth: AdminAuthService;
     private readonly anomalies: AnomalyService;
+    private readonly passwordExpiry: PasswordExpiryService;
     public readonly retention: RetentionService;
     public readonly dataRequests: DataRequestService;
     private readonly audit: AdminAuditService;
@@ -76,6 +79,8 @@ export class AdminApp {
         this.app = express();
         this.audit = new AdminAuditService(pool);
         this.auth = new AdminAuthService(pool, logger, appService.getJwtSecret());
+        this.auth.setPasswordPolicy(passwordPolicy);
+        this.passwordExpiry = new PasswordExpiryService(pool, this.auth);
         this.anomalies = new AnomalyService(pool, logger);
         this.retention = new RetentionService(pool);
         this.auth.setSignInObserver((admin, ip, startedAt) => void this.anomalies.adminSignedIn(admin, ip, startedAt));
@@ -135,6 +140,11 @@ export class AdminApp {
                 await this.anomalies.check();
                 return "Checked";
             },
+        });
+        jobs.register({
+            id: "password-expiry", name: "Admin password reminders", schedule: "Every day", everyMs: 24 * HOUR,
+            description: "Emails each admin whose password expires within the warning window (default 5 days), once a day, and again every day after it has expired. Passwords expire after ADMIN_PASSWORD_MAX_AGE_DAYS (default 60).",
+            run: () => this.passwordExpiry.run(),
         });
         jobs.register({
             id: "update-check", name: "Update check", schedule: "Every day", everyMs: 24 * HOUR,
@@ -273,8 +283,12 @@ export class AdminApp {
 
         const first = setTimeout(() => void this.maintain(), 2 * 60 * 1000);
         const hourly = setInterval(() => void this.maintain(), MAINTENANCE_INTERVAL_MS);
-        const daily = setInterval(() => void appService.getJobs().runScheduled("update-check"), 24 * 60 * 60 * 1000);
-        const firstCheck = setTimeout(() => void appService.getJobs().runScheduled("update-check"), 5 * 60 * 1000);
+        const dailyJobs = () => {
+            void appService.getJobs().runScheduled("update-check");
+            void appService.getJobs().runScheduled("password-expiry");
+        };
+        const daily = setInterval(dailyJobs, 24 * 60 * 60 * 1000);
+        const firstCheck = setTimeout(dailyJobs, 5 * 60 * 1000);
         [first, hourly, daily, firstCheck].forEach((timer) => timer.unref());
         this.timers.push(first, hourly, daily, firstCheck);
     }

@@ -15,13 +15,20 @@
 		<v-card>
 			<div class="table-wrap">
 				<v-table>
-					<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Two-factor</th><th>Last sign-in</th><th></th></tr></thead>
+					<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Two-factor</th><th>Password</th><th>Last sign-in</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="admin in admins" :key="admin.id">
 							<td class="text-no-wrap font-weight-medium">{{ admin.name }}<v-chip v-if="admin.id === state.admin?.id" size="x-small" variant="tonal" class="ml-2">you</v-chip><v-chip v-if="admin.disabled" size="x-small" color="error" variant="tonal" class="ml-2">disabled</v-chip></td>
 							<td class="text-no-wrap text-medium-emphasis">{{ admin.email }}</td>
 							<td class="text-no-wrap">{{ admin.role === "superadmin" ? "Superadmin" : "Read-only" }}</td>
 							<td class="text-no-wrap">{{ admin.totpEnabled ? "On" : "Not set up yet" }}</td>
+							<!-- Password lifetime: "never expires" when ADMIN_PASSWORD_MAX_AGE_DAYS is 0; red once expired, orange inside the reminder window. -->
+							<td class="text-no-wrap">
+								<v-chip v-if="admin.passwordExpiresAt === null" size="x-small" variant="tonal">never expires</v-chip>
+								<v-chip v-else-if="admin.passwordExpired" size="x-small" variant="tonal" color="error">expired</v-chip>
+								<v-chip v-else size="x-small" variant="tonal" :color="(admin.passwordDaysLeft ?? 99) <= 5 ? 'warning' : undefined">in {{ admin.passwordDaysLeft }} {{ admin.passwordDaysLeft === 1 ? "day" : "days" }}</v-chip>
+								<v-tooltip v-if="admin.passwordExpiresAt" activator="parent" location="top">Expires {{ dateOnly(admin.passwordExpiresAt) }}</v-tooltip>
+							</td>
 							<td>{{ relative(admin.lastLoginDate) }}</td>
 							<td class="text-right text-no-wrap">
 								<v-menu v-if="canWrite() && admin.id !== state.admin?.id">
@@ -103,7 +110,7 @@ import {onMounted, reactive, ref} from "vue";
 import type {AdminRole, IAdminSession, IAdminUser} from "@vaultisse/types/admin/IAdmin";
 import {api} from "@/api";
 import {canWrite, notify, state} from "@/store";
-import {dateTime, relative} from "@/utils/format";
+import {dateOnly, dateTime, relative} from "@/utils/format";
 import ConfirmDangerDialog from "@/components/ConfirmDangerDialog.vue";
 import PageHeader from "@/components/PageHeader.vue";
 

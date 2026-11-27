@@ -95,6 +95,8 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     {key: "RETENTION_JOB_RUNS_DAYS", group: "retention", label: "Background job history (days)", description: "0 keeps it forever.", type: "number", defaultValue: "30", min: 0},
     {key: "RETENTION_AUDIT_DAYS", group: "retention", label: "Audit trail (days)", description: "0 keeps it forever; otherwise at least 90.", type: "number", defaultValue: "0", min: 0},
     {key: "ADMIN_NOTIFY_JOBS", group: "notifications", label: "A background job failed", description: "A scheduled job (clean-up, reminders, deletions) ended with an error.", type: "boolean", defaultValue: "true"},
+    {key: "ADMIN_PASSWORD_MAX_AGE_DAYS", group: "admin", label: "Admin password lifetime (days)", description: "An admin must choose a new password after this many days. 0 = passwords never expire.", type: "number", defaultValue: "60", min: 0},
+    {key: "ADMIN_PASSWORD_WARN_DAYS", group: "admin", label: "Remind admins this many days before (every day)", description: "From this many days before a password expires, the admin gets an email every day and a notice at the top of the console. Needs email to be set up for the emails.", type: "number", defaultValue: "5", min: 0},
     {key: "ADMIN_DELETION_GRACE_DAYS", group: "admin", label: "Deletion grace period (days)", description: "Deleting an account or vault from the portal locks it out first and only deletes it after this many days, so it can be cancelled. 0 = delete immediately.", type: "number", defaultValue: "7", min: 0},
 ];
 

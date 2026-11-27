@@ -114,6 +114,10 @@ export function authRoutes(auth: AdminAuthService, audit: AdminAuditService): Ro
             name: admin.name,
             role: admin.role,
             mustChangePassword: admin.mustChangePassword,
+            passwordExpired: admin.passwordExpired ?? false,
+            passwordExpiresAt: admin.passwordExpiresAt ?? null,
+            passwordDaysLeft: admin.passwordDaysLeft ?? null,
+            passwordExpiryWarning: admin.passwordExpiryWarning ?? false,
             reauthUntil: admin.reauthUntil && admin.reauthUntil.getTime() > Date.now() ? admin.reauthUntil : null,
         });
     }));

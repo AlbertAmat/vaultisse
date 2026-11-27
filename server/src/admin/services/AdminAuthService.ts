@@ -199,6 +199,33 @@ export class AdminAuthService {
         throw new UnauthorizedError("That code is not valid.");
     }
 
+    private policy: () => {maxAgeDays: number; warnDays: number} = () => ({maxAgeDays: 0, warnDays: 0});
+
+    /** @param policy Where the password lifetime comes from (the portal wires in the settings; without it passwords never expire). */
+    public setPasswordPolicy(policy: () => {maxAgeDays: number; warnDays: number}): void {
+        this.policy = policy;
+    }
+
+    /**
+     * Where a password stands against the lifetime policy.
+     * @param changedAt When the password was set.
+     * @param now Current time (a parameter so it can be tested).
+     * @returns When it expires (null = never), whole days left (0 or less once expired), and whether it is expired or inside the warning window.
+     * @example
+     *   // policy: expire after 60 days, warn from 5 days before; password set 56 days ago
+     *   passwordExpiry(setFiftySixDaysAgo)  // {expiresAt: <in 4 days>, daysLeft: 4, expired: false, warning: true}
+     *   passwordExpiry(setSixtyOneDaysAgo)  // {expiresAt: <yesterday>, daysLeft: -1, expired: true,  warning: true}
+     */
+    public passwordExpiry(changedAt: Date, now: number = Date.now()): {expiresAt: Date | null; daysLeft: number | null; expired: boolean; warning: boolean} {
+        const {maxAgeDays, warnDays} = this.policy();
+        if (maxAgeDays <= 0) {
+            return {expiresAt: null, daysLeft: null, expired: false, warning: false};
+        }
+        const expiresAt = new Date(new Date(changedAt).getTime() + maxAgeDays * 24 * 60 * 60 * 1000);
+        const daysLeft = Math.ceil((expiresAt.getTime() - now) / (24 * 60 * 60 * 1000));
+        return {expiresAt, daysLeft, expired: expiresAt.getTime() <= now, warning: daysLeft <= warnDays};
+    }
+
     private signInObserver?: (admin: {id: number; email: string}, ip: string | undefined, startedAt: Date) => void;
 
     /** @param observer Called (without waiting) after every successful admin sign-in. */
@@ -254,8 +281,13 @@ export class AdminAuthService {
             this.repo.touchSession(session.id).catch((error) => this.logger.error(`Updating admin session failed: ${error}`));
         }
         const timeLeft = decoded.exp - Math.floor(now / 1000);
+        // A password past its lifetime is treated like a generated one: nothing but changing it works.
+        const expiry = this.passwordExpiry(admin.passwordChangedAt);
         return {
-            admin: {id: admin.id, email: admin.email, name: admin.name, role: admin.role, mustChangePassword: admin.mustChangePassword, sessionId: session.id, reauthUntil: session.reauthUntil},
+            admin: {
+                id: admin.id, email: admin.email, name: admin.name, role: admin.role, mustChangePassword: admin.mustChangePassword || expiry.expired, sessionId: session.id, reauthUntil: session.reauthUntil,
+                passwordExpired: expiry.expired, passwordExpiresAt: expiry.expiresAt, passwordDaysLeft: expiry.daysLeft, passwordExpiryWarning: expiry.warning,
+            },
             refreshedToken: timeLeft < this.sessionMs / 1000 / 2 ? this.createSessionToken(admin.id, admin.tokenVersion, decoded.sid) : null,
         };
     }
@@ -303,6 +335,12 @@ export class AdminAuthService {
         validateAdminPassword(newPassword);
         if (newPassword === currentPassword) {
             throw new ValidationError("Choose a password different from the current one.");
+        }
+        // Changing it back to one of the last five would make the expiry pointless.
+        for (const old of row.passwordHistory ?? []) {
+            if (await bcrypt.compare(newPassword, old)) {
+                throw new ValidationError("You used that password recently. Choose one that isn't among your last five.");
+            }
         }
         const sessionKey = await this.sessionKeyOf(admin.sessionId);
         const tokenVersion = await this.repo.setPassword(admin.id, await bcrypt.hash(newPassword, 12));

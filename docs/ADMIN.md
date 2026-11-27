@@ -44,6 +44,7 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 - [Admin sessions](#admin-sessions)
 - [Security, logs and audit](#security-logs-and-audit)
 - [Admin accounts](#admin-accounts)
+  - [Password lifetime](#password-lifetime)
 - [Securing it](#securing-it)
 - [Environment variables](#environment-variables)
 - [API map](#api-map)
@@ -522,6 +523,7 @@ Accounts are not covered here: they go through the inactive-account setting or a
 | Data request reminders | every hour | emails about requests near or past their deadline |
 | Anomaly checks | every hour | new country, burst of sign-ups |
 | Update check | every day | asks GitHub for the latest release |
+| Admin password reminders | every day | emails admins whose password expires within the window, see [Password lifetime](#password-lifetime) |
 | Inactive accounts | every day | warns, then deletes, accounts unused for the period in *Settings* |
 
 For each job: when it last ran, whether it worked, what it did (or why it failed), how long it took and an estimate of the next run,
@@ -749,6 +751,29 @@ docker compose exec -it app node index.js admin:reset --email you@example.com
 
 That sets a new password and removes two-factor; you enrol again at next sign-in.
 
+### Password lifetime
+
+Admin passwords expire. By default an admin must choose a new password **every 60 days**, and is reminded **every day for the last 5 days**:
+
+| Setting (env var of the same name) | Default | Meaning |
+|---|---|---|
+| `ADMIN_PASSWORD_MAX_AGE_DAYS` | `60` | A password older than this must be replaced. `0` = passwords never expire. At least 7 otherwise. |
+| `ADMIN_PASSWORD_WARN_DAYS` | `5` | From this many days before the end, remind the admin every day. Must be shorter than the lifetime. |
+
+Change them in *Settings > Admin portal* or as environment variables (the console wins, like any setting).
+
+- **Reminders.** The daily job *Admin password reminders* (see Jobs) emails each admin, and only that admin, from the first day of the window: "Your password
+  expires on 2026-12-05 (3 days from now)". It is sent at most once a day, and again every day after the password has expired, until it is changed.
+  The email carries no secret. Without email set up nothing can be sent: the job says so, and the console warns instead.
+- **In the console.** Inside the window every page shows "Your password expires in 3 days. Change password". The *Admins* page has a *Password* column ("in 12 days", "expired", "never expires").
+- **At expiry.** An expired password is treated like the generated first-admin password: after signing in the admin can only choose a new one (account menu >
+  Change password, or the page they are sent to) before anything else works. Nothing is deleted or locked, and there is no lock-out to recover from.
+- **No going back.** The new password must differ from the last five (only their hashes are kept), otherwise the rotation would mean nothing.
+- **The clock** starts when the password is set: at creation, at the forced first change, at every change, and by `node index.js admin:reset`. When you upgrade, it starts at the upgrade.
+
+> Current security guidance (NIST SP 800-63B) advises *against* forcing periodic changes when a second factor is mandatory, as it is here, because people respond with weaker passwords.
+> The default of 60 days follows your policy; set `ADMIN_PASSWORD_MAX_AGE_DAYS=0` if you prefer changing a password only when you suspect a leak.
+
 ## Securing it
 
 - Put it on its own domain over HTTPS, set `ADMIN_URL` to that origin. Requests from
@@ -768,7 +793,7 @@ That sets a new password and removes two-factor; you enrol again at next sign-in
 
 Built in, and covered by tests (`server/test/routes/AdminSecurity.test.ts`):
 
-- **Sign-in:** password (bcrypt) plus a mandatory authenticator code; a wrong password and an unknown email give the same answer in the same time;
+- **Sign-in:** password (bcrypt) that expires every 60 days (and can't go back to the last five) plus a mandatory authenticator code; a wrong password and an unknown email give the same answer in the same time;
   5 failures lock the account for 15 minutes; a login rate limit per address; a generated first password that must be changed at once;
   one-use backup codes that are stored hashed; a code can't be replayed.
 - **Sessions:** a signed token (HS256 only, its own key and audience, so a user's token is useless here) in an `HttpOnly`, `SameSite=Strict` cookie, `Secure`
@@ -806,6 +831,7 @@ Only these stay env-only for the portal:
 | `ADMIN_URL` | empty | Public origin of the console, for origin checks |
 | `ADMIN_ALLOWED_IPS` | empty | Comma-separated client IPs allowed to reach it |
 | `SETTINGS_ENCRYPTION_KEY` | derived from `JWT_SECRET` | Key encrypting secrets saved in the portal |
+| `ADMIN_PASSWORD_MAX_AGE_DAYS`, `ADMIN_PASSWORD_WARN_DAYS` | `60`, `5` | Admin password lifetime and reminder window (also editable in the console, see [Password lifetime](#password-lifetime)) |
 | `ADMIN_WEBHOOKS_ALLOW_PRIVATE` | `false` | Let a generic webhook reach private/internal addresses (see [Webhooks](#webhooks)) |
 
 Command line: `node index.js admin:create --email <e> [--name <n>]`,

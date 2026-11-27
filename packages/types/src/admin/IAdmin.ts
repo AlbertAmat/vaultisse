@@ -14,6 +14,14 @@ export interface IAdminSelf {
     mustChangePassword: boolean;
     /** Until when dangerous actions are unlocked by a fresh password + code check; null when locked. */
     reauthUntil: string | null;
+    /** The password is past its lifetime: like a generated one, it must be replaced before anything else. */
+    passwordExpired: boolean;
+    /** When the password expires; null when passwords never expire. */
+    passwordExpiresAt: string | null;
+    /** Whole days left (0 or less once expired); null when passwords never expire. */
+    passwordDaysLeft: number | null;
+    /** Inside the reminder window: the console shows a notice. */
+    passwordExpiryWarning: boolean;
 }
 
 export interface IAdminUser {
@@ -26,6 +34,9 @@ export interface IAdminUser {
     totpEnabled: boolean;
     createdDate: string;
     lastLoginDate: string | null;
+    passwordExpiresAt: string | null;
+    passwordDaysLeft: number | null;
+    passwordExpired: boolean;
 }
 
 export interface IPaged<T> {

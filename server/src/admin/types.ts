@@ -11,6 +11,14 @@ export interface AdminContext {
     sessionId: number;
     /** When the session's fresh password+code verification lapses; null/past = dangerous actions need `/auth/reauth` first. */
     reauthUntil: Date | null;
+    /** The password is past its lifetime (see PasswordPolicy): it must be changed before anything else. */
+    passwordExpired?: boolean;
+    /** When the password expires; null when passwords never expire. */
+    passwordExpiresAt?: Date | null;
+    /** Whole days left (0 or less once expired); null when passwords never expire. */
+    passwordDaysLeft?: number | null;
+    /** Inside the warning window (or expired): the console tells the admin. */
+    passwordExpiryWarning?: boolean;
 }
 
 declare global {
