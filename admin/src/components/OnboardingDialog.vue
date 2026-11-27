@@ -26,9 +26,6 @@
 					<p class="text-body-1 mb-3">
 						A few quick steps to set Vaultisse up: email, who can register, optional API keys, and which problems to be emailed about. Everything is changeable later under Settings and Notifications, so skip anything you're unsure about.
 					</p>
-					<v-alert type="warning" variant="tonal" density="compact" class="mb-3" icon="mdi-shield-lock-outline">
-						Keep this console private. It can be exposed to the internet, but we recommend <strong>not exposing it</strong>: open it locally, over a VPN or an SSH tunnel.
-					</v-alert>
 					<v-alert v-if="fromEnv.length" type="info" variant="tonal" density="compact" class="mb-3" icon="mdi-cog-outline">
 						Already configured through environment variables: <span class="mono">{{ fromEnv.join(", ") }}</span>. Anything you save here takes priority over those.
 					</v-alert>

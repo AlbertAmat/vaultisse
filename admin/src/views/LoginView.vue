@@ -74,11 +74,6 @@
 				<v-checkbox v-model="saved" density="compact" label="I have saved my backup codes" class="mt-2"/>
 				<v-btn block color="primary" variant="flat" size="large" :disabled="!saved" @click="finish">Continue to the console</v-btn>
 			</div>
-			<!-- Said to everybody who finds the page, before they sign in. -->
-			<p class="exposure-note text-caption text-medium-emphasis mt-5">
-				<v-icon size="14" class="mr-1">mdi-shield-lock-outline</v-icon>
-				This console is for the people who run this installation. We recommend not exposing it to the internet: open it locally or through a VPN.
-			</p>
 		</v-card>
 	</div>
 </template>
@@ -169,11 +164,6 @@ function downloadCodes() {
 </script>
 
 <style scoped>
-.exposure-note {
-	border-top: 1px solid var(--pb-border);
-	padding-top: 12px;
-}
-
 .login {
 	min-height: 100vh;
 	display: grid;

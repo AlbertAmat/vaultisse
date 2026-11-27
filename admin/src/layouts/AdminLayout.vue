@@ -46,13 +46,6 @@
 	</v-app-bar>
 
 	<v-main>
-		<!-- Exposure: shown when this very connection comes from the internet and nothing restricts the console by address
-		     (ADMIN_ALLOWED_IPS). Dismissing hides it for this browser session only; it comes back next time. -->
-		<v-alert v-if="state.admin?.connection?.fromInternet && !state.admin.connection.restrictedByIp && !exposureDismissed" type="warning" variant="tonal" class="mx-6 mt-4 mb-0" icon="mdi-earth-arrow-right" closable @click:close="dismissExposure">
-			You are reaching this console from the internet<template v-if="state.admin.connection.address"> ({{ state.admin.connection.address }})</template>, and nothing limits who can try. It can be exposed, but we recommend
-			<strong>not exposing it to the internet</strong>: use it locally, over a VPN or an SSH tunnel. If you must expose it, restrict it with <span class="mono">ADMIN_ALLOWED_IPS</span> and HTTPS.
-			<template #append><v-btn variant="text" to="/system">Who can reach it</v-btn></template>
-		</v-alert>
 		<!-- Password expiry: shown on every page from ADMIN_PASSWORD_WARN_DAYS (default 5) days before the password expires.
 		     Once it has expired the router sends the admin to the change-password page instead. -->
 		<v-alert v-if="state.admin?.passwordExpiryWarning && !state.admin.passwordExpired" type="warning" variant="tonal" class="mx-6 mt-4 mb-0" icon="mdi-lock-clock">
@@ -83,22 +76,6 @@ const router = useRouter();
 const {mdAndUp} = useDisplay();
 const drawer = ref(mdAndUp.value);
 const passwordDialog = ref(false);
-const exposureDismissed = ref(false);
-try {
-	exposureDismissed.value = sessionStorage.getItem("admin-exposure-dismissed") === "1";
-} catch {
-	// Storage blocked: the notice simply shows.
-}
-
-/** Hides the exposure notice until the browser session ends. */
-function dismissExposure() {
-	exposureDismissed.value = true;
-	try {
-		sessionStorage.setItem("admin-exposure-dismissed", "1");
-	} catch {
-		// Not remembered: it shows again after a reload.
-	}
-}
 
 const groups = [
 	{title: "", items: [

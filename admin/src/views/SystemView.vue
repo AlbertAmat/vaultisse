@@ -12,31 +12,6 @@
 		</page-header>
 
 		<template v-if="info">
-			<!-- Who can reach this console. The recommendation is the same in every case: keep it off the internet. -->
-			<v-card v-if="info.exposure" class="pa-5 mb-4">
-				<div class="d-flex flex-wrap align-center ga-3 mb-3">
-					<div class="text-subtitle-1 font-weight-medium">Who can reach this console</div>
-					<v-chip v-if="info.exposure.fromInternet && !info.exposure.restrictedByIp" color="warning" variant="flat" size="small" prepend-icon="mdi-earth">Open to the internet</v-chip>
-					<v-chip v-else-if="info.exposure.restrictedByIp" color="success" variant="tonal" size="small" prepend-icon="mdi-filter-check-outline">Limited to {{ info.exposure.allowedCount }} {{ info.exposure.allowedCount === 1 ? "address" : "addresses" }}</v-chip>
-					<v-chip v-else color="success" variant="tonal" size="small" prepend-icon="mdi-lan">Reached locally</v-chip>
-				</div>
-				<p class="text-body-2 mb-3">
-					The console can be exposed to the internet, but <strong>we recommend not exposing it</strong>: open it locally, over a VPN or through an SSH tunnel.
-					Whoever finds the sign-in page will try to attack it, and the less of the world that can reach it the better.
-					If you must expose it, restrict it to known addresses with <span class="mono">ADMIN_ALLOWED_IPS</span>, serve it over HTTPS on its own domain, and keep it behind your proxy.
-				</p>
-				<dl class="facts">
-					<dt>Your connection</dt><dd>{{ info.exposure.fromInternet ? "From the internet" : "From a local or private address" }}<span v-if="info.exposure.yourAddress" class="mono text-medium-emphasis"> · {{ info.exposure.yourAddress }}</span></dd>
-					<dt>Address allowlist</dt><dd>{{ info.exposure.restrictedByIp ? `On: ${info.exposure.allowedCount} ${info.exposure.allowedCount === 1 ? "address" : "addresses"} can reach it` : "Off: any address can reach the sign-in page" }}</dd>
-					<dt>Public address</dt><dd>{{ info.exposure.publicUrl ?? "None set (ADMIN_URL)" }}</dd>
-					<dt>HTTPS</dt><dd>{{ info.exposure.https ? "Yes" : "No (fine on a local network, not over the internet)" }}</dd>
-					<dt>Behind a proxy</dt><dd>{{ info.exposure.trustProxy ? "Yes (TRUST_PROXY): make sure only the proxy can reach the port" : "No" }}</dd>
-				</dl>
-				<v-alert v-if="info.exposure.fromInternet && !info.exposure.restrictedByIp" type="warning" variant="tonal" density="compact" class="mt-3">
-					Right now nothing limits who can try to sign in. Set <span class="mono">ADMIN_ALLOWED_IPS</span> to your own address(es), or move the console behind a VPN.
-				</v-alert>
-			</v-card>
-
 			<!-- Version -->
 			<v-card class="pa-5 mb-4">
 				<div class="d-flex flex-wrap align-center ga-3 mb-3">
