@@ -70,6 +70,8 @@ export interface ISetting {
     isSet: boolean;
     source: SettingSource;
     defaultValue: string | null;
+    /** Whether the key can be tested against its provider (`POST /settings/test-key`). */
+    testable: boolean;
     /** A stored secret that can't be decrypted any more (the encryption key changed): enter it again. */
     unreadable: boolean;
 }

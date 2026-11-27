@@ -20,6 +20,8 @@ export interface SettingDefinition {
     defaultValue?: string;
     /** Smallest allowed value for `number`. */
     min?: number;
+    /** A secret the portal can check against its provider (see ApiKeyTester). */
+    testable?: boolean;
 }
 
 export type SettingGroupId = "email" | "registration" | "sso" | "metadata" | "limits" | "inactivity" | "admin";
@@ -28,7 +30,7 @@ export const SETTING_GROUPS: {id: SettingGroupId; label: string; description: st
     {id: "email", label: "Email (SMTP)", description: "Outgoing mail for verification links and notifications. Leave host and from empty to run without email."},
     {id: "registration", label: "Registration", description: "Who can create an account on this installation."},
     {id: "sso", label: "Single sign-on (OIDC)", description: "Sign in through an identity provider such as Authentik or Keycloak. Issuer, client id, client secret and redirect URI are all required to turn it on."},
-    {id: "metadata", label: "Book metadata", description: "API keys for the ISBN and cover lookups."},
+    {id: "metadata", label: "API keys", description: "Keys for the services that look up book details and covers by ISBN. Each one can be tested before you save it."},
     {id: "limits", label: "Upload limits", description: "Largest files users can upload."},
     {id: "inactivity", label: "Inactive accounts", description: "Permanently deletes accounts nobody has used for a while. Leave the days empty to never delete."},
     {id: "admin", label: "Admin portal", description: "Behaviour of the portal itself."},
@@ -56,8 +58,8 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     {key: "OIDC_PERSONAL_VAULT", group: "sso", label: "Personal vault for new SSO users", description: "Give each new SSO user a library of their own.", type: "boolean", defaultValue: "true"},
     {key: "SSO_ONLY", group: "sso", label: "SSO only", description: "Switch password login and registration off. Ignored unless SSO is fully configured.", type: "boolean", defaultValue: "false"},
 
-    {key: "GOOGLE_BOOKS_API_KEY", group: "metadata", label: "Google Books API key", description: "Optional. Open Library is always tried first.", type: "secret"},
-    {key: "LIBRARYTHING_API_KEY", group: "metadata", label: "LibraryThing dev key", description: "Optional third fallback for covers.", type: "secret"},
+    {key: "GOOGLE_BOOKS_API_KEY", group: "metadata", label: "Google Books API key", description: "Optional extra source of book details. Without it Open Library and the national catalogs are still used. Create one in the Google Cloud console (Books API).", type: "secret", testable: true},
+    {key: "LIBRARYTHING_API_KEY", group: "metadata", label: "LibraryThing dev key", description: "Optional third fallback for covers, used when Google Books and Open Library have none. Free with a LibraryThing account (librarything.com/services/keys.php).", type: "secret", testable: true},
 
     {key: "MAX_EBOOK_FILE_SIZE_MB", group: "limits", label: "Largest ebook file (MB)", description: "EPUB, PDF and Kindle uploads.", type: "number", defaultValue: "10", min: 1},
     {key: "MAX_IMPORT_FILE_SIZE_MB", group: "limits", label: "Largest import file (MB)", description: "Library import CSV/JSON.", type: "number", defaultValue: "10", min: 1},

@@ -56,6 +56,8 @@ export interface AdminApiClient {
         list(): Promise<ISettingGroup[]>;
         update(changes: SettingChanges): Promise<ISettingGroup[]>;
         /** `unsaved`: SMTP_* values typed in the form but not saved yet; a secret left out keeps the saved one. */
+        /** Tries an API key against its provider: the typed value, or the saved one when omitted. */
+        testKey(key: string, value?: string): Promise<{ok: boolean; message: string}>;
         testEmail(to: string, unsaved?: Record<string, string>): Promise<{ok: boolean; error: string | null}>;
     };
     users: {
@@ -172,6 +174,7 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
         settings: {
             list: async () => (await get<{groups: ISettingGroup[]}>("/settings")).groups,
             update: async (changes) => (await put<{groups: ISettingGroup[]}>("/settings", {changes})).groups,
+            testKey: (key, value) => post("/settings/test-key", {key, value}),
             testEmail: (to, unsaved) => post("/settings/test-email", {to, settings: unsaved}),
         },
         users: {

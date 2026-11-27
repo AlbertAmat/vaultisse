@@ -45,9 +45,16 @@ not enforced. The server behaves exactly as before, configured by env vars alone
      ADMIN PORTAL - first start
          username: admin@vaultisse.local
          password: <generated, 20 characters>
-     Sign in at https://adm.example.com
+     The admin portal is listening on port 3001. Open it at:
+         https://adm.example.com   (ADMIN_URL)
+         http://localhost:3001
+         http://192.168.1.20:3001
      CHANGE THIS PASSWORD AFTER THE FIRST LOGIN: you will be asked to.
    ====================================================================
+   ```
+   It lists the port and every address of the machine (and `ADMIN_URL`). In Docker,
+   those IPs are the container's own: from the host use `localhost` and the published port.
+   ```text
    ```
 4. Open the portal and sign in with it. Set up two-factor authentication (mandatory,
    save the backup codes it shows once), then the console **makes you choose your
@@ -126,7 +133,7 @@ and a test checks that a book title never appears in the admin API's output.
 | Email (SMTP) | host, port, TLS options, user, password, sender; "send a test email" |
 | Registration | allow registration, require admin approval |
 | Single sign-on | issuer, client id/secret, redirect URI, scopes, groups claim, SSO only |
-| Book metadata | Google Books and LibraryThing keys |
+| API keys | Google Books and LibraryThing keys, each with a **Test key** button that makes one real request to the provider (with the key typed in the field, or the saved one) and says whether it was accepted, refused, out of quota, or unreachable |
 | Upload limits | ebook and import file size |
 | Inactive accounts | delete after N days, warn M days before |
 | Admin portal | deletion grace period |

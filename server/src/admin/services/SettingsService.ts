@@ -32,6 +32,8 @@ export interface SettingView {
     source: SettingSource;
     /** The value used when nothing else is set. */
     defaultValue: string | null;
+    /** Whether the key can be tested against its provider. */
+    testable: boolean;
     /** A stored secret that could not be decrypted (the encryption key changed): enter it again. */
     unreadable: boolean;
 }
@@ -155,6 +157,7 @@ export class SettingsService {
             isSet: value !== undefined && value !== "",
             source,
             defaultValue: secret ? null : (definition.defaultValue ?? null),
+            testable: definition.testable === true,
             unreadable: this.unreadable.has(definition.key),
         };
     }

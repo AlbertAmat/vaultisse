@@ -13,6 +13,7 @@ import {handle} from "../http";
 import {requireFreshAuth, requireSuperadmin} from "../middleware";
 import {AdminAuditService} from "../services/AdminAuditService";
 import {MailService} from "../../services/MailService";
+import {ApiKeyTester} from "../services/ApiKeyTester";
 import {findSetting} from "../services/settingsCatalog";
 
 /**
@@ -45,6 +46,23 @@ export function settingsRoutes(audit: AdminAuditService): Router {
         // Names only, never values: secrets must not end up in the audit trail.
         await audit.record(req, "settings.update", {entityType: "settings", metadata: {keys}});
         res.json({groups: appService.getSettings().describe()});
+    }));
+
+    // Checks an API key against its provider: the typed value, or the saved one when none is given.
+    router.post("/settings/test-key", requireSuperadmin, handle(async (req, res) => {
+        const key = typeof req.body?.key === "string" ? req.body.key : "";
+        if (!ApiKeyTester.supports(key)) {
+            throw new ValidationError("That setting can't be tested.");
+        }
+        const typed = typeof req.body?.value === "string" ? req.body.value.trim() : "";
+        const value = typed || (appService.getSettings().get(key) ?? "").trim();
+        if (!value) {
+            throw new ValidationError("Enter a key first.");
+        }
+        const result = await ApiKeyTester.test(key, value);
+        // The key itself is never audited or logged, only which one was tried and the outcome.
+        await audit.record(req, "settings.test_key", {entityType: "settings", entityLabel: key, metadata: {ok: result.ok, unsaved: !!typed}});
+        res.json(result);
     }));
 
     router.post("/settings/test-email", requireSuperadmin, handle(async (req, res) => {

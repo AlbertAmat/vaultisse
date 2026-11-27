@@ -57,6 +57,17 @@
 									:disabled="!canWrite()"
 								/>
 								<v-btn
+									v-if="item.testable && canWrite()"
+									variant="tonal"
+									class="mt-1"
+									prepend-icon="mdi-check-network-outline"
+									:loading="keyTesting === item.key"
+									:disabled="!secrets[item.key] && !item.isSet"
+									@click="testKey(item.key)"
+								>
+									Test key
+								</v-btn>
+								<v-btn
 									v-if="canWrite() && item.source === 'database'"
 									variant="text"
 									size="small"
@@ -67,6 +78,9 @@
 									Use env
 								</v-btn>
 							</div>
+							<v-alert v-if="keyResults[item.key]" :type="keyResults[item.key].ok ? 'success' : 'error'" variant="tonal" density="compact" class="mt-2" closable @click:close="delete keyResults[item.key]">
+								{{ keyResults[item.key].message }}
+							</v-alert>
 							<p v-if="item.description" class="text-caption text-medium-emphasis mt-1">{{ item.description }}</p>
 						</div>
 
@@ -130,6 +144,8 @@ const resets = reactive(new Set<string>());
 const saving = ref(false);
 const testTo = ref("");
 const testing = ref(false);
+const keyTesting = ref("");
+const keyResults = reactive<Record<string, { ok: boolean; message: string }>>({});
 const testResult = ref<{ ok: boolean; error: string | null } | null>(null);
 
 const sourceLabel = (source: SettingSource) => ({database: "Set here", env: "From env var", default: "Default"}[source]);
@@ -188,6 +204,17 @@ async function save(group: ISettingGroup) {
 		notify("Saved and applied.");
 	} finally {
 		saving.value = false;
+	}
+}
+
+/** Tries the key typed in the field, or the saved one when the field is empty. */
+async function testKey(key: string) {
+	keyTesting.value = key;
+	delete keyResults[key];
+	try {
+		keyResults[key] = await api.settings.testKey(key, secrets[key] || undefined);
+	} finally {
+		keyTesting.value = "";
 	}
 }
 

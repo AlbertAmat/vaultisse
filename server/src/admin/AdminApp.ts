@@ -8,6 +8,7 @@
  */
 import fs from "fs";
 import http, {Server} from "http";
+import os from "os";
 import path from "path";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
@@ -175,8 +176,9 @@ export class AdminApp {
     public async ensureFirstAdmin(port: number): Promise<{email: string; password: string} | null> {
         const created = await this.auth.bootstrapFirstAdmin();
         if (created) {
-            const where = this.config.url ?? `http://localhost:${port}`;
             const line = "=".repeat(68);
+            const addresses = AdminApp.reachableAddresses(port, this.config.url);
+            const docker = fs.existsSync("/.dockerenv");
             console.log([
                 "",
                 line,
@@ -187,7 +189,16 @@ export class AdminApp {
                 `      username: ${created.email}`,
                 `      password: ${created.password}`,
                 "",
-                `  Sign in at ${where}`,
+                `  The admin portal is listening on port ${port}. Open it at:`,
+                "",
+                ...addresses.map((address) => `      ${address}`),
+                ...(docker ? [
+                    "",
+                    "  (Running in Docker: use the host's address with the PUBLISHED port. The compose",
+                    `   file publishes ${port} on 127.0.0.1 only, so from another machine use a reverse`,
+                    "   proxy, an SSH tunnel, or change the published address.)",
+                ] : []),
+                "",
                 "  CHANGE THIS PASSWORD AFTER THE FIRST LOGIN: you will be asked to.",
                 "  It is shown only this once. If you lose it, run:",
                 "    node index.js admin:reset --email " + created.email,
@@ -197,6 +208,29 @@ export class AdminApp {
             this.logger.warn("Admin portal: the first administrator was created; its generated password was printed to the container output.");
         }
         return created;
+    }
+
+    /**
+     * @param port Port the portal listens on.
+     * @param publicUrl ADMIN_URL, if set.
+     * @returns Addresses to open it at: the public URL, localhost, and every IPv4 address of this machine.
+     */
+    public static reachableAddresses(port: number, publicUrl: string | null): string[] {
+        const addresses: string[] = [];
+        if (publicUrl) {
+            addresses.push(`${publicUrl}   (ADMIN_URL)`);
+        }
+        if (publicUrl !== `http://localhost:${port}`) {
+            addresses.push(`http://localhost:${port}`);
+        }
+        for (const list of Object.values(os.networkInterfaces())) {
+            for (const entry of list ?? []) {
+                if (entry.family === "IPv4" && !entry.internal) {
+                    addresses.push(`http://${entry.address}:${port}`);
+                }
+            }
+        }
+        return addresses;
     }
 
     /** Hourly housekeeping: carry out deletions whose grace period is over, drop old events and sessions. */

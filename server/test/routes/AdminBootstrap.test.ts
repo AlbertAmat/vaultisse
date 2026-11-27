@@ -47,6 +47,16 @@ describe("first admin", () => {
         expect(output.toLowerCase()).toContain("change this password");
     });
 
+    it("says which port it listens on and every address to open it at", () => {
+        expect(output).toContain("listening on port 3001");
+        expect(output).toContain("http://localhost:3001");
+        const {AdminApp} = require("../../src/admin/AdminApp");
+        const addresses: string[] = AdminApp.reachableAddresses(3001, "https://adm.example.com");
+        expect(addresses[0]).toBe("https://adm.example.com   (ADMIN_URL)");
+        expect(addresses[1]).toBe("http://localhost:3001");
+        addresses.slice(2).forEach((address) => expect(address).toMatch(/^http:\/\/\d+\.\d+\.\d+\.\d+:3001$/));
+    });
+
     it("generates a different strong password each time that satisfies the admin password rules", async () => {
         expect(created.password).toHaveLength(20);
         const {validateAdminPassword} = await import("../../src/admin/services/AdminAuthService");
