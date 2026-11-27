@@ -29,7 +29,7 @@
 									:model-value="form[item.key] === 'true'"
 									color="primary"
 									hide-details
-									density="comfortable"
+									density="compact"
 									:disabled="!canWrite()"
 									:label="form[item.key] === 'true' ? 'On' : 'Off'"
 									@update:model-value="form[item.key] = $event ? 'true' : 'false'"
@@ -48,6 +48,7 @@
 									autocomplete="new-password"
 									:placeholder="item.isSet ? '•••••••• (set, type to replace)' : 'Not set'"
 									:disabled="!canWrite()"
+									style="max-width: 440px"
 								/>
 								<v-text-field
 									v-else
@@ -55,6 +56,7 @@
 									:type="item.type === 'number' ? 'number' : 'text'"
 									:placeholder="item.defaultValue ?? ''"
 									:disabled="!canWrite()"
+									:style="{maxWidth: item.type === 'number' ? '180px' : '440px'}"
 								/>
 								<v-btn
 									v-if="item.testable && canWrite()"
@@ -285,7 +287,7 @@ onMounted(async () => {
 
 <style scoped>
 .setting {
-	margin-bottom: 22px;
+	margin-bottom: 18px;
 	max-width: 760px;
 }
 </style>

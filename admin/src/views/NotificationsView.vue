@@ -18,7 +18,7 @@
 					:model-value="form[item.key] === 'true'"
 					color="primary"
 					hide-details
-					density="comfortable"
+					density="compact"
 					:disabled="!canWrite()"
 					@update:model-value="form[item.key] = $event ? 'true' : 'false'"
 				>

@@ -53,10 +53,10 @@
 				<div v-else-if="step === 2">
 					<div class="text-h6 font-weight-bold mb-1 pb-display">Who can sign up</div>
 					<p class="text-body-2 text-medium-emphasis mb-4">Controls the "Register" page of the app.</p>
-					<v-switch v-model="flags.REGISTRATION_ENABLED" color="primary" hide-details density="comfortable">
+					<v-switch v-model="flags.REGISTRATION_ENABLED" color="primary" hide-details density="compact">
 						<template #label><div><div class="font-weight-medium">Allow people to register</div><div class="text-caption text-medium-emphasis">Turn off once everyone who needs an account has one.</div></div></template>
 					</v-switch>
-					<v-switch v-model="flags.REGISTRATION_REQUIRES_APPROVAL" color="primary" hide-details density="comfortable" :disabled="!flags.REGISTRATION_ENABLED">
+					<v-switch v-model="flags.REGISTRATION_REQUIRES_APPROVAL" color="primary" hide-details density="compact" :disabled="!flags.REGISTRATION_ENABLED">
 						<template #label><div><div class="font-weight-medium">Approve new accounts myself</div><div class="text-caption text-medium-emphasis">New accounts stay locked until you approve them under Accounts. Recommended if the app is on the internet.</div></div></template>
 					</v-switch>
 					<p class="text-caption text-medium-emphasis mt-4">Single sign-on (Authentik, Keycloak...) is set up under Settings, since it needs details from your identity provider.</p>
@@ -81,11 +81,11 @@
 					<div class="text-h6 font-weight-bold mb-1 pb-display">Be told when something needs you</div>
 					<p class="text-body-2 text-medium-emphasis mb-3">Emails to your sign-in address (<strong>{{ state.admin?.email }}</strong>). They are sent only when email works.</p>
 					<v-alert v-if="!mailReady" type="warning" variant="tonal" density="compact" class="mb-3">Email isn't set up yet, so nothing can be sent. Go back to the email step, or do it later.</v-alert>
-					<v-switch v-model="subscribed" color="primary" hide-details density="comfortable">
+					<v-switch v-model="subscribed" color="primary" hide-details density="compact">
 						<template #label><div class="font-weight-medium">Send me admin notifications</div></template>
 					</v-switch>
 					<v-divider class="my-2"/>
-					<v-switch v-for="event in events" :key="event.key" v-model="flags[event.key]" color="primary" hide-details density="comfortable" :disabled="!subscribed">
+					<v-switch v-for="event in events" :key="event.key" v-model="flags[event.key]" color="primary" hide-details density="compact" :disabled="!subscribed">
 						<template #label><div><div class="font-weight-medium">{{ event.label }}</div><div class="text-caption text-medium-emphasis">{{ event.help }}</div></div></template>
 					</v-switch>
 				</div>

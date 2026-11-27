@@ -46,8 +46,11 @@ export default createVuetify({
     defaults: {
         VCard: {rounded: "lg"},
         VBtn: {rounded: "lg"},
-        VTextField: {rounded: "lg", density: "comfortable", hideDetails: "auto"},
-        VSelect: {rounded: "lg", density: "comfortable", hideDetails: "auto"},
-        VTextarea: {rounded: "lg", hideDetails: "auto"},
+        // Outlined, compact inputs everywhere (about 40px tall).
+        VTextField: {variant: "outlined", density: "compact", rounded: "lg", hideDetails: "auto"},
+        VSelect: {variant: "outlined", density: "compact", rounded: "lg", hideDetails: "auto"},
+        VTextarea: {variant: "outlined", density: "compact", rounded: "lg", hideDetails: "auto"},
+        VSwitch: {density: "compact"},
+        VCheckbox: {density: "compact"},
     },
 });
