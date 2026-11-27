@@ -2,9 +2,9 @@
 	<div>
 		<v-card>
 			<div class="d-flex flex-wrap align-center ga-3 pa-4 pb-0">
-				<v-btn-toggle v-model="kind" mandatory density="compact" variant="outlined" color="primary" divided @update:model-value="load">
-					<v-btn v-for="k in kinds" :key="k.value" :value="k.value">{{ k.plural }}</v-btn>
-				</v-btn-toggle>
+				<v-chip-group v-model="kind" mandatory selected-class="text-primary" @update:model-value="load">
+					<v-chip v-for="k in kinds" :key="k.value" :value="k.value" variant="text" filter>{{ k.plural }}</v-chip>
+				</v-chip-group>
 				<v-spacer/>
 				<v-btn v-if="canWrite()" color="primary" variant="flat" prepend-icon="mdi-plus" @click="edit(null)">Add {{ current.single }}</v-btn>
 			</div>
