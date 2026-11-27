@@ -20,7 +20,24 @@ subtitles in four languages and a cover image, and **uploads it to the owner's Y
 | **Subtitles** | **English, Spanish, Catalan and German**, each as a subtitle file *and* a plain transcript. |
 | **Cover** | A 1280x720 image for YouTube. |
 
-Keep one idea per video, 3 to 10 minutes of main content. If a topic needs more, split it into a series.
+### The length rule: 3 minutes at most
+
+**Every video is at most 3 minutes long, in total** (intro and outro included). This is a hard limit, not a target.
+
+- A video is **a small chapter that explains one precise thing**, never a long tutorial. People search YouTube or Google for one precise
+  question ("how to set up email in Vaultisse", "how to block an address in the admin panel") and must find a short video that answers exactly that, fast.
+- Budget: intro about 20 to 30 s, **main content about 2 minutes**, outro 5 s. That is about **300 spoken words in all**, no more.
+- If a topic does not fit in 3 minutes, **do not squeeze it and do not make it longer: split it into several videos** (a series, one precise thing each,
+  linked in a playlist and in each description). Example: *"Set up the admin panel"* becomes *Start it*, *First sign-in and two-factor*, *Use the setup guide*, *Set up email*.
+- One video, one question, one answer. No detours, no "by the way", no feature tours. If the title does not name the thing the video does, the video is too broad.
+
+### Made to be found
+
+The title, the first words of the narration, the description and the tags are written for **search**, so someone who types the question finds this video:
+
+- The title says the exact task in the words people type, as a short phrase (see section 4): `𝗦𝗲𝘁𝘂𝗽: How to set up email (SMTP) in Vaultisse — v1.4.0`.
+- The key phrase appears in the title, in the first sentence of the description, in the first sentence spoken, in a tag, and in the file names of the transcript.
+- One video answers one query. Do not mix two topics in one title.
 
 ## 2. Where everything goes (outside the repository)
 
@@ -103,10 +120,12 @@ Playlist: Setup            <- from the playlist map in config.env, if any
    YouTube titles cannot be formatted, so the bold is made with Unicode bold letters (𝗦𝗲𝘁𝘂𝗽 = Mathematical Sans-Serif Bold, U+1D5D4 to U+1D5ED
    for A-Z and U+1D5EE to U+1D607 for a-z; digits U+1D7EC to U+1D7F5). Convert the topic word(s) only, not the whole title.
 2. It **ends with the version**: ` — v<version>`.
-3. At most 100 characters **counted as YouTube counts them** (the bold letters are two UTF-16 units each; keep a margin). Shorten the
+3. After the bold topic comes **the question or task in plain words, the way people search for it** ("How to ...", "Set up ...", "Fix ...", "What is ..."),
+   with the product name `Vaultisse` in it, and the main keyword as early as possible. Precise beats clever: no puns, no vague titles.
+4. At most 100 characters **counted as YouTube counts them** (the bold letters are two UTF-16 units each; keep a margin). Shorten the
    sentence, never the version.
-4. Topics to use as the bold start: `Setup`, `Admin panel`, `Security`, `Compliance`, `Accounts`, `Library`, `Loans`, `What's new`, `Tutorial`.
-5. Write the localized titles the same way, in their language, with the same bold topic and the same version.
+5. Topics to use as the bold start: `Setup`, `Admin panel`, `Security`, `Compliance`, `Accounts`, `Library`, `Loans`, `What's new`, `Tutorial`.
+6. Write the localized titles the same way, in their language, **using the words people search for in that language** (not a literal translation), with the same bold topic and the same version.
 
 **Description template** (English; keep the same shape in the other languages)
 
@@ -126,9 +145,10 @@ Version shown: v<version>
 #vaultisse #selfhosted #opensource
 ```
 
-- The first two lines are what people see before "more": make them count, no links before them.
-- Chapters: the first must be `0:00`, at least three, each at least 10 seconds, in order. They come from the real timestamps of the finished video.
-- Tags: 8 to 15, the whole list under 500 characters, most specific first. Always include `vaultisse`.
+- The first two lines are what people see before "more": say exactly what the video shows, with the search phrase in the first sentence, no links before them.
+- Chapters: the first must be `0:00`, at least three, each at least 10 seconds, in order (a 3-minute video usually has 3 to 5). They come from the real timestamps of the finished video.
+- Tags: 8 to 15, the whole list under 500 characters, most specific first: the exact search phrase and its variants ("vaultisse smtp setup", "vaultisse email"), then the topic, then `vaultisse`. Always include `vaultisse`.
+- If the video belongs to a series, the description lists the other parts with their links (add them as they are uploaded).
 - Never put secrets, real names, real addresses or private URLs anywhere in the texts.
 
 ## 5. The episode script (`tools/video/episodes/<slug>.json`)
@@ -158,7 +178,7 @@ One file per video, the single source of truth. It is what lets the video be reb
 }
 ```
 
-- **Narration** is written once in English and translated, not machine-literal: natural, short sentences, about 150 words per minute.
+- **Narration** is written once in English and translated, not machine-literal: natural, short sentences, about 150 words per minute, **about 300 words for the whole video** (the 3-minute limit leaves no room for more). Cut every sentence that is not needed to answer the one question.
   Read every line aloud in your head; if it is awkward to say, rewrite it.
 - **Actions** are what the browser does: `goto`, `click`, `type`, `select`, `scroll`, `highlight` (a soft ring around an element), `zoom`
   (a smooth zoom on a region), `pause` (seconds). Every action waits for the page to settle. Human pacing: a typed character every 40 to 70 ms,
@@ -198,14 +218,14 @@ Generate every visual from HTML rendered with Playwright (already installed with
 **Brand**: logo from `admin/src/components/BrandMark.vue`, fonts Fraunces (titles) and Inter (text), colours from
 `admin/src/plugins/vuetify.ts`: beige `#f7f2ea`, copper `#c97b3d`, dark brown `#2f2a22`, dark-blue theme `#0d1420` / `#1c7ff1`.
 
-**Intro (about 30 seconds, 3 to 5 slides, 1920x1080)**
+**Intro (20 to 30 seconds, 3 to 4 slides, 1920x1080; the whole video stays within 3 minutes)**
 
 1. Title slide (4 to 5 s): a nice image as the background (a soft gradient with a large blurred screenshot of the app, or a tidy bookshelf-style
    illustration drawn in HTML/CSS), the logo, the **topic in large type**, the title, `v<version>`.
-2. "In this video" (about 10 s): the 3 to 5 bullets from the script, appearing one by one.
+2. "In this video" (about 8 s): the 2 to 4 bullets from the script, appearing one by one.
 3. "Before you start" (optional, about 6 s): what is needed (Docker, a domain, the `.env` file ...).
 4. A last slide that dissolves into the app (about 3 s).
-Narration of the introduction (`intro.narration`) is spoken over the slides, about 70 to 80 words. Crossfades of 0.4 s between slides. Subtle motion (a slow zoom) so it does not feel frozen.
+Narration of the introduction (`intro.narration`) is spoken over the slides, about 50 to 70 words, and tells the viewer in one sentence the exact thing they will be able to do at the end. Crossfades of 0.4 s between slides. Subtle motion (a slow zoom) so it does not feel frozen.
 
 **Main video: a desktop application look**
 
@@ -243,7 +263,7 @@ Do the steps in order and keep going without asking, unless something is unclear
 1. **Understand the request.** Topic, audience (setup, management, end user, promo, release), version. If it is a release video, read the release notes (the GitHub release, or `git log <previous tag>..HEAD`) and the matching sections of `docs/`, and
    make one step per feature that matters to a user; never claim something the app does not do. Verify every claim against the running app or the docs.
 2. **Check the setup.** `config.env` exists, `ffmpeg` and Playwright's Chromium work, the output directory is writable, the YouTube client file exists. Report what is missing and stop if the upload cannot work (the owner can still get the files).
-3. **Write or update `tools/video/episodes/<slug>.json`** (section 5). Show the owner a **short outline** (title, the steps, the length) in the reply, then continue without waiting.
+3. **Write or update `tools/video/episodes/<slug>.json`** (section 5). **Check the length first**: if the outline will not fit in 3 minutes, split the topic into a series and make the first part (say so in the reply and list the other parts). Show the owner a **short outline** (title, the steps, the estimated length) in the reply, then continue without waiting.
 4. **Prepare the demo installation** (section 8).
 5. **Record** each step. Re-run a step that stumbled (a slow load, a misclick). Keep the raw recording in `work/`.
 6. **Make the intro, outro and cover** (section 7).
@@ -256,7 +276,9 @@ Do the steps in order and keep going without asking, unless something is unclear
 
 ## 10. Checks before the upload
 
+- **Duration: 180 seconds or less. Over that, the video fails the check: cut or split it, never upload it.**
 - `ffprobe`: 1920x1080, 30 fps, H.264 + AAC, the duration within 10% of the sum of the step durations; audio present and not silent; no clipping.
+- The title and the first sentence of the description contain the exact phrase the video answers.
 - The first frame is the intro and the last frame is the outro; no black frames longer than 0.3 s; no frozen section longer than 3 s outside the intro.
 - Subtitles: valid SRT, no cue shorter than 1 s or longer than 7 s, no overlap, the last cue ends before the video does; four files; the same number of cues in each.
 - Title: starts with the bold topic and a colon, ends with ` — v<version>`, within YouTube's length. Description under 5,000 characters. Tags under 500.
@@ -294,13 +316,15 @@ Rules:
 
 ## 12. Kinds of videos and what to put in them
 
+Every row below is **several short videos of up to 3 minutes**, one precise thing each, never one long video.
+
 | Kind | Examples | Notes |
 |---|---|---|
-| **Setup** | Install with Docker; the `.env` file; first start of the admin panel; email; single sign-on; behind a reverse proxy; upgrading | Show commands in a terminal-looking window; say the admin panel should stay off the internet (see [`docs/ADMIN.md`](../../docs/ADMIN.md)). |
-| **Management** | Accounts and vaults; plans; security and the login history; compliance and GDPR requests; retention; webhooks; jobs | One video per area of the admin panel; follow the order of its menu. |
+| **Setup** | One video each: install with Docker; fill the `.env` file; start the admin panel; first sign-in and two-factor; set up email; set up single sign-on; upgrade to a new version | Show commands in a terminal-looking window; say the admin panel should stay off the internet (see [`docs/ADMIN.md`](../../docs/ADMIN.md)). |
+| **Management** | One video each: approve a new account; merge two accounts; clear a vault; block an address; read the admin sign-in history; answer a GDPR request; set data retention; add a webhook | One precise task per video, named as people ask it. |
 | **End user** | Add a book by ISBN; organise with categories and locations; lend and return; print labels and library cards; import | Use the app itself, not the admin panel. |
 | **Promo** | A 60 to 90 second trailer | No narration walk-through: short on-screen lines, music from `VIDEO_MUSIC_DIR`, the best five moments of the app, a clear call to action. |
-| **Release** | "What's new in v1.4.0" | One slide per highlight, then the real feature in the app; list the upgrade note ("upgrading is `docker compose pull && docker compose up -d`"); link the release notes. |
+| **Release** | "What's new in v1.4.0" | At most 4 highlights, one slide and about 20 seconds each; the upgrade note in the last seconds ("upgrading is `docker compose pull && docker compose up -d`"); link the release notes. A release with more highlights gets one short video per big feature, plus this overview. |
 
 ## 13. What not to do
 
