@@ -22,6 +22,15 @@ export interface IAdminSelf {
     passwordDaysLeft: number | null;
     /** Inside the reminder window: the console shows a notice. */
     passwordExpiryWarning: boolean;
+    /** How this admin is reaching the console right now. */
+    connection: {
+        /** The request comes from a public internet address (not a private, local or VPN-style one). */
+        fromInternet: boolean;
+        address: string | null;
+        /** ADMIN_ALLOWED_IPS is set: only listed addresses can reach the console at all. */
+        restrictedByIp: boolean;
+        https: boolean;
+    };
 }
 
 export interface IAdminUser {
@@ -402,6 +411,19 @@ export interface ISystemDetails {
     database: IDatabaseInfo;
     migrations: {items: IMigration[]; total: number};
     runtime: {node: string; platform: string; arch: string; hostname: string; uptimeSeconds: number; memoryMb: number; environment: string; inDocker: boolean};
+    /** Who can reach the console, as far as the server can tell from inside. */
+    exposure: {
+        restrictedByIp: boolean;
+        /** How many addresses ADMIN_ALLOWED_IPS lists (the addresses themselves are not shown). */
+        allowedCount: number;
+        /** ADMIN_URL, when the console has a public address of its own. */
+        publicUrl: string | null;
+        https: boolean;
+        trustProxy: boolean;
+        /** This request came from a public internet address. */
+        fromInternet: boolean;
+        yourAddress: string | null;
+    };
 }
 
 // --- Notifications ----------------------------------------------------------------------------------

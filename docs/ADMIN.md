@@ -8,6 +8,12 @@ whoever uses it. It exists for two situations:
 - You host Vaultisse for other people (SaaS-style): many independent accounts, which
   you must be able to look after **without being able to read their libraries**.
 
+> **Where to run it.** The console *can* be exposed to the internet, but **we recommend not exposing it**: open it locally, over a VPN or through an SSH tunnel
+> (`ssh -L 3001:127.0.0.1:3001 your-server`, then `http://localhost:3001`). Whoever finds a sign-in page will try to attack it, so the fewer people who can
+> reach it the better. The compose file already publishes the port on `127.0.0.1` only. If you must expose it, restrict it to known addresses with
+> `ADMIN_ALLOWED_IPS`, serve it over HTTPS on its own domain and keep it behind your proxy ([Securing it](#securing-it)).
+> The console reminds you: the login page says so, a notice appears when you connect from the internet with no address limit, and *System > Who can reach this console* shows the facts.
+
 It is **off by default**. With `ADMIN_ENABLED` unset or `false`, nothing of it runs:
 no extra port, no admin routes, database-stored settings are ignored and plans are
 not enforced. The server behaves exactly as before, configured by env vars alone.

@@ -363,8 +363,9 @@ ADMIN_URL=http://localhost:3001         # the address the panel is opened at
 
 <p align="center"><img src="docs/images/admin/04-setup-guide.png" alt="The admin panel's setup guide" width="70%"></p>
 
-Behind a reverse proxy, give the panel its own domain (for example `adm.example.com`) pointing at the admin port,
-and set `TRUST_PROXY=true`. Everything the panel can do is described in **[docs/ADMIN.md](docs/ADMIN.md)**.
+The panel is published on `127.0.0.1` only. To reach it from elsewhere, prefer a VPN or an SSH tunnel (`ssh -L 3001:127.0.0.1:3001 your-server`).
+If you do put it behind a reverse proxy, give it its own domain (for example `adm.example.com`) pointing at the admin port, set
+`TRUST_PROXY=true`, and limit it with `ADMIN_ALLOWED_IPS`. Everything the panel can do is described in **[docs/ADMIN.md](docs/ADMIN.md)**.
 
 ### Option 2: environment variables
 
@@ -414,6 +415,9 @@ is built so an admin **never sees what is inside someone's library**.
   <img src="docs/images/admin/05-overview.png" alt="Admin panel overview" width="48%">
   <img src="docs/images/admin/18-compliance.png" alt="Admin panel compliance page" width="48%">
 </p>
+
+> **Keep it private.** The panel can be exposed to the internet, but we recommend **not exposing it**: open it locally, over a VPN or through an
+> SSH tunnel. If you must expose it, limit it with `ADMIN_ALLOWED_IPS` and serve it over HTTPS (see [Securing it](docs/ADMIN.md#securing-it)).
 
 What it covers: configuration without env vars (with test buttons), accounts and vaults (bulk actions, merge two accounts,
 change an email, transfer or clear a vault), plans and quotas, announcements and a read-only maintenance mode, emailing the
