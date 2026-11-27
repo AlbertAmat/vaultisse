@@ -7,7 +7,9 @@ export const ADMIN_PENDING_COOKIE = "admin_pending";
 
 /** Strict SameSite: the portal is a separate site, nothing legitimate navigates into it carrying the cookie. */
 function baseCookie(): CookieOptions {
-    return {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", path: "/"};
+    // Secure in production, and also whenever ADMIN_URL says the console is on HTTPS (even in a non-production run).
+    const secure = process.env.NODE_ENV === "production" || (process.env.ADMIN_URL ?? "").startsWith("https://");
+    return {httpOnly: true, secure, sameSite: "strict", path: "/"};
 }
 
 /**

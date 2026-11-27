@@ -186,6 +186,18 @@ export class AdminApp {
             },
         }));
 
+        // Nothing the console shows (accounts, logs, exports) may be kept by a browser or a proxy cache, and the console
+        // never needs the camera, microphone, location or payment APIs.
+        app.use((_req, res, next) => {
+            res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
+            next();
+        });
+        app.use("/api/admin", (_req, res, next) => {
+            res.setHeader("Cache-Control", "no-store, max-age=0");
+            res.setHeader("Pragma", "no-cache");
+            next();
+        });
+
         app.use(rateLimit({windowMs: 10 * 60 * 1000, max: 1500, handler: rateLimited("admin-global")}));
         if (this.config.url) {
             app.use(cors({origin: this.config.url, credentials: true}));

@@ -2,7 +2,7 @@
  * Logs (mounted at `/api/admin/logs`).
  *
  *  GET /activity   sign-in activity of the regular users (`activity_log`)  ?action=&actorId=&ip=&page=
- *  GET /server     tail of the server log file  ?lines=&level=info|warn|error&q=
+ *  GET /server     tail of the server log file (superadmins only: it can hold names, addresses and stack traces)  ?lines=&level=info|warn|error&q=
  *  GET /mail       emails sent to users (recipient, subject, delivery result; never the body)  ?status=sent|failed&q=&page=
  *  GET /audit      what the admins did (`admin_audit_log`)  ?action=&adminId=&entityType=&page=
  *
@@ -14,6 +14,7 @@ import {Pool} from "pg";
 import {ValidationError} from "../../errors/DomainError";
 import {appService} from "../../AppService";
 import {handle, paging, text} from "../http";
+import {requireSuperadmin} from "../middleware";
 import {MailLogRepository} from "../repositories/MailLogRepository";
 import {PlatformRepository} from "../repositories/PlatformRepository";
 import {AdminAuditService} from "../services/AdminAuditService";
@@ -62,7 +63,7 @@ export function logsRoutes(pool: Pool, audit: AdminAuditService): Router {
         res.json({items: rows, total, page, pageSize});
     }));
 
-    router.get("/server", handle(async (req, res) => {
+    router.get("/server", requireSuperadmin, handle(async (req, res) => {
         const lines = Math.min(1000, Math.max(10, Math.floor(Number(req.query.lines)) || 200));
         const level = text(req.query.level)?.toUpperCase();
         if (level && !["INFO", "WARN", "ERROR", "DEBUG"].includes(level)) {

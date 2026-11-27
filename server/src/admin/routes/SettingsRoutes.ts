@@ -29,12 +29,13 @@ export function settingsRoutes(audit: AdminAuditService): Router {
     }));
 
     router.put("/settings", requireSuperadmin, (req, res, next) => {
-        // Touching a secret or the single sign-on setup needs a fresh verification: that is how an
-        // attacker with a stolen session would redirect logins or read mail.
+        // Touching a secret, the mail server or the single sign-on setup needs a fresh verification: that is how an
+        // attacker with a stolen session would redirect logins or read mail (SMTP_HOST pointed at their own server
+        // receives every verification link and the emailed reset code, without ever knowing the password).
         const changes = req.body?.changes;
         const sensitive = changes && typeof changes === "object" && Object.keys(changes).some((key) => {
             const definition = findSetting(key);
-            return definition?.type === "secret" || key.startsWith("OIDC_") || key === "SSO_ONLY";
+            return definition?.type === "secret" || key.startsWith("OIDC_") || key.startsWith("SMTP_") || key === "SSO_ONLY";
         });
         return sensitive ? requireFreshAuth(req, res, next) : next();
     }, handle(async (req: Request, res) => {

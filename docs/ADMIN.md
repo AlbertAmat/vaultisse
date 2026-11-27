@@ -761,6 +761,39 @@ That sets a new password and removes two-factor; you enrol again at next sign-in
 - `TRUST_PROXY=true` behind a proxy (and only then), or every client looks like the
   proxy to the rate limiter and the blocklist.
 - Keep the number of superadmins small; give everyone else `readonly`.
+- `TRUST_PROXY=true` is only safe when the admin port can be reached **only** through your proxy: otherwise anyone can
+  send their own `X-Forwarded-For` and walk past the IP allowlist and the automatic blocking.
+
+### What protects it (and what does not)
+
+Built in, and covered by tests (`server/test/routes/AdminSecurity.test.ts`):
+
+- **Sign-in:** password (bcrypt) plus a mandatory authenticator code; a wrong password and an unknown email give the same answer in the same time;
+  5 failures lock the account for 15 minutes; a login rate limit per address; a generated first password that must be changed at once;
+  one-use backup codes that are stored hashed; a code can't be replayed.
+- **Sessions:** a signed token (HS256 only, its own key and audience, so a user's token is useless here) in an `HttpOnly`, `SameSite=Strict` cookie, `Secure`
+  in production or whenever `ADMIN_URL` is HTTPS; 30 minutes idle, 12 hours at most; revocable one by one or all at once; a password change ends the others.
+- **Requests:** every route needs a session (a test calls about 55 endpoints signed out and expects 401 from each); changes need a superadmin; a change from another origin, or one
+  that isn't JSON, is refused (CSRF); the strict content security policy forbids inline scripts and framing; answers are never cached
+  (`Cache-Control: no-store`); errors never show internals.
+- **Dangerous actions** (delete, merge, clear a vault, change an email, export personal data, run a deleting job, change a secret, the mail server or single sign-on,
+  create or change an admin) ask for the password and a code again; the confirmation is good for 5 minutes.
+- **Data:** SQL always uses parameters; no page renders HTML from data (the only rich text is escaped by Vue, popups on the map are built from text nodes); CSV exports
+  neutralise spreadsheet formulas; secrets are stored encrypted (AES-256-GCM) and never sent back to the browser; the audit trail can't be edited.
+- **Outgoing calls:** a webhook can only reach its own service (Slack, Discord, Telegram) or a **public** HTTPS address. The address is checked when the
+  connection is made, not only before, so a host that changes its DNS answer (DNS rebinding), a redirect or an address like `169.254.169.254` can't turn the
+  portal into a way to reach your internal network.
+- **Network:** the admin port is its own listener, published on `127.0.0.1` only by the compose file; optional IP allowlist; blocked addresses are refused before anything else.
+
+Known limits, so you can decide whether they matter to you:
+
+- A **superadmin** is trusted: they can point the SMTP server and the single-sign-on issuer at any address (so the portal can be made to connect to one, though a stolen
+  session needs a fresh password and code to do it). Keep superadmins few.
+- Locking an account after failed sign-ins means someone who knows an admin's email can lock that admin out for 15 minutes. The IP allowlist and your proxy are the
+  answer; `node index.js admin:reset` recovers from inside the container.
+- The content security policy allows inline *styles* (the component library needs them); it still forbids inline scripts.
+- The portal cannot absorb a denial-of-service attack: put it behind a proxy or CDN with protection.
+- Everything is only as safe as the host: protect the `.env` file, the database and the backups, and keep the image up to date (the update check tells you).
 
 ## Environment variables
 

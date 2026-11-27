@@ -12,7 +12,10 @@
  * ADMIN_WEBHOOKS_ALLOW_PRIVATE=true to reach an internal service on purpose).
  */
 import crypto from "crypto";
-import dns from "dns/promises";
+import dns from "dns";
+import dnsPromises from "dns/promises";
+import http from "http";
+import https from "https";
 import axios from "axios";
 import {Pool} from "pg";
 import {ValidationError} from "../../errors/DomainError";
@@ -142,11 +145,41 @@ async function assertPublicHost(url: URL): Promise<void> {
     if (process.env.ADMIN_WEBHOOKS_ALLOW_PRIVATE === "true") {
         return;
     }
-    const addresses = await dns.lookup(url.hostname, {all: true});
+    const addresses = await dnsPromises.lookup(url.hostname.replace(/^\[|\]$/g, ""), {all: true});
     if (addresses.length === 0 || addresses.some((a) => !isPublicAddress(a.address))) {
         throw new Error("The address of that host is private or local, which is not allowed.");
     }
 }
+
+/**
+ * DNS lookup used for the connection itself. Checking the address before connecting is not enough: a hostile DNS server can
+ * answer "public" to the check and "127.0.0.1" a moment later when the socket is opened (DNS rebinding). The check is therefore
+ * repeated here, on the very addresses the connection is about to use.
+ *
+ * @example
+ *   guardedLookup("localhost", {}, cb)        // cb(Error("The address of that host is private or local, ..."))
+ *   guardedLookup("hooks.example.com", {}, cb) // cb(null, "93.184.216.34", 4)   when it resolves to a public address
+ */
+export function guardedLookup(hostname: string, options: dns.LookupOptions, callback: (err: Error | null, address?: any, family?: number) => void): void {
+    dns.lookup(hostname, {...options, all: true}, (error, addresses) => {
+        if (error) {
+            callback(error);
+            return;
+        }
+        const list = addresses as dns.LookupAddress[];
+        if (process.env.ADMIN_WEBHOOKS_ALLOW_PRIVATE !== "true" && (list.length === 0 || list.some((a) => !isPublicAddress(a.address)))) {
+            callback(new Error("The address of that host is private or local, which is not allowed."));
+            return;
+        }
+        if (options.all) {
+            callback(null, list);
+        } else {
+            callback(null, list[0].address, list[0].family);
+        }
+    });
+}
+
+const SAFE_AGENTS = {httpAgent: new http.Agent({lookup: guardedLookup}), httpsAgent: new https.Agent({lookup: guardedLookup})};
 
 /** Sends the portal's events to webhooks. */
 export class WebhookService {
@@ -328,7 +361,7 @@ export class WebhookService {
                     headers["X-Vaultisse-Signature"] = `sha256=${crypto.createHmac("sha256", target.secret).update(JSON.stringify(body)).digest("hex")}`;
                 }
             }
-            const response = await axios.post(url, body, {headers, timeout: TIMEOUT_MS, maxRedirects: 0, validateStatus: () => true});
+            const response = await axios.post(url, body, {headers, timeout: TIMEOUT_MS, maxRedirects: 0, validateStatus: () => true, ...(kind === "generic" ? SAFE_AGENTS : {})});
             httpStatus = response.status;
             if (response.status < 200 || response.status >= 300 || (kind === "telegram" && response.data?.ok === false)) {
                 error = kind === "telegram" && response.data?.description ? String(response.data.description) : `The service answered HTTP ${response.status}.`;
