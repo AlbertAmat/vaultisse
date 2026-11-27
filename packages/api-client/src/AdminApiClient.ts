@@ -14,7 +14,7 @@
  */
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from "axios";
 import type {
-    IChartsData, IAccountNote, IAdminSession, IDataRequest, DataRequestKind, IWebhook, IWebhookDelivery, IWebhookEvent, IWebhookInput,
+    IJob, IJobRun, IRetentionItem, ClearScope, PreviousAdmins, IClearCounts, IMergeResult, IChartsData, IAccountNote, IAdminSession, IDataRequest, DataRequestKind, IWebhook, IWebhookDelivery, IWebhookEvent, IWebhookInput,
     AdminLoginStep, AdminRole, IAccountDetail, IAccount, IAdminSelf, IAdminUser, IAdminVault, IAuditEntry, IBlockedIp, IDeletionRequestResult,
     IEnrollConfirm, IEnrollStart, ILockout, IOverview, IPaged, IPlan, IPlanInput, IScheduledDeletion, ISecurityEvent, ISecuritySummary,
     ILoginMap, IComplianceOverview, IControlInput, IRegisterEntry, IRegisterInput, RegisterKind, IIncident, IIncidentInput, IAccessReview, IAnnouncement, IBroadcast, IBroadcastAudience, IBroadcastPreview, IBulkResult, IInactivityPreview, IMaintenance, ITermsCounts, ITermsRow, AnnouncementLevel, BroadcastAudience, BulkAccountAction, TermsDocument, TermsStatus, IMailEntry, IOnboardingStatus, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
@@ -137,6 +137,10 @@ export interface AdminApiClient {
         forceLogout(id: number): Promise<void>;
         resetTwoFactor(id: number): Promise<void>;
         remove(id: number, confirm: string, immediate?: boolean): Promise<IDeletionRequestResult>;
+        /** Changes the email address. Needs a fresh verification (handled by the client). */
+        changeEmail(id: number, email: string, verified: boolean): Promise<{email: string; verified: boolean; notified: boolean}>;
+        /** Folds the account `sourceId` into this one and deletes it. `confirm` is the source's username. */
+        merge(id: number, sourceId: number, confirm: string): Promise<IMergeResult>;
         /** The same action on many accounts: a selection (`ids`) or everyone with a status (`status`). */
         bulk(action: BulkAccountAction, target: {ids?: number[]; status?: UserStatus}, extra?: {reason?: string; confirm?: string}): Promise<IBulkResult>;
     };
@@ -147,6 +151,12 @@ export interface AdminApiClient {
         unsuspend(id: number): Promise<void>;
         setPlan(id: number, planId: number | null): Promise<void>;
         remove(id: number, confirm: string, immediate?: boolean): Promise<IDeletionRequestResult>;
+        /** Makes a member the admin of the vault. */
+        transfer(id: number, toUserId: number, previous: PreviousAdmins): Promise<{vault: string; newAdmin: string; changed: number}>;
+        /** How much of each kind of content the vault holds (counts only). */
+        content(id: number): Promise<{vault: {id: number; name: string}; counts: IClearCounts}>;
+        /** Deletes the chosen kinds of content. `confirm` is the vault's name. Cannot be undone. */
+        clear(id: number, scopes: ClearScope[], confirm: string): Promise<{removed: Record<string, number>; counts: IClearCounts}>;
     };
     plans: {
         list(): Promise<IPlan[]>;
@@ -189,6 +199,15 @@ export interface AdminApiClient {
         sessions(): Promise<IAdminSession[]>;
         /** Ends another admin's session. Needs a fresh verification (handled by the client). */
         revokeSession(id: number): Promise<void>;
+    };
+    jobs: {
+        list(): Promise<IJob[]>;
+        /** Runs it now. A job that deletes data needs a fresh verification (handled by the client). */
+        run(id: string): Promise<IJobRun>;
+        history(id: string): Promise<IJobRun[]>;
+    };
+    retention: {
+        list(): Promise<{items: IRetentionItem[]; auditFloorDays: number}>;
     };
     dataRequests: {
         list(status?: string): Promise<{items: IDataRequest[]; counts: {open: number; overdue: number}}>;
@@ -337,6 +356,8 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             forceLogout: (id) => post(`/users/${id}/force-logout`),
             resetTwoFactor: (id) => post(`/users/${id}/reset-2fa`),
             remove: (id, confirm, immediate = false) => del(`/users/${id}`, {confirm, immediate}),
+            changeEmail: (id, email, verified) => post(`/users/${id}/email`, {email, verified}),
+            merge: (id, sourceId, confirm) => post(`/users/${id}/merge`, {sourceId, confirm}),
             bulk: (action, target, extra) => post("/users/bulk", {action, ...target, ...extra}),
             tags: async () => (await get<{items: {tag: string; count: number}[]}>("/users/tags")).items,
             setTags: async (id, tags) => (await put<{tags: string[]}>(`/users/${id}/tags`, {tags})).tags,
@@ -350,6 +371,9 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             unsuspend: (id) => post(`/vaults/${id}/unsuspend`),
             setPlan: (id, planId) => put(`/vaults/${id}/plan`, {planId}),
             remove: (id, confirm, immediate = false) => del(`/vaults/${id}`, {confirm, immediate}),
+            transfer: (id, toUserId, previous) => post(`/vaults/${id}/transfer`, {toUserId, previous}),
+            content: (id) => get(`/vaults/${id}/content`),
+            clear: (id, scopes, confirm) => post(`/vaults/${id}/clear`, {scopes, confirm}),
         },
         plans: {
             list: async () => (await get<{items: IPlan[]}>("/plans")).items,
@@ -390,6 +414,14 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             remove: (id) => del(`/admins/${id}`),
             sessions: async () => (await get<{items: IAdminSession[]}>("/admins/sessions")).items,
             revokeSession: (id) => post(`/admins/sessions/${id}/revoke`),
+        },
+        jobs: {
+            list: async () => (await get<{items: IJob[]}>("/jobs")).items,
+            run: async (id) => (await post<{run: IJobRun}>(`/jobs/${id}/run`)).run,
+            history: async (id) => (await get<{items: IJobRun[]}>(`/jobs/${id}/history`)).items,
+        },
+        retention: {
+            list: () => get("/retention"),
         },
         dataRequests: {
             list: (status) => get("/data-requests", {status}),

@@ -39,6 +39,9 @@ export interface Facts {
     register: Record<"policy" | "supplier" | "risk" | "asset", {active: number; overdue: number}>;
     highRisks: number;
     dataRequests: {open: number; overdue: number};
+    /** Retention: how long personal logs are kept (0 = forever) and how many background jobs failed last time. */
+    retention: {activityDays: number; securityDays: number; mailDays: number};
+    jobsFailing: number;
 }
 
 export interface ControlDef {
@@ -165,6 +168,8 @@ export const COMPLIANCE_CATALOG: ControlDef[] = [
         refs: {gdpr: "Art. 5, 25, 30"},
         check: (f) => f.dataRequests.overdue > 0
             ? fail(`${plural(f.dataRequests.overdue, "data request")} past the one-month deadline (GDPR art. 12). See Data requests.`)
+            : f.retention.activityDays === 0
+            ? warn("The sign-in log (with addresses) is kept forever. Choose a period on the Data retention page: storage limitation, GDPR art. 5(1)(e).")
             : f.config.inactivityDays > 0
             ? pass(`Accounts unused for ${f.config.inactivityDays} days are removed (storage limitation). Admins can't read the libraries of the users. Access and erasure requests are tracked against their deadline${f.dataRequests.open ? ` (${f.dataRequests.open} open)` : ""}.`)
             : warn("Inactive accounts are kept forever. Set ACCOUNT_INACTIVITY_DAYS to apply storage limitation (Settings > Inactive accounts)."),
@@ -268,7 +273,8 @@ export const COMPLIANCE_CATALOG: ControlDef[] = [
         summary: "Systems are monitored for abnormal behaviour and the right people are told.",
         howTo: "",
         refs: {soc2: "CC7.2"},
-        check: (f) => !f.config.mailConfigured ? warn("Email isn't set up, so admins can't be alerted.")
+        check: (f) => f.jobsFailing > 0 ? warn(`${plural(f.jobsFailing, "background job")} failed on the last run. See Jobs.`)
+            : !f.config.mailConfigured ? warn("Email isn't set up, so admins can't be alerted.")
             : !f.config.adminAlerts ? warn("Alerts for security problems are off (Settings > Admin notifications).")
                 : pass(`Security events are counted (${f.security.events30d} in 30 days) and admins are emailed about problems.`),
     },

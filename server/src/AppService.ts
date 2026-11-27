@@ -36,6 +36,7 @@ import {AutoBlocker} from "./admin/services/AutoBlocker";
 import {NoticeService} from "./admin/services/NoticeService";
 import {AdminNotifier} from "./admin/services/AdminNotifier";
 import {WebhookService} from "./admin/services/WebhookService";
+import {JobService} from "./admin/services/JobService";
 import {SystemInfoService} from "./admin/services/SystemInfoService";
 import {UpdateChecker} from "./admin/services/UpdateChecker";
 import {MailLogRepository} from "./admin/repositories/MailLogRepository";
@@ -229,6 +230,7 @@ export class AppService {
     /** Admin notification emails and the health checks behind them. */
     private m_notifier!: AdminNotifier;
     private m_webhooks!: WebhookService;
+    private m_jobs!: JobService;
     private m_systemInfo!: SystemInfoService;
     private m_updateChecker!: UpdateChecker;
 
@@ -405,6 +407,7 @@ export class AppService {
         this.m_securityEvents.setObserver((type, ip, detail) => this.m_autoBlocker.observe(type, ip, detail));
         this.m_notices = new NoticeService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
         this.m_notifier = new AdminNotifier(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
+        this.m_jobs = new JobService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled);
         this.m_webhooks = new WebhookService(this.m_databasePool, this.m_logger, this.m_adminConfig.enabled, settingsSecret);
         this.m_systemInfo = new SystemInfoService(this.m_databasePool, () => this.m_notifier.databaseSizeLimitMb());
         this.m_updateChecker = new UpdateChecker(
@@ -574,6 +577,11 @@ export class AppService {
         return this.m_notices;
     }
 
+    /** Records and runs the background jobs (a no-op while the portal is off). */
+    public getJobs(): JobService {
+        return this.m_jobs;
+    }
+
     /** Sends the portal's events to Slack, Discord, Telegram or a URL (a no-op while the portal is off). */
     public getWebhooks(): WebhookService {
         return this.m_webhooks;
@@ -665,6 +673,12 @@ export class AppService {
     public static validateEnv(env: NodeJS.ProcessEnv, touchedKeys: string[] = []): void {
         const mail = MailService.readConfig(env);
         InactivityService.readConfig(env, mail !== null);
+        if (touchedKeys.includes("RETENTION_AUDIT_DAYS")) {
+            const days = Number(env.RETENTION_AUDIT_DAYS);
+            if (env.RETENTION_AUDIT_DAYS !== undefined && env.RETENTION_AUDIT_DAYS !== "" && days !== 0 && !(Number.isInteger(days) && days >= 90)) {
+                throw new Error("The audit trail is kept forever (0) or for at least 90 days: it is the evidence of what admins did.");
+            }
+        }
         if (touchedKeys.some((key) => key.startsWith("OIDC_") || key === "SSO_ONLY")) {
             const required = ["OIDC_ISSUER", "OIDC_CLIENT_ID", "OIDC_CLIENT_SECRET", "OIDC_REDIRECT_URI"];
             const filled = required.filter((key) => (env[key] ?? "").trim() !== "");
@@ -776,15 +790,28 @@ export class AppService {
 
         // The settings can change while the server runs (admin portal), so the config is read on every
         // pass rather than once here; with none set a pass does nothing.
-        const run = () => {
+        const exec = async (): Promise<string> => {
             const config = this.m_inactivityConfig;
             if (!config) {
-                return;
+                return "Switched off: no inactivity period is set";
             }
             this.m_logger.warn(`Inactive accounts are deleted after ${config.inactivityDays} days (`
                 + (config.noticeDays > 0 ? `warned ${config.noticeDays} days ahead).` : "with no warning)."));
-            new InactivityService(this.m_databasePool, config).run()
-                .catch((error) => console.error("Inactive-account cleanup failed:", error));
+            const result = await new InactivityService(this.m_databasePool, config).run();
+            return `${result.warned} warned, ${result.deleted} deleted`;
+        };
+        this.m_jobs.register({
+            id: "inactive-accounts", name: "Inactive accounts",
+            description: "Warns, then deletes, accounts nobody has used for the period set under Settings > Inactive accounts. Does nothing while no period is set.",
+            schedule: "Every day", everyMs: 24 * 60 * 60 * 1000, dangerous: true, run: exec,
+        });
+        // With the portal on the run is recorded and shown in the console; without it, it just runs.
+        const run = () => {
+            if (this.m_jobs.isEnabled()) {
+                void this.m_jobs.runScheduled("inactive-accounts");
+            } else {
+                exec().catch((error) => console.error("Inactive-account cleanup failed:", error));
+            }
         };
         const first = setTimeout(run, 60 * 1000);
         const daily = setInterval(run, 24 * 60 * 60 * 1000);

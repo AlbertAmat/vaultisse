@@ -106,7 +106,8 @@ export class PlatformRepository {
               (SELECT COUNT(*) FROM books)::int                                                                  AS "books",
               (SELECT COUNT(*) FROM book_stocks)::int                                                            AS "stocks",
               (SELECT COALESCE(SUM(file_size), 0) FROM book_files)::bigint                                       AS "fileBytes",
-              (SELECT COUNT(*) FROM scheduled_deletions WHERE cancelled_at IS NULL AND executed_at IS NULL)::int AS "pendingDeletions"
+              (SELECT COUNT(*) FROM scheduled_deletions WHERE cancelled_at IS NULL AND executed_at IS NULL)::int AS "pendingDeletions",
+              (SELECT COUNT(*) FROM (SELECT DISTINCT ON (job_id) status FROM job_runs ORDER BY job_id, started_at DESC) j WHERE j.status = 'failed')::int AS "failedJobs"
         `);
         const row = result.rows[0];
         return Object.fromEntries(Object.entries(row).map(([key, value]) => [key, Number(value)]));

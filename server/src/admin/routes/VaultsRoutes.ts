@@ -18,6 +18,7 @@ import {handle, idParam, paging, text} from "../http";
 import {requireFreshAuth, requireSuperadmin} from "../middleware";
 import {PlanRepository} from "../repositories/PlanRepository";
 import {PlatformRepository} from "../repositories/PlatformRepository";
+import {VaultSupportService} from "../services/VaultSupportService";
 import {AdminAuditService} from "../services/AdminAuditService";
 import {DeletionService} from "../services/DeletionService";
 import {QuotaService} from "../services/QuotaService";
@@ -43,6 +44,7 @@ function limit(value: unknown, label: string, min: number): number | null {
 export function vaultsRoutes(pool: Pool, audit: AdminAuditService, deletions: DeletionService): Router {
     const router = Router();
     const platform = new PlatformRepository(pool);
+    const vaultSupport = new VaultSupportService(pool);
     const plans = new PlanRepository(pool);
 
     const requireVault = async (id: number) => {
@@ -119,6 +121,32 @@ export function vaultsRoutes(pool: Pool, audit: AdminAuditService, deletions: De
             entityType: "vault", entityId: id, entityLabel: vault.name, metadata: {executeAfter: result.executeAfter, deletionId: result.deletionId},
         });
         res.json(result);
+    }));
+
+    router.post("/vaults/:id/transfer", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {
+        const id = idParam(req);
+        const toUserId = Number(req.body?.toUserId);
+        if (!Number.isInteger(toUserId)) {
+            throw new ValidationError("Choose the member who takes over.");
+        }
+        const result = await vaultSupport.transfer(id, toUserId, req.body?.previous ?? "keep");
+        await audit.record(req, "vault.transfer", {entityType: "vault", entityId: id, entityLabel: result.vault, metadata: {newAdmin: result.newAdmin, previous: req.body?.previous ?? "keep", changed: result.changed}});
+        res.json(result);
+    }));
+
+    router.get("/vaults/:id/content", handle(async (req, res) => {
+        res.json(await vaultSupport.counts(idParam(req)));
+    }));
+
+    router.post("/vaults/:id/clear", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {
+        const id = idParam(req);
+        const {vault} = await vaultSupport.counts(id);
+        if (req.body?.confirm !== vault.name) {
+            throw new ValidationError(`Type the name of the vault (${vault.name}) to confirm.`);
+        }
+        const removed = await vaultSupport.clear(id, req.body?.scopes);
+        await audit.record(req, "vault.clear", {entityType: "vault", entityId: id, entityLabel: vault.name, metadata: {scopes: req.body?.scopes, removed}});
+        res.json({removed, ...(await vaultSupport.counts(id))});
     }));
 
     router.get("/plans", handle(async (_req, res) => {

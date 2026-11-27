@@ -708,3 +708,147 @@
 [2026-11-27T14:06:46.123Z] [WARN]: Admin portal: the first administrator was created; its generated password was printed to the container output.
 [2026-11-27T14:06:46.124Z] [WARN]: SETTINGS_ENCRYPTION_KEY is not set: secrets saved in the admin portal are encrypted with a key derived from JWT_SECRET. Set a dedicated SETTINGS_ENCRYPTION_KEY (and keep it stable).
 [2026-11-27T14:06:46.124Z] [INFO]: Server running on port 3000;
+[2026-11-27T14:44:12.872Z] [INFO]: [migrate] 0.0.1.sql: applied
+[2026-11-27T14:44:12.881Z] [INFO]: [migrate] 1.0.0/1.sql: applied
+[2026-11-27T14:44:12.889Z] [INFO]: [migrate] 1.0.0/2.sql: applied
+[2026-11-27T14:44:12.901Z] [INFO]: [migrate] 1.0.0/3.sql: applied
+[2026-11-27T14:44:12.903Z] [INFO]: [migrate] 1.0.2.sql: applied
+[2026-11-27T14:44:12.913Z] [INFO]: [migrate] 1.1.0/1.sql: applied
+[2026-11-27T14:44:12.917Z] [INFO]: [migrate] 1.1.0/2.sql: applied
+[2026-11-27T14:44:12.922Z] [INFO]: [migrate] 1.1.0/3.sql: applied
+[2026-11-27T14:44:12.924Z] [INFO]: [migrate] 1.1.2.sql: applied
+[2026-11-27T14:44:12.928Z] [INFO]: [migrate] 1.1.5.sql: applied
+[2026-11-27T14:44:12.930Z] [INFO]: [migrate] 1.1.6.sql: applied
+[2026-11-27T14:44:12.935Z] [INFO]: [migrate] 1.1.7.sql: applied
+[2026-11-27T14:44:12.938Z] [INFO]: [migrate] 1.1.8.sql: applied
+[2026-11-27T14:44:12.940Z] [INFO]: [migrate] 1.2.2.sql: applied
+[2026-11-27T14:44:12.963Z] [INFO]: [migrate] 1.3.0.sql: applied
+[2026-11-27T14:44:12.973Z] [INFO]: [migrate] 1.3.2.sql: applied
+[2026-11-27T14:44:12.980Z] [INFO]: [migrate] 1.3.4.sql: applied
+[2026-11-27T14:44:12.985Z] [INFO]: [migrate] 1.3.5.sql: applied
+[2026-11-27T14:44:12.987Z] [INFO]: [migrate] 1.3.6.sql: applied
+[2026-11-27T14:44:12.991Z] [INFO]: [migrate] 1.3.7.sql: applied
+[2026-11-27T14:44:13.001Z] [INFO]: [migrate] 1.3.9.sql: applied
+[2026-11-27T14:44:13.051Z] [INFO]: [migrate] 1.4.0.sql: applied
+[2026-11-27T14:44:42.324Z] [INFO]: [migrate] 0.0.1.sql: applied
+[2026-11-27T14:44:42.332Z] [INFO]: [migrate] 1.0.0/1.sql: applied
+[2026-11-27T14:44:42.339Z] [INFO]: [migrate] 1.0.0/2.sql: applied
+[2026-11-27T14:44:42.350Z] [INFO]: [migrate] 1.0.0/3.sql: applied
+[2026-11-27T14:44:42.352Z] [INFO]: [migrate] 1.0.2.sql: applied
+[2026-11-27T14:44:42.362Z] [INFO]: [migrate] 1.1.0/1.sql: applied
+[2026-11-27T14:44:42.365Z] [INFO]: [migrate] 1.1.0/2.sql: applied
+[2026-11-27T14:44:42.370Z] [INFO]: [migrate] 1.1.0/3.sql: applied
+[2026-11-27T14:44:42.371Z] [INFO]: [migrate] 1.1.2.sql: applied
+[2026-11-27T14:44:42.375Z] [INFO]: [migrate] 1.1.5.sql: applied
+[2026-11-27T14:44:42.377Z] [INFO]: [migrate] 1.1.6.sql: applied
+[2026-11-27T14:44:42.382Z] [INFO]: [migrate] 1.1.7.sql: applied
+[2026-11-27T14:44:42.384Z] [INFO]: [migrate] 1.1.8.sql: applied
+[2026-11-27T14:44:42.385Z] [INFO]: [migrate] 1.2.2.sql: applied
+[2026-11-27T14:44:42.415Z] [INFO]: [migrate] 1.3.0.sql: applied
+[2026-11-27T14:44:42.429Z] [INFO]: [migrate] 1.3.2.sql: applied
+[2026-11-27T14:44:42.435Z] [INFO]: [migrate] 1.3.4.sql: applied
+[2026-11-27T14:44:42.440Z] [INFO]: [migrate] 1.3.5.sql: applied
+[2026-11-27T14:44:42.441Z] [INFO]: [migrate] 1.3.6.sql: applied
+[2026-11-27T14:44:42.444Z] [INFO]: [migrate] 1.3.7.sql: applied
+[2026-11-27T14:44:42.455Z] [INFO]: [migrate] 1.3.9.sql: applied
+[2026-11-27T14:44:42.497Z] [INFO]: [migrate] 1.4.0.sql: applied
+[2026-11-27T14:48:23.697Z] [INFO]: [migrate] 0.0.1.sql: applied
+[2026-11-27T14:48:23.707Z] [INFO]: [migrate] 1.0.0/1.sql: applied
+[2026-11-27T14:48:23.719Z] [INFO]: [migrate] 1.0.0/2.sql: applied
+[2026-11-27T14:48:23.732Z] [INFO]: [migrate] 1.0.0/3.sql: applied
+[2026-11-27T14:48:23.735Z] [INFO]: [migrate] 1.0.2.sql: applied
+[2026-11-27T14:48:23.742Z] [INFO]: [migrate] 1.1.0/1.sql: applied
+[2026-11-27T14:48:23.746Z] [INFO]: [migrate] 1.1.0/2.sql: applied
+[2026-11-27T14:48:23.749Z] [INFO]: [migrate] 1.1.0/3.sql: applied
+[2026-11-27T14:48:23.751Z] [INFO]: [migrate] 1.1.2.sql: applied
+[2026-11-27T14:48:23.754Z] [INFO]: [migrate] 1.1.5.sql: applied
+[2026-11-27T14:48:23.756Z] [INFO]: [migrate] 1.1.6.sql: applied
+[2026-11-27T14:48:23.759Z] [INFO]: [migrate] 1.1.7.sql: applied
+[2026-11-27T14:48:23.761Z] [INFO]: [migrate] 1.1.8.sql: applied
+[2026-11-27T14:48:23.763Z] [INFO]: [migrate] 1.2.2.sql: applied
+[2026-11-27T14:48:23.783Z] [INFO]: [migrate] 1.3.0.sql: applied
+[2026-11-27T14:48:23.790Z] [INFO]: [migrate] 1.3.2.sql: applied
+[2026-11-27T14:48:23.795Z] [INFO]: [migrate] 1.3.4.sql: applied
+[2026-11-27T14:48:23.799Z] [INFO]: [migrate] 1.3.5.sql: applied
+[2026-11-27T14:48:23.800Z] [INFO]: [migrate] 1.3.6.sql: applied
+[2026-11-27T14:48:23.803Z] [INFO]: [migrate] 1.3.7.sql: applied
+[2026-11-27T14:48:23.813Z] [INFO]: [migrate] 1.3.9.sql: applied
+[2026-11-27T14:48:23.859Z] [INFO]: [migrate] 1.4.0.sql: applied
+[2026-11-27T14:48:57.882Z] [INFO]: [migrate] 0.0.1.sql: applied
+[2026-11-27T14:48:57.889Z] [INFO]: [migrate] 1.0.0/1.sql: applied
+[2026-11-27T14:48:57.897Z] [INFO]: [migrate] 1.0.0/2.sql: applied
+[2026-11-27T14:48:57.906Z] [INFO]: [migrate] 1.0.0/3.sql: applied
+[2026-11-27T14:48:57.908Z] [INFO]: [migrate] 1.0.2.sql: applied
+[2026-11-27T14:48:57.918Z] [INFO]: [migrate] 1.1.0/1.sql: applied
+[2026-11-27T14:48:57.922Z] [INFO]: [migrate] 1.1.0/2.sql: applied
+[2026-11-27T14:48:57.926Z] [INFO]: [migrate] 1.1.0/3.sql: applied
+[2026-11-27T14:48:57.928Z] [INFO]: [migrate] 1.1.2.sql: applied
+[2026-11-27T14:48:57.932Z] [INFO]: [migrate] 1.1.5.sql: applied
+[2026-11-27T14:48:57.934Z] [INFO]: [migrate] 1.1.6.sql: applied
+[2026-11-27T14:48:57.939Z] [INFO]: [migrate] 1.1.7.sql: applied
+[2026-11-27T14:48:57.941Z] [INFO]: [migrate] 1.1.8.sql: applied
+[2026-11-27T14:48:57.943Z] [INFO]: [migrate] 1.2.2.sql: applied
+[2026-11-27T14:48:57.965Z] [INFO]: [migrate] 1.3.0.sql: applied
+[2026-11-27T14:48:57.974Z] [INFO]: [migrate] 1.3.2.sql: applied
+[2026-11-27T14:48:57.979Z] [INFO]: [migrate] 1.3.4.sql: applied
+[2026-11-27T14:48:57.982Z] [INFO]: [migrate] 1.3.5.sql: applied
+[2026-11-27T14:48:57.983Z] [INFO]: [migrate] 1.3.6.sql: applied
+[2026-11-27T14:48:57.987Z] [INFO]: [migrate] 1.3.7.sql: applied
+[2026-11-27T14:48:57.998Z] [INFO]: [migrate] 1.3.9.sql: applied
+[2026-11-27T14:48:58.056Z] [INFO]: [migrate] 1.4.0.sql: applied
+[2026-11-27T14:48:58.074Z] [INFO]: Admin portal running on port 3001;
+[2026-11-27T14:48:58.284Z] [WARN]: Admin portal: the first administrator was created; its generated password was printed to the container output.
+[2026-11-27T14:48:58.284Z] [WARN]: SETTINGS_ENCRYPTION_KEY is not set: secrets saved in the admin portal are encrypted with a key derived from JWT_SECRET. Set a dedicated SETTINGS_ENCRYPTION_KEY (and keep it stable).
+[2026-11-27T14:48:58.284Z] [INFO]: Server running on port 3000;
+[2026-11-27T14:49:38.976Z] [INFO]: [migrate] 0.0.1.sql: applied
+[2026-11-27T14:49:38.983Z] [INFO]: [migrate] 1.0.0/1.sql: applied
+[2026-11-27T14:49:38.991Z] [INFO]: [migrate] 1.0.0/2.sql: applied
+[2026-11-27T14:49:39.005Z] [INFO]: [migrate] 1.0.0/3.sql: applied
+[2026-11-27T14:49:39.007Z] [INFO]: [migrate] 1.0.2.sql: applied
+[2026-11-27T14:49:39.015Z] [INFO]: [migrate] 1.1.0/1.sql: applied
+[2026-11-27T14:49:39.018Z] [INFO]: [migrate] 1.1.0/2.sql: applied
+[2026-11-27T14:49:39.022Z] [INFO]: [migrate] 1.1.0/3.sql: applied
+[2026-11-27T14:49:39.023Z] [INFO]: [migrate] 1.1.2.sql: applied
+[2026-11-27T14:49:39.027Z] [INFO]: [migrate] 1.1.5.sql: applied
+[2026-11-27T14:49:39.028Z] [INFO]: [migrate] 1.1.6.sql: applied
+[2026-11-27T14:49:39.032Z] [INFO]: [migrate] 1.1.7.sql: applied
+[2026-11-27T14:49:39.034Z] [INFO]: [migrate] 1.1.8.sql: applied
+[2026-11-27T14:49:39.035Z] [INFO]: [migrate] 1.2.2.sql: applied
+[2026-11-27T14:49:39.055Z] [INFO]: [migrate] 1.3.0.sql: applied
+[2026-11-27T14:49:39.062Z] [INFO]: [migrate] 1.3.2.sql: applied
+[2026-11-27T14:49:39.067Z] [INFO]: [migrate] 1.3.4.sql: applied
+[2026-11-27T14:49:39.070Z] [INFO]: [migrate] 1.3.5.sql: applied
+[2026-11-27T14:49:39.071Z] [INFO]: [migrate] 1.3.6.sql: applied
+[2026-11-27T14:49:39.075Z] [INFO]: [migrate] 1.3.7.sql: applied
+[2026-11-27T14:49:39.084Z] [INFO]: [migrate] 1.3.9.sql: applied
+[2026-11-27T14:49:39.126Z] [INFO]: [migrate] 1.4.0.sql: applied
+[2026-11-27T14:49:39.146Z] [INFO]: Admin portal running on port 3001;
+[2026-11-27T14:49:39.358Z] [WARN]: Admin portal: the first administrator was created; its generated password was printed to the container output.
+[2026-11-27T14:49:39.358Z] [WARN]: SETTINGS_ENCRYPTION_KEY is not set: secrets saved in the admin portal are encrypted with a key derived from JWT_SECRET. Set a dedicated SETTINGS_ENCRYPTION_KEY (and keep it stable).
+[2026-11-27T14:49:39.358Z] [INFO]: Server running on port 3000;
+[2026-11-27T14:50:28.849Z] [INFO]: [migrate] 0.0.1.sql: applied
+[2026-11-27T14:50:28.855Z] [INFO]: [migrate] 1.0.0/1.sql: applied
+[2026-11-27T14:50:28.862Z] [INFO]: [migrate] 1.0.0/2.sql: applied
+[2026-11-27T14:50:28.870Z] [INFO]: [migrate] 1.0.0/3.sql: applied
+[2026-11-27T14:50:28.871Z] [INFO]: [migrate] 1.0.2.sql: applied
+[2026-11-27T14:50:28.882Z] [INFO]: [migrate] 1.1.0/1.sql: applied
+[2026-11-27T14:50:28.885Z] [INFO]: [migrate] 1.1.0/2.sql: applied
+[2026-11-27T14:50:28.888Z] [INFO]: [migrate] 1.1.0/3.sql: applied
+[2026-11-27T14:50:28.889Z] [INFO]: [migrate] 1.1.2.sql: applied
+[2026-11-27T14:50:28.891Z] [INFO]: [migrate] 1.1.5.sql: applied
+[2026-11-27T14:50:28.893Z] [INFO]: [migrate] 1.1.6.sql: applied
+[2026-11-27T14:50:28.896Z] [INFO]: [migrate] 1.1.7.sql: applied
+[2026-11-27T14:50:28.898Z] [INFO]: [migrate] 1.1.8.sql: applied
+[2026-11-27T14:50:28.899Z] [INFO]: [migrate] 1.2.2.sql: applied
+[2026-11-27T14:50:28.917Z] [INFO]: [migrate] 1.3.0.sql: applied
+[2026-11-27T14:50:28.923Z] [INFO]: [migrate] 1.3.2.sql: applied
+[2026-11-27T14:50:28.928Z] [INFO]: [migrate] 1.3.4.sql: applied
+[2026-11-27T14:50:28.930Z] [INFO]: [migrate] 1.3.5.sql: applied
+[2026-11-27T14:50:28.931Z] [INFO]: [migrate] 1.3.6.sql: applied
+[2026-11-27T14:50:28.933Z] [INFO]: [migrate] 1.3.7.sql: applied
+[2026-11-27T14:50:28.942Z] [INFO]: [migrate] 1.3.9.sql: applied
+[2026-11-27T14:50:28.980Z] [INFO]: [migrate] 1.4.0.sql: applied
+[2026-11-27T14:50:28.998Z] [INFO]: Admin portal running on port 3001;
+[2026-11-27T14:50:29.216Z] [WARN]: Admin portal: the first administrator was created; its generated password was printed to the container output.
+[2026-11-27T14:50:29.217Z] [WARN]: SETTINGS_ENCRYPTION_KEY is not set: secrets saved in the admin portal are encrypted with a key derived from JWT_SECRET. Set a dedicated SETTINGS_ENCRYPTION_KEY (and keep it stable).
+[2026-11-27T14:50:29.217Z] [INFO]: Server running on port 3000;

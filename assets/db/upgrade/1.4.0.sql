@@ -102,6 +102,13 @@ CREATE INDEX idx_admin_audit_log_created ON admin_audit_log (created_date DESC);
 CREATE FUNCTION admin_audit_log_append_only() RETURNS trigger AS
 $$
 BEGIN
+    -- Entries are never changed. The only way one leaves is the retention job (Data retention page), which says so
+    -- for its own transaction, and only for an entry older than 90 days: nobody can quietly erase recent history.
+    IF TG_OP = 'DELETE' THEN
+        IF current_setting('vaultisse.audit_retention', true) = 'on' AND OLD.created_date < CURRENT_TIMESTAMP - INTERVAL '90 days' THEN
+            RETURN OLD;
+        END IF;
+    END IF;
     RAISE EXCEPTION 'admin_audit_log is append-only';
 END;
 $$ LANGUAGE plpgsql;
@@ -418,3 +425,21 @@ CREATE TABLE webhook_deliveries
     created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_webhook_deliveries_hook ON webhook_deliveries (webhook_id, created_date DESC);
+
+-- ============================================================
+-- Background jobs of the admin portal
+-- ============================================================
+
+-- One row per run of a background job (hourly clean-ups, reminders, deletions, ...), scheduled or started by an admin.
+CREATE TABLE job_runs
+(
+    id          BIGSERIAL PRIMARY KEY,
+    job_id      VARCHAR(40)  NOT NULL,
+    trigger     VARCHAR(10)  NOT NULL CHECK (trigger IN ('schedule', 'manual')),
+    status      VARCHAR(10)  NOT NULL CHECK (status IN ('ok', 'failed')),
+    message     TEXT,
+    started_at  TIMESTAMPTZ  NOT NULL,
+    finished_at TIMESTAMPTZ  NOT NULL,
+    run_by      INT REFERENCES admin_users (id) ON DELETE SET NULL
+);
+CREATE INDEX idx_job_runs_job ON job_runs (job_id, started_at DESC);

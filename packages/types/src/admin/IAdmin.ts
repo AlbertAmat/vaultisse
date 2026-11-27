@@ -121,7 +121,7 @@ export interface IOverview {
         users: number; usersPending: number; usersDisabled: number; usersUnverified: number; usersWithTwoFactor: number; usersSso: number;
         activeNow: number; activeDay: number; activeWeek: number; activeMonth: number; signupsWeek: number;
         vaults: number; vaultsSuspended: number; vaultsShared: number;
-        books: number; stocks: number; fileBytes: number; pendingDeletions: number;
+        books: number; stocks: number; fileBytes: number; pendingDeletions: number; failedJobs: number;
     };
     signups: {day: string; count: number}[];
     logins: {day: string; count: number}[];
@@ -776,4 +776,73 @@ export interface IWebhookInput {
     token?: string;
     chatId?: string;
     secret?: string;
+}
+
+// ---- Background jobs ----
+
+export interface IJobRun {
+    id: number;
+    jobId: string;
+    trigger: "schedule" | "manual";
+    status: "ok" | "failed";
+    message: string | null;
+    startedAt: string;
+    finishedAt: string;
+    durationMs: number;
+    runBy: string | null;
+}
+
+export interface IJob {
+    id: string;
+    name: string;
+    description: string;
+    schedule: string;
+    /** Running it by hand changes or deletes data, so it needs a fresh verification. */
+    dangerous: boolean;
+    running: boolean;
+    lastRun: IJobRun | null;
+    nextRunAt: string | null;
+    recentFailures: number;
+}
+
+// ---- Data retention ----
+
+export interface IRetentionItem {
+    id: string;
+    key: string;
+    label: string;
+    description: string;
+    personal: boolean;
+    minDays: number;
+    /** Days a record is kept; 0 = forever. */
+    days: number;
+    defaultDays: number;
+    rows: number;
+    oldest: string | null;
+    /** Rows already older than the period (the next purge removes them). */
+    overdue: number;
+}
+
+// ---- Support operations ----
+
+export type ClearScope = "books" | "history" | "customers" | "groups" | "authors" | "categories" | "locations" | "card";
+export type PreviousAdmins = "keep" | "demote" | "remove";
+
+export interface IClearCounts {
+    books: number;
+    copies: number;
+    files: number;
+    history: number;
+    customers: number;
+    groups: number;
+    authors: number;
+    categories: number;
+    locations: number;
+    card: number;
+}
+
+export interface IMergeResult {
+    vaultsMoved: number;
+    vaultsCombined: number;
+    rowsReassigned: number;
 }

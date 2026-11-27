@@ -109,7 +109,7 @@ describe("support notes and tags", () => {
         expect((await admin.agent.get("/api/admin/users/tags")).body.items.find((t: any) => t.tag === "vip").count).toBeGreaterThanOrEqual(1);
 
         // The user never sees any of it.
-        expect(JSON.stringify((await user.agent.get("/api/rest/user")).body)).not.toMatch(/refund|vip/i);
+        expect(JSON.stringify((await user.agent.get("/api/rest/user/sessions")).body)).not.toMatch(/refund|vip/i);
 
         const audit = (await admin.agent.get("/api/admin/logs/audit").query({action: "user."})).body.items.map((e: any) => e.action);
         expect(audit).toEqual(expect.arrayContaining(["user.note_add", "user.tags"]));

@@ -8,6 +8,10 @@
 			{{ counts.usersPending }} new {{ counts.usersPending === 1 ? "account is" : "accounts are" }} waiting for approval.
 			<template #append><v-btn variant="text" to="/users?status=pending">Review</v-btn></template>
 		</v-alert>
+		<v-alert v-if="counts && counts.failedJobs > 0" type="error" variant="tonal" class="mb-4" icon="mdi-timer-alert-outline">
+			{{ counts.failedJobs }} background {{ counts.failedJobs === 1 ? "job" : "jobs" }} failed on the last run.
+			<template #append><v-btn variant="text" to="/jobs">See jobs</v-btn></template>
+		</v-alert>
 		<v-alert v-if="system && system.database !== 'ok'" type="error" variant="tonal" class="mb-4">The database is not reachable.</v-alert>
 
 		<v-row v-if="counts">

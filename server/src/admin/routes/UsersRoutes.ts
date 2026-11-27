@@ -7,6 +7,8 @@
  *  GET    /tags           every tag in use
  *  PUT    /:id/tags       `{tags}` replace the tags;  POST /:id/notes `{body}`;  DELETE /:id/notes/:noteId   (private admin notes)
  *  GET    /:id            account, vault memberships, live sessions, recent sign-in activity
+ *  POST   /:id/email      `{email, verified?}` change the address                    [fresh verification]
+ *  POST   /:id/merge      `{sourceId, confirm}` fold another account into this one    [fresh verification]
  *  POST   /:id/approve    enable an account waiting for approval (and tell its owner if mail is on)
  *  POST   /:id/disable    lock an account out and end its sessions
  *  POST   /:id/enable     lift a lock
@@ -20,6 +22,7 @@ import {appService} from "../../AppService";
 import {Pool} from "pg";
 import {handle, idParam, paging, text} from "../http";
 import {requireFreshAuth, requireSuperadmin} from "../middleware";
+import {AccountSupportService, maskEmail} from "../services/AccountSupportService";
 import {AccountNotesRepository} from "../repositories/AccountNotesRepository";
 import {PlatformRepository, UserStatusFilter} from "../repositories/PlatformRepository";
 import {AdminAuditService} from "../services/AdminAuditService";
@@ -40,6 +43,7 @@ export function usersRoutes(pool: Pool, audit: AdminAuditService, deletions: Del
     const platform = new PlatformRepository(pool);
     const actions = new AccountActions(pool, audit, deletions);
     const notes = new AccountNotesRepository(pool);
+    const support = new AccountSupportService(pool);
 
     const requireUser = async (id: number) => {
         const user = await platform.findUser(id);
@@ -114,6 +118,36 @@ export function usersRoutes(pool: Pool, audit: AdminAuditService, deletions: Del
         await notes.setTags(id, tags, req.admin!.id);
         await audit.record(req, "user.tags", {entityType: "user", entityId: id, entityLabel: user.code, metadata: {tags}});
         res.json({tags});
+    }));
+
+    router.post("/:id/email", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {
+        const id = idParam(req);
+        const user = await requireUser(id);
+        const result = await support.changeEmail(id, req.body?.email, req.body?.verified === true);
+        await audit.record(req, "user.change_email", {
+            entityType: "user", entityId: id, entityLabel: user.code,
+            metadata: {from: maskEmail(result.oldEmail), to: maskEmail(result.email), verified: result.verified, oldAddressNotified: result.notified},
+        });
+        res.json({email: result.email, verified: result.verified, notified: result.notified, user: await platform.findUser(id)});
+    }));
+
+    router.post("/:id/merge", requireSuperadmin, requireFreshAuth, handle(async (req, res) => {
+        const targetId = idParam(req);
+        const target = await requireUser(targetId);
+        const sourceId = Number(req.body?.sourceId);
+        if (!Number.isInteger(sourceId)) {
+            throw new ValidationError("Choose the account to merge into this one.");
+        }
+        const source = await requireUser(sourceId);
+        if (req.body?.confirm !== source.code) {
+            throw new ValidationError(`Type the username of the account that will disappear (${source.code}) to confirm.`);
+        }
+        const result = await support.merge(targetId, sourceId);
+        await audit.record(req, "user.merge", {
+            entityType: "user", entityId: targetId, entityLabel: target.code,
+            metadata: {mergedAccount: source.code, ...result},
+        });
+        res.json({...result, user: await platform.findUser(targetId)});
     }));
 
     router.post("/:id/approve", requireSuperadmin, handle(async (req, res) => {

@@ -30,6 +30,9 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 - [Terms acceptance report](#terms-acceptance-report)
 - [Automatic IP blocking](#automatic-ip-blocking)
 - [Overview charts](#overview-charts)
+- [Support operations on accounts and vaults](#support-operations-on-accounts-and-vaults)
+- [Data retention](#data-retention)
+- [Jobs](#jobs)
 - [Support notes and tags](#support-notes-and-tags)
 - [Data requests (GDPR)](#data-requests-gdpr)
 - [Login map](#login-map)
@@ -419,6 +422,79 @@ later (art. 12(3)). You can extend it **once**, up to three months from receipt,
 request also turns *Compliance* control A.5.34 red. A request stays on record after the account is erased, with the
 email address it came from: that is your proof that it was answered. Tables: `data_requests`.
 
+## Support operations on accounts and vaults
+
+Things admins otherwise do in SQL. All of them need a fresh verification (password and code), are written to the audit
+trail, and never read what is inside a vault.
+
+- **Change an email address** (*Accounts > account > Support > Change email*). Refused when another account already uses the address
+  (merge them instead). Tick "I confirmed this address with the person" to mark it verified; otherwise they verify it
+  themselves before signing in again (without email set up nobody can, so it counts as verified). When email is set up the
+  *old* address is told about the change, with the new one partly hidden, so a change nobody asked for doesn't go unnoticed.
+  The audit trail keeps only the hidden form of both addresses.
+- **Merge two accounts** (*Support > Merge another account*), for someone who ended up with two. Open the account that stays, pick the
+  one that goes away and type its username. In one transaction (all or nothing) the account that stays gets:
+  the other's vault memberships (where both belong to the same vault the stronger role wins, so an admin stays admin), everything
+  it created or borrowed (books, copies on loan, loan history), its activity log, admin notes and tags. Then the old account
+  is deleted. Dropped with it: its sessions, two-factor, backup codes and terms acceptances. A single-sign-on link of the old
+  account is not carried over. It cannot be undone.
+- **Transfer a vault** (*Vaults > vault > Transfer ownership*), for when the owner leaves. A member who accepted the membership becomes
+  admin; choose whether the previous admins stay admins, become normal members or leave the vault. The new admin is made
+  admin by hand, so a single-sign-on group mapping won't take it away. (Without this, deleting an account that is the only admin of
+  a shared vault is refused.)
+- **Clear a vault** (*Vaults > vault > Clear content*), for example when a customer asks to start over. You see how many of each there
+  are (books, borrowers, authors, categories, locations, borrower groups, loan history, library card design), tick what to
+  delete and type the vault's name. The vault, its members, plan and settings stay. Clearing *books* also removes their copies,
+  ebook files, reading status and the loan history; clearing *borrowers* puts the copies on loan to them back on the shelf and
+  removes their loans; clearing categories or locations leaves books and copies without one. It **cannot be undone**: tell the owner
+  first. The audit trail records counts, never titles or names.
+
+## Data retention
+
+*Data retention* sets how long each kind of record is kept, because GDPR asks that personal data is not kept longer than needed
+(art. 5(1)(e)) and that choice is yours. Each row shows what the record holds, whether it is personal data, the period in days
+(0 keeps it forever), the default, how many rows there are, the oldest and how many are already older than the period.
+
+| Records | Default | Note |
+|---|---|---|
+| Sign-in and activity log | forever | addresses of every sign-in; feeds the login map. Choose a period. |
+| Security events | 30 days | failed sign-ins and blocked requests |
+| Emails sent | 90 days | recipient and subject, never the text |
+| Admin notifications | 90 days | |
+| Webhook deliveries | 30 days | |
+| Background job history | 30 days | |
+| Audit trail | forever | at least 90 days if set |
+
+The hourly job *Purge old records* (see Jobs) deletes what is older. *Purge now* runs it at once, after a fresh verification.
+Shortening a period deletes the older records at the next run, and they cannot be brought back. The periods are saved like
+any other setting (keys `RETENTION_*_DAYS`, so they can also be set as environment variables; the portal wins).
+
+**The audit trail** is protected by the database: nobody can change an entry, and an entry can only be removed by this job,
+inside a transaction that says so, once it is older than 90 days. A shorter period is refused. Each purge writes its own entry
+(`retention.purge`, with how many were removed). *Compliance* control A.5.34 warns while the sign-in log is kept forever.
+Accounts are not covered here: they go through the inactive-account setting or a data request.
+
+## Jobs
+
+*Jobs* lists what runs in the background, so a failure shows up in the console instead of only in the server log:
+
+| Job | Runs | What it does |
+|---|---|---|
+| Health checks and alerts | every 5 minutes | database, failed sign-ins, email failures, new versions: alerts the admins |
+| Scheduled deletions | every hour | carries out account and vault deletions whose grace period is over |
+| Purge old records | every hour | applies the retention periods and drops expired admin sessions |
+| Data request reminders | every hour | emails about requests near or past their deadline |
+| Anomaly checks | every hour | new country, burst of sign-ups |
+| Update check | every day | asks GitHub for the latest release |
+| Inactive accounts | every day | warns, then deletes, accounts unused for the period in *Settings* |
+
+For each job: when it last ran, whether it worked, what it did (or why it failed), how long it took and an estimate of the next run,
+plus the last 30 runs. **Run now** starts it by hand; for the jobs that delete data (deletions, purge, inactive accounts) that
+needs a fresh verification. A job already running can't be started twice. A job that fails is recorded with its message,
+shown in red here and on the Overview, makes *Compliance* control A.8.16 warn, and emails the admins (*Notifications > A background job
+failed*, at most every six hours per job) and your webhooks (`system.alert`). Run history is in `job_runs`. Without the portal
+the jobs run on their old timers, unrecorded.
+
 ## Login map
 
 *Login map* shows where people sign in from. It plots the successful sign-ins of the regular users, and the
@@ -674,6 +750,9 @@ Everything is under `/api/admin` on the admin port and needs an admin session ex
 | Data requests | `GET/POST /data-requests`, `POST /data-requests/:id/{extend,close,erase}`, `POST /data-requests/export/:userId`, `GET /data-requests/export/:userId/:token` |
 | Webhooks | `GET/POST /webhooks`, `PUT/PATCH/DELETE /webhooks/:id`, `POST /webhooks/:id/test`, `GET /webhooks/:id/deliveries` |
 | Admin sessions | `GET /admins/sessions`, `POST /admins/sessions/:id/revoke` |
+| Jobs | `GET /jobs`, `POST /jobs/:id/run`, `GET /jobs/:id/history` |
+| Data retention | `GET /retention` (periods are saved with `PUT /settings`, keys `RETENTION_*_DAYS`) |
+| Support operations | `POST /users/:id/email`, `POST /users/:id/merge`, `POST /vaults/:id/transfer`, `GET /vaults/:id/content`, `POST /vaults/:id/clear` |
 | Compliance | `GET /compliance`, `PUT /compliance/controls/:id`, `GET /compliance/export.csv`, `GET/POST /compliance/register`, `PUT/DELETE /compliance/register/:id`, `GET/POST /compliance/incidents`, `PUT /compliance/incidents/:id`, `GET/POST /compliance/access` |
 | Admins | `GET/POST /admins`, `PATCH/DELETE /admins/:id`, `POST /admins/:id/reset-2fa` |
 

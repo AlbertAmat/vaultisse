@@ -24,7 +24,7 @@ export interface SettingDefinition {
     testable?: boolean;
 }
 
-export type SettingGroupId = "security" | "notifications" | "email" | "registration" | "sso" | "metadata" | "limits" | "inactivity" | "admin";
+export type SettingGroupId = "security" | "notifications" | "email" | "registration" | "sso" | "metadata" | "limits" | "inactivity" | "retention" | "admin";
 
 export const SETTING_GROUPS: {id: SettingGroupId; label: string; description: string}[] = [
     {id: "email", label: "Email (SMTP)", description: "Outgoing mail for verification links and notifications. Leave host and from empty to run without email."},
@@ -33,6 +33,7 @@ export const SETTING_GROUPS: {id: SettingGroupId; label: string; description: st
     {id: "metadata", label: "API keys", description: "Keys for the services that look up book details and covers by ISBN. Each one can be tested before you save it."},
     {id: "limits", label: "Upload limits", description: "Largest files users can upload."},
     {id: "inactivity", label: "Inactive accounts", description: "Permanently deletes accounts nobody has used for a while. Leave the days empty to never delete."},
+    {id: "retention", label: "Data retention", description: "How long each kind of log is kept. Edited on the Data retention page."},
     {id: "security", label: "Automatic IP blocking", description: "Blocks an address that keeps failing to sign in. Edited on the Security page."},
     {id: "notifications", label: "Admin notifications", description: "Which events email the admins. Edited on the Notifications page."},
     {id: "admin", label: "Admin portal", description: "Behaviour of the portal itself."},
@@ -86,6 +87,14 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     {key: "ADMIN_NOTIFY_ANOMALY", group: "notifications", label: "Anomalies", description: "Sign-ins from a country never seen before, a burst of new accounts, or an admin signing in from a new country.", type: "boolean", defaultValue: "true"},
     {key: "ADMIN_NOTIFY_ANOMALY_SIGNUPS_PER_HOUR", group: "notifications", label: "New accounts per hour that count as a burst", description: "More sign-ups than this within an hour raises an anomaly alert.", type: "number", defaultValue: "20", min: 1},
     {key: "ADMIN_NOTIFY_DATA_REQUESTS", group: "notifications", label: "Data requests (GDPR)", description: "A request to access or erase personal data was logged, or its deadline is near.", type: "boolean", defaultValue: "true"},
+    {key: "RETENTION_ACTIVITY_LOG_DAYS", group: "retention", label: "Sign-in and activity log (days)", description: "0 keeps it forever.", type: "number", defaultValue: "0", min: 0},
+    {key: "RETENTION_SECURITY_EVENTS_DAYS", group: "retention", label: "Security events (days)", description: "0 keeps them forever.", type: "number", defaultValue: "30", min: 0},
+    {key: "RETENTION_MAIL_LOG_DAYS", group: "retention", label: "Emails sent (days)", description: "0 keeps them forever.", type: "number", defaultValue: "90", min: 0},
+    {key: "RETENTION_NOTIFICATIONS_DAYS", group: "retention", label: "Admin notifications (days)", description: "0 keeps them forever.", type: "number", defaultValue: "90", min: 0},
+    {key: "RETENTION_WEBHOOK_DELIVERIES_DAYS", group: "retention", label: "Webhook deliveries (days)", description: "0 keeps them forever.", type: "number", defaultValue: "30", min: 0},
+    {key: "RETENTION_JOB_RUNS_DAYS", group: "retention", label: "Background job history (days)", description: "0 keeps it forever.", type: "number", defaultValue: "30", min: 0},
+    {key: "RETENTION_AUDIT_DAYS", group: "retention", label: "Audit trail (days)", description: "0 keeps it forever; otherwise at least 90.", type: "number", defaultValue: "0", min: 0},
+    {key: "ADMIN_NOTIFY_JOBS", group: "notifications", label: "A background job failed", description: "A scheduled job (clean-up, reminders, deletions) ended with an error.", type: "boolean", defaultValue: "true"},
     {key: "ADMIN_DELETION_GRACE_DAYS", group: "admin", label: "Deletion grace period (days)", description: "Deleting an account or vault from the portal locks it out first and only deletes it after this many days, so it can be cancelled. 0 = delete immediately.", type: "number", defaultValue: "7", min: 0},
 ];
 

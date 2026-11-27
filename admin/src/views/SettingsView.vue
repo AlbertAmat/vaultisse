@@ -191,7 +191,7 @@ const sourceColor = (source: SettingSource) => ({database: "primary", env: "info
 
 function fill(next: ISettingGroup[]) {
 	// The notification switches have their own page.
-	groups.value = next.filter((group) => group.id !== "notifications" && group.id !== "security");
+	groups.value = next.filter((group) => group.id !== "notifications" && group.id !== "security" && group.id !== "retention");
 	resets.clear();
 	for (const group of next) {
 		for (const item of group.items) {

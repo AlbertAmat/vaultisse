@@ -20,7 +20,7 @@ import {SecurityRepository} from "../repositories/SecurityRepository";
 import {findSetting} from "./settingsCatalog";
 import {WebhookEvent} from "./WebhookService";
 
-export type NotificationType = "user_pending" | "security" | "database" | "mail_failures" | "deletions" | "updates" | "startup" | "anomaly" | "data_requests" | "test";
+export type NotificationType = "user_pending" | "security" | "database" | "mail_failures" | "deletions" | "updates" | "startup" | "anomaly" | "data_requests" | "jobs" | "test";
 
 /** Setting that switches each event type on or off. */
 export const NOTIFICATION_SWITCH: Record<Exclude<NotificationType, "test">, string> = {
@@ -33,12 +33,13 @@ export const NOTIFICATION_SWITCH: Record<Exclude<NotificationType, "test">, stri
     startup: "ADMIN_NOTIFY_STARTUP",
     anomaly: "ADMIN_NOTIFY_ANOMALY",
     data_requests: "ADMIN_NOTIFY_DATA_REQUESTS",
+    jobs: "ADMIN_NOTIFY_JOBS",
 };
 
 /** The webhook event an email notification type corresponds to, unless the request names one. */
 const DEFAULT_EVENT: Record<Exclude<NotificationType, "test">, WebhookEvent> = {
     user_pending: "account.pending", security: "security.alert", database: "system.alert", mail_failures: "system.alert",
-    deletions: "deletion.done", updates: "system.alert", startup: "system.alert", anomaly: "anomaly.detected", data_requests: "data_request.due",
+    deletions: "deletion.done", updates: "system.alert", startup: "system.alert", anomaly: "anomaly.detected", data_requests: "data_request.due", jobs: "system.alert",
 };
 
 export interface NotificationRequest {
@@ -210,8 +211,10 @@ export class AdminNotifier {
             return;
         }
         const startup = setTimeout(() => void this.announceStartup(bootTime), 20 * 1000);
-        const first = setTimeout(() => void this.runChecks(), 60 * 1000);
-        const every = setInterval(() => void this.runChecks(), CHECK_INTERVAL_MS);
+        // Through the job registry, so each run is recorded (and a failure is visible) in the console.
+        const scheduled = () => void appService.getJobs().runScheduled("health-checks");
+        const first = setTimeout(scheduled, 60 * 1000);
+        const every = setInterval(scheduled, CHECK_INTERVAL_MS);
         [startup, first, every].forEach((timer) => timer.unref());
         this.timers.push(startup, first, every);
     }

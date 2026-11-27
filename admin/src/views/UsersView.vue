@@ -113,6 +113,12 @@
 					<v-btn v-if="canWrite()" variant="tonal" prepend-icon="mdi-clipboard-text-clock-outline" :to="`/data-requests?new=1&user=${detail.user.id}`">Log a request…</v-btn>
 				</div>
 
+				<div v-if="canWrite() && detail.user.disabledReason !== 'pending_deletion'" class="text-subtitle-2 mt-6 mb-2">Support</div>
+				<div v-if="canWrite() && detail.user.disabledReason !== 'pending_deletion'" class="d-flex flex-wrap ga-2">
+					<v-btn variant="tonal" prepend-icon="mdi-email-edit-outline" @click="openEmail">Change email…</v-btn>
+					<v-btn variant="tonal" prepend-icon="mdi-account-multiple-plus-outline" @click="openMerge">Merge another account…</v-btn>
+				</div>
+
 				<div class="text-subtitle-2 mt-6 mb-2">Vaults</div>
 				<v-list v-if="detail.memberships.length" density="compact" class="pa-0" bg-color="transparent">
 					<v-list-item v-for="m in detail.memberships" :key="m.vaultId" :title="m.vaultName" :subtitle="`${m.role}${m.status === 0 ? ' · pending' : m.status === 2 ? ' · rejected' : ''}`" :to="`/vaults?search=${encodeURIComponent(m.vaultName)}`">
@@ -135,6 +141,41 @@
 				</template>
 			</div>
 		</v-navigation-drawer>
+
+		<!-- Change email -->
+		<v-dialog v-model="emailOpen" max-width="480">
+			<v-card v-if="detail" class="pa-2">
+				<v-card-title>Change the email address</v-card-title>
+				<v-card-text>
+					<p class="text-body-2 mb-3">Now: <strong>{{ detail.user.email }}</strong>. When email is set up, the old address is told about the change.</p>
+					<v-text-field v-model="newEmail" type="email" label="New email address" autocomplete="off" class="mb-2"/>
+					<v-checkbox v-model="emailVerified" density="compact" hide-details label="I confirmed this address with the person: mark it as verified"/>
+					<p class="text-caption text-medium-emphasis mt-1">Otherwise they have to verify it themselves before they can sign in again. Without email set up it counts as verified.</p>
+				</v-card-text>
+				<v-card-actions><v-spacer/><v-btn variant="text" @click="emailOpen = false">Cancel</v-btn><v-btn color="primary" variant="flat" :loading="savingEmail" :disabled="!newEmail.trim()" @click="changeEmail">Change it</v-btn></v-card-actions>
+			</v-card>
+		</v-dialog>
+
+		<!-- Merge -->
+		<v-dialog v-model="mergeOpen" max-width="560">
+			<v-card v-if="detail" class="pa-2">
+				<v-card-title class="d-flex align-center ga-2"><v-icon color="warning">mdi-account-multiple-plus-outline</v-icon>Merge another account into {{ detail.user.name }}</v-card-title>
+				<v-card-text>
+					<p class="text-body-2 mb-3">For someone who ended up with two accounts. Choose the one that goes away: everything it owns moves to <strong>{{ detail.user.name }}</strong> ({{ detail.user.code }}), then it is deleted.</p>
+					<v-autocomplete v-model="mergeSource" :items="mergeFound" item-title="label" item-value="id" return-object clearable no-filter label="The account that goes away" placeholder="Search by name, username or email" :loading="mergeSearching" class="mb-3" @update:search="searchMerge"/>
+					<template v-if="mergeSource">
+						<ul class="text-body-2 mb-3 pl-5">
+							<li><strong>Moves over:</strong> its vault memberships (where both belong to the same vault the stronger role wins), what it created or borrowed, its activity log, notes and tags.</li>
+							<li><strong>Dropped with it:</strong> its sessions, two-factor, backup codes and terms acceptances. {{ detail.user.name }} keeps their own. A single sign-on link of the old account is not carried over.</li>
+							<li><strong>Cannot be undone.</strong></li>
+						</ul>
+						<p class="text-body-2 mb-2">Type <strong class="mono">{{ mergeSource.code }}</strong> to confirm.</p>
+						<v-text-field v-model="mergeConfirm" autocomplete="off"/>
+					</template>
+				</v-card-text>
+				<v-card-actions><v-spacer/><v-btn variant="text" @click="mergeOpen = false">Cancel</v-btn><v-btn color="warning" variant="flat" :loading="merging" :disabled="!mergeSource || mergeConfirm !== mergeSource.code" @click="merge">Merge the accounts</v-btn></v-card-actions>
+			</v-card>
+		</v-dialog>
 
 		<!-- Bulk: approve everyone waiting -->
 		<v-dialog v-model="approveAllOpen" max-width="440">
@@ -236,6 +277,17 @@ const editTags = ref<string[]>([]);
 const newNote = ref("");
 const savingNote = ref(false);
 const exporting = ref(false);
+const emailOpen = ref(false);
+const newEmail = ref("");
+const emailVerified = ref(false);
+const savingEmail = ref(false);
+const mergeOpen = ref(false);
+const mergeSource = ref<{id: number; code: string; label: string} | null>(null);
+const mergeFound = ref<{id: number; code: string; label: string}[]>([]);
+const mergeConfirm = ref("");
+const mergeSearching = ref(false);
+const merging = ref(false);
+let mergeTimer: ReturnType<typeof setTimeout> | undefined;
 const approveAllOpen = ref(false);
 const bulkDeleteOpen = ref(false);
 const working = ref(false);
@@ -346,6 +398,61 @@ async function addNote() {
 async function removeNote(noteId: number) {
 	detail.value!.notes = await api.users.removeNote(detail.value!.user.id, noteId);
 	await load();
+}
+
+function openEmail() {
+	newEmail.value = "";
+	emailVerified.value = false;
+	emailOpen.value = true;
+}
+
+async function changeEmail() {
+	savingEmail.value = true;
+	try {
+		const result = await api.users.changeEmail(detail.value!.user.id, newEmail.value.trim(), emailVerified.value);
+		emailOpen.value = false;
+		notify(result.verified ? "The email address was changed." : "The email address was changed. They have to verify it before signing in.");
+		detail.value = await api.users.get(detail.value!.user.id);
+		await load();
+	} finally {
+		savingEmail.value = false;
+	}
+}
+
+function openMerge() {
+	mergeSource.value = null;
+	mergeFound.value = [];
+	mergeConfirm.value = "";
+	mergeOpen.value = true;
+}
+
+function searchMerge(text: string | null) {
+	clearTimeout(mergeTimer);
+	if (!text || text.length < 2 || mergeSource.value?.label === text) return;
+	mergeTimer = setTimeout(async () => {
+		mergeSearching.value = true;
+		try {
+			const found = await api.users.list({search: text, pageSize: 8});
+			mergeFound.value = found.items.filter((u) => u.id !== detail.value?.user.id).map((u) => ({id: u.id, code: u.code, label: `${u.name} (${u.code}) · ${u.email}`}));
+		} finally {
+			mergeSearching.value = false;
+		}
+	}, 250);
+}
+
+async function merge() {
+	merging.value = true;
+	try {
+		const keepId = detail.value!.user.id;
+		const result = await api.users.merge(keepId, mergeSource.value!.id, mergeConfirm.value);
+		mergeOpen.value = false;
+		notify(`Merged: ${result.vaultsMoved} vault${result.vaultsMoved === 1 ? "" : "s"} moved, ${result.vaultsCombined} combined.`);
+		detail.value = await api.users.get(keepId);
+		editTags.value = [...detail.value.user.tags];
+		await load();
+	} finally {
+		merging.value = false;
+	}
 }
 
 /** A fresh verification buys a one-minute link; following it downloads the ZIP. */

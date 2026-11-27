@@ -6,6 +6,7 @@ import {Pool} from "pg";
 import {appService} from "../../AppService";
 import {ComplianceRepository, ControlRecord, ControlStatus} from "../repositories/ComplianceRepository";
 import {COMPLIANCE_CATALOG, CheckResult, ControlDef, Facts} from "./complianceCatalog";
+import {RETENTION_ITEMS, RetentionService} from "./RetentionService";
 import {findSetting} from "./settingsCatalog";
 
 /** An admin whose access wasn't confirmed for this long counts as overdue. */
@@ -110,6 +111,9 @@ export class ComplianceService {
         }
         const dataRequests = (await this.pool.query(
             `SELECT COUNT(*)::int AS open, COUNT(*) FILTER (WHERE due_at < CURRENT_TIMESTAMP)::int AS overdue FROM data_requests WHERE status IN ('open', 'processing')`)).rows[0];
+        const retention = new RetentionService(this.pool);
+        const days = (id: string) => retention.days(RETENTION_ITEMS.find((item) => item.id === id)!);
+        const jobsFailing = await appService.getJobs().failingCount().catch(() => 0);
         const highRisks = await this.scalar("SELECT COUNT(*)::int FROM compliance_register WHERE kind = 'risk' AND status = 'active' AND rating = 'high'");
 
         const value = (key: string): string => {
@@ -146,6 +150,8 @@ export class ComplianceService {
             register,
             highRisks,
             dataRequests,
+            retention: {activityDays: days("activity_log"), securityDays: days("security_events"), mailDays: days("mail_log")},
+            jobsFailing,
         };
     }
 

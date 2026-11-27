@@ -31,8 +31,11 @@ import {inactivityRoutes} from "./routes/InactivityRoutes";
 import {termsRoutes} from "./routes/TermsRoutes";
 import {broadcastRoutes} from "./routes/BroadcastRoutes";
 import {BroadcastService} from "./services/BroadcastService";
+import {jobsRoutes} from "./routes/JobsRoutes";
+import {retentionRoutes} from "./routes/RetentionRoutes";
 import {dataRequestsRoutes} from "./routes/DataRequestsRoutes";
 import {webhooksRoutes} from "./routes/WebhooksRoutes";
+import {RetentionService} from "./services/RetentionService";
 import {AnomalyService} from "./services/AnomalyService";
 import {DataRequestService} from "./services/DataRequestService";
 import {complianceRoutes} from "./routes/ComplianceRoutes";
@@ -58,6 +61,7 @@ export class AdminApp {
     private timers: NodeJS.Timeout[] = [];
     private readonly auth: AdminAuthService;
     private readonly anomalies: AnomalyService;
+    public readonly retention: RetentionService;
     public readonly dataRequests: DataRequestService;
     private readonly audit: AdminAuditService;
     private readonly deletions: DeletionService;
@@ -73,6 +77,7 @@ export class AdminApp {
         this.audit = new AdminAuditService(pool);
         this.auth = new AdminAuthService(pool, logger, appService.getJwtSecret());
         this.anomalies = new AnomalyService(pool, logger);
+        this.retention = new RetentionService(pool);
         this.auth.setSignInObserver((admin, ip, startedAt) => void this.anomalies.adminSignedIn(admin, ip, startedAt));
         this.deletions = new DeletionService(pool, this.audit, logger, () => {
             const days = Number(appService.getSettings().get("ADMIN_DELETION_GRACE_DAYS"));
@@ -80,7 +85,67 @@ export class AdminApp {
         });
         this.dataRequests = new DataRequestService(pool, this.deletions);
         this.broadcasts = new BroadcastService(pool, logger);
+        this.registerJobs();
         this.configure();
+    }
+
+    /** Tells the job registry what the portal runs in the background (and how to run each by hand). */
+    private registerJobs(): void {
+        const HOUR = 60 * 60 * 1000;
+        const jobs = appService.getJobs();
+        jobs.register({
+            id: "health-checks", name: "Health checks and alerts", schedule: "Every 5 minutes", everyMs: 5 * 60 * 1000,
+            description: "Checks the database, failed sign-ins, email failures and new versions, and alerts the admins when something is wrong.",
+            run: async () => {
+                await appService.getNotifier().runChecks();
+                return "Checked";
+            },
+        });
+        jobs.register({
+            id: "deletions", name: "Scheduled deletions", schedule: "Every hour", everyMs: HOUR, dangerous: true,
+            description: "Carries out the account and vault deletions whose grace period is over.",
+            run: async () => {
+                const done = await this.deletions.executeDue();
+                return done > 0 ? `${done} deleted` : "Nothing was due";
+            },
+        });
+        jobs.register({
+            id: "retention", name: "Purge old records", schedule: "Every hour", everyMs: HOUR, dangerous: true,
+            description: "Deletes logs older than the periods set on the Data retention page, and expired admin sessions.",
+            run: async () => {
+                const removed = await this.retention.purge();
+                await this.auth.purgeSessions();
+                const total = Object.values(removed).reduce((sum, n) => sum + n, 0);
+                const parts = Object.entries(removed).filter(([, n]) => n > 0).map(([id, n]) => `${n} from ${id.replace(/_/g, " ")}`);
+                return total === 0 ? "Nothing to remove" : `Removed ${parts.join(", ")}`;
+            },
+        });
+        jobs.register({
+            id: "data-requests", name: "Data request reminders", schedule: "Every hour", everyMs: HOUR,
+            description: "Emails the admins about data requests that are close to their deadline or past it.",
+            run: async () => {
+                await this.dataRequests.remind();
+                return "Checked";
+            },
+        });
+        jobs.register({
+            id: "anomalies", name: "Anomaly checks", schedule: "Every hour", everyMs: HOUR,
+            description: "Looks for sign-ins from a country nobody used before and for a burst of new accounts.",
+            run: async () => {
+                await this.anomalies.check();
+                return "Checked";
+            },
+        });
+        jobs.register({
+            id: "update-check", name: "Update check", schedule: "Every day", everyMs: 24 * HOUR,
+            description: "Asks GitHub for the latest release, so the console and the admins' emails can say when a new version is out.",
+            run: async () => {
+                const status = await appService.getUpdateChecker().status(true);
+                if (!status.checkEnabled) return "Switched off (Settings > Admin portal)";
+                if (status.error) return `Could not reach GitHub: ${status.error}`;
+                return status.updateAvailable ? `Version ${status.latest} is available` : "Up to date";
+            },
+        });
     }
 
     /** @returns The underlying HTTP server (null until started). */
@@ -148,6 +213,8 @@ export class AdminApp {
         app.use("/api/admin/compliance", complianceRoutes(this.pool, this.audit));
         app.use("/api/admin/data-requests", dataRequestsRoutes(this.pool, this.audit, this.dataRequests));
         app.use("/api/admin/webhooks", webhooksRoutes(this.audit));
+        app.use("/api/admin/jobs", jobsRoutes(this.audit));
+        app.use("/api/admin/retention", retentionRoutes(this.retention));
         app.use("/api/admin/map", mapRoutes(this.pool));
         app.use("/api/admin/notifications", notificationsRoutes(this.pool, this.audit));
         app.use("/api/admin", (_req, res) => {
@@ -194,9 +261,10 @@ export class AdminApp {
 
         const first = setTimeout(() => void this.maintain(), 2 * 60 * 1000);
         const hourly = setInterval(() => void this.maintain(), MAINTENANCE_INTERVAL_MS);
-        first.unref();
-        hourly.unref();
-        this.timers.push(first, hourly);
+        const daily = setInterval(() => void appService.getJobs().runScheduled("update-check"), 24 * 60 * 60 * 1000);
+        const firstCheck = setTimeout(() => void appService.getJobs().runScheduled("update-check"), 5 * 60 * 1000);
+        [first, hourly, daily, firstCheck].forEach((timer) => timer.unref());
+        this.timers.push(first, hourly, daily, firstCheck);
     }
 
     /**
@@ -266,23 +334,13 @@ export class AdminApp {
         return addresses;
     }
 
-    /** Hourly housekeeping: carry out deletions whose grace period is over, drop old events and sessions. */
+    /** Hourly housekeeping: runs the hourly background jobs (deletions, purge of old records, reminders, anomaly checks). */
     public async maintain(): Promise<void> {
-        const step = async (name: string, work: () => Promise<unknown>) => {
-            try {
-                await work();
-            } catch (error) {
-                this.logger.error(`Admin maintenance (${name}) failed: ${error instanceof Error ? error.message : String(error)}`);
-            }
-        };
-        await step("deletions", () => this.deletions.executeDue());
-        await step("security events", () => appService.getSecurityEvents().purgeOld());
-        await step("notifications", () => appService.getNotifier().purgeOld());
-        await step("mail log", () => new MailLogRepository(this.pool).purge(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)));
-        await step("sessions", () => this.auth.purgeSessions());
-        await step("webhook log", () => appService.getWebhooks().purge(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)));
-        await step("data requests", () => this.dataRequests.remind());
-        await step("anomalies", () => this.anomalies.check());
+        const jobs = appService.getJobs();
+        // One after the other: each is recorded, and one failing doesn't stop the rest.
+        for (const id of ["deletions", "retention", "data-requests", "anomalies"]) {
+            await jobs.runScheduled(id);
+        }
     }
 
     /** Stops the timers and the listener. */
