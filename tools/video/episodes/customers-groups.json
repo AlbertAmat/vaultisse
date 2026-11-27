@@ -45,10 +45,10 @@
       "Manage groups"
     ],
     "narration": {
-      "en": "Here is how to add customers and groups in Vaultisse. Customers are the people who borrow books.",
-      "es": "Así se añaden clientes y grupos en Vaultisse. Los clientes son quienes se llevan libros.",
-      "ca": "Així s'afegeixen clients i grups a Vaultisse. Els clients són qui s'emporta llibres.",
-      "de": "So legst du Kunden und Gruppen in Vaultisse an. Kunden sind alle, die Bücher ausleihen."
+      "en": "Here is how to add customers and groups in Vaultisse. In this video: add a customer. Put them in a group. Manage your groups.",
+      "es": "Así se añaden clientes y grupos en Vaultisse. En este vídeo: añade un cliente. Ponlo en un grupo. Gestiona los grupos.",
+      "ca": "Així s'afegeixen clients i grups a Vaultisse. En aquest vídeo: afegeix un client. Posa'l en un grup. Gestiona els grups.",
+      "de": "So legst du Kunden und Gruppen in Vaultisse an. In diesem Video: einen Kunden anlegen. Ihn einer Gruppe zuordnen. Die Gruppen verwalten."
     }
   },
   "steps": [
@@ -179,10 +179,10 @@
   "outro": {
     "next": "Lend and return a book",
     "narration": {
-      "en": "Your borrowers are ready.",
-      "es": "Ya tienes a tus lectores.",
-      "ca": "Ja tens els teus lectors.",
-      "de": "Deine Ausleiher sind angelegt."
+      "en": "Your borrowers are ready. Next time: lending and returning a book. Thanks for watching, and see you soon!",
+      "es": "Ya tienes a tus lectores. En el próximo vídeo: prestar y devolver un libro. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Ja tens els teus lectors. Al pròxim vídeo: prestar i retornar un llibre. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Ausleiher sind angelegt. Im nächsten Video: ein Buch verleihen und zurücknehmen. Danke fürs Zuschauen und bis bald!"
     }
   }
 }

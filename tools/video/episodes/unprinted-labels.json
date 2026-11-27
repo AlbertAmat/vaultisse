@@ -45,10 +45,10 @@
       "Create the PDF"
     ],
     "narration": {
-      "en": "Here is how to print only unprinted barcode labels in Vaultisse. It remembers which copies already have one.",
-      "es": "Así se imprimen solo las etiquetas pendientes en Vaultisse. Recuerda qué ejemplares ya tienen la suya.",
-      "ca": "Així s'imprimeixen només les etiquetes pendents a Vaultisse. Recorda quins exemplars ja en tenen.",
-      "de": "So druckst du in Vaultisse nur ungedruckte Etiketten. Es merkt sich, welche Exemplare schon eine haben."
+      "en": "Here is how to print only unprinted barcode labels in Vaultisse. In this video: open the printer queue. Add what was never printed. Create the PDF.",
+      "es": "Así se imprimen solo las etiquetas pendientes en Vaultisse. En este vídeo: abre la cola de impresión. Añade lo que nunca se imprimió. Crea el PDF.",
+      "ca": "Així s'imprimeixen només les etiquetes pendents a Vaultisse. En aquest vídeo: obre la cua d'impressió. Afegeix el que no s'ha imprès mai. Crea el PDF.",
+      "de": "So druckst du in Vaultisse nur ungedruckte Etiketten. In diesem Video: die Druckwarteschlange öffnen. Alles Ungedruckte hinzufügen. Das PDF erzeugen."
     }
   },
   "steps": [
@@ -174,10 +174,10 @@
   "outro": {
     "next": "Design your library card",
     "narration": {
-      "en": "No label printed twice.",
-      "es": "Ninguna etiqueta repetida.",
-      "ca": "Cap etiqueta repetida.",
-      "de": "Keine Etikette doppelt."
+      "en": "No label printed twice. Next time: designing your library card. Thanks for watching, and see you soon!",
+      "es": "Ninguna etiqueta repetida. En el próximo vídeo: diseñar tu carné de biblioteca. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Cap etiqueta repetida. Al pròxim vídeo: dissenyar el carnet de biblioteca. Gràcies per mirar-ho i fins aviat!",
+      "de": "Keine Etikette doppelt. Im nächsten Video: den Bibliotheksausweis gestalten. Danke fürs Zuschauen und bis bald!"
     }
   }
 }

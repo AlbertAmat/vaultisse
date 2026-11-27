@@ -45,10 +45,10 @@
       "Keep authors tidy"
     ],
     "narration": {
-      "en": "Here is how to manage categories and authors in Vaultisse. They make books easy to find.",
-      "es": "Así se gestionan categorías y autores en Vaultisse. Gracias a ellos los libros se encuentran fácil.",
-      "ca": "Així es gestionen categories i autors a Vaultisse. Gràcies a ells els llibres es troben fàcilment.",
-      "de": "So verwaltest du Kategorien und Autoren in Vaultisse. Damit findest du Bücher leicht wieder."
+      "en": "Here is how to manage categories and authors in Vaultisse. In this video: add a category. Edit or delete it. Keep authors tidy.",
+      "es": "Así se gestionan categorías y autores en Vaultisse. En este vídeo: añade una categoría. Edítala o bórrala. Ordena los autores.",
+      "ca": "Així es gestionen categories i autors a Vaultisse. En aquest vídeo: afegeix una categoria. Edita-la o esborra-la. Endreça els autors.",
+      "de": "So verwaltest du Kategorien und Autoren in Vaultisse. In diesem Video: eine Kategorie anlegen. Sie bearbeiten oder löschen. Die Autoren ordentlich halten."
     }
   },
   "steps": [
@@ -164,10 +164,10 @@
   "outro": {
     "next": "Organise with locations",
     "narration": {
-      "en": "Your catalogue stays tidy.",
-      "es": "Tu catálogo queda ordenado.",
-      "ca": "El teu catàleg queda endreçat.",
-      "de": "So bleibt dein Katalog ordentlich."
+      "en": "Your catalogue stays tidy. Next time: organising with locations. Thanks for watching, and see you soon!",
+      "es": "Tu catálogo queda ordenado. En el próximo vídeo: organizar por ubicaciones. ¡Gracias por vernos y hasta pronto!",
+      "ca": "El teu catàleg queda endreçat. Al pròxim vídeo: organitzar per ubicacions. Gràcies per mirar-ho i fins aviat!",
+      "de": "So bleibt dein Katalog ordentlich. Im nächsten Video: Ordnen nach Standorten. Danke fürs Zuschauen und bis bald!"
     }
   }
 }

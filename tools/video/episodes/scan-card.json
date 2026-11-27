@@ -45,10 +45,10 @@
       "Check the history"
     ],
     "narration": {
-      "en": "Here is how to lend books by scanning a library card in Vaultisse. A barcode reader makes it very quick.",
-      "es": "Así se prestan libros escaneando el carné en Vaultisse. Con un lector de códigos es muy rápido.",
-      "ca": "Així es presten llibres escanejant el carnet a Vaultisse. Amb un lector de codis és molt ràpid.",
-      "de": "So verleihst du in Vaultisse Bücher per Ausweis-Scan. Mit einem Barcodeleser geht das sehr schnell."
+      "en": "Here is how to lend books by scanning a library card in Vaultisse. In this video: scan the card. Scan a book to lend it. Check the history.",
+      "es": "Así se prestan libros escaneando el carné en Vaultisse. En este vídeo: escanea el carné. Escanea un libro para prestarlo. Revisa el historial.",
+      "ca": "Així es presten llibres escanejant el carnet a Vaultisse. En aquest vídeo: escaneja el carnet. Escaneja un llibre per prestar-lo. Revisa l'historial.",
+      "de": "So verleihst du in Vaultisse Bücher per Ausweis-Scan. In diesem Video: den Ausweis scannen. Ein Buch zum Verleihen scannen. Den Verlauf prüfen."
     }
   },
   "steps": [
@@ -180,10 +180,10 @@
   "outro": {
     "next": "Lend and return a book",
     "narration": {
-      "en": "Lending takes two scans.",
-      "es": "Prestar son dos escaneos.",
-      "ca": "Prestar són dos escanejos.",
-      "de": "Zwei Scans, und das Buch ist verliehen."
+      "en": "Lending takes two scans. Next time: lending and returning a book. Thanks for watching, and see you soon!",
+      "es": "Prestar son dos escaneos. En el próximo vídeo: prestar y devolver un libro. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Prestar són dos escanejos. Al pròxim vídeo: prestar i retornar un llibre. Gràcies per mirar-ho i fins aviat!",
+      "de": "Zwei Scans, und das Buch ist verliehen. Im nächsten Video: ein Buch verleihen und zurücknehmen. Danke fürs Zuschauen und bis bald!"
     }
   }
 }

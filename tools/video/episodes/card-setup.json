@@ -45,10 +45,10 @@
       "Download a customer card"
     ],
     "narration": {
-      "en": "Here is how to design a library card in Vaultisse. Every customer gets one, with a barcode.",
-      "es": "Así se diseña un carné de biblioteca en Vaultisse. Cada cliente tiene el suyo, con código de barras.",
-      "ca": "Així es dissenya un carnet de biblioteca a Vaultisse. Cada client té el seu, amb codi de barres.",
-      "de": "So gestaltest du in Vaultisse einen Bibliotheksausweis. Jeder Kunde bekommt einen mit Barcode."
+      "en": "Here is how to design a library card in Vaultisse. In this video: two fields of your own. A live preview. Downloading a customer card.",
+      "es": "Así se diseña un carné de biblioteca en Vaultisse. En este vídeo: dos campos propios. La vista previa al momento. La descarga del carné de un cliente.",
+      "ca": "Així es dissenya un carnet de biblioteca a Vaultisse. En aquest vídeo: dos camps propis. La previsualització a l'instant. La descàrrega del carnet d'un client.",
+      "de": "So gestaltest du in Vaultisse einen Bibliotheksausweis. In diesem Video: zwei eigene Felder. Eine Live-Vorschau. Den Ausweis eines Kunden herunterladen."
     }
   },
   "steps": [
@@ -191,10 +191,10 @@
   "outro": {
     "next": "Scan a card to lend books",
     "narration": {
-      "en": "Your cards are ready to print.",
-      "es": "Tus carnés están listos para imprimir.",
-      "ca": "Els carnets ja es poden imprimir.",
-      "de": "Deine Ausweise sind druckfertig."
+      "en": "Your cards are ready to print. Next time: lending by scanning a card. Thanks for watching, and see you soon!",
+      "es": "Tus carnés están listos para imprimir. En el próximo vídeo: prestar escaneando el carné. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Els carnets ja es poden imprimir. Al pròxim vídeo: prestar escanejant el carnet. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Ausweise sind druckfertig. Im nächsten Video: Verleihen per Ausweis-Scan. Danke fürs Zuschauen und bis bald!"
     }
   }
 }

@@ -7,37 +7,90 @@
   "playlist": "End user",
   "docs": "https://docs.vaultisse.com/lending-and-returns",
   "start": "/app/book/1",
-  "tags": ["vaultisse lend a book", "vaultisse return a book", "track lent books", "library loan tracker", "self-hosted library", "school library software", "book lending app", "vaultisse"],
+  "tags": [
+    "vaultisse lend a book",
+    "vaultisse return a book",
+    "track lent books",
+    "library loan tracker",
+    "self-hosted library",
+    "school library software",
+    "book lending app",
+    "vaultisse"
+  ],
   "local": {
-    "en": {"topic": "Loans", "title": "How to lend and return a book in Vaultisse", "description": "Learn how to lend and return a book in Vaultisse, and see at any moment who has each copy."},
-    "es": {"topic": "Préstamos", "title": "Cómo prestar y devolver un libro en Vaultisse", "description": "Aprende a prestar y devolver un libro en Vaultisse y a saber en todo momento quién tiene cada ejemplar."},
-    "ca": {"topic": "Préstecs", "title": "Com prestar i retornar un llibre a Vaultisse", "description": "Aprèn a prestar i retornar un llibre a Vaultisse i a saber en tot moment qui té cada exemplar."},
-    "de": {"topic": "Ausleihen", "title": "Bücher in Vaultisse verleihen und zurücknehmen", "description": "So verleihst du in Vaultisse ein Buch, nimmst es zurück und siehst jederzeit, wer welches Exemplar hat."}
+    "en": {
+      "topic": "Loans",
+      "title": "How to lend and return a book in Vaultisse",
+      "description": "Learn how to lend and return a book in Vaultisse, and see at any moment who has each copy."
+    },
+    "es": {
+      "topic": "Préstamos",
+      "title": "Cómo prestar y devolver un libro en Vaultisse",
+      "description": "Aprende a prestar y devolver un libro en Vaultisse y a saber en todo momento quién tiene cada ejemplar."
+    },
+    "ca": {
+      "topic": "Préstecs",
+      "title": "Com prestar i retornar un llibre a Vaultisse",
+      "description": "Aprèn a prestar i retornar un llibre a Vaultisse i a saber en tot moment qui té cada exemplar."
+    },
+    "de": {
+      "topic": "Ausleihen",
+      "title": "Bücher in Vaultisse verleihen und zurücknehmen",
+      "description": "So verleihst du in Vaultisse ein Buch, nimmst es zurück und siehst jederzeit, wer welches Exemplar hat."
+    }
   },
   "intro": {
-    "bullets": ["Lend a copy from the book page", "See every open loan", "Return a book in one click"],
+    "bullets": [
+      "Lend from the book page",
+      "Lend several books at once",
+      "Return a book in one click"
+    ],
     "narration": {
-      "en": "Here is how to lend and return a book in Vaultisse. You will lend a copy to a pupil. Then you will check who has it, and take it back.",
-      "es": "Así se presta y se devuelve un libro en Vaultisse. Prestarás un ejemplar a un alumno. Después verás quién lo tiene y lo recuperarás.",
-      "ca": "Així es presta i es retorna un llibre a Vaultisse. Prestaràs un exemplar a un alumne. Després veuràs qui el té i el recuperaràs.",
-      "de": "So verleihst du ein Buch in Vaultisse und nimmst es zurück. Du verleihst ein Exemplar an einen Schüler. Danach siehst du, wer es hat, und nimmst es zurück."
+      "en": "Here is how to lend and return a book in Vaultisse. In this video: lend from the book page. Lend several books at once. Return a book in one click.",
+      "es": "Así se presta y se devuelve un libro en Vaultisse. En este vídeo: presta desde la página del libro. Presta varios libros a la vez. Devuelve un libro con un clic.",
+      "ca": "Així es presta i es retorna un llibre a Vaultisse. En aquest vídeo: presta des de la pàgina del llibre. Presta diversos llibres alhora. Retorna un llibre amb un clic.",
+      "de": "So verleihst du ein Buch in Vaultisse und nimmst es zurück. In diesem Video: auf der Buchseite verleihen. Mehrere Bücher auf einmal verleihen. Ein Buch mit einem Klick zurücknehmen."
     }
   },
   "steps": [
     {
       "id": "copies",
-      "title": {"en": "Open the book", "es": "Abre el libro", "ca": "Obre el llibre", "de": "Das Buch öffnen"},
+      "title": {
+        "en": "Open the book",
+        "es": "Abre el libro",
+        "ca": "Obre el llibre",
+        "de": "Das Buch öffnen"
+      },
       "narration": {
         "en": "Open the book you want to lend. Under Stocks, every physical copy has its own line, with its location and status.",
         "es": "Abre el libro que quieres prestar. En Stocks, cada ejemplar tiene su propia línea, con su ubicación y su estado.",
         "ca": "Obre el llibre que vols prestar. A Estocs, cada exemplar té la seva línia, amb la ubicació i l'estat.",
         "de": "Öffne das Buch, das du verleihen willst. Unter Bestände hat jedes Exemplar eine eigene Zeile mit Standort und Status."
       },
-      "actions": [{"pause": 1.5}, {"scroll": 300}, {"highlight": {"within": "tbody tr", "text": "Available", "exact": false}}]
+      "actions": [
+        {
+          "pause": 1.5
+        },
+        {
+          "scroll": 300
+        },
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "text": "Available",
+            "exact": false
+          }
+        }
+      ]
     },
     {
       "id": "lend",
-      "title": {"en": "Lend a copy", "es": "Presta un ejemplar", "ca": "Presta un exemplar", "de": "Ein Exemplar verleihen"},
+      "title": {
+        "en": "Lend a copy",
+        "es": "Presta un ejemplar",
+        "ca": "Presta un exemplar",
+        "de": "Ein Exemplar verleihen"
+      },
       "narration": {
         "en": "Click Lend on an available copy. Choose who is borrowing it. You can type a few letters to find the name. Then confirm with Lend.",
         "es": "Pulsa Prestar en un ejemplar disponible. Elige quién se lo lleva. Puedes escribir unas letras para encontrar el nombre. Confirma con Prestar.",
@@ -45,45 +98,227 @@
         "de": "Klicke bei einem verfügbaren Exemplar auf Verleihen. Wähle, wer es ausleiht. Du kannst ein paar Buchstaben tippen, um den Namen zu finden. Bestätige mit Verleihen."
       },
       "actions": [
-        {"click": {"role": "button", "name": "Lend"}},
-        {"pause": 0.8},
-        {"type": {"into": {"within": "[role=dialog]", "selector": "input"}, "text": "Mei"}},
-        {"pause": 0.8},
-        {"click": {"within": ".v-overlay-container .v-list", "text": "Mei Tanaka"}},
-        {"pause": 1},
-        {"click": {"within": "[role=dialog]", "role": "button", "name": "Lend"}}
+        {
+          "click": {
+            "role": "button",
+            "name": "Lend"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "selector": "input"
+            },
+            "text": "Mei"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "within": ".v-overlay-container .v-list",
+            "text": "Mei Tanaka"
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "role": "button",
+            "name": "Lend"
+          }
+        }
       ]
     },
     {
       "id": "status",
-      "title": {"en": "Check the status", "es": "Comprueba el estado", "ca": "Comprova l'estat", "de": "Den Status prüfen"},
+      "title": {
+        "en": "Check the status",
+        "es": "Comprueba el estado",
+        "ca": "Comprova l'estat",
+        "de": "Den Status prüfen"
+      },
       "narration": {
         "en": "The copy now shows as on loan, with the borrower's name.",
         "es": "El ejemplar aparece ahora como prestado, con el nombre de quien lo tiene.",
         "ca": "L'exemplar surt ara com a prestat, amb el nom de qui el té.",
         "de": "Das Exemplar ist jetzt als ausgeliehen markiert, mit dem Namen der Person."
       },
-      "actions": [{"highlight": {"within": "tbody tr", "hasText": "Mei Tanaka", "text": "Mei Tanaka", "seconds": 2.5}}]
+      "actions": [
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "hasText": "Mei Tanaka",
+            "text": "Mei Tanaka",
+            "seconds": 2.5
+          }
+        }
+      ]
     },
     {
       "id": "loans",
-      "title": {"en": "See all loans", "es": "Todos los préstamos", "ca": "Tots els préstecs", "de": "Alle Ausleihen"},
+      "title": {
+        "en": "See all loans",
+        "es": "Todos los préstamos",
+        "ca": "Tots els préstecs",
+        "de": "Alle Ausleihen"
+      },
       "narration": {
-        "en": "Open Loans in the menu to see every book that is out. You can filter by group or date. Generate report gives you a copy to print or share.",
-        "es": "Abre Préstamos en el menú para ver todos los libros fuera. Puedes filtrar por grupo o fecha. Generar informe te da una copia para imprimir o compartir.",
-        "ca": "Obre Préstecs al menú per veure tots els llibres que són fora. Pots filtrar per grup o data. Generar informe et dona una còpia per imprimir o compartir.",
-        "de": "Unter Ausleihen im Menü siehst du alle verliehenen Bücher. Du kannst nach Gruppe oder Datum filtern. Bericht erstellen liefert eine Liste zum Drucken oder Teilen."
+        "en": "Open Loans in the menu to see every book that is out. You can filter by group or date, and generate a report.",
+        "es": "Abre Préstamos en el menú para ver todos los libros fuera. Puedes filtrar por grupo o fecha, y generar un informe.",
+        "ca": "Obre Préstecs al menú per veure tots els llibres que són fora. Pots filtrar per grup o data, i generar un informe.",
+        "de": "Unter Ausleihen im Menü siehst du alle verliehenen Bücher. Du kannst nach Gruppe oder Datum filtern und einen Bericht erstellen."
       },
       "actions": [
-        {"click": {"within": "nav", "text": "Loans", "exact": true}},
-        {"pause": 1.5},
-        {"highlight": {"text": "All groups", "seconds": 1.8}},
-        {"highlight": {"role": "button", "name": "Generate report", "seconds": 1.8}}
+        {
+          "click": {
+            "within": "nav",
+            "text": "Loans",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "highlight": {
+            "text": "All groups",
+            "seconds": 1.8
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Generate report",
+            "seconds": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "loan-here",
+      "title": {
+        "en": "Lend several books at once",
+        "es": "Prestar varios libros a la vez",
+        "ca": "Prestar diversos llibres alhora",
+        "de": "Mehrere Bücher auf einmal verleihen"
+      },
+      "narration": {
+        "en": "You can also lend from this page, several books at once. Click Loan a book. Choose the customer, or scan their card. Search a book, or scan its label, and it joins the list. Add as many as you need. Then confirm with Lend.",
+        "es": "También puedes prestar desde esta página, varios libros a la vez. Pulsa Prestar un libro. Elige el cliente, o escanea su carnet. Busca un libro, o escanea su etiqueta, y se añade a la lista. Añade todos los que necesites. Después confirma con Prestar.",
+        "ca": "També pots prestar des d'aquesta pàgina, diversos llibres alhora. Prem Presta un llibre. Tria el client, o escaneja el seu carnet. Cerca un llibre, o escaneja la seva etiqueta, i s'afegeix a la llista. Afegeix-ne tants com calgui. Després confirma amb Presta.",
+        "de": "Auf dieser Seite kannst du auch mehrere Bücher auf einmal verleihen. Klicke auf Buch verleihen. Wähle den Kunden oder scanne den Ausweis. Suche ein Buch oder scanne sein Etikett, und es kommt in die Liste. Füge so viele hinzu, wie du brauchst. Bestätige dann mit Verleihen."
+      },
+      "actions": [
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Loan a book"
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Select a customer or scan their card"
+            },
+            "text": "Amara"
+          }
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list",
+            "text": "Amara Okafor"
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Paper"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Paper Astronomer",
+            "text": "The Paper Astronomer"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Glass"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Glass Heron",
+            "text": "The Glass Heron"
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "role": "button",
+            "name": "Lend (2)"
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "hasText": "Amara Okafor",
+            "text": "Amara Okafor",
+            "seconds": 2
+          }
+        }
       ]
     },
     {
       "id": "return",
-      "title": {"en": "Return the book", "es": "Devuelve el libro", "ca": "Retorna el llibre", "de": "Das Buch zurücknehmen"},
+      "title": {
+        "en": "Return the book",
+        "es": "Devuelve el libro",
+        "ca": "Retorna el llibre",
+        "de": "Das Buch zurücknehmen"
+      },
       "narration": {
         "en": "When the book comes back, click Return on its line. With many books, use Return books and scan their labels.",
         "es": "Cuando el libro vuelva, pulsa Devolver en su línea. Si son muchos, usa Devolver libros y escanea sus etiquetas.",
@@ -91,14 +326,34 @@
         "de": "Wenn das Buch zurückkommt, klicke in seiner Zeile auf Zurückgeben. Bei vielen Büchern nutzt du Bücher zurückgeben und scannst die Etiketten."
       },
       "actions": [
-        {"click": {"within": "tbody tr", "hasText": "Mei Tanaka", "role": "button", "name": "Return"}},
-        {"pause": 1.5},
-        {"highlight": {"role": "button", "name": "Return books", "seconds": 2.5}}
+        {
+          "click": {
+            "within": "tbody tr",
+            "hasText": "Mei Tanaka",
+            "role": "button",
+            "name": "Return"
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Return books",
+            "seconds": 2.5
+          }
+        }
       ]
     }
   ],
   "outro": {
     "next": "Print a library card",
-    "narration": {"en": "That is lending in Vaultisse.", "es": "Así son los préstamos en Vaultisse.", "ca": "Així són els préstecs a Vaultisse.", "de": "So funktioniert das Verleihen in Vaultisse."}
+    "narration": {
+      "en": "That is lending in Vaultisse. Next time: printing a library card. Thanks for watching, and see you soon!",
+      "es": "Así son los préstamos en Vaultisse. En el próximo vídeo: imprimir un carné de biblioteca. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Així són els préstecs a Vaultisse. Al pròxim vídeo: imprimir un carnet de biblioteca. Gràcies per mirar-ho i fins aviat!",
+      "de": "So funktioniert das Verleihen in Vaultisse. Im nächsten Video: einen Bibliotheksausweis drucken. Danke fürs Zuschauen und bis bald!"
+    }
   }
 }

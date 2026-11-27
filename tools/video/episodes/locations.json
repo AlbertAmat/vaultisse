@@ -45,10 +45,10 @@
       "Choose the default one"
     ],
     "narration": {
-      "en": "Here is how to organise books by location in Vaultisse. A location is a room, a shelf or a box.",
-      "es": "Así se organizan los libros por ubicación en Vaultisse. Una ubicación es una sala, un estante o una caja.",
-      "ca": "Així s'organitzen els llibres per ubicació a Vaultisse. Una ubicació és una sala, un prestatge o una capsa.",
-      "de": "So ordnest du Bücher in Vaultisse nach Standort. Ein Standort ist ein Raum, ein Regal oder eine Kiste."
+      "en": "Here is how to organise books by location in Vaultisse. In this video: see what is on each shelf. Add a location. Choose the default one.",
+      "es": "Así se organizan los libros por ubicación en Vaultisse. En este vídeo: mira qué hay en cada estante. Añade una ubicación. Elige la ubicación por defecto.",
+      "ca": "Així s'organitzen els llibres per ubicació a Vaultisse. En aquest vídeo: mira què hi ha a cada prestatge. Afegeix una ubicació. Tria la ubicació per defecte.",
+      "de": "So ordnest du Bücher in Vaultisse nach Standort. In diesem Video: sehen, was in jedem Regal steht. Einen Standort anlegen. Den Standardstandort wählen."
     }
   },
   "steps": [
@@ -164,10 +164,10 @@
   "outro": {
     "next": "Categories and authors",
     "narration": {
-      "en": "Now every copy has a place.",
-      "es": "Ahora cada ejemplar tiene su sitio.",
-      "ca": "Ara cada exemplar té el seu lloc.",
-      "de": "So hat jedes Exemplar seinen Platz."
+      "en": "Now every copy has a place. Next time: categories and authors. Thanks for watching, and see you soon!",
+      "es": "Ahora cada ejemplar tiene su sitio. En el próximo vídeo: categorías y autores. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Ara cada exemplar té el seu lloc. Al pròxim vídeo: categories i autors. Gràcies per mirar-ho i fins aviat!",
+      "de": "So hat jedes Exemplar seinen Platz. Im nächsten Video: Kategorien und Autoren. Danke fürs Zuschauen und bis bald!"
     }
   }
 }

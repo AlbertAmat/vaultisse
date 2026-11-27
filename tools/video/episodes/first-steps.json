@@ -46,10 +46,10 @@
       "Your library and account"
     ],
     "narration": {
-      "en": "Here is how to use Vaultisse, starting with a first tour. You will learn where everything is.",
-      "es": "Así se usa Vaultisse, empezando por un primer recorrido. Aprenderás dónde está cada cosa.",
-      "ca": "Així es fa servir Vaultisse, començant per un primer recorregut. Aprendràs on és cada cosa.",
-      "de": "So benutzt du Vaultisse, angefangen mit einem Rundgang. Du lernst, wo alles zu finden ist."
+      "en": "Here is how to use Vaultisse, starting with a first tour. In this video: the menu. The search bar. Your library and account.",
+      "es": "Así se usa Vaultisse, empezando por un primer recorrido. En este vídeo: el menú. El buscador. Tu biblioteca y tu cuenta.",
+      "ca": "Així es fa servir Vaultisse, començant per un primer recorregut. En aquest vídeo: el menú. El cercador. La biblioteca i el compte.",
+      "de": "So benutzt du Vaultisse, angefangen mit einem Rundgang. In diesem Video: das Menü. Die Suchleiste. Deine Bibliothek und dein Konto."
     }
   },
   "steps": [
@@ -229,10 +229,10 @@
   "outro": {
     "next": "Read the dashboard",
     "narration": {
-      "en": "That is the tour of Vaultisse.",
-      "es": "Ese es el recorrido por Vaultisse.",
-      "ca": "Aquest és el recorregut per Vaultisse.",
-      "de": "Das war der Rundgang durch Vaultisse."
+      "en": "That is the tour of Vaultisse. Next time: reading the dashboard. Thanks for watching, and see you soon!",
+      "es": "Ese es el recorrido por Vaultisse. En el próximo vídeo: el panel de control. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Aquest és el recorregut per Vaultisse. Al pròxim vídeo: el panell de control. Gràcies per mirar-ho i fins aviat!",
+      "de": "Das war der Rundgang durch Vaultisse. Im nächsten Video: die Übersicht. Danke fürs Zuschauen und bis bald!"
     }
   }
 }

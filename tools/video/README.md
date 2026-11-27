@@ -29,6 +29,9 @@ subtitles in four languages and a cover image, and **uploads it to the owner's Y
 - Budget: intro about 20 to 30 s, **main content about 2 minutes**, outro 5 s. That is about **300 spoken words in all**, no more.
 - If a topic does not fit in 3 minutes, **do not squeeze it and do not make it longer: split it into several videos** (a series, one precise thing each,
   linked in a playlist and in each description). Example: *"Set up the admin panel"* becomes *Start it*, *First sign-in and two-factor*, *Use the setup guide*, *Set up email*.
+- **No silence longer than 2 seconds**, anywhere. Speed up (never jump-cut) quiet stretches of the recording, or say more.
+- The intro **reads the "In this video" list aloud**, each line as it appears.
+- The video **ends with spoken closing sentences** (what comes next, then goodbye); no trailing silent seconds.
 - One video, one question, one answer. No detours, no "by the way", no feature tours. If the title does not name the thing the video does, the video is too broad.
 
 ### Made to be found
@@ -277,6 +280,7 @@ Do the steps in order and keep going without asking, unless something is unclear
 ## 10. Checks before the upload
 
 - **Duration: 180 seconds or less. Over that, the video fails the check: cut or split it, never upload it.**
+- `silencedetect` (-45 dB, 2 s) finds nothing in the audio.
 - `ffprobe`: 1920x1080, 30 fps, H.264 + AAC, the duration within 10% of the sum of the step durations; audio present and not silent; no clipping.
 - The title and the first sentence of the description contain the exact phrase the video answers.
 - The first frame is the intro and the last frame is the outro; no black frames longer than 0.3 s; no frozen section longer than 3 s outside the intro.

@@ -45,10 +45,10 @@
       "Loans and growth"
     ],
     "narration": {
-      "en": "This is what the Vaultisse dashboard shows. In one page you see how your library is doing.",
-      "es": "Esto es lo que muestra el panel de Vaultisse. En una página ves cómo va tu biblioteca.",
-      "ca": "Això és el que mostra el panell de Vaultisse. En una pàgina veus com va la biblioteca.",
-      "de": "Das zeigt die Übersicht von Vaultisse. Auf einer Seite siehst du, wie es deiner Bibliothek geht."
+      "en": "This is what the Vaultisse dashboard shows. In this video: new books this month. Browsing by category. Loans and growth.",
+      "es": "Esto es lo que muestra el panel de Vaultisse. En este vídeo: las novedades del mes. Los libros por categorías. Préstamos y evolución.",
+      "ca": "Això és el que mostra el panell de Vaultisse. En aquest vídeo: les novetats del mes. Els llibres per categories. Préstecs i evolució.",
+      "de": "Das zeigt die Übersicht von Vaultisse. In diesem Video: neue Bücher in diesem Monat. Stöbern nach Kategorie. Ausleihen und Wachstum."
     }
   },
   "steps": [
@@ -167,10 +167,10 @@
   "outro": {
     "next": "Search and filter your books",
     "narration": {
-      "en": "That is your dashboard.",
-      "es": "Ese es tu panel.",
-      "ca": "Aquest és el teu panell.",
-      "de": "Das ist deine Übersicht."
+      "en": "That is your dashboard. Next time: searching and filtering your books. Thanks for watching, and see you soon!",
+      "es": "Ese es tu panel. En el próximo vídeo: buscar y filtrar tus libros. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Aquest és el teu panell. Al pròxim vídeo: cercar i filtrar els llibres. Gràcies per mirar-ho i fins aviat!",
+      "de": "Das ist deine Übersicht. Im nächsten Video: Bücher suchen und filtern. Danke fürs Zuschauen und bis bald!"
     }
   }
 }
