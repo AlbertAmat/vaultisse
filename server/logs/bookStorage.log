@@ -454,3 +454,29 @@
 [2026-11-27T13:35:47.138Z] [INFO]: [migrate] 1.3.7.sql: applied
 [2026-11-27T13:35:47.145Z] [INFO]: [migrate] 1.3.9.sql: applied
 [2026-11-27T13:35:47.180Z] [INFO]: [migrate] 1.4.0.sql: applied
+[2026-11-27T13:39:03.517Z] [INFO]: [migrate] 0.0.1.sql: applied
+[2026-11-27T13:39:03.526Z] [INFO]: [migrate] 1.0.0/1.sql: applied
+[2026-11-27T13:39:03.536Z] [INFO]: [migrate] 1.0.0/2.sql: applied
+[2026-11-27T13:39:03.546Z] [INFO]: [migrate] 1.0.0/3.sql: applied
+[2026-11-27T13:39:03.547Z] [INFO]: [migrate] 1.0.2.sql: applied
+[2026-11-27T13:39:03.556Z] [INFO]: [migrate] 1.1.0/1.sql: applied
+[2026-11-27T13:39:03.560Z] [INFO]: [migrate] 1.1.0/2.sql: applied
+[2026-11-27T13:39:03.564Z] [INFO]: [migrate] 1.1.0/3.sql: applied
+[2026-11-27T13:39:03.565Z] [INFO]: [migrate] 1.1.2.sql: applied
+[2026-11-27T13:39:03.568Z] [INFO]: [migrate] 1.1.5.sql: applied
+[2026-11-27T13:39:03.570Z] [INFO]: [migrate] 1.1.6.sql: applied
+[2026-11-27T13:39:03.575Z] [INFO]: [migrate] 1.1.7.sql: applied
+[2026-11-27T13:39:03.578Z] [INFO]: [migrate] 1.1.8.sql: applied
+[2026-11-27T13:39:03.580Z] [INFO]: [migrate] 1.2.2.sql: applied
+[2026-11-27T13:39:03.602Z] [INFO]: [migrate] 1.3.0.sql: applied
+[2026-11-27T13:39:03.610Z] [INFO]: [migrate] 1.3.2.sql: applied
+[2026-11-27T13:39:03.615Z] [INFO]: [migrate] 1.3.4.sql: applied
+[2026-11-27T13:39:03.619Z] [INFO]: [migrate] 1.3.5.sql: applied
+[2026-11-27T13:39:03.620Z] [INFO]: [migrate] 1.3.6.sql: applied
+[2026-11-27T13:39:03.622Z] [INFO]: [migrate] 1.3.7.sql: applied
+[2026-11-27T13:39:03.632Z] [INFO]: [migrate] 1.3.9.sql: applied
+[2026-11-27T13:39:03.665Z] [INFO]: [migrate] 1.4.0.sql: applied
+[2026-11-27T13:39:03.691Z] [INFO]: Admin portal running on port 3001;
+[2026-11-27T13:39:03.914Z] [WARN]: Admin portal: the first administrator was created; its generated password was printed to the container output.
+[2026-11-27T13:39:03.914Z] [WARN]: SETTINGS_ENCRYPTION_KEY is not set: secrets saved in the admin portal are encrypted with a key derived from JWT_SECRET. Set a dedicated SETTINGS_ENCRYPTION_KEY (and keep it stable).
+[2026-11-27T13:39:03.914Z] [INFO]: Server running on port 3000;

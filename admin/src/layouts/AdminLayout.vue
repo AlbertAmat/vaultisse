@@ -8,7 +8,10 @@
 			</div>
 		</div>
 		<v-list nav density="compact" slim class="app-menu-list">
-			<v-list-item v-for="item in items" :key="item.to" :to="item.to" :prepend-icon="item.icon" :title="item.title" density="compact" class="app-menu-item" exact/>
+			<template v-for="group in groups" :key="group.title">
+				<v-list-subheader v-if="group.title" class="menu-group">{{ group.title }}</v-list-subheader>
+				<v-list-item v-for="item in group.items" :key="item.to" :to="item.to" :prepend-icon="item.icon" :title="item.title" density="compact" class="app-menu-item" exact/>
+			</template>
 		</v-list>
 		<template #append>
 			<div class="pa-4 text-caption app-menu-foot">
@@ -61,24 +64,34 @@ const {mdAndUp} = useDisplay();
 const drawer = ref(mdAndUp.value);
 const passwordDialog = ref(false);
 
-const items = [
-	{to: "/", title: "Overview", icon: "mdi-view-dashboard-outline"},
-	{to: "/users", title: "Accounts", icon: "mdi-account-multiple-outline"},
-	{to: "/vaults", title: "Vaults", icon: "mdi-bookshelf"},
-	{to: "/plans", title: "Plans & quotas", icon: "mdi-layers-outline"},
-	{to: "/deletions", title: "Deletions", icon: "mdi-delete-clock-outline"},
-	{to: "/terms", title: "Terms & notices", icon: "mdi-file-sign"},
-	{to: "/announcements", title: "Announcements", icon: "mdi-bullhorn-outline"},
-	{to: "/broadcast", title: "Email users", icon: "mdi-email-multiple-outline"},
-	{to: "/security", title: "Security", icon: "mdi-shield-alert-outline"},
-	{to: "/map", title: "Login map", icon: "mdi-map-marker-radius-outline"},
-	{to: "/compliance", title: "Compliance", icon: "mdi-clipboard-check-outline"},
-	{to: "/logs", title: "Logs", icon: "mdi-text-box-search-outline"},
-	{to: "/audit", title: "Audit trail", icon: "mdi-clipboard-text-clock-outline"},
-	{to: "/notifications", title: "Notifications", icon: "mdi-bell-outline"},
-	{to: "/settings", title: "Settings", icon: "mdi-cog-outline"},
-	{to: "/system", title: "System", icon: "mdi-server-outline"},
-	{to: "/admins", title: "Admins", icon: "mdi-account-key-outline"},
+const groups = [
+	{title: "", items: [
+		{to: "/", title: "Overview", icon: "mdi-view-dashboard-outline"},
+	]},
+	{title: "Customers", items: [
+		{to: "/users", title: "Accounts", icon: "mdi-account-multiple-outline"},
+		{to: "/vaults", title: "Vaults", icon: "mdi-bookshelf"},
+		{to: "/plans", title: "Plans & quotas", icon: "mdi-layers-outline"},
+		{to: "/deletions", title: "Deletions", icon: "mdi-delete-clock-outline"},
+	]},
+	{title: "Communication", items: [
+		{to: "/announcements", title: "Announcements", icon: "mdi-bullhorn-outline"},
+		{to: "/broadcast", title: "Email users", icon: "mdi-email-multiple-outline"},
+		{to: "/terms", title: "Terms & notices", icon: "mdi-file-sign"},
+	]},
+	{title: "Security & compliance", items: [
+		{to: "/security", title: "Security", icon: "mdi-shield-alert-outline"},
+		{to: "/map", title: "Login map", icon: "mdi-map-marker-radius-outline"},
+		{to: "/compliance", title: "Compliance", icon: "mdi-clipboard-check-outline"},
+		{to: "/logs", title: "Logs", icon: "mdi-text-box-search-outline"},
+		{to: "/audit", title: "Audit trail", icon: "mdi-clipboard-text-clock-outline"},
+	]},
+	{title: "Platform", items: [
+		{to: "/settings", title: "Settings", icon: "mdi-cog-outline"},
+		{to: "/notifications", title: "Notifications", icon: "mdi-bell-outline"},
+		{to: "/system", title: "System", icon: "mdi-server-outline"},
+		{to: "/admins", title: "Admins", icon: "mdi-account-key-outline"},
+	]},
 ];
 
 // The first time a superadmin gets in (and nobody has finished or skipped it before), the setup guide opens by itself.
@@ -143,6 +156,15 @@ async function logout() {
 	border-radius: 10px;
 	margin: 2px 8px;
 	color: var(--pb-nav-text-muted);
+}
+
+.menu-group {
+	color: var(--pb-nav-text-muted) !important;
+	font-size: 0.68rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	min-height: 24px;
+	margin-top: 2px;
 }
 
 .app-menu :deep(.v-list-item--active) {
