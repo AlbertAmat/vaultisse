@@ -1,5 +1,5 @@
 <template>
-	<v-dialog v-model="dialog" width="560">
+	<v-dialog v-model="dialog" width="560" :persistent="lending">
 		<template v-slot:activator="{ props: activatorProps }">
 			<v-btn
 				v-bind="activatorProps"
@@ -37,17 +37,20 @@
 					</template>
 				</v-autocomplete>
 
+				<!-- Each pick or scan adds a copy to the list below; the field stays empty for the next one. -->
 				<v-autocomplete
 					ref="bookInput"
-					v-model="stock"
+					:model-value="null"
+					@update:model-value="add"
 					:search="bookSearch"
 					@update:search="onBookSearch"
-					:items="stocks"
+					:items="choices"
 					item-title="bookName"
 					item-value="code"
 					:label="t(AppLabels.LOAN_BOOK_FIELD)"
 					:no-data-text="t(AppLabels.LOAN_NO_AVAILABLE_COPY)"
 					:loading="searching"
+					:disabled="lending"
 					variant="outlined"
 					density="compact"
 					hide-details
@@ -57,32 +60,48 @@
 					@keydown.enter="pickCopy(bookSearch)"
 				>
 					<template v-slot:item="{ props: itemProps, item }">
-						<v-list-item v-bind="itemProps" :subtitle="describe(item.raw)"/>
+						<v-list-item v-bind="itemProps" :subtitle="describe(item)"/>
 					</template>
 					<template v-slot:append-inner>
 						<barcode-scanner @value="pickCopy"/>
 					</template>
 				</v-autocomplete>
 
-				<p v-if="stock" class="text-medium-emphasis mt-2" style="font-size: 13px">
-					{{ describe(stock) }}
-				</p>
+				<v-list v-if="picked.length" density="compact" class="mt-2 pa-0" max-height="260">
+					<v-list-item
+						v-for="copy in picked"
+						:key="copy.code"
+						:title="copy.bookName"
+						:subtitle="describe(copy)"
+						class="px-1"
+					>
+						<template v-slot:append>
+							<v-btn
+								icon="mdi-close"
+								variant="text"
+								size="small"
+								:disabled="lending"
+								@click="remove(copy.code)"
+							/>
+						</template>
+					</v-list-item>
+				</v-list>
 			</v-card-text>
 
 			<v-divider/>
 
 			<v-card-actions>
 				<v-spacer/>
-				<v-btn class="text-none" @click="dialog = false">{{ t(AppLabels.CLOSE) }}</v-btn>
+				<v-btn class="text-none" :disabled="lending" @click="dialog = false">{{ t(AppLabels.CLOSE) }}</v-btn>
 				<v-btn
 					color="primary"
 					variant="elevated"
 					class="text-none"
-					:disabled="customerId === null || !stock || lending"
+					:disabled="customerId === null || !picked.length || lending"
 					:loading="lending"
 					@click="lend()"
 				>
-					{{ t(AppLabels.LEND) }}
+					{{ t(AppLabels.LEND) }}<template v-if="picked.length > 1">&nbsp;({{ picked.length }})</template>
 				</v-btn>
 			</v-card-actions>
 		</v-card>
@@ -91,10 +110,10 @@
 
 <script setup lang="ts">
 /**
- * Lends one copy from the Loans view: pick the customer (by name or library
- * card scan), then an available copy (by title or stock label scan).
+ * Lends one or more copies from the Loans view: pick the customer (by name or
+ * library card scan), then add available copies (by title or stock label scan).
  */
-import {nextTick, ref, shallowRef, watch} from "vue";
+import {computed, nextTick, ref, shallowRef, watch} from "vue";
 import {useI18n} from "vue-i18n";
 import {ICustomerDetail} from "@vaultisse/types/customer/ICustomer";
 import {IAvailableStock} from "@vaultisse/types/loans/IAvailableStock";
@@ -105,7 +124,7 @@ import {appSnackbarController} from "@/components/appSnackbar/AppSnackbarControl
 
 defineProps<{customers: ICustomerDetail[]}>();
 const emit = defineEmits<{
-	/** A book was lent, so the loans list is stale. */
+	/** At least one book was lent, so the loans list is stale. */
 	(e: 'refresh'): void
 }>();
 const {t} = useI18n();
@@ -113,7 +132,8 @@ const {t} = useI18n();
 const dialog = ref(false);
 const customerId = ref<number | null>(null);
 const customerSearch = ref("");
-const stock = shallowRef<IAvailableStock | null>(null);
+/** Copies waiting to be lent, in the order they were added. */
+const picked = shallowRef<IAvailableStock[]>([]);
 const stocks = shallowRef<IAvailableStock[]>([]);
 const bookSearch = ref("");
 const scanning = ref(false);
@@ -128,6 +148,9 @@ let searchNumber = 0;
 /** @returns The stock code and, if shelved, the location of a copy. */
 const describe = (copy: IAvailableStock) => [copy.code, copy.locationName].filter(Boolean).join(" · ");
 
+/** The search results still left to add. */
+const choices = computed(() => stocks.value.filter((copy) => !picked.value.some((p) => p.code === copy.code)));
+
 watch(dialog, (open) => {
 	clearTimeout(searchTimer);
 	if (open) {
@@ -137,7 +160,7 @@ watch(dialog, (open) => {
 	}
 	customerId.value = null;
 	customerSearch.value = "";
-	stock.value = null;
+	picked.value = [];
 	stocks.value = [];
 	bookSearch.value = "";
 });
@@ -174,14 +197,35 @@ async function search(query: string): Promise<IAvailableStock[] | null> {
 function onBookSearch(query: string) {
 	bookSearch.value = query;
 	clearTimeout(searchTimer);
-	// Picking an item writes its title into the field; that isn't a new search.
-	if (query !== stock.value?.bookName) {
-		searchTimer = setTimeout(() => search(query), 250);
-	}
+	searchTimer = setTimeout(() => search(query), 250);
 }
 
 /**
- * Selects the copy carrying a scanned (or typed and entered) stock label.
+ * Adds a copy to the list to lend and empties the field for the next one.
+ * @param copy The chosen or scanned copy; adding it twice has no effect.
+ */
+async function add(copy: IAvailableStock | null) {
+	if (!copy) {
+		return;
+	}
+	if (!picked.value.some((p) => p.code === copy.code)) {
+		picked.value = [...picked.value, copy];
+	}
+	// After the autocomplete has finished writing its own search text.
+	await nextTick();
+	onBookSearch("");
+}
+
+/**
+ * Takes a copy off the list.
+ * @param code Stock code.
+ */
+function remove(code: string) {
+	picked.value = picked.value.filter((copy) => copy.code !== code);
+}
+
+/**
+ * Adds the copy carrying a scanned (or typed and entered) stock label.
  * @param code Stock code.
  */
 async function pickCopy(code: string) {
@@ -196,7 +240,7 @@ async function pickCopy(code: string) {
 	}
 	const match = found.find((copy) => copy.code.toLowerCase() === wanted);
 	if (match) {
-		stock.value = match;
+		await add(match);
 	} else if (found.length === 0) {
 		appSnackbarController.show({message: t(AppLabels.LOAN_NO_AVAILABLE_COPY)});
 	}
@@ -230,21 +274,37 @@ function scanTypedCard() {
 	}
 }
 
-/** Lends the picked copy to the picked customer; only an available copy is accepted by the server. */
+/**
+ * Lends every listed copy to the picked customer, one by one; the server only
+ * accepts available copies. Any it refuses stay listed, with the dialog open.
+ */
 async function lend() {
-	if (customerId.value === null || !stock.value) {
+	const customer = customerId.value;
+	if (customer === null || !picked.value.length) {
 		return;
 	}
+	let lent = 0;
 	try {
 		lending.value = true;
-		await api.customers.lendByScan(customerId.value, stock.value.code);
-		appSnackbarController.show({message: t(AppLabels.SNACKBAR_BOOK_LENT)});
-		emit('refresh');
-		dialog.value = false;
-	} catch (e) {
-		console.error("Error lending book", e);
+		for (const copy of picked.value) {
+			try {
+				await api.customers.lendByScan(customer, copy.code);
+				remove(copy.code);
+				lent++;
+			} catch (e) {
+				console.error("Error lending book", copy.code, e);
+			}
+		}
 	} finally {
 		lending.value = false;
+	}
+	if (!lent) {
+		return;
+	}
+	emit('refresh');
+	if (!picked.value.length) {
+		appSnackbarController.show({message: t(AppLabels.SNACKBAR_BOOK_LENT)});
+		dialog.value = false;
 	}
 }
 </script>
