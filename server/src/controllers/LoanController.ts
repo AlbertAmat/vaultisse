@@ -34,6 +34,22 @@ export class LoanController {
     }
 
     /**
+     * GET /loans/available - copies that can be lent right now, matching `query`.
+     * @param req Express request.
+     * @param res Express response.
+     */
+    public async available(req: Request, res: Response): Promise<void> {
+        try {
+            const vaultId = appService.getSessionVault(req);
+            const stocks = await new LoanService(this.pool).searchAvailableStocks(vaultId, String(req.query.query ?? ""));
+            res.status(200).json({stocks});
+        } catch (err: any) {
+            console.error('Error executing query', err.stack);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+
+    /**
      * GET /loans/report - unpaginated loan-history export for the Excel report.
      * @param req Express request.
      * @param res Express response.

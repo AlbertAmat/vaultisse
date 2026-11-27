@@ -74,6 +74,21 @@ describe("library cards", () => {
         }
     });
 
+    it("searches only the copies that can be lent", async () => {
+        const codes = async (query: string) => (await user.agent.get("/api/rest/loans/available").query({query})).body.stocks.map((s: {code: string}) => s.code);
+        expect(await codes("card bo")).toEqual([stockCode]);
+        expect(await codes(stockCode)).toEqual([stockCode]);
+        expect(await codes("%")).toEqual([]);
+
+        const pool = appService.getDatabasePool();
+        await pool.query("UPDATE book_stocks SET status = 1 WHERE code = $1", [stockCode]);
+        try {
+            expect(await codes(stockCode)).toEqual([]);
+        } finally {
+            await pool.query("UPDATE book_stocks SET status = 0 WHERE code = $1", [stockCode]);
+        }
+    });
+
     it("resolves a scanned card and lends only available copies", async () => {
         const {uuid} = (await user.agent.get(`/api/rest/customer/${customerId}/card`)).body;
         const scan = await user.agent.get(`/api/rest/customer/card/scan/${uuid.replace(/-/g, "").toUpperCase()}`);

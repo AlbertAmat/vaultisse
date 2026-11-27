@@ -197,6 +197,33 @@ VALUES ('en', 'CUSTOMER_CARD', 'Library card'),
        ('fr', 'SNACKBAR_BOOK_LENT', 'Livre prêté'),
        ('de', 'SNACKBAR_BOOK_LENT', 'Buch verliehen');
 
+-- "Loan a book" dialog of the loans page.
+INSERT INTO app_labels (language, code, text)
+VALUES ('en', 'LOAN_A_BOOK', 'Loan a book'),
+       ('ca', 'LOAN_A_BOOK', 'Presta un llibre'),
+       ('es', 'LOAN_A_BOOK', 'Prestar un libro'),
+       ('it', 'LOAN_A_BOOK', 'Presta un libro'),
+       ('fr', 'LOAN_A_BOOK', 'Prêter un livre'),
+       ('de', 'LOAN_A_BOOK', 'Buch verleihen'),
+       ('en', 'LOAN_CUSTOMER_FIELD', 'Select a customer or scan their card'),
+       ('ca', 'LOAN_CUSTOMER_FIELD', 'Selecciona un client o escaneja el seu carnet'),
+       ('es', 'LOAN_CUSTOMER_FIELD', 'Selecciona un cliente o escanea su carnet'),
+       ('it', 'LOAN_CUSTOMER_FIELD', 'Seleziona un cliente o scansiona la sua tessera'),
+       ('fr', 'LOAN_CUSTOMER_FIELD', 'Choisis un client ou scanne sa carte'),
+       ('de', 'LOAN_CUSTOMER_FIELD', 'Kunden wählen oder Ausweis scannen'),
+       ('en', 'LOAN_BOOK_FIELD', 'Search a book or scan its label'),
+       ('ca', 'LOAN_BOOK_FIELD', 'Cerca un llibre o escaneja la seva etiqueta'),
+       ('es', 'LOAN_BOOK_FIELD', 'Busca un libro o escanea su etiqueta'),
+       ('it', 'LOAN_BOOK_FIELD', 'Cerca un libro o scansiona la sua etichetta'),
+       ('fr', 'LOAN_BOOK_FIELD', 'Cherche un livre ou scanne son étiquette'),
+       ('de', 'LOAN_BOOK_FIELD', 'Buch suchen oder Etikett scannen'),
+       ('en', 'LOAN_NO_AVAILABLE_COPY', 'No available copy found'),
+       ('ca', 'LOAN_NO_AVAILABLE_COPY', 'No s’ha trobat cap exemplar disponible'),
+       ('es', 'LOAN_NO_AVAILABLE_COPY', 'No se ha encontrado ningún ejemplar disponible'),
+       ('it', 'LOAN_NO_AVAILABLE_COPY', 'Nessuna copia disponibile trovata'),
+       ('fr', 'LOAN_NO_AVAILABLE_COPY', 'Aucun exemplaire disponible trouvé'),
+       ('de', 'LOAN_NO_AVAILABLE_COPY', 'Kein verfügbares Exemplar gefunden');
+
 -- ============================================================
 -- Add all unprinted stock labels to the print queue
 -- ============================================================

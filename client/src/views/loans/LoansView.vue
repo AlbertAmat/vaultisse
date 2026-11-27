@@ -1,6 +1,12 @@
 <template>
 	<page-component :model="controller">
 		<template v-slot:append>
+			<loan-book-dialog
+				v-if="applicationService.isLoansEnabled()"
+				:customers="controller.getCustomers()"
+				@refresh="controller.refresh()"
+			/>
+
 			<return-books-dialog @refresh="controller.refresh()"/>
 
 			<v-btn
@@ -123,13 +129,15 @@
 /**
  * Loans management view: a filterable (customer group, loan date range),
  * paginated table of every book currently on loan, with a per-row Return
- * action and a bulk `ReturnBooksDialog` in the toolbar, backed by
+ * action, plus `LoanBookDialog` and a bulk `ReturnBooksDialog` in the toolbar, backed by
  * `LoansController`.
  */
 import PageComponent from "@/views/PageComponent.vue";
 import LoansController from "@/controller/loans/LoansController";
 import EmptyState from "@/components/emptyState/EmptyState.vue";
 import LoanReportDialog from "@/views/loans/LoanReportDialog.vue";
+import LoanBookDialog from "@/views/loans/components/LoanBookDialog.vue";
+import {applicationService} from "@/service/ApplicationService";
 import ReturnBooksDialog from "@/views/loans/components/ReturnBooksDialog.vue";
 import {computed, ref} from "vue";
 import {useI18n} from "vue-i18n";

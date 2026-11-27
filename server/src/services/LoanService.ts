@@ -1,6 +1,6 @@
 import {Pool} from "pg";
 import {LoanRepository} from "../repositories/LoanRepository";
-import {Loan, LoanHistoryRow, LoanListFilter, LoanReportFilter, MyLoan, MyLoanHistoryRow} from "../types/loan";
+import {AvailableStock, Loan, LoanHistoryRow, LoanListFilter, LoanReportFilter, MyLoan, MyLoanHistoryRow} from "../types/loan";
 import {ValidationError} from "../errors/DomainError";
 
 /** Business rules for the Loans resource. Calls LoanRepository; throws DomainError subclasses for expected failures. */
@@ -20,6 +20,16 @@ export class LoanService {
     public async listLoans(vaultId: number, filter: LoanListFilter): Promise<{total: number; limit: number; loans: Loan[]}> {
         const {total, loans} = await new LoanRepository(this.pool).list(vaultId, filter);
         return {total, limit: LoanRepository.MAX_ROWS, loans};
+    }
+
+    /**
+     * Searches the copies that can be lent right now.
+     * @param vaultId Vault id.
+     * @param query Stock code, title or ISBN fragment.
+     * @returns Matching available copies.
+     */
+    public async searchAvailableStocks(vaultId: number, query: string): Promise<AvailableStock[]> {
+        return new LoanRepository(this.pool).searchAvailable(vaultId, query.trim());
     }
 
     /**

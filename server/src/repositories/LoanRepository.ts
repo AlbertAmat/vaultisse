@@ -1,5 +1,5 @@
 import {Pool, PoolClient} from "pg";
-import {Loan, LoanHistoryRow, LoanListFilter, LoanReportFilter, MyLoan, MyLoanHistoryRow} from "../types/loan";
+import {AvailableStock, Loan, LoanHistoryRow, LoanListFilter, LoanReportFilter, MyLoan, MyLoanHistoryRow} from "../types/loan";
 
 /** Data access for currently-on-loan `book_stocks` rows and the `loan_history` ledger. See LoanService for the business rules built on top of this. */
 export class LoanRepository {
@@ -70,6 +70,33 @@ export class LoanRepository {
         );
 
         return {total: Number(totalResult.rows[0].count), loans: result.rows};
+    }
+
+    /**
+     * Searches the copies that can be lent (`book_stocks.status = 0`) by stock code, title or ISBN.
+     * @param vaultId Vault id.
+     * @param query Search text; empty lists the first copies by title.
+     * @returns Up to 20 copies, an exact code match first.
+     */
+    public async searchAvailable(vaultId: number, query: string): Promise<AvailableStock[]> {
+        // %, _ and \ are matched literally.
+        const pattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
+        const result = await this.db.query(
+            `SELECT bs.code     AS "code",
+                    b.name      AS "bookName",
+                    b.image_url AS "imageUrl",
+                    l.name      AS "locationName"
+               FROM book_stocks bs
+                    JOIN books b ON b.id = bs.book_id AND b.vault_id = bs.vault_id
+                    LEFT JOIN locations l ON l.id = bs.location_id AND l.vault_id = bs.vault_id
+              WHERE bs.vault_id = $1
+                AND bs.status = 0
+                AND (bs.code ILIKE $2 OR b.name ILIKE $2 OR b.isbn ILIKE $2)
+              ORDER BY LOWER(bs.code) = LOWER($3) DESC, b.name, bs.code
+              LIMIT 20`,
+            [vaultId, pattern, query]
+        );
+        return result.rows;
     }
 
     /**

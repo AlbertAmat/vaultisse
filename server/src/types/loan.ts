@@ -43,6 +43,14 @@ export interface LoanHistoryRow {
     returnedAt: string | null;
 }
 
+/** A copy that can be lent right now. */
+export interface AvailableStock {
+    code: string;
+    bookName: string;
+    imageUrl: string | null;
+    locationName: string | null;
+}
+
 export interface LoanListFilter {
     groupId?: number | null;
     dateFrom?: string | null;

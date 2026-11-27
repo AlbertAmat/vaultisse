@@ -58,6 +58,17 @@ router.get('/mine/history', requireAuth, requireVaultPermission("canBorrow"), (r
 router.get('', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLoanController().list(req, res));
 
 /**
+ * GET /loans/available
+ * ----------------------
+ * Copies that can be lent right now, matched by stock code, title or ISBN (20 at most, exact code first).
+ *
+ * Auth: required. Query: `?query=hobbit`
+ *
+ * Example response (200): { "stocks": [{ "code": "abc123", "bookName": "The Hobbit", "imageUrl": null, "locationName": "Shelf" }] }
+ */
+router.get('/available', requireAuth, requireVaultPermission("canEditCatalog"), (req, res) => getLoanController().available(req, res));
+
+/**
  * GET /loans/report
  * -------------------
  * Unpaginated `loan_history` export for a date range, for the Loans view's Excel report.

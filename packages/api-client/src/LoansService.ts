@@ -1,5 +1,6 @@
 import type {AxiosInstance} from "axios";
 import ILoansResponse from "@vaultisse/types/loans/ILoan";
+import {IAvailableStock} from "@vaultisse/types/loans/IAvailableStock";
 import ILoanHistoryEntry from "@vaultisse/types/loans/ILoanHistory";
 import {IMyLoan, IMyLoanHistoryRow} from "@vaultisse/types/loans/IMyLoan";
 
@@ -29,6 +30,16 @@ export class LoansService {
     public async getMyLoanHistory(): Promise<IMyLoanHistoryRow[]> {
         const {data} = await this.http.get(`/loans/mine/history`);
         return data.rows;
+    }
+
+    /**
+     * Copies that can be lent right now.
+     * @param query Stock code, title or ISBN fragment.
+     * @returns Up to 20 copies, an exact code match first.
+     */
+    public async searchAvailable(query: string): Promise<IAvailableStock[]> {
+        const {data} = await this.http.get(`/loans/available`, {params: {query}});
+        return data.stocks;
     }
 
     /**

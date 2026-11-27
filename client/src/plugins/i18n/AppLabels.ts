@@ -402,4 +402,10 @@ export enum AppLabels {
     CARD_LEND_SCAN = "CARD_LEND_SCAN",
     SNACKBAR_CARD_SAVED = "SNACKBAR_CARD_SAVED",
     SNACKBAR_BOOK_LENT = "SNACKBAR_BOOK_LENT",
+
+    // "Loan a book" dialog - see views/loans/components/LoanBookDialog.vue.
+    LOAN_A_BOOK = "LOAN_A_BOOK",
+    LOAN_CUSTOMER_FIELD = "LOAN_CUSTOMER_FIELD",
+    LOAN_BOOK_FIELD = "LOAN_BOOK_FIELD",
+    LOAN_NO_AVAILABLE_COPY = "LOAN_NO_AVAILABLE_COPY",
 }
