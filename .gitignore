@@ -27,3 +27,11 @@ ecosystem-config.js
 !**/.env.example
 !**/.env.minimal.example
 *.zip
+
+# Video production: media and YouTube credentials live outside the repository (tools/video/README.md)
+*.mp4
+*.mov
+*.webm
+client_secret*.json
+youtube-token*.json
+**/vaultisse-video/

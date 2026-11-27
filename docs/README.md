@@ -19,6 +19,8 @@ there.
   page: turning it on, editing settings without env vars, accounts, vaults, plans,
   security, logs, GDPR data requests, data retention, compliance (ISO/IEC 27001),
   jobs, webhooks, and how it keeps itself separate from the app.
+- **[../tools/video/README.md](../tools/video/README.md)** - the playbook Claude Code follows to make, subtitle (English, Spanish,
+  Catalan, German) and upload the YouTube videos about the app, outside the repository.
 - **[TESTING.md](TESTING.md)** - running the server's Jest/Supertest suite
   locally, how the dedicated test database and auth helpers work, and the CI
   workflow that runs it on every push/PR.
