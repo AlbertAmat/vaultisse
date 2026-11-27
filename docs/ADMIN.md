@@ -51,6 +51,8 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 
 ## Turning it on
 
+<p align="center"><img src="images/admin/01-login.png" alt="The sign-in page of the console: email, password, then a code from your authenticator app." width="92%"><br><sub>The sign-in page of the console: email, password, then a code from your authenticator app.</sub></p>
+
 1. In `.env`:
    ```
    ADMIN_ENABLED=true
@@ -179,6 +181,8 @@ Restart the server afterwards so it reloads the environment.
 
 ## The setup guide
 
+<p align="center"><img src="images/admin/04-setup-guide.png" alt="The setup guide that opens the first time a superadmin gets in: it walks through email, registration, single sign-on and notifications without touching the menu." width="92%"><br><sub>The setup guide that opens the first time a superadmin gets in: it walks through email, registration, single sign-on and notifications without touching the menu.</sub></p>
+
 The first time a superadmin gets into the console, a short guide opens on top of it, so nothing
 has to be found in the menu: **Welcome** (it lists what the environment already configured),
 **Email** (with a test button that tries the values before you save), **Sign-up** (who can
@@ -228,6 +232,8 @@ and a test checks that a book title never appears in the admin API's output.
 
 ## Settings without env vars
 
+<p align="center"><img src="images/admin/28-settings.png" alt="Settings edited in the console, with the saved-vs-environment priority shown per field." width="92%"><br><sub>Settings edited in the console, with the saved-vs-environment priority shown per field.</sub></p>
+
 *Settings* edits what used to need an env var and a restart:
 
 | Group | Settings |
@@ -269,6 +275,14 @@ the portal" are one code path.
 
 ## Accounts, vaults and deletions
 
+<p align="center"><img src="images/admin/07-accounts.png" alt="Accounts: search, filter, select several for a bulk action." width="92%"><br><sub>Accounts: search, filter, select several for a bulk action.</sub></p>
+
+<p align="center"><img src="images/admin/08-account-detail.png" alt="An account: status, private tags and notes, data requests, support operations, vaults and recent activity." width="92%"><br><sub>An account: status, private tags and notes, data requests, support operations, vaults and recent activity.</sub></p>
+
+<p align="center"><img src="images/admin/09-vault-detail.png" alt="A vault: members, plan, and the actions that change it. Names and sizes only, never the books." width="92%"><br><sub>A vault: members, plan, and the actions that change it. Names and sizes only, never the books.</sub></p>
+
+<p align="center"><img src="images/admin/12-deletions.png" alt="Scheduled deletions wait out their grace period and can be cancelled." width="92%"><br><sub>Scheduled deletions wait out their grace period and can be cancelled.</sub></p>
+
 **Accounts** can be searched and filtered (active, awaiting approval, disabled,
 deletion scheduled, unverified). Per account an admin can approve a new registration,
 disable or re-enable, sign out everywhere, remove two-factor (lost phone), and delete.
@@ -292,6 +306,8 @@ it is the only admin of a vault it shares, the deletion is refused with an expla
 
 ## Plans and quotas
 
+<p align="center"><img src="images/admin/11-plans.png" alt="Plans with limits on books, members and storage." width="92%"><br><sub>Plans with limits on books, members and storage.</sub></p>
+
 *Plans & quotas* defines tiers with limits on books, members and storage (empty =
 unlimited). A vault uses the plan assigned to it, or the default plan, or no limit.
 
@@ -301,6 +317,8 @@ unlimited). A vault uses the plan assigned to it, or the default plan, or no lim
 - There is no billing. Plans are assigned by hand. Payment integration is out of scope.
 
 ## Announcements and maintenance mode
+
+<p align="center"><img src="images/admin/13-announcements.png" alt="Announcements and the read-only maintenance switch." width="92%"><br><sub>Announcements and the read-only maintenance switch.</sub></p>
 
 *Announcements* puts a banner at the top of the app (and on the login and register pages) for every
 user: "Maintenance tonight at 22:00", a new feature. Each has a look (information and warning can be
@@ -318,6 +336,8 @@ The app reads `GET /api/rest/app/notice` (public, always empty with the portal o
 minutes and when the tab regains focus.
 
 ## Emailing the users
+
+<p align="center"><img src="images/admin/14-email-users.png" alt="Preview the exact recipient count and the email before anything is sent." width="92%"><br><sub>Preview the exact recipient count and the email before anything is sent.</sub></p>
 
 *Email users* sends a plain-text message to the people who use the app, for things that can't wait for
 their next visit: a closure, new terms, a security notice.
@@ -359,6 +379,8 @@ can still be cancelled. Up to 500 accounts per action.
 
 ## Terms acceptance report
 
+<p align="center"><img src="images/admin/15-terms.png" alt="Who accepted the Terms of Service and the security notice, who was asked and who wasn't." width="92%"><br><sub>Who accepted the Terms of Service and the security notice, who was asked and who wasn't.</sub></p>
+
 *Terms & notices* shows, for the Terms of Service and the security notice, how many accounts accepted, were
 asked but haven't answered, or haven't been asked yet (usually: not signed in since it was introduced), with
 the list per account, search, and an **Export CSV** of the current filter. The CSV opens safely in a
@@ -384,6 +406,10 @@ Behind a reverse proxy, set `TRUST_PROXY=true` so real visitor addresses are see
 
 ## Overview charts
 
+<p align="center"><img src="images/admin/05-overview.png" alt="The overview: headline numbers and trends for 7, 30 or 90 days." width="92%"><br><sub>The overview: headline numbers and trends for 7, 30 or 90 days.</sub></p>
+
+<p align="center"><img src="images/admin/06-overview-dark.png" alt="The same page in the dark theme." width="70%"><br><sub>The same page in the dark theme.</sub></p>
+
 The Overview page has a 7 / 30 / 90-day switch for its trends: new accounts, sign-ins, library growth (books in all
 vaults), failed sign-ins (users and admins), emails delivered and failed, and security events by type. Beside them:
 accounts by status (a donut: active, awaiting approval, disabled, email not verified), vaults by plan, the vaults
@@ -400,6 +426,10 @@ to the admins: the user never sees them, and every change goes to the audit trai
 the account holder, so notes and tags are included in the personal-data export (below) and deleted with the account.
 
 ## Data requests (GDPR)
+
+<p align="center"><img src="images/admin/20-data-requests.png" alt="Requests with their one-month deadline." width="92%"><br><sub>Requests with their one-month deadline.</sub></p>
+
+<p align="center"><img src="images/admin/21-data-request-erasure.png" alt="An erasure request, step by step." width="70%"><br><sub>An erasure request, step by step.</sub></p>
 
 *Data requests* tracks the two requests people can make about their data and the deadline that comes with them:
 
@@ -423,6 +453,8 @@ request also turns *Compliance* control A.5.34 red. A request stays on record af
 email address it came from: that is your proof that it was answered. Tables: `data_requests`.
 
 ## Support operations on accounts and vaults
+
+<p align="center"><img src="images/admin/10-vault-clear.png" alt="Clear a vault: choose what to delete, see how many items there are, type the vault's name." width="92%"><br><sub>Clear a vault: choose what to delete, see how many items there are, type the vault's name.</sub></p>
 
 Things admins otherwise do in SQL. All of them need a fresh verification (password and code), are written to the audit
 trail, and never read what is inside a vault.
@@ -451,6 +483,8 @@ trail, and never read what is inside a vault.
 
 ## Data retention
 
+<p align="center"><img src="images/admin/22-data-retention.png" alt="How long each kind of record is kept." width="92%"><br><sub>How long each kind of record is kept.</sub></p>
+
 *Data retention* sets how long each kind of record is kept, because GDPR asks that personal data is not kept longer than needed
 (art. 5(1)(e)) and that choice is yours. Each row shows what the record holds, whether it is personal data, the period in days
 (0 keeps it forever), the default, how many rows there are, the oldest and how many are already older than the period.
@@ -476,6 +510,8 @@ Accounts are not covered here: they go through the inactive-account setting or a
 
 ## Jobs
 
+<p align="center"><img src="images/admin/27-jobs.png" alt="What runs in the background, when it last ran and what it did." width="92%"><br><sub>What runs in the background, when it last ran and what it did.</sub></p>
+
 *Jobs* lists what runs in the background, so a failure shows up in the console instead of only in the server log:
 
 | Job | Runs | What it does |
@@ -497,6 +533,8 @@ the jobs run on their old timers, unrecorded.
 
 ## Login map
 
+<p align="center"><img src="images/admin/17-login-map.png" alt="Sign-ins and failed attempts by place (the map background loads from OpenStreetMap in your browser; this screenshot uses a plain placeholder)." width="92%"><br><sub>Sign-ins and failed attempts by place (the map background loads from OpenStreetMap in your browser; this screenshot uses a plain placeholder).</sub></p>
+
 *Login map* shows where people sign in from. It plots the successful sign-ins of the regular users, and the
 failed attempts, on an OpenStreetMap, for the last 7, 30, 90 or 365 days. Addresses that resolve to the same
 place are merged into one circle; its size is the number of events and it turns red when failed attempts
@@ -516,6 +554,10 @@ The popup never names a person.
   grouped; mention it in your privacy policy.
 
 ## Compliance
+
+<p align="center"><img src="images/admin/18-compliance.png" alt="ISO/IEC 27001 controls measured against this installation." width="92%"><br><sub>ISO/IEC 27001 controls measured against this installation.</sub></p>
+
+<p align="center"><img src="images/admin/19-compliance-registers.png" alt="Registers of policies, suppliers, risks and assets." width="92%"><br><sub>Registers of policies, suppliers, risks and assets.</sub></p>
 
 *Compliance* helps you prepare the evidence an ISO/IEC 27001 audit (or a GDPR or SOC 2 review) asks for. It is a
 working aid: it does **not** certify anything, and passing every check does not make an installation "ISO
@@ -555,6 +597,8 @@ Added to the database for this (all in the v1.4.0 upgrade): `compliance_controls
 
 ## System page
 
+<p align="center"><img src="images/admin/29-system.png" alt="Version and updates, database size and status, migrations, runtime." width="92%"><br><sub>Version and updates, database size and status, migrations, runtime.</sub></p>
+
 *System* answers "what am I running and is it healthy":
 
 - **Version.** The installed version (`APP_VERSION`, set by the Docker image) and whether
@@ -572,6 +616,8 @@ Added to the database for this (all in the v1.4.0 upgrade): `compliance_controls
 - **This server.** Instance id, uptime, Node.js, system, memory, whether it runs in Docker.
 
 ## Notifications to admins
+
+<p align="center"><img src="images/admin/25-notifications.png" alt="Which events email the admins, and the history of what was sent." width="92%"><br><sub>Which events email the admins, and the history of what was sent.</sub></p>
 
 *Notifications* is where the console emails its admins, so problems reach you without
 anyone watching the console. It needs email to be set up (*Settings > Email*); without it,
@@ -599,6 +645,12 @@ that it reaches you, and *What was sent* lists everything attempted, including w
 skipped and why (90 days). Notification emails also show up under *Logs > Emails sent*.
 
 ## Security, logs and audit
+
+<p align="center"><img src="images/admin/16-security.png" alt="Security: failed sign-ins, locked accounts, blocked addresses, live sessions." width="92%"><br><sub>Security: failed sign-ins, locked accounts, blocked addresses, live sessions.</sub></p>
+
+<p align="center"><img src="images/admin/23-logs.png" alt="Logs: sign-ins, emails sent, the server log." width="92%"><br><sub>Logs: sign-ins, emails sent, the server log.</sub></p>
+
+<p align="center"><img src="images/admin/24-audit-trail.png" alt="The audit trail: everything admins did, protected against edits." width="92%"><br><sub>The audit trail: everything admins did, protected against edits.</sub></p>
 
 *Security* shows, for this server since it started and for the last 30 days:
 
@@ -645,6 +697,8 @@ Countries come from the same offline database as the login map, with the same ac
 
 ## Webhooks
 
+<p align="center"><img src="images/admin/26-webhooks.png" alt="Webhooks to Slack, Discord, Telegram or any URL." width="92%"><br><sub>Webhooks to Slack, Discord, Telegram or any URL.</sub></p>
+
 *Webhooks* sends the portal's events to **Slack**, **Discord**, **Telegram** or any **URL**. Add a webhook, pick the
 events, press **Test**. Events: a new account registered, an account waits for approval, an incident was recorded,
 an address was blocked (by hand or automatically), security alerts, anomalies, an admin signed in from a new
@@ -666,6 +720,8 @@ country, a data request was logged or is near its deadline, an account or vault 
   Tables: `webhooks`, `webhook_deliveries`.
 
 ## Admin sessions
+
+<p align="center"><img src="images/admin/30-admins.png" alt="Admins and their active sessions." width="92%"><br><sub>Admins and their active sessions.</sub></p>
 
 *Admins > Active sessions* lists where admins are signed in now: who, device, address, the place of the address
 (from the offline database), when they signed in and when they were last active. A superadmin can **End session**

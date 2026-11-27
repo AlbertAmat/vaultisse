@@ -15,9 +15,10 @@ there.
   (`activity_log`), and how a dying session surfaces on the client.
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - self-hosting: local-only, behind your
   own reverse proxy, behind Cloudflare Tunnel, or the one-click Unraid template.
-- **[ADMIN.md](ADMIN.md)** - the optional admin portal: turning it on, editing
-  settings without env vars, managing accounts, vaults, plans and deletions,
-  logs and security, and how it keeps itself separate from the app.
+- **[ADMIN.md](ADMIN.md)** - the optional admin portal, with a screenshot of every
+  page: turning it on, editing settings without env vars, accounts, vaults, plans,
+  security, logs, GDPR data requests, data retention, compliance (ISO/IEC 27001),
+  jobs, webhooks, and how it keeps itself separate from the app.
 - **[TESTING.md](TESTING.md)** - running the server's Jest/Supertest suite
   locally, how the dedicated test database and auth helpers work, and the CI
   workflow that runs it on every push/PR.

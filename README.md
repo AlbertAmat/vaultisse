@@ -34,6 +34,11 @@ language, format, cover image), and it can look books up automatically by ISBN.
   - [3. Configure the server](#3-configure-the-server)
   - [4. Run the server](#4-run-the-server)
   - [5. Run the client](#5-run-the-client)
+- [Configuration](#configuration)
+  - [Option 1: the admin panel (easiest)](#option-1-the-admin-panel-easiest)
+  - [Option 2: environment variables](#option-2-environment-variables)
+  - [Which one wins](#which-one-wins)
+- [Admin panel](#admin-panel)
 - [Building for production](#building-for-production)
 - [Deploying with Docker](#deploying-with-docker)
 - [Releasing a new version](#releasing-a-new-version)
@@ -60,6 +65,9 @@ language, format, cover image), and it can look books up automatically by ISBN.
 - Print barcode/ISBN labels for shelving and quick re-scanning
 - Full-text search across the catalog
 - A dashboard with collection statistics and charts
+- An optional **admin panel** on its own port for whoever runs the installation: settings without
+  editing `.env`, accounts, vaults, plans, security, logs, GDPR tools and compliance evidence
+  (see [docs/ADMIN.md](docs/ADMIN.md))
 - Multi-language UI (English, Spanish, Catalan, Italian, French, German)
 - Built-in `/docs` help pages, rendered from Markdown, in the same languages
 - Cookie/session-based authentication with JWT, password hashing, optional OIDC/SSO
@@ -310,6 +318,111 @@ npm run dev:client     # starts Vite; proxies /api/rest to the server
 
 Open the URL Vite prints (typically `http://localhost:5173/app`) in your browser.
 
+## Configuration
+
+Vaultisse can be configured in two ways. **You can mix them**, and the admin panel is the easiest.
+
+| | Admin panel | Environment variables |
+|---|---|---|
+| Where | A web page, on its own port (`http://localhost:3001`) | The `.env` file (or your container's environment) |
+| Changing a value | Edit, press Save. No restart | Edit the file, restart the container |
+| Email, registration, single sign-on, API keys, limits, notifications, retention | Yes, with a setup guide | Yes |
+| Database connection, secrets, ports, proxy | No: needed before the panel can start | Yes (only these are required) |
+| Secrets (SMTP password, API keys) | Stored encrypted, shown as "set" | Plain text in the file |
+| Test buttons (send a test email, check an API key) | Yes | No |
+| Best for | Almost everyone | Automation, Kubernetes, reproducible deployments |
+
+### Option 1: the admin panel (easiest)
+
+Put the handful of variables that must exist before the database can be reached in `.env`, switch the panel on,
+and set everything else in your browser.
+
+```bash
+cp .env.minimal.example .env        # fill in DB_PASSWORD, JWT_SECRET, SETTINGS_ENCRYPTION_KEY (openssl rand -hex 32)
+docker compose up -d
+docker compose logs app             # the first admin's username and password are printed here, once
+```
+
+The file contains the minimum, and the important line is `ADMIN_ENABLED=true`:
+
+```dotenv
+DB_NAME=vaultisse
+DB_USER=vaultisse
+DB_PASSWORD=<openssl rand -hex 24>
+JWT_SECRET=<openssl rand -hex 32>
+SETTINGS_ENCRYPTION_KEY=<openssl rand -hex 32>
+FRONT_END_URL=http://localhost:3000     # the address your users open
+ADMIN_ENABLED=true                      # turns the admin panel on
+ADMIN_URL=http://localhost:3001         # the address the panel is opened at
+```
+
+1. Open `ADMIN_URL`. Sign in with the generated `admin@vaultisse.local` and the password from the logs.
+2. Choose a new password and set up two-factor authentication (an authenticator app). Both are mandatory.
+3. A **setup guide** opens: email (with a *Send a test email* button), registration, single sign-on, notifications.
+   Skip what you don't need, everything can be changed later under **Settings**.
+
+<p align="center"><img src="docs/images/admin/04-setup-guide.png" alt="The admin panel's setup guide" width="70%"></p>
+
+Behind a reverse proxy, give the panel its own domain (for example `adm.example.com`) pointing at the admin port,
+and set `TRUST_PROXY=true`. Everything the panel can do is described in **[docs/ADMIN.md](docs/ADMIN.md)**.
+
+### Option 2: environment variables
+
+Everything can also be set in `.env` (or the container's environment), which is how Vaultisse worked before the
+panel existed and still works if you never turn the panel on. [`.env.example`](.env.example) lists every variable
+with a comment. In short:
+
+| Needed to start | Meaning |
+|---|---|
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD` (and `DB_HOST`, `DB_PORT` outside Docker) | The PostgreSQL connection |
+| `JWT_SECRET` | Signs sessions. `openssl rand -hex 32` |
+| `FRONT_END_URL` | The address users open (CORS, security headers, links in emails) |
+
+| Optional, by topic | Variables |
+|---|---|
+| Email (verification links, notifications) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` |
+| Who can register | `REGISTRATION_ENABLED`, `REGISTRATION_REQUIRES_APPROVAL` |
+| Single sign-on | `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`, `SSO_ONLY` |
+| Book lookup | `GOOGLE_BOOKS_API_KEY`, `LIBRARYTHING_API_KEY` |
+| Upload limits | `MAX_EBOOK_FILE_SIZE_MB`, `MAX_IMPORT_FILE_SIZE_MB` |
+| Inactive accounts | `ACCOUNT_INACTIVITY_DAYS`, `ACCOUNT_DELETION_NOTICE_DAYS` |
+| Running behind a proxy / over HTTP | `TRUST_PROXY`, `ALLOW_HTTP` |
+| Admin panel | `ADMIN_ENABLED`, `ADMIN_PORT`, `ADMIN_URL`, `ADMIN_ALLOWED_IPS`, `SETTINGS_ENCRYPTION_KEY` |
+
+### Which one wins
+
+If you use both, **the admin panel wins**: for every setting the value used is what is saved in the panel, then the
+environment variable, then the built-in default. At every start the container prints a table that shows, for each
+setting, the value from the environment, the value from the panel and which one is applied, so you can see at a glance
+why an environment variable is being ignored. Each setting in the panel says the same on its own field, and a
+*Danger zone* (confirmed with a code sent by email) clears everything saved in the panel to go back to the
+environment variables.
+
+```
+SETTING                  ENV VAR          ADMIN PANEL      APPLIED      NOTE
+SMTP_HOST                smtp.old.com     smtp.new.com     admin panel  env var IGNORED (the admin panel overrides it)
+REGISTRATION_ENABLED     true             -                env var
+```
+
+## Admin panel
+
+The optional admin panel is a separate console for whoever *runs* the installation, on its own port or domain. It is
+**off by default**. It lets you manage accounts, vaults, plans and settings without touching the database, and it
+is built so an admin **never sees what is inside someone's library**.
+
+<p align="center">
+  <img src="docs/images/admin/05-overview.png" alt="Admin panel overview" width="48%">
+  <img src="docs/images/admin/18-compliance.png" alt="Admin panel compliance page" width="48%">
+</p>
+
+What it covers: configuration without env vars (with test buttons), accounts and vaults (bulk actions, merge two accounts,
+change an email, transfer or clear a vault), plans and quotas, announcements and a read-only maintenance mode, emailing the
+users, security (automatic IP blocking, sessions, a login map), logs and a tamper-proof audit trail, GDPR data requests
+and personal-data export, data retention periods, a compliance page for ISO/IEC 27001, background jobs, webhooks to Slack,
+Discord and Telegram, and email alerts to the admins.
+
+**Read the full guide, with a screenshot of every page: [docs/ADMIN.md](docs/ADMIN.md).**
+
 ## Building for production
 
 The supported way to run Vaultisse is the Docker image (see [Deploying with Docker](#deploying-with-docker)),
@@ -353,6 +466,7 @@ curl -O https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/.env.example
 curl -o assets/db/databaseSchema.sql https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/assets/db/databaseSchema.sql
 cp .env.example .env
 # edit .env: set JWT_SECRET, DB_PASSWORD, FRONT_END_URL, etc.
+# (or start from .env.minimal.example and set the rest in the admin panel, see Configuration)
 docker compose up -d
 ```
 
