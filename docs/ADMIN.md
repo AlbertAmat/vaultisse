@@ -29,6 +29,8 @@ not enforced. The server behaves exactly as before, configured by env vars alone
 - [Bulk actions on accounts](#bulk-actions-on-accounts)
 - [Terms acceptance report](#terms-acceptance-report)
 - [Automatic IP blocking](#automatic-ip-blocking)
+- [Login map](#login-map)
+- [Compliance](#compliance)
 - [System page](#system-page)
 - [Notifications to admins](#notifications-to-admins)
 - [Security, logs and audit](#security-logs-and-audit)
@@ -371,6 +373,64 @@ Because a wrong block would lock real people out, it **never** blocks:
 
 Behind a reverse proxy, set `TRUST_PROXY=true` so real visitor addresses are seen.
 
+## Login map
+
+*Login map* shows where people sign in from. It plots the successful sign-ins of the regular users, and the
+failed attempts, on an OpenStreetMap, for the last 7, 30, 90 or 365 days. Addresses that resolve to the same
+place are merged into one circle; its size is the number of events and it turns red when failed attempts
+outnumber sign-ins. Click a circle for the place, the number of sign-ins and accounts, and the last sign-in.
+The popup never names a person.
+
+- **Offline lookup.** Addresses are placed with the database bundled in the `geoip-lite` package, on this
+  server. No address is sent to any outside service. The only request that leaves is your browser asking
+  openstreetmap.org for the map tiles (so the admin CSP allows `tile.openstreetmap.org`).
+- **Accuracy.** The country is nearly always right, the city often, never the street. A VPN, a mobile carrier
+  or a proxy shows where that network ends. The data is as old as the installed package; update it by
+  updating the app.
+- **Not placed.** Private and local addresses (`10.x`, `192.168.x`, `127.x`, ...) have no place and are only
+  counted. Behind Docker or a reverse proxy without `TRUST_PROXY=true` every visitor looks like one, so set it.
+- **Memory.** The database (about 100 MB) is loaded the first time the map is opened, not at start-up.
+- **Privacy.** A sign-in address is personal data. The map shows the same information as *Logs > Sign-ins*,
+  grouped; mention it in your privacy policy.
+
+## Compliance
+
+*Compliance* helps you prepare the evidence an ISO/IEC 27001 audit (or a GDPR or SOC 2 review) asks for. It is a
+working aid: it does **not** certify anything, and passing every check does not make an installation "ISO
+certified". Certification covers your organisation, not just this software.
+
+**Controls.** The catalogue holds the ISO/IEC 27001:2022 Annex A controls an installation of this app can
+evidence (30 or so), each mapped to the matching GDPR articles and SOC 2 criteria. Two kinds:
+
+- *Measured* controls are checked by the portal from the live configuration and database: admin
+  two-factor and access reviews (A.5.17, A.5.18), HTTPS and encryption of secrets (A.8.24), the tamper-proof
+  audit trail (A.8.15), alerts to admins (A.8.16), IP allowlist and automatic blocking (A.8.20), update status
+  (A.8.8), retention of inactive accounts (A.5.34, A.8.10) and so on. They turn green, amber or red on their
+  own, and a measured control can't be turned green by hand: fix the cause. The one thing a person may declare
+  is *not applicable*, which needs a written justification.
+- *Declared* controls can't be measured (backups, training, physical security, change management). A person
+  sets the status (implemented, partly, planned), the owner, the evidence link and the next review.
+
+Click a control for what it asks for, what to keep, and the form. Every change goes to the audit trail. The
+**Statement of applicability** button exports a CSV of every control, whether it applies, how it stands and why
+(the document ISO/IEC 27001 clause 6.1.3 asks for). The readiness score counts implemented as 1, partly as ½,
+and leaves out what doesn't apply.
+
+**Registers.** ISO 27001 wants records, so the page keeps four small registers: *Policies* (version, approval
+date, next review), *Suppliers* (criticality, link to the contract or data processing agreement, GDPR art. 28),
+*Risks* (risk level, treatment) and *Assets* (owner, criticality). Their review dates feed the controls: a
+policy past its review date turns A.5.1 red.
+
+**Incidents.** Record each security incident with severity, what was done and the lessons learned. For a
+personal-data breach the page counts the 72 hours GDPR art. 33 gives you to tell the authority, and flags it red
+when that time passes without a notification date. Incidents are closed, never deleted.
+
+**Access review.** Confirm every few months that each admin still needs access (A.5.18). Admins never reviewed
+or not reviewed for 180 days are flagged. The date and the reviewer are stored on the admin account.
+
+Added to the database for this (all in the v1.4.0 upgrade): `compliance_controls`, `compliance_register`,
+`security_incidents`, and `admin_users.access_reviewed_at` / `access_reviewed_by`.
+
 ## System page
 
 *System* answers "what am I running and is it healthy":
@@ -517,6 +577,8 @@ Everything is under `/api/admin` on the admin port and needs an admin session ex
 | Deletions | `GET /deletions`, `POST /deletions/:id/{cancel,execute}` |
 | Security | `GET /security/{summary,traffic,events,top-ips,lockouts,blocked-ips,sessions}`, plus unlock, block/unblock, end session |
 | Logs | `GET /logs/{activity,server,audit}` |
+| Login map | `GET /map/logins?days=` |
+| Compliance | `GET /compliance`, `PUT /compliance/controls/:id`, `GET /compliance/export.csv`, `GET/POST /compliance/register`, `PUT/DELETE /compliance/register/:id`, `GET/POST /compliance/incidents`, `PUT /compliance/incidents/:id`, `GET/POST /compliance/access` |
 | Admins | `GET/POST /admins`, `PATCH/DELETE /admins/:id`, `POST /admins/:id/reset-2fa` |
 
 ## Development

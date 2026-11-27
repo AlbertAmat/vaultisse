@@ -16,7 +16,7 @@ import axios, {AxiosError, AxiosInstance, AxiosRequestConfig} from "axios";
 import type {
     AdminLoginStep, AdminRole, IAccountDetail, IAccount, IAdminSelf, IAdminUser, IAdminVault, IAuditEntry, IBlockedIp, IDeletionRequestResult,
     IEnrollConfirm, IEnrollStart, ILockout, IOverview, IPaged, IPlan, IPlanInput, IScheduledDeletion, ISecurityEvent, ISecuritySummary,
-    IAnnouncement, IBroadcast, IBroadcastAudience, IBroadcastPreview, IBulkResult, IInactivityPreview, IMaintenance, ITermsCounts, ITermsRow, AnnouncementLevel, BroadcastAudience, BulkAccountAction, TermsDocument, TermsStatus, IMailEntry, IOnboardingStatus, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
+    ILoginMap, IComplianceOverview, IControlInput, IRegisterEntry, IRegisterInput, RegisterKind, IIncident, IIncidentInput, IAccessReview, IAnnouncement, IBroadcast, IBroadcastAudience, IBroadcastPreview, IBulkResult, IInactivityPreview, IMaintenance, ITermsCounts, ITermsRow, AnnouncementLevel, BroadcastAudience, BulkAccountAction, TermsDocument, TermsStatus, IMailEntry, IOnboardingStatus, INotificationEntry, INotificationsOverview, ISystemDetails, IVersionStatus, IServerLog, ISettingGroup, ISystemInfo, ITopIp, ITraffic, IUserSession, IVaultDetail, IActivityEntry, SettingChanges, UserStatus,
 } from "@vaultisse/types/admin/IAdmin";
 
 export interface AdminClientOptions {
@@ -59,6 +59,22 @@ export interface AdminApiClient {
         remove(id: number): Promise<void>;
         /** Read-only mode for the whole app. Turning it on needs a fresh verification (handled by the client). */
         setMaintenance(enabled: boolean, message?: string): Promise<IMaintenance>;
+    };
+    map: {
+        logins(days: number): Promise<ILoginMap>;
+    };
+    compliance: {
+        overview(): Promise<IComplianceOverview>;
+        saveControl(id: string, input: IControlInput): Promise<void>;
+        register(kind?: RegisterKind): Promise<IRegisterEntry[]>;
+        createRegister(input: IRegisterInput): Promise<void>;
+        updateRegister(id: number, input: IRegisterInput): Promise<void>;
+        removeRegister(id: number): Promise<void>;
+        incidents(): Promise<IIncident[]>;
+        createIncident(input: IIncidentInput): Promise<void>;
+        updateIncident(id: number, input: IIncidentInput): Promise<void>;
+        access(): Promise<IAccessReview[]>;
+        confirmAccess(ids?: number[]): Promise<number>;
     };
     broadcast: {
         audiences(): Promise<{items: IBroadcastAudience[]; mailEnabled: boolean}>;
@@ -224,6 +240,22 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
             update: (id, input) => put(`/announcements/${id}`, input),
             remove: (id) => del(`/announcements/${id}`),
             setMaintenance: async (enabled, message) => (await put<{maintenance: IMaintenance}>("/announcements/maintenance", {enabled, message})).maintenance,
+        },
+        map: {
+            logins: (days) => get("/map/logins", {days}),
+        },
+        compliance: {
+            overview: () => get("/compliance"),
+            saveControl: (id, input) => put(`/compliance/controls/${encodeURIComponent(id)}`, input),
+            register: async (kind) => (await get<{items: IRegisterEntry[]}>("/compliance/register", {kind})).items,
+            createRegister: (input) => post("/compliance/register", input),
+            updateRegister: (id, input) => put(`/compliance/register/${id}`, input),
+            removeRegister: (id) => del(`/compliance/register/${id}`),
+            incidents: async () => (await get<{items: IIncident[]}>("/compliance/incidents")).items,
+            createIncident: (input) => post("/compliance/incidents", input),
+            updateIncident: (id, input) => put(`/compliance/incidents/${id}`, input),
+            access: async () => (await get<{items: IAccessReview[]}>("/compliance/access")).items,
+            confirmAccess: async (ids) => (await post<{confirmed: number}>("/compliance/access", {ids})).confirmed,
         },
         broadcast: {
             audiences: () => get("/broadcast/audiences"),

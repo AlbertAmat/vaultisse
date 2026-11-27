@@ -16,6 +16,7 @@
     "@vaultisse/types": "*",
     "axios": "^1.20.0",
     "chart.js": "^4.5.0",
+    "leaflet": "^1.9.4",
     "vue": "^3.5.43",
     "vue-chartjs": "^5.3.2",
     "vue-router": "^4.5.1",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",
+    "@types/leaflet": "^1.9.23",
     "@types/node": "^22.15.32",
     "@vitejs/plugin-vue": "^6.0.0",
     "typescript": "~5.8.0",

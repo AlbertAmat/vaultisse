@@ -52,6 +52,10 @@ CREATE TABLE admin_users
     failed_login_count SMALLINT            NOT NULL DEFAULT 0,
     lockout_until      TIMESTAMPTZ,
     last_login_date    TIMESTAMPTZ,
+    -- Periodic review of who has admin access (ISO/IEC 27001 A.5.18): when an admin last confirmed this account
+    -- still needs its access, and who did.
+    access_reviewed_at TIMESTAMPTZ,
+    access_reviewed_by INT,
     created_date       TIMESTAMPTZ         NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -277,4 +281,62 @@ CREATE TABLE broadcasts
     created_by   INT REFERENCES admin_users (id) ON DELETE SET NULL,
     created_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     finished_at  TIMESTAMPTZ
+);
+
+-- ============================================================
+-- Compliance (ISO/IEC 27001, GDPR, ...): evidence kept next to the live checks
+-- ============================================================
+
+-- What a person recorded about one control of the compliance catalogue (the catalogue itself lives in code):
+-- who owns it, its status when it can't be measured by the portal, the evidence and the next review.
+CREATE TABLE compliance_controls
+(
+    control_id     VARCHAR(40) PRIMARY KEY,
+    status         VARCHAR(16) CHECK (status IN ('implemented', 'partial', 'planned', 'not_applicable')),
+    owner          VARCHAR(100),
+    justification  TEXT,
+    evidence_url   VARCHAR(500),
+    reviewed_at    TIMESTAMPTZ,
+    reviewed_by    INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    next_review_at DATE
+);
+
+-- Registers an ISMS needs: policies and procedures, suppliers, risks and assets, one row each.
+CREATE TABLE compliance_register
+(
+    id             SERIAL PRIMARY KEY,
+    kind           VARCHAR(10)  NOT NULL CHECK (kind IN ('policy', 'supplier', 'risk', 'asset')),
+    title          VARCHAR(200) NOT NULL,
+    owner          VARCHAR(100),
+    status         VARCHAR(12)  NOT NULL DEFAULT 'active' CHECK (status IN ('draft', 'active', 'retired')),
+    -- Risk level for a risk, criticality for a supplier or asset.
+    rating         VARCHAR(8) CHECK (rating IN ('low', 'medium', 'high')),
+    version        VARCHAR(20),
+    details        TEXT,
+    reference_url  VARCHAR(500),
+    approved_at    DATE,
+    next_review_at DATE,
+    created_by     INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    created_date   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_date   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_compliance_register_kind ON compliance_register (kind);
+
+-- Security incidents (ISO/IEC 27001 A.5.24-A.5.28; GDPR art. 33 asks to notify a personal-data breach within 72 hours).
+CREATE TABLE security_incidents
+(
+    id               SERIAL PRIMARY KEY,
+    title            VARCHAR(200) NOT NULL,
+    severity         VARCHAR(8)   NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+    status           VARCHAR(12)  NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'contained', 'resolved', 'closed')),
+    detected_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolved_at      TIMESTAMPTZ,
+    description      TEXT,
+    actions          TEXT,
+    lessons          TEXT,
+    personal_data    BOOLEAN      NOT NULL DEFAULT FALSE,
+    authority_notified_at TIMESTAMPTZ,
+    users_notified_at     TIMESTAMPTZ,
+    created_by       INT REFERENCES admin_users (id) ON DELETE SET NULL,
+    created_date     TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

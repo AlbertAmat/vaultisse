@@ -71,6 +71,8 @@ const items = [
 	{to: "/announcements", title: "Announcements", icon: "mdi-bullhorn-outline"},
 	{to: "/broadcast", title: "Email users", icon: "mdi-email-multiple-outline"},
 	{to: "/security", title: "Security", icon: "mdi-shield-alert-outline"},
+	{to: "/map", title: "Login map", icon: "mdi-map-marker-radius-outline"},
+	{to: "/compliance", title: "Compliance", icon: "mdi-clipboard-check-outline"},
 	{to: "/logs", title: "Logs", icon: "mdi-text-box-search-outline"},
 	{to: "/audit", title: "Audit trail", icon: "mdi-clipboard-text-clock-outline"},
 	{to: "/notifications", title: "Notifications", icon: "mdi-bell-outline"},

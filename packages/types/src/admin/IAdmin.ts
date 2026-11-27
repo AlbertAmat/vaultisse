@@ -544,3 +544,124 @@ export interface ITermsRow {
     acceptedDate: string | null;
     status: TermsStatus;
 }
+
+// ---- Login map ----
+
+export interface IMapPoint {
+    lat: number;
+    lon: number;
+    city: string;
+    region: string;
+    /** ISO 3166-1 alpha-2. */
+    country: string;
+    logins: number;
+    accounts: number;
+    failed: number;
+    addresses: number;
+    lastLogin: string | null;
+}
+
+export interface ILoginMap {
+    /** False when the offline location database couldn't be loaded. */
+    available: boolean;
+    days: number;
+    points: IMapPoint[];
+    countries: {country: string; logins: number; failed: number}[];
+    totals: {logins: number; failed: number; located: number; unlocated: number; truncated: boolean};
+}
+
+// ---- Compliance ----
+
+export type ControlOutcome = "compliant" | "partial" | "gap" | "planned" | "not_assessed" | "not_applicable";
+export type ControlStatus = "implemented" | "partial" | "planned" | "not_applicable";
+export type RegisterKind = "policy" | "supplier" | "risk" | "asset";
+export type IncidentSeverity = "low" | "medium" | "high" | "critical";
+export type IncidentStatus = "open" | "contained" | "resolved" | "closed";
+
+export interface IControlRecord {
+    controlId: string;
+    status: ControlStatus | null;
+    owner: string | null;
+    justification: string | null;
+    evidenceUrl: string | null;
+    reviewedAt: string | null;
+    reviewedBy: string | null;
+    nextReviewAt: string | null;
+}
+
+export interface IControl {
+    id: string;
+    title: string;
+    area: "Organisational" | "People" | "Physical" | "Technological";
+    summary: string;
+    howTo: string;
+    refs: {iso: string; gdpr?: string; soc2?: string};
+    measured: {state: "pass" | "warn" | "fail"; detail: string} | null;
+    record: IControlRecord | null;
+    outcome: ControlOutcome;
+    reviewOverdue: boolean;
+}
+
+export interface IComplianceOverview {
+    generatedAt: string;
+    score: number;
+    counts: Record<ControlOutcome, number>;
+    controls: IControl[];
+    attention: {kind: string; text: string; link: string}[];
+}
+
+export interface IControlInput {
+    status: ControlStatus | null;
+    owner: string | null;
+    justification: string | null;
+    evidenceUrl: string | null;
+    nextReviewAt: string | null;
+    /** Stamp the control as reviewed now. */
+    reviewed: boolean;
+}
+
+export interface IRegisterEntry {
+    id: number;
+    kind: RegisterKind;
+    title: string;
+    owner: string | null;
+    status: "draft" | "active" | "retired";
+    rating: "low" | "medium" | "high" | null;
+    version: string | null;
+    details: string | null;
+    referenceUrl: string | null;
+    approvedAt: string | null;
+    nextReviewAt: string | null;
+    updatedDate: string;
+}
+
+export type IRegisterInput = Omit<IRegisterEntry, "id" | "updatedDate">;
+
+export interface IIncident {
+    id: number;
+    title: string;
+    severity: IncidentSeverity;
+    status: IncidentStatus;
+    detectedAt: string;
+    resolvedAt: string | null;
+    description: string | null;
+    actions: string | null;
+    lessons: string | null;
+    personalData: boolean;
+    authorityNotifiedAt: string | null;
+    usersNotifiedAt: string | null;
+    createdBy: string | null;
+}
+
+export type IIncidentInput = Omit<IIncident, "id" | "createdBy">;
+
+export interface IAccessReview {
+    id: number;
+    email: string;
+    name: string;
+    role: string;
+    disabled: boolean;
+    lastLoginDate: string | null;
+    accessReviewedAt: string | null;
+    reviewedBy: string | null;
+}

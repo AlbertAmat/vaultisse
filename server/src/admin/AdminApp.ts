@@ -31,6 +31,8 @@ import {inactivityRoutes} from "./routes/InactivityRoutes";
 import {termsRoutes} from "./routes/TermsRoutes";
 import {broadcastRoutes} from "./routes/BroadcastRoutes";
 import {BroadcastService} from "./services/BroadcastService";
+import {complianceRoutes} from "./routes/ComplianceRoutes";
+import {mapRoutes} from "./routes/MapRoutes";
 import {announcementsRoutes} from "./routes/AnnouncementsRoutes";
 import {notificationsRoutes} from "./routes/NotificationsRoutes";
 import {systemRoutes} from "./routes/SystemRoutes";
@@ -100,7 +102,8 @@ export class AdminApp {
                     scriptSrc: ["'self'"],
                     // The same Google Fonts the client app uses, so both look alike.
                     styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-                    imgSrc: ["'self'", "data:"],
+                    // OpenStreetMap tiles for the login map.
+                    imgSrc: ["'self'", "data:", "https://tile.openstreetmap.org"],
                     fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
                     connectSrc: ["'self'", ...(this.config.url ? [this.config.url] : [])],
                     frameAncestors: ["'none'"],
@@ -133,6 +136,8 @@ export class AdminApp {
         app.use("/api/admin/broadcast", broadcastRoutes(this.broadcasts, this.audit));
         app.use("/api/admin/inactivity", inactivityRoutes(this.pool, this.audit));
         app.use("/api/admin/terms", termsRoutes(this.pool));
+        app.use("/api/admin/compliance", complianceRoutes(this.pool, this.audit));
+        app.use("/api/admin/map", mapRoutes(this.pool));
         app.use("/api/admin/notifications", notificationsRoutes(this.pool, this.audit));
         app.use("/api/admin", (_req, res) => {
             res.status(404).json({message: "Not found"});
