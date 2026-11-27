@@ -7,15 +7,13 @@
 		<v-card>
 			<div class="table-wrap">
 				<v-table>
-					<thead><tr><th>Admin</th><th>Role</th><th>Two-factor</th><th>Last sign-in</th><th></th></tr></thead>
+					<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Two-factor</th><th>Last sign-in</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="admin in admins" :key="admin.id">
-							<td>
-								<div class="font-weight-medium">{{ admin.name }} <v-chip v-if="admin.id === state.admin?.id" size="x-small" variant="tonal" class="ml-1">you</v-chip> <v-chip v-if="admin.disabled" size="x-small" color="error" variant="tonal" class="ml-1">disabled</v-chip></div>
-								<div class="text-caption text-medium-emphasis">{{ admin.email }}</div>
-							</td>
-							<td>{{ admin.role === "superadmin" ? "Superadmin" : "Read-only" }}</td>
-							<td>{{ admin.totpEnabled ? "On" : "Not set up yet" }}</td>
+							<td class="text-no-wrap font-weight-medium">{{ admin.name }}<v-chip v-if="admin.id === state.admin?.id" size="x-small" variant="tonal" class="ml-2">you</v-chip><v-chip v-if="admin.disabled" size="x-small" color="error" variant="tonal" class="ml-2">disabled</v-chip></td>
+							<td class="text-no-wrap text-medium-emphasis">{{ admin.email }}</td>
+							<td class="text-no-wrap">{{ admin.role === "superadmin" ? "Superadmin" : "Read-only" }}</td>
+							<td class="text-no-wrap">{{ admin.totpEnabled ? "On" : "Not set up yet" }}</td>
 							<td>{{ relative(admin.lastLoginDate) }}</td>
 							<td class="text-right text-no-wrap">
 								<v-menu v-if="canWrite() && admin.id !== state.admin?.id">
