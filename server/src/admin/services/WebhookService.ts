@@ -158,7 +158,7 @@ export class WebhookService {
     }
 
     private hint(kind: WebhookKind, target: WebhookTarget): string {
-        if (kind === "telegram") return `chat ${target.chatId} · bot …${(target.token ?? "").slice(-4)}`;
+        if (kind === "telegram") return `${target.chatId} · bot …${(target.token ?? "").slice(-4)}`;
         try {
             const url = new URL(target.url ?? "");
             return `${url.hostname}/…${(target.url ?? "").slice(-4)}`;

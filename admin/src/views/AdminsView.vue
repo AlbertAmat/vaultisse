@@ -45,17 +45,19 @@
 			</div>
 			<div class="table-wrap">
 				<v-table density="comfortable">
-					<thead><tr><th>Admin</th><th>Device</th><th>Address</th><th>Signed in</th><th>Last active</th><th></th></tr></thead>
+					<thead><tr><th>Admin</th><th>Email</th><th>Device</th><th>Address</th><th>Place</th><th>Signed in</th><th>Last active</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="session in sessions" :key="session.id">
-							<td><div class="font-weight-medium">{{ session.adminName }}<v-chip v-if="session.current" size="x-small" color="success" variant="tonal" class="ml-2">this session</v-chip></div><div class="text-caption text-medium-emphasis">{{ session.adminEmail }}</div></td>
-							<td>{{ device(session.userAgent) }}</td>
-							<td><span class="mono">{{ session.ipAddress ?? "—" }}</span><div class="text-caption text-medium-emphasis">{{ place(session) }}</div></td>
-							<td class="text-no-wrap">{{ dateTime(session.createdDate) }}</td>
+							<td class="text-no-wrap font-weight-medium">{{ session.adminName }}<v-chip v-if="session.current" size="x-small" color="success" variant="tonal" class="ml-2">this session</v-chip></td>
+							<td class="text-no-wrap text-medium-emphasis">{{ session.adminEmail }}</td>
+							<td class="text-no-wrap"><v-icon size="18" class="mr-1">{{ deviceIcon(session.userAgent) }}</v-icon>{{ device(session.userAgent) }}</td>
+							<td class="text-no-wrap mono">{{ session.ipAddress ?? "—" }}</td>
+							<td class="text-no-wrap">{{ place(session) || "—" }}</td>
+							<td class="text-no-wrap" :title="dateTime(session.createdDate)">{{ relative(session.createdDate) }}</td>
 							<td class="text-no-wrap">{{ relative(session.lastSeenDate) }}</td>
-							<td class="text-right"><v-btn v-if="canWrite() && !session.current" size="small" variant="tonal" color="error" @click="endSession(session)">End session</v-btn></td>
+							<td class="text-right text-no-wrap"><v-btn v-if="canWrite() && !session.current" size="small" variant="tonal" color="error" @click="endSession(session)">End session</v-btn></td>
 						</tr>
-						<tr v-if="!sessions.length"><td colspan="6" class="text-center text-medium-emphasis pa-6">No other session.</td></tr>
+						<tr v-if="!sessions.length"><td colspan="8" class="text-center text-medium-emphasis pa-6">No other session.</td></tr>
 					</tbody>
 				</v-table>
 			</div>
@@ -109,8 +111,13 @@ function device(ua: string | null): string {
 	return os ? `${browser} on ${os}` : browser;
 }
 
+/** An icon for the kind of device. */
+function deviceIcon(ua: string | null): string {
+	return ua && /Android|iPhone|iPad|iOS/.test(ua) ? "mdi-cellphone" : ua && /curl|node|axios|supertest/i.test(ua) ? "mdi-console" : "mdi-laptop";
+}
+
 function place(session: IAdminSession): string {
-	if (!session.country) return session.ipAddress ? "Private or unknown address" : "";
+	if (!session.country) return session.ipAddress ? "Private or unknown" : "";
 	let country = session.country;
 	try {
 		country = regionNames?.of(session.country) ?? session.country;

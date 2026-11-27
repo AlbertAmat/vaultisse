@@ -7,18 +7,20 @@
 		<v-card>
 			<div class="table-wrap">
 				<v-table density="comfortable">
-					<thead><tr><th>Webhook</th><th>Events</th><th>Last delivery</th><th>On</th><th></th></tr></thead>
+					<thead><tr><th>Name</th><th>Type</th><th>Sends to</th><th>Events</th><th>Last delivery</th><th>On</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="hook in items" :key="hook.id">
-							<td>
-								<div class="d-flex align-center ga-2"><v-icon :icon="kinds[hook.kind].icon" size="20"/><span class="font-weight-medium">{{ hook.name }}</span></div>
-								<div class="text-caption text-medium-emphasis mono">{{ hook.targetHint }}</div>
+							<td class="text-no-wrap font-weight-medium">{{ hook.name }}</td>
+							<td class="text-no-wrap"><v-icon :icon="kinds[hook.kind].icon" size="18" class="mr-1"/>{{ kinds[hook.kind].title }}</td>
+							<td class="text-no-wrap mono text-medium-emphasis">{{ hook.targetHint }}</td>
+							<td class="text-no-wrap">
+								<v-chip size="small" variant="tonal">{{ hook.events.length }} {{ hook.events.length === 1 ? "event" : "events" }}</v-chip>
+								<v-tooltip activator="parent" location="top"><div v-for="e in hook.events" :key="e">{{ label(e) }}</div></v-tooltip>
 							</td>
-							<td style="max-width: 320px"><v-chip v-for="e in hook.events.slice(0, 3)" :key="e" size="x-small" variant="tonal" class="mr-1 mb-1">{{ label(e) }}</v-chip><v-chip v-if="hook.events.length > 3" size="x-small" variant="text">+{{ hook.events.length - 3 }}</v-chip></td>
-							<td>
+							<td class="text-no-wrap">
 								<template v-if="hook.lastAt"><v-chip size="x-small" variant="tonal" :color="hook.lastStatus === 'sent' ? 'success' : 'error'">{{ hook.lastStatus === "sent" ? "delivered" : "failed" }}</v-chip> <span class="text-caption text-medium-emphasis">{{ relative(hook.lastAt) }}</span></template>
 								<span v-else class="text-medium-emphasis">never</span>
-								<div v-if="hook.lastStatus === 'failed' && hook.lastError" class="text-caption text-error">{{ hook.lastError }}</div>
+								<v-tooltip v-if="hook.lastStatus === 'failed' && hook.lastError" activator="parent" location="top">{{ hook.lastError }}</v-tooltip>
 							</td>
 							<td><v-switch :model-value="hook.enabled" density="compact" hide-details color="primary" :disabled="!canWrite()" :aria-label="`${hook.name} enabled`" @update:model-value="toggle(hook, !!$event)"/></td>
 							<td class="text-right text-no-wrap">
@@ -33,7 +35,7 @@
 								</v-menu>
 							</td>
 						</tr>
-						<tr v-if="!items.length"><td colspan="5" class="text-center text-medium-emphasis pa-8">No webhook yet. Add one to get alerts in your chat.</td></tr>
+						<tr v-if="!items.length"><td colspan="7" class="text-center text-medium-emphasis pa-8">No webhook yet. Add one to get alerts in your chat.</td></tr>
 					</tbody>
 				</v-table>
 			</div>
