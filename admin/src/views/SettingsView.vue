@@ -70,14 +70,14 @@
 							<p v-if="item.description" class="text-caption text-medium-emphasis mt-1">{{ item.description }}</p>
 						</div>
 
-						<!-- Email: send a test message with what is saved -->
-						<div v-if="group.id === 'email'" class="mt-6 pa-4 rounded border">
-							<div class="font-weight-medium mb-2">Send a test email</div>
+						<!-- Email: send a test message with what is in the form, saved or not -->
+						<div v-if="group.id === 'email'" class="mt-2 mb-6 pa-4 rounded border">
+							<div class="font-weight-medium mb-2"><v-icon size="18" class="mr-1">mdi-email-check-outline</v-icon>Check that email works</div>
 							<div class="d-flex ga-2 align-start">
 								<v-text-field v-model="testTo" type="email" placeholder="you@example.com" label="Send to" style="max-width: 340px"/>
-								<v-btn variant="tonal" prepend-icon="mdi-send-outline" class="mt-1" :loading="testing" :disabled="!testTo || !canWrite()" @click="sendTest">Send</v-btn>
+								<v-btn color="primary" variant="flat" prepend-icon="mdi-send-outline" class="mt-1" :loading="testing" :disabled="!testTo || !canWrite()" @click="sendTest">Send test email</v-btn>
 							</div>
-							<p class="text-caption text-medium-emphasis mt-1">Uses the settings that are saved, so save first.</p>
+							<p class="text-caption text-medium-emphasis mt-1">Sends a message with the values above, even if you haven't saved them yet.</p>
 							<v-alert v-if="testResult" :type="testResult.ok ? 'success' : 'error'" variant="tonal" density="compact" class="mt-2">
 								{{ testResult.ok ? "The mail server accepted the message." : testResult.error }}
 							</v-alert>
@@ -194,7 +194,15 @@ async function sendTest() {
 	testing.value = true;
 	testResult.value = null;
 	try {
-		testResult.value = await api.settings.testEmail(testTo.value);
+		const unsaved: Record<string, string> = {};
+		for (const item of groups.value.find((group) => group.id === "email")?.items ?? []) {
+			if (item.type === "secret") {
+				if (secrets[item.key]) unsaved[item.key] = secrets[item.key];
+			} else {
+				unsaved[item.key] = form[item.key] ?? "";
+			}
+		}
+		testResult.value = await api.settings.testEmail(testTo.value, unsaved);
 	} finally {
 		testing.value = false;
 	}

@@ -55,7 +55,8 @@ export interface AdminApiClient {
     settings: {
         list(): Promise<ISettingGroup[]>;
         update(changes: SettingChanges): Promise<ISettingGroup[]>;
-        testEmail(to: string): Promise<{ok: boolean; error: string | null}>;
+        /** `unsaved`: SMTP_* values typed in the form but not saved yet; a secret left out keeps the saved one. */
+        testEmail(to: string, unsaved?: Record<string, string>): Promise<{ok: boolean; error: string | null}>;
     };
     users: {
         list(query: {search?: string; status?: UserStatus; sort?: string; page?: number; pageSize?: number}): Promise<IPaged<IAccount>>;
@@ -170,7 +171,7 @@ export function createAdminApiClient(options: AdminClientOptions = {}): AdminApi
         settings: {
             list: async () => (await get<{groups: ISettingGroup[]}>("/settings")).groups,
             update: async (changes) => (await put<{groups: ISettingGroup[]}>("/settings", {changes})).groups,
-            testEmail: (to) => post("/settings/test-email", {to}),
+            testEmail: (to, unsaved) => post("/settings/test-email", {to, settings: unsaved}),
         },
         users: {
             list: (query) => get("/users", query),

@@ -51,7 +51,7 @@ export type EnvValidator = (env: NodeJS.ProcessEnv, touchedKeys: string[]) => vo
 
 /** Reads, merges and persists the portal-managed settings. */
 export class SettingsService {
-    private overrides = new Map<string, string>();
+    private overrides_ = new Map<string, string>();
     private unreadable = new Set<string>();
     private readonly repo: SettingsRepository;
 
@@ -88,7 +88,7 @@ export class SettingsService {
                 this.logger.error(`Setting ${row.key} could not be decrypted (the encryption key changed?) - enter it again in the admin portal.`);
             }
         }
-        this.overrides = next;
+        this.overrides_ = next;
         this.unreadable = unreadable;
     }
 
@@ -96,7 +96,7 @@ export class SettingsService {
      * @param overrides Overrides to merge; defaults to the loaded ones.
      * @returns `process.env` with the overrides applied on top.
      */
-    public effectiveEnv(overrides: Map<string, string> = this.overrides): NodeJS.ProcessEnv {
+    public effectiveEnv(overrides: Map<string, string> = this.overrides_): NodeJS.ProcessEnv {
         if (!this.enabled) {
             return process.env;
         }
@@ -105,6 +105,11 @@ export class SettingsService {
             env[key] = value;
         }
         return env;
+    }
+
+    /** @returns A copy of the loaded overrides (for building a trial configuration, e.g. a test email). */
+    public overrides(): Map<string, string> {
+        return new Map(this.enabled ? this.overrides_ : []);
     }
 
     /**
@@ -128,7 +133,7 @@ export class SettingsService {
     }
 
     private view(definition: SettingDefinition): SettingView {
-        const override = this.enabled ? this.overrides.get(definition.key) : undefined;
+        const override = this.enabled ? this.overrides_.get(definition.key) : undefined;
         const envValue = process.env[definition.key];
         let source: SettingSource = "default";
         let value: string | undefined;
@@ -163,7 +168,7 @@ export class SettingsService {
      * @throws ValidationError when a key is unknown, a value is malformed, or the result is invalid.
      */
     public async update(changes: SettingChanges, adminId: number, validate: EnvValidator): Promise<string[]> {
-        const next = new Map(this.overrides);
+        const next = new Map(this.overrides_);
         const touched: string[] = [];
 
         for (const [key, raw] of Object.entries(changes)) {
@@ -196,7 +201,7 @@ export class SettingsService {
             this.unreadable.delete(key);
         }
 
-        this.overrides = next;
+        this.overrides_ = next;
         return touched;
     }
 

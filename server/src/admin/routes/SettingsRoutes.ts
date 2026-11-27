@@ -12,6 +12,7 @@ import {appService, AppService} from "../../AppService";
 import {handle} from "../http";
 import {requireFreshAuth, requireSuperadmin} from "../middleware";
 import {AdminAuditService} from "../services/AdminAuditService";
+import {MailService} from "../../services/MailService";
 import {findSetting} from "../services/settingsCatalog";
 
 /**
@@ -51,12 +52,28 @@ export function settingsRoutes(audit: AdminAuditService): Router {
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
             throw new ValidationError("Enter a valid email address.");
         }
-        const mail = appService.getMailService();
+        // Optional unsaved SMTP_* values from the form: test what is typed in before saving it. A
+        // secret left empty keeps the saved one.
+        const typed = req.body?.settings;
+        let mail = appService.getMailService();
+        if (typed && typeof typed === "object") {
+            const overrides = new Map<string, string>();
+            for (const [key, value] of Object.entries(typed)) {
+                if (key.startsWith("SMTP_") && typeof value === "string" && !(findSetting(key)?.type === "secret" && value === "")) {
+                    overrides.set(key, value.trim());
+                }
+            }
+            try {
+                mail = new MailService(MailService.readConfig(appService.getSettings().effectiveEnv(new Map([...appService.getSettings().overrides(), ...overrides]))), appService.getLogger());
+            } catch (error) {
+                throw new ValidationError(error instanceof Error ? error.message : String(error));
+            }
+        }
         if (!mail.isEnabled()) {
             throw new ValidationError("Email isn't configured: set the SMTP host and sender address first.");
         }
         const error = await mail.sendReportingError(to, "Vaultisse test email", "This is a test email from the Vaultisse admin portal. If you can read it, your email settings work.");
-        await audit.record(req, "settings.test_email", {entityType: "settings", metadata: {ok: error === null}});
+        await audit.record(req, "settings.test_email", {entityType: "settings", metadata: {ok: error === null, unsaved: !!typed}});
         res.json({ok: error === null, error});
     }));
 

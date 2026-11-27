@@ -142,6 +142,27 @@ describe("admin portal: settings without env vars", () => {
         expect(appService.getMailService().isEnabled()).toBe(false);
     });
 
+    it("tests the mail settings typed in the form before they are saved, and reports why delivery failed", async () => {
+        const admin = await createLoggedInAdmin(apps.admin());
+        // Nothing saved and nothing typed: there is nothing to test.
+        expect((await admin.agent.post("/api/admin/settings/test-email").send({to: "me@example.com"})).status).toBe(400);
+        // Half-filled form values are explained, not sent.
+        const half = await admin.agent.post("/api/admin/settings/test-email").send({to: "me@example.com", settings: {SMTP_HOST: "127.0.0.1"}});
+        expect(half.status).toBe(400);
+        // A complete but unreachable server: the attempt is made and the failure is reported to the admin.
+        const failed = await admin.agent.post("/api/admin/settings/test-email").send({
+            to: "me@example.com",
+            settings: {SMTP_HOST: "127.0.0.1", SMTP_PORT: "1", SMTP_FROM: "Vaultisse <a@example.com>"},
+        });
+        expect(failed.status).toBe(200);
+        expect(failed.body.ok).toBe(false);
+        expect(failed.body.error).toMatch(/ECONNREFUSED|connect/i);
+        // Testing doesn't save or switch anything on.
+        expect(appService.getMailService().isEnabled()).toBe(false);
+        expect((await pool().query("SELECT 1 FROM app_settings WHERE key LIKE 'SMTP_%'")).rowCount).toBe(0);
+        expect((await admin.agent.post("/api/admin/settings/test-email").send({to: "not-an-email"})).status).toBe(400);
+    });
+
     it("rejects unknown keys and malformed values", async () => {
         const admin = await createLoggedInAdmin(apps.admin());
         expect((await admin.agent.put("/api/admin/settings").send({changes: {JWT_SECRET: "x"}})).status).toBe(400);
