@@ -10,6 +10,7 @@ language, format, cover image), and it can look books up automatically by ISBN.
 - **Website:** [vaultisse.com](https://vaultisse.com)
 - **Live demo (read-only):** [demo.vaultisse.com](https://demo.vaultisse.com) — log in with
   `demo@vaultisse.com` / `VaultisseDemo!2026`
+- **Video tutorials:** [youtube.com/@Vaultisse](https://www.youtube.com/@Vaultisse/videos)
 - **License:** [MIT](LICENSE)
 
 <p align="center">
