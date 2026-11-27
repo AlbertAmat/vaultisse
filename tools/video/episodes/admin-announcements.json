@@ -1,0 +1,168 @@
+{
+  "slug": "admin-announcements",
+  "topic": "Admin panel",
+  "title": "Announcements",
+  "search": "How to post announcements and use maintenance mode in Vaultisse",
+  "coverWords": "Announce and maintain",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#announcements-and-maintenance-mode",
+  "start": "/announcements",
+  "tags": [
+    "announcement banner",
+    "maintenance mode",
+    "read only mode",
+    "vaultisse announcements",
+    "notify users",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to post announcements and use maintenance mode in Vaultisse",
+      "description": "Learn how to post announcements and use maintenance mode in Vaultisse."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo publicar avisos y usar el modo mantenimiento en Vaultisse",
+      "description": "Aprende a publicar avisos y a usar el modo mantenimiento en Vaultisse."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com publicar avisos i fer servir el mode manteniment a Vaultisse",
+      "description": "Aprèn a publicar avisos i a fer servir el mode manteniment a Vaultisse."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Ankündigungen und Wartungsmodus in Vaultisse",
+      "description": "Veröffentliche Ankündigungen und nutze den Wartungsmodus."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Write a banner",
+      "Schedule it",
+      "Maintenance mode"
+    ],
+    "narration": {
+      "en": "Here is how to announce things to your users. In this video: write a banner. Schedule it. Maintenance mode.",
+      "es": "Así se avisa a los usuarios. En este vídeo: escribe un aviso. Prográmalo. Modo mantenimiento.",
+      "ca": "Així s'avisa els usuaris. En aquest vídeo: escriu un avís. Programa'l. Mode manteniment.",
+      "de": "So informierst du deine Nutzer. In diesem Video: ein Banner schreiben. Es planen. Wartungsmodus."
+    }
+  },
+  "steps": [
+    {
+      "id": "new",
+      "title": {
+        "en": "A banner",
+        "es": "Un aviso",
+        "ca": "Un avís",
+        "de": "Ein Banner"
+      },
+      "narration": {
+        "en": "Click New announcement and write the message. It appears at the top of the app for everyone.",
+        "es": "Pulsa New announcement y escribe el mensaje. Aparece arriba en la aplicación para todos.",
+        "ca": "Prem New announcement i escriu el missatge. Apareix a dalt de l'aplicació per a tothom.",
+        "de": "Klicke auf New announcement und schreibe die Nachricht. Sie erscheint oben in der App für alle."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "New announcement",
+            "exact": false
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "selector": ".v-overlay--active textarea",
+              "nth": 0
+            },
+            "text": "New opening hours from Monday."
+          }
+        },
+        {
+          "hold": 1
+        }
+      ]
+    },
+    {
+      "id": "schedule",
+      "title": {
+        "en": "Schedule",
+        "es": "Programar",
+        "ca": "Programar",
+        "de": "Planen"
+      },
+      "narration": {
+        "en": "Choose how it looks, when it starts and, if you like, when it ends. Then publish.",
+        "es": "Elige su aspecto, cuándo empieza y, si quieres, cuándo termina. Después publica.",
+        "ca": "Tria l'aspecte, quan comença i, si vols, quan acaba. Després publica.",
+        "de": "Wähle Aussehen, Beginn und auf Wunsch das Ende. Dann veröffentliche."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "How users will see it",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Publish"
+          }
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "maintenance",
+      "title": {
+        "en": "Maintenance",
+        "es": "Mantenimiento",
+        "ca": "Manteniment",
+        "de": "Wartung"
+      },
+      "narration": {
+        "en": "Maintenance mode makes the app read only while you work on it. People can still read and sign in.",
+        "es": "El modo mantenimiento deja la aplicación en solo lectura mientras trabajas. La gente puede leer y entrar.",
+        "ca": "El mode manteniment deixa l'aplicació en només lectura mentre hi treballes. La gent pot llegir i entrar.",
+        "de": "Der Wartungsmodus macht die App nur lesbar, während du arbeitest. Lesen und Anmelden geht weiter."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Start maintenance",
+            "exact": false
+          }
+        },
+        {
+          "hold": 3.5
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Cancel"
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Email your users",
+    "narration": {
+      "en": "Everyone stays informed. Next time: emailing your users. Thanks for watching, and see you soon!",
+      "es": "Todos quedan informados. En el próximo vídeo: escribir a los usuarios. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Tothom queda informat. Al pròxim vídeo: escriure als usuaris. Gràcies per mirar-ho i fins aviat!",
+      "de": "So bleiben alle informiert. Im nächsten Video: E-Mails an die Nutzer. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

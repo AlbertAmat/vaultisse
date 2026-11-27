@@ -1,0 +1,190 @@
+{
+  "slug": "troubleshooting",
+  "topic": "Setup",
+  "title": "Fix common problems",
+  "search": "How to fix common Vaultisse installation problems",
+  "coverWords": "Fix common problems",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/troubleshooting",
+  "start": "term",
+  "tags": [
+    "vaultisse not starting",
+    "vaultisse login loop",
+    "docker compose logs",
+    "too many attempts",
+    "vaultisse troubleshooting",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to fix common Vaultisse installation problems",
+      "description": "Learn how to fix common Vaultisse installation problems, starting with the log."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo resolver problemas de instalación de Vaultisse",
+      "description": "Aprende a resolver problemas habituales de Vaultisse, empezando por el registro."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com resoldre problemes d'instal·lació de Vaultisse",
+      "description": "Aprèn a resoldre problemes habituals de Vaultisse, començant pel registre."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Häufige Vaultisse-Installationsprobleme lösen",
+      "description": "Löse häufige Vaultisse-Probleme, beginnend mit dem Protokoll."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Read the log",
+      "The app keeps restarting",
+      "Sign-in problems"
+    ],
+    "narration": {
+      "en": "Here is how to fix common Vaultisse problems. In this video: read the log. The app keeps restarting. Sign-in problems.",
+      "es": "Así se resuelven los problemas habituales de Vaultisse. En este vídeo: lee el registro. La aplicación se reinicia. Problemas al entrar.",
+      "ca": "Així es resolen els problemes habituals de Vaultisse. En aquest vídeo: llegeix el registre. L'aplicació es reinicia. Problemes en entrar.",
+      "de": "So löst du häufige Probleme mit Vaultisse. In diesem Video: das Protokoll lesen. Die App startet ständig neu. Probleme beim Anmelden."
+    }
+  },
+  "steps": [
+    {
+      "id": "log",
+      "title": {
+        "en": "Read the log",
+        "es": "El registro",
+        "ca": "El registre",
+        "de": "Das Protokoll"
+      },
+      "narration": {
+        "en": "Start with the log. It usually names the problem.",
+        "es": "Empieza por el registro. Suele decir cuál es el problema.",
+        "ca": "Comença pel registre. Sol dir quin és el problema.",
+        "de": "Beginne mit dem Protokoll. Es nennt meist das Problem."
+      },
+      "actions": [
+        {
+          "run": "docker compose logs --tail 100 app"
+        }
+      ]
+    },
+    {
+      "id": "restart",
+      "title": {
+        "en": "It keeps restarting",
+        "es": "Se reinicia",
+        "ca": "Es reinicia",
+        "de": "Ständiger Neustart"
+      },
+      "narration": {
+        "en": "Check that JWT secret is not empty, and that the database is healthy. The database password only applies when it is first created.",
+        "es": "Comprueba que JWT secret no esté vacío y que la base de datos esté sana. La contraseña de la base solo se aplica al crearla.",
+        "ca": "Comprova que JWT secret no sigui buit i que la base de dades estigui sana. La contrasenya de la base només s'aplica en crear-la.",
+        "de": "Prüfe, ob JWT secret gesetzt und die Datenbank gesund ist. Das Datenbankpasswort gilt nur beim ersten Anlegen."
+      },
+      "actions": [
+        {
+          "run": "docker compose ps"
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "JWT_SECRET=<must not be empty>",
+              "DB_PASSWORD=<the one the database was created with>"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "JWT_SECRET"
+          }
+        },
+        {
+          "hold": 2
+        },
+        {
+          "point": {
+            "line": "DB_PASSWORD"
+          }
+        }
+      ]
+    },
+    {
+      "id": "signin",
+      "title": {
+        "en": "Sign-in loops",
+        "es": "Bucle al entrar",
+        "ca": "Bucle en entrar",
+        "de": "Anmeldeschleife"
+      },
+      "narration": {
+        "en": "If you are sent back to the login page, front end URL must match the browser address exactly. Behind a proxy, set trust proxy to true.",
+        "es": "Si vuelves a la página de acceso, front end URL debe coincidir exactamente con la dirección del navegador. Tras un proxy, pon trust proxy en true.",
+        "ca": "Si tornes a la pàgina d'accés, front end URL ha de coincidir exactament amb l'adreça del navegador. Darrere d'un proxy, posa trust proxy en true.",
+        "de": "Landest du wieder bei der Anmeldung, muss front end URL genau zur Browseradresse passen. Hinter einem Proxy setzt du trust proxy auf true."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "FRONT_END_URL=https://books.example.com",
+              "TRUST_PROXY=true",
+              "ALLOW_HTTP=false"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "FRONT_END_URL"
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "point": {
+            "line": "TRUST_PROXY"
+          }
+        }
+      ]
+    },
+    {
+      "id": "attempts",
+      "title": {
+        "en": "Too many attempts",
+        "es": "Demasiados intentos",
+        "ca": "Massa intents",
+        "de": "Zu viele Versuche"
+      },
+      "narration": {
+        "en": "Too many attempts means five tries in five minutes. Wait a little, or restart the app.",
+        "es": "Demasiados intentos significa cinco en cinco minutos. Espera un poco o reinicia la aplicación.",
+        "ca": "Massa intents vol dir cinc en cinc minuts. Espera una mica o reinicia l'aplicació.",
+        "de": "Zu viele Versuche heißt fünf in fünf Minuten. Warte kurz oder starte die App neu."
+      },
+      "actions": [
+        {
+          "run": "docker compose restart app"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "The admin panel",
+    "narration": {
+      "en": "That covers the usual problems. Next time: turning on the admin panel. Thanks for watching, and see you soon!",
+      "es": "Con esto se resuelve lo habitual. En el próximo vídeo: activar el panel de administración. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Amb això es resol el més habitual. Al pròxim vídeo: activar el panell d'administració. Gràcies per mirar-ho i fins aviat!",
+      "de": "Damit sind die üblichen Probleme gelöst. Im nächsten Video: das Admin-Panel. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

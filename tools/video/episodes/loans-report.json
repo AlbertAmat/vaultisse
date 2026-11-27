@@ -1,0 +1,183 @@
+{
+  "slug": "loans-report",
+  "topic": "Loans",
+  "title": "Export a loan report",
+  "search": "How to export a loan report in Vaultisse",
+  "coverWords": "Export a loan report",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/lending-and-returns",
+  "start": "/app/loans",
+  "tags": [
+    "loan report",
+    "export loans",
+    "vaultisse report",
+    "overdue books list",
+    "library loans spreadsheet",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Loans",
+      "title": "How to export a loan report in Vaultisse",
+      "description": "Learn how to export a loan report in Vaultisse, filtered by date, group or customer."
+    },
+    "es": {
+      "topic": "Préstamos",
+      "title": "Cómo exportar un informe de préstamos en Vaultisse",
+      "description": "Aprende a exportar un informe de préstamos en Vaultisse, por fecha, grupo o cliente."
+    },
+    "ca": {
+      "topic": "Préstecs",
+      "title": "Com exportar un informe de préstecs a Vaultisse",
+      "description": "Aprèn a exportar un informe de préstecs a Vaultisse, per data, grup o client."
+    },
+    "de": {
+      "topic": "Ausleihen",
+      "title": "Ausleihbericht in Vaultisse exportieren",
+      "description": "So exportierst du in Vaultisse einen Ausleihbericht nach Datum, Gruppe oder Kunde."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Check the open loans",
+      "Filter them",
+      "Generate the report"
+    ],
+    "narration": {
+      "en": "Here is how to export a loan report in Vaultisse. In this video: check the open loans. Filter them. Generate the report.",
+      "es": "Así se exporta un informe de préstamos en Vaultisse. En este vídeo: revisa los préstamos abiertos. Fíltralos. Genera el informe.",
+      "ca": "Així s'exporta un informe de préstecs a Vaultisse. En aquest vídeo: revisa els préstecs oberts. Filtra'ls. Genera l'informe.",
+      "de": "So exportierst du einen Ausleihbericht in Vaultisse. In diesem Video: die offenen Ausleihen prüfen. Sie filtern. Den Bericht erstellen."
+    }
+  },
+  "steps": [
+    {
+      "id": "list",
+      "title": {
+        "en": "Open loans",
+        "es": "Préstamos abiertos",
+        "ca": "Préstecs oberts",
+        "de": "Offene Ausleihen"
+      },
+      "narration": {
+        "en": "The Loans page lists every book that is out, with who has it and since when.",
+        "es": "La página de Préstamos muestra cada libro fuera, quién lo tiene y desde cuándo.",
+        "ca": "La pàgina de Préstecs mostra cada llibre fora, qui el té i des de quan.",
+        "de": "Die Seite Ausleihen zeigt jedes verliehene Buch, wer es hat und seit wann."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "scroll": 500
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "scroll": -500
+        }
+      ]
+    },
+    {
+      "id": "filter",
+      "title": {
+        "en": "Filter",
+        "es": "Filtrar",
+        "ca": "Filtrar",
+        "de": "Filtern"
+      },
+      "narration": {
+        "en": "Filter by group to see a single class.",
+        "es": "Filtra por grupo para ver una sola clase.",
+        "ca": "Filtra per grup per veure una sola classe.",
+        "de": "Filtere nach Gruppe, um nur eine Klasse zu sehen."
+      },
+      "actions": [
+        {
+          "click": {
+            "text": "All groups",
+            "nth": 0
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Class 4B",
+            "text": "Class 4B"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "report",
+      "title": {
+        "en": "Generate the report",
+        "es": "Genera el informe",
+        "ca": "Genera l'informe",
+        "de": "Bericht erstellen"
+      },
+      "narration": {
+        "en": "Click Generate report. Choose the dates, group or customer, then generate it. You get a file to open, print or share.",
+        "es": "Pulsa Generar informe. Elige fechas, grupo o cliente y genéralo. Obtendrás un archivo para abrir, imprimir o compartir.",
+        "ca": "Prem Generar informe. Tria dates, grup o client i genera'l. Obtindràs un fitxer per obrir, imprimir o compartir.",
+        "de": "Klicke auf Bericht erstellen. Wähle Zeitraum, Gruppe oder Kunde und erstelle ihn. Du erhältst eine Datei zum Öffnen, Drucken oder Teilen."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Generate report"
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "fill": {
+            "within": "[role=dialog]",
+            "label": "From",
+            "value": "2026-01-01"
+          }
+        },
+        {
+          "fill": {
+            "within": "[role=dialog]",
+            "label": "To",
+            "value": "2026-11-27"
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Generate report",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Design your library card",
+    "narration": {
+      "en": "Your report is ready. Next time: designing your library card. Thanks for watching, and see you soon!",
+      "es": "Tu informe está listo. En el próximo vídeo: diseñar tu carné de biblioteca. ¡Gracias por vernos y hasta pronto!",
+      "ca": "El teu informe està a punt. Al pròxim vídeo: dissenyar el carnet de biblioteca. Gràcies per mirar-ho i fins aviat!",
+      "de": "Dein Bericht ist fertig. Im nächsten Video: den Bibliotheksausweis gestalten. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

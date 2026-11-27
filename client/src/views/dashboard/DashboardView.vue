@@ -1,7 +1,8 @@
 <template>
 	<page-component :model="controller">
 		<template v-slot:append>
-			<return-books-dialog/>
+			<!-- Returning is a catalog action: the server refuses it to borrowers and read-only members. -->
+			<return-books-dialog v-if="canEditCatalog"/>
 		</template>
 
 		<template v-slot:default>

@@ -1,0 +1,166 @@
+{
+  "slug": "import-books",
+  "topic": "Library",
+  "title": "Import your books",
+  "search": "How to import books into Vaultisse from CSV or Goodreads",
+  "coverWords": "Import your books",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/importing-books",
+  "start": "/app/library/search",
+  "tags": [
+    "import books csv",
+    "goodreads import",
+    "vaultisse import",
+    "bulk add books",
+    "migrate book collection",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to import books into Vaultisse from CSV or Goodreads",
+      "description": "Learn how to import books into Vaultisse from your own CSV file or a Goodreads export."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo importar libros a Vaultisse desde CSV o Goodreads",
+      "description": "Aprende a importar libros a Vaultisse desde tu archivo CSV o una exportación de Goodreads."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com importar llibres a Vaultisse des de CSV o Goodreads",
+      "description": "Aprèn a importar llibres a Vaultisse des del teu fitxer CSV o una exportació de Goodreads."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Bücher aus CSV oder Goodreads in Vaultisse importieren",
+      "description": "So importierst du Bücher aus einer eigenen CSV-Datei oder aus Goodreads in Vaultisse."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Choose where the file comes from",
+      "Upload it",
+      "Check the result"
+    ],
+    "narration": {
+      "en": "Here is how to import books into Vaultisse. In this video: choose where the file comes from. Upload it. Check the result.",
+      "es": "Así se importan libros a Vaultisse. En este vídeo: elige el origen del archivo. Súbelo. Revisa el resultado.",
+      "ca": "Així s'importen llibres a Vaultisse. En aquest vídeo: tria l'origen del fitxer. Puja'l. Revisa el resultat.",
+      "de": "So importierst du Bücher in Vaultisse. In diesem Video: die Quelle der Datei wählen. Sie hochladen. Das Ergebnis prüfen."
+    }
+  },
+  "steps": [
+    {
+      "id": "open",
+      "title": {
+        "en": "Choose the source",
+        "es": "Elige el origen",
+        "ca": "Tria l'origen",
+        "de": "Quelle wählen"
+      },
+      "narration": {
+        "en": "In the Library, click Import. Choose Vaultisse for your own file, or Goodreads for an export from there. For your own file, download the template first.",
+        "es": "En la Biblioteca, pulsa Importar. Elige Vaultisse para tu propio archivo, o Goodreads para su exportación. Para tu archivo, descarga antes la plantilla.",
+        "ca": "A la Biblioteca, prem Importa. Tria Vaultisse per al teu fitxer, o Goodreads per a la seva exportació. Per al teu fitxer, baixa abans la plantilla.",
+        "de": "Klicke in der Bibliothek auf Importieren. Wähle Vaultisse für eine eigene Datei oder Goodreads für einen Export von dort. Lade für die eigene Datei zuerst die Vorlage."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Import"
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-card",
+            "text": "Vaultisse",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "highlight": {
+            "text": "Download template",
+            "seconds": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "upload",
+      "title": {
+        "en": "Upload the file",
+        "es": "Sube el archivo",
+        "ca": "Puja el fitxer",
+        "de": "Datei hochladen"
+      },
+      "narration": {
+        "en": "Drop your CSV file in the box, then click Import.",
+        "es": "Suelta tu archivo CSV en el recuadro y pulsa Importar.",
+        "ca": "Deixa el fitxer CSV al requadre i prem Importa.",
+        "de": "Zieh deine CSV-Datei in das Feld und klicke auf Importieren."
+      },
+      "actions": [
+        {
+          "upload": {
+            "selector": "[role=dialog] input[type=file]",
+            "file": "/home/albert/Desktop/vaultisse-videos/dataset/books-to-import.csv"
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Import",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 3
+        }
+      ]
+    },
+    {
+      "id": "result",
+      "title": {
+        "en": "Check the result",
+        "es": "Revisa el resultado",
+        "ca": "Revisa el resultat",
+        "de": "Ergebnis prüfen"
+      },
+      "narration": {
+        "en": "You see how many books were added. Books you already have are skipped.",
+        "es": "Verás cuántos libros se han añadido. Los que ya tienes se omiten.",
+        "ca": "Veuràs quants llibres s'han afegit. Els que ja tens s'ometen.",
+        "de": "Du siehst, wie viele Bücher dazugekommen sind. Vorhandene werden übersprungen."
+      },
+      "actions": [
+        {
+          "pause": 3.5
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Print barcode labels",
+    "narration": {
+      "en": "Your books are in. Next time: printing barcode labels. Thanks for watching, and see you soon!",
+      "es": "Tus libros ya están dentro. En el próximo vídeo: imprimir etiquetas. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Els teus llibres ja hi són. Al pròxim vídeo: imprimir etiquetes. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Bücher sind da. Im nächsten Video: Barcode-Etiketten drucken. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

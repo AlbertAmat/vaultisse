@@ -1,0 +1,164 @@
+{
+  "slug": "admin-support",
+  "topic": "Admin panel",
+  "title": "Support an account",
+  "search": "How to help a user from the Vaultisse admin panel",
+  "coverWords": "Help a user",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#support-operations-on-accounts-and-vaults",
+  "start": "/users",
+  "tags": [
+    "change user email",
+    "merge accounts",
+    "admin notes",
+    "vaultisse support",
+    "transfer library",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to help a user from the Vaultisse admin panel",
+      "description": "Learn how to help a user from the Vaultisse admin panel with notes, email changes and merges."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo ayudar a un usuario desde el panel de Vaultisse",
+      "description": "Aprende a ayudar a un usuario desde el panel con notas, cambios de correo y fusiones."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com ajudar un usuari des del panell de Vaultisse",
+      "description": "Aprèn a ajudar un usuari des del panell amb notes, canvis de correu i fusions."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Nutzern im Vaultisse Admin-Panel helfen",
+      "description": "Hilf Nutzern mit Notizen, E-Mail-Änderungen und Zusammenführungen."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Keep notes and tags",
+      "Fix an account",
+      "Transfer a library"
+    ],
+    "narration": {
+      "en": "Here is how to help a user from the panel. In this video: keep notes and tags. Fix an account. Transfer a library.",
+      "es": "Así se ayuda a un usuario desde el panel. En este vídeo: guarda notas y etiquetas. Arregla una cuenta. Transfiere una biblioteca.",
+      "ca": "Així s'ajuda un usuari des del panell. En aquest vídeo: desa notes i etiquetes. Arregla un compte. Transfereix una biblioteca.",
+      "de": "So hilfst du Nutzern im Panel. In diesem Video: Notizen und Tags führen. Ein Konto reparieren. Eine Bibliothek übertragen."
+    }
+  },
+  "steps": [
+    {
+      "id": "notes",
+      "title": {
+        "en": "Notes and tags",
+        "es": "Notas y etiquetas",
+        "ca": "Notes i etiquetes",
+        "de": "Notizen und Tags"
+      },
+      "narration": {
+        "en": "Open an account. Tags and private notes are only seen by admins.",
+        "es": "Abre una cuenta. Las etiquetas y notas privadas solo las ven los administradores.",
+        "ca": "Obre un compte. Les etiquetes i notes privades només les veuen els administradors.",
+        "de": "Öffne ein Konto. Tags und private Notizen sehen nur Admins."
+      },
+      "actions": [
+        {
+          "click": {
+            "text": "Jordan Lee"
+          }
+        },
+        {
+          "highlight": {
+            "text": "Teacher of Class 4B. Prefers email.",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "fix",
+      "title": {
+        "en": "Support",
+        "es": "Soporte",
+        "ca": "Suport",
+        "de": "Support"
+      },
+      "narration": {
+        "en": "Under Support you can change the email address, or merge a second account into this one. A merge cannot be undone.",
+        "es": "En Support puedes cambiar el correo o fusionar una segunda cuenta en esta. La fusión no se puede deshacer.",
+        "ca": "A Support pots canviar el correu o fusionar un segon compte en aquest. La fusió no es pot desfer.",
+        "de": "Unter Support änderst du die E-Mail oder führst ein zweites Konto zusammen. Das lässt sich nicht rückgängig machen."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Change email",
+            "exact": false,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Merge another account",
+            "exact": false,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "transfer",
+      "title": {
+        "en": "Transfer",
+        "es": "Transferir",
+        "ca": "Transferir",
+        "de": "Übertragen"
+      },
+      "narration": {
+        "en": "When an owner leaves, open the library under Vaults and transfer its ownership.",
+        "es": "Si el propietario se va, abre la biblioteca en Vaults y transfiere la propiedad.",
+        "ca": "Si el propietari marxa, obre la biblioteca a Vaults i transfereix la propietat.",
+        "de": "Geht der Eigentümer, öffne die Bibliothek unter Vaults und übertrage sie."
+      },
+      "actions": [
+        {
+          "goto": "/vaults"
+        },
+        {
+          "click": {
+            "text": "Hillside Book Club"
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Transfer ownership",
+            "exact": false,
+            "seconds": 2.5
+          }
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Jobs and system health",
+    "narration": {
+      "en": "The user is sorted. Next time: jobs and system health. Thanks for watching, and see you soon!",
+      "es": "Usuario atendido. En el próximo vídeo: tareas y estado del sistema. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Usuari atès. Al pròxim vídeo: tasques i estat del sistema. Gràcies per mirar-ho i fins aviat!",
+      "de": "Dem Nutzer ist geholfen. Im nächsten Video: Jobs und Systemzustand. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

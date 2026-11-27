@@ -1,0 +1,155 @@
+{
+  "slug": "ebook-files",
+  "topic": "Library",
+  "title": "Keep ebook files",
+  "search": "How to attach ebook files to a book in Vaultisse",
+  "coverWords": "Keep your ebooks",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/book-details",
+  "start": "/app/book/16",
+  "tags": [
+    "attach ebook",
+    "epub library",
+    "vaultisse ebook",
+    "backup ebooks",
+    "self-hosted ebook storage",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to attach ebook files to a book in Vaultisse",
+      "description": "Learn how to attach ebook files to a book in Vaultisse and keep a backup copy."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo adjuntar archivos ebook en Vaultisse",
+      "description": "Aprende a adjuntar archivos ebook a un libro en Vaultisse y guarda una copia."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com adjuntar fitxers ebook a Vaultisse",
+      "description": "Aprèn a adjuntar fitxers ebook a un llibre a Vaultisse i desa'n una còpia."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "E-Book-Dateien in Vaultisse anhängen",
+      "description": "Hänge in Vaultisse E-Book-Dateien an ein Buch und bewahre eine Sicherungskopie auf."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Which books can have files",
+      "Add the file",
+      "Get it back later"
+    ],
+    "narration": {
+      "en": "Here is how to attach ebook files to a book in Vaultisse. In this video: which books can have files. Add the file. Get it back later.",
+      "es": "Así se adjuntan ebooks a un libro en Vaultisse. En este vídeo: qué libros admiten archivos. Añade el archivo. Recupéralo cuando quieras.",
+      "ca": "Així s'adjunten ebooks a un llibre a Vaultisse. En aquest vídeo: quins llibres admeten fitxers. Afegeix el fitxer. Recupera'l quan vulguis.",
+      "de": "So hängst du E-Books an ein Buch in Vaultisse. In diesem Video: welche Bücher Dateien erlauben. Die Datei hinzufügen. Sie später wiederholen."
+    }
+  },
+  "steps": [
+    {
+      "id": "format",
+      "title": {
+        "en": "Electronic format",
+        "es": "Formato electrónico",
+        "ca": "Format electrònic",
+        "de": "Elektronisches Format"
+      },
+      "narration": {
+        "en": "Files are available for books whose format is Electronic. Set it with Edit if needed.",
+        "es": "Los archivos están disponibles en libros con formato electrónico. Cámbialo con Editar si hace falta.",
+        "ca": "Els fitxers estan disponibles en llibres amb format electrònic. Canvia'l amb Edita si cal.",
+        "de": "Dateien gibt es bei Büchern im elektronischen Format. Stelle es bei Bedarf über Bearbeiten ein."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "highlight": {
+            "text": "Electronic",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "add",
+      "title": {
+        "en": "Add the file",
+        "es": "Añade el archivo",
+        "ca": "Afegeix el fitxer",
+        "de": "Datei hinzufügen"
+      },
+      "narration": {
+        "en": "Under Ebook files, click Add, or drop an epub, PDF or Kindle file on the box.",
+        "es": "En Archivos ebook, pulsa Agregar, o suelta un epub, PDF o archivo de Kindle.",
+        "ca": "A Fitxers ebook, prem Afegir, o deixa-hi un epub, PDF o fitxer de Kindle.",
+        "de": "Klicke bei E-Book-Dateien auf Hinzufügen oder zieh eine EPUB-, PDF- oder Kindle-Datei hinein."
+      },
+      "actions": [
+        {
+          "scroll": 300
+        },
+        {
+          "highlight": {
+            "text": "Ebook files",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        },
+        {
+          "upload": {
+            "selector": "input[type=file][accept*=epub]",
+            "file": "/home/albert/Desktop/vaultisse-videos/dataset/the-quiet-rivers.epub"
+          }
+        },
+        {
+          "pause": 2.5
+        }
+      ]
+    },
+    {
+      "id": "keep",
+      "title": {
+        "en": "Keep it safe",
+        "es": "Guárdalo",
+        "ca": "Desa'l",
+        "de": "Sicher aufbewahrt"
+      },
+      "narration": {
+        "en": "The file stays with the book. You can download it again if you lose your reader.",
+        "es": "El archivo queda con el libro. Puedes descargarlo de nuevo si pierdes tu lector.",
+        "ca": "El fitxer queda amb el llibre. Pots tornar-lo a baixar si perds el lector.",
+        "de": "Die Datei bleibt beim Buch. Du kannst sie erneut laden, falls dein Lesegerät verloren geht."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "the-quiet-rivers.epub",
+            "nth": 0,
+            "seconds": 3
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Categories and authors",
+    "narration": {
+      "en": "Your ebook is stored. Next time: categories and authors. Thanks for watching, and see you soon!",
+      "es": "Tu ebook está guardado. En el próximo vídeo: categorías y autores. ¡Gracias por vernos y hasta pronto!",
+      "ca": "El teu ebook està desat. Al pròxim vídeo: categories i autors. Gràcies per mirar-ho i fins aviat!",
+      "de": "Dein E-Book ist gespeichert. Im nächsten Video: Kategorien und Autoren. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "setup": [
+    "UPDATE books SET format_id=(SELECT id FROM formats WHERE name='Electronic') WHERE name='A Field Guide to Quiet Rivers'"
+  ]
+}

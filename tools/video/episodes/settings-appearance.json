@@ -1,0 +1,189 @@
+{
+  "slug": "settings-appearance",
+  "topic": "Accounts",
+  "title": "Profile and appearance",
+  "search": "How to change language and theme in Vaultisse",
+  "coverWords": "Make it yours",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/settings",
+  "start": "/app/settings",
+  "tags": [
+    "change language",
+    "dark theme library app",
+    "vaultisse settings",
+    "profile picture",
+    "appearance settings",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Accounts",
+      "title": "How to change language and theme in Vaultisse",
+      "description": "Learn how to change language and theme in Vaultisse, and set your name and picture."
+    },
+    "es": {
+      "topic": "Cuentas",
+      "title": "Cómo cambiar idioma y tema en Vaultisse",
+      "description": "Aprende a cambiar idioma y tema en Vaultisse, y a poner tu nombre y tu foto."
+    },
+    "ca": {
+      "topic": "Comptes",
+      "title": "Com canviar idioma i tema a Vaultisse",
+      "description": "Aprèn a canviar idioma i tema a Vaultisse, i a posar el teu nom i foto."
+    },
+    "de": {
+      "topic": "Konten",
+      "title": "Sprache und Design in Vaultisse ändern",
+      "description": "So änderst du Sprache und Design in Vaultisse und trägst Namen und Bild ein."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Your profile",
+      "The theme and menu",
+      "Language and region"
+    ],
+    "narration": {
+      "en": "Here is how to change language and theme in Vaultisse. In this video: your profile. The theme and menu. Language and region.",
+      "es": "Así se cambian idioma y tema en Vaultisse. En este vídeo: tu perfil. El tema y el menú. Idioma y región.",
+      "ca": "Així es canvien idioma i tema a Vaultisse. En aquest vídeo: el teu perfil. El tema i el menú. Idioma i regió.",
+      "de": "So änderst du Sprache und Design in Vaultisse. In diesem Video: dein Profil. Design und Menü. Sprache und Region."
+    }
+  },
+  "steps": [
+    {
+      "id": "profile",
+      "title": {
+        "en": "Your profile",
+        "es": "Tu perfil",
+        "ca": "El teu perfil",
+        "de": "Dein Profil"
+      },
+      "narration": {
+        "en": "In Settings, you can change your name and add a picture.",
+        "es": "En Configuración puedes cambiar tu nombre y añadir una foto.",
+        "ca": "A Configuració pots canviar el teu nom i afegir una foto.",
+        "de": "In den Einstellungen änderst du deinen Namen und fügst ein Bild hinzu."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "highlight": {
+            "label": "Name",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Change image",
+            "seconds": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "theme",
+      "title": {
+        "en": "Theme",
+        "es": "Tema",
+        "ca": "Tema",
+        "de": "Design"
+      },
+      "narration": {
+        "en": "Under Appearance, pick the warm light theme or the dark one. Compact menu keeps only the icons.",
+        "es": "En Apariencia, elige el tema claro y cálido o el oscuro. El menú compacto deja solo los iconos.",
+        "ca": "A Aparença, tria el tema clar i càlid o el fosc. El menú compacte deixa només les icones.",
+        "de": "Unter Darstellung wählst du das warme helle oder das dunkle Design. Das kompakte Menü zeigt nur Symbole."
+      },
+      "actions": [
+        {
+          "scroll": 420
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "text": "Open Shelf"
+          }
+        },
+        {
+          "pause": 2.5
+        },
+        {
+          "click": {
+            "text": "Reading Room"
+          }
+        },
+        {
+          "pause": 1
+        }
+      ]
+    },
+    {
+      "id": "language",
+      "title": {
+        "en": "Language",
+        "es": "Idioma",
+        "ca": "Idioma",
+        "de": "Sprache"
+      },
+      "narration": {
+        "en": "Under Language and Region, choose your language. Click Save to keep your changes.",
+        "es": "En Idioma y región, elige tu idioma. Pulsa Guardar para conservar los cambios.",
+        "ca": "A Idioma i regió, tria el teu idioma. Prem Desa per conservar els canvis.",
+        "de": "Unter Sprache und Region wählst du deine Sprache. Mit Speichern behältst du die Änderungen."
+      },
+      "actions": [
+        {
+          "scroll": 320
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "within": ".v-select",
+            "hasText": "Language",
+            "selector": ".v-field",
+            "nth": 0
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Spanish",
+            "text": "Spanish"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Save",
+            "seconds": 2
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Protect your account",
+    "narration": {
+      "en": "Now it looks the way you like. Next time: protecting your account. Thanks for watching, and see you soon!",
+      "es": "Ahora está a tu gusto. En el próximo vídeo: proteger tu cuenta. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Ara està al teu gust. Al pròxim vídeo: protegir el compte. Gràcies per mirar-ho i fins aviat!",
+      "de": "Jetzt sieht alles aus, wie du es magst. Im nächsten Video: dein Konto schützen. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

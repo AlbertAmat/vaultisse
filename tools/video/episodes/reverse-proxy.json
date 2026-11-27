@@ -1,0 +1,177 @@
+{
+  "slug": "reverse-proxy",
+  "topic": "Setup",
+  "title": "HTTPS with a proxy",
+  "search": "How to put Vaultisse behind HTTPS with a reverse proxy",
+  "coverWords": "Add HTTPS",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/reverse-proxy",
+  "start": "term",
+  "tags": [
+    "vaultisse reverse proxy",
+    "vaultisse https",
+    "caddy reverse proxy",
+    "nginx proxy",
+    "self-hosted https",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to put Vaultisse behind HTTPS with a reverse proxy",
+      "description": "Learn how to put Vaultisse behind HTTPS with Caddy, a reverse proxy."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo poner Vaultisse con HTTPS y proxy inverso",
+      "description": "Aprende a poner Vaultisse tras HTTPS con Caddy, un proxy inverso."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com posar Vaultisse amb HTTPS i proxy invers",
+      "description": "Aprèn a posar Vaultisse darrere d'HTTPS amb Caddy, un proxy invers."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Vaultisse hinter HTTPS mit Reverse Proxy betreiben",
+      "description": "Betreibe Vaultisse hinter HTTPS mit dem Reverse Proxy Caddy."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Two settings",
+      "Close the open port",
+      "Add Caddy"
+    ],
+    "narration": {
+      "en": "Here is how to put Vaultisse behind HTTPS. In this video: two settings. Close the open port. Add Caddy.",
+      "es": "Así se pone Vaultisse detrás de HTTPS. En este vídeo: dos ajustes. Cierra el puerto abierto. Añade Caddy.",
+      "ca": "Així es posa Vaultisse darrere d'HTTPS. En aquest vídeo: dues opcions. Tanca el port obert. Afegeix Caddy.",
+      "de": "So bringst du Vaultisse hinter HTTPS. In diesem Video: zwei Einstellungen. Den offenen Port schließen. Caddy einrichten."
+    }
+  },
+  "steps": [
+    {
+      "id": "settings",
+      "title": {
+        "en": "Settings",
+        "es": "Ajustes",
+        "ca": "Opcions",
+        "de": "Einstellungen"
+      },
+      "narration": {
+        "en": "You need a domain pointing at your server. Set the public https address, and tell Vaultisse that a proxy is in front.",
+        "es": "Necesitas un dominio que apunte a tu servidor. Pon la dirección https pública e indica que hay un proxy delante.",
+        "ca": "Necessites un domini que apunti al servidor. Posa l'adreça https pública i indica que hi ha un proxy davant.",
+        "de": "Du brauchst eine Domain, die auf deinen Server zeigt. Setze die öffentliche https-Adresse und melde den Proxy davor."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "FRONT_END_URL=http://localhost:3000",
+              "TRUST_PROXY=false",
+              "ALLOW_HTTP=false"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "FRONT_END_URL",
+            "value": "FRONT_END_URL=https://books.example.com"
+          }
+        },
+        {
+          "point": {
+            "line": "TRUST_PROXY",
+            "value": "TRUST_PROXY=true"
+          }
+        }
+      ]
+    },
+    {
+      "id": "port",
+      "title": {
+        "en": "Keep the port private",
+        "es": "Cierra el puerto",
+        "ca": "Tanca el port",
+        "de": "Port abschotten"
+      },
+      "narration": {
+        "en": "In the compose file, publish the app port on the local address only, so the proxy is the only way in.",
+        "es": "En el archivo compose, publica el puerto solo en la dirección local, para que el proxy sea la única entrada.",
+        "ca": "Al fitxer compose, publica el port només a l'adreça local, perquè el proxy sigui l'única entrada.",
+        "de": "Gib den App-Port in der Compose-Datei nur lokal frei, damit nur der Proxy hineinkommt."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": "docker-compose.yml",
+            "lines": [
+              "  app:",
+              "    ports:",
+              "      - \"127.0.0.1:${API_PORT:-3000}:${API_PORT:-3000}\""
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "caddy",
+      "title": {
+        "en": "Add Caddy",
+        "es": "Añade Caddy",
+        "ca": "Afegeix Caddy",
+        "de": "Caddy einrichten"
+      },
+      "narration": {
+        "en": "Install Caddy and give it your domain. It gets and renews the certificate by itself. Reload it, and open ports eighty and four forty three.",
+        "es": "Instala Caddy y dale tu dominio. Consigue y renueva el certificado solo. Recárgalo y abre los puertos ochenta y cuatrocientos cuarenta y tres.",
+        "ca": "Instal·la Caddy i dona-li el teu domini. Aconsegueix i renova el certificat sol. Recarrega'l i obre els ports vuitanta i quatre-cents quaranta-tres.",
+        "de": "Installiere Caddy und nenne ihm deine Domain. Das Zertifikat holt und erneuert er selbst. Lade ihn neu und öffne die Ports 80 und 443."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": "/etc/caddy/Caddyfile",
+            "lines": [
+              "books.example.com {",
+              "    reverse_proxy localhost:3000",
+              "}"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "books.example.com"
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "run": "sudo systemctl reload caddy"
+        },
+        {
+          "run": "docker compose up -d"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Set up email",
+    "narration": {
+      "en": "Your library is now on HTTPS. Next time: setting up email. Thanks for watching, and see you soon!",
+      "es": "Tu biblioteca ya usa HTTPS. En el próximo vídeo: configurar el correo. ¡Gracias por vernos y hasta pronto!",
+      "ca": "La biblioteca ja fa servir HTTPS. Al pròxim vídeo: configurar el correu. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Bibliothek läuft jetzt über HTTPS. Im nächsten Video: E-Mail einrichten. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

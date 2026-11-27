@@ -1,0 +1,157 @@
+{
+  "slug": "admin-accounts",
+  "topic": "Admin panel",
+  "title": "Admins and access",
+  "search": "How to add admins in Vaultisse and review their access",
+  "coverWords": "Add an admin",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#admin-accounts",
+  "start": "/admins",
+  "tags": [
+    "add admin user",
+    "readonly admin",
+    "access review",
+    "admin sessions",
+    "vaultisse admins",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to add admins in Vaultisse and review their access",
+      "description": "Learn how to add admins in Vaultisse, choose their role and review who still needs access."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo añadir administradores en Vaultisse y revisar accesos",
+      "description": "Aprende a añadir administradores en Vaultisse, elegir su rol y revisar quién sigue necesitando acceso."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com afegir administradors a Vaultisse i revisar accessos",
+      "description": "Aprèn a afegir administradors a Vaultisse, triar el rol i revisar qui encara necessita accés."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Admins in Vaultisse anlegen und Zugriffe prüfen",
+      "description": "Lege in Vaultisse Admins an, wähle ihre Rolle und prüfe, wer noch Zugriff braucht."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Add an admin",
+      "See who is signed in",
+      "Confirm access"
+    ],
+    "narration": {
+      "en": "Here is how to add admins and review their access. In this video: add an admin. See who is signed in. Confirm access.",
+      "es": "Así se añaden administradores y se revisan accesos. En este vídeo: añade uno. Mira quién está conectado. Confirma accesos.",
+      "ca": "Així s'afegeixen administradors i es revisen accessos. En aquest vídeo: afegeix-ne un. Mira qui està connectat. Confirma accessos.",
+      "de": "So legst du Admins an und prüfst ihre Zugriffe. In diesem Video: einen Admin anlegen. Sehen, wer angemeldet ist. Zugriffe bestätigen."
+    }
+  },
+  "steps": [
+    {
+      "id": "new",
+      "title": {
+        "en": "A new admin",
+        "es": "Un nuevo administrador",
+        "ca": "Un administrador nou",
+        "de": "Neuer Admin"
+      },
+      "narration": {
+        "en": "Click New admin. A full admin can change things, and read only can just look. They set up two-factor at first sign-in.",
+        "es": "Pulsa New admin. Un administrador completo puede cambiar cosas, y solo lectura únicamente mirar. Configuran el doble factor al entrar.",
+        "ca": "Prem New admin. Un administrador complet pot canviar coses, i només lectura només mirar. Configuren el doble factor en entrar.",
+        "de": "Klicke auf New admin. Ein voller Admin darf ändern, Nur-Lesen darf nur schauen. Zwei-Faktor richten sie bei der ersten Anmeldung ein."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "New admin",
+            "exact": false
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Cancel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sessions",
+      "title": {
+        "en": "Sessions",
+        "es": "Sesiones",
+        "ca": "Sessions",
+        "de": "Sitzungen"
+      },
+      "narration": {
+        "en": "Active sessions shows where admins are signed in. End any you do not recognise.",
+        "es": "Las sesiones activas muestran dónde han entrado. Cierra las que no reconozcas.",
+        "ca": "Les sessions actives mostren on han entrat. Tanca les que no reconeguis.",
+        "de": "Aktive Sitzungen zeigen, wo Admins angemeldet sind. Beende unbekannte."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "Active sessions",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "title": {
+        "en": "Access review",
+        "es": "Revisión de accesos",
+        "ca": "Revisió d'accessos",
+        "de": "Zugriffsprüfung"
+      },
+      "narration": {
+        "en": "Under Compliance, Access review, confirm now and then that each admin still needs access.",
+        "es": "En Compliance, Access review, confirma de vez en cuando que cada administrador sigue necesitando acceso.",
+        "ca": "A Compliance, Access review, confirma de tant en tant que cada administrador encara necessita accés.",
+        "de": "Unter Compliance, Access review, bestätigst du ab und zu, dass jeder Admin den Zugriff noch braucht."
+      },
+      "actions": [
+        {
+          "goto": "/compliance"
+        },
+        {
+          "click": {
+            "role": "tab",
+            "name": "Access review"
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Confirm everyone still needs access",
+            "exact": false,
+            "seconds": 2.5
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Manage accounts",
+    "narration": {
+      "en": "Your admin team is under control. Next time: managing accounts. Thanks for watching, and see you soon!",
+      "es": "Tu equipo de administración está controlado. En el próximo vídeo: gestionar cuentas. ¡Gracias por vernos y hasta pronto!",
+      "ca": "L'equip d'administració està controlat. Al pròxim vídeo: gestionar comptes. Gràcies per mirar-ho i fins aviat!",
+      "de": "Dein Admin-Team ist im Griff. Im nächsten Video: die Kontoverwaltung. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

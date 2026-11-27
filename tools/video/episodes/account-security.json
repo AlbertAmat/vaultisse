@@ -1,0 +1,169 @@
+{
+  "slug": "account-security",
+  "topic": "Accounts",
+  "title": "Protect your account",
+  "search": "How to secure your Vaultisse account with two-factor",
+  "coverWords": "Protect your account",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/settings",
+  "start": "/app/settings",
+  "tags": [
+    "two factor authentication",
+    "change password",
+    "vaultisse security",
+    "active sessions",
+    "account protection",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Accounts",
+      "title": "How to secure your Vaultisse account with two-factor",
+      "description": "Learn how to secure your Vaultisse account with two-factor sign-in, a new password and session control."
+    },
+    "es": {
+      "topic": "Cuentas",
+      "title": "Cómo proteger tu cuenta de Vaultisse con doble factor",
+      "description": "Aprende a proteger tu cuenta de Vaultisse con doble factor, nueva contraseña y control de sesiones."
+    },
+    "ca": {
+      "topic": "Comptes",
+      "title": "Com protegir el compte de Vaultisse amb doble factor",
+      "description": "Aprèn a protegir el compte de Vaultisse amb doble factor, contrasenya nova i control de sessions."
+    },
+    "de": {
+      "topic": "Konten",
+      "title": "Vaultisse-Konto mit Zwei-Faktor schützen",
+      "description": "So schützt du dein Vaultisse-Konto mit Zwei-Faktor, neuem Passwort und Sitzungskontrolle."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Change your password",
+      "Turn on two-factor",
+      "Review your sessions"
+    ],
+    "narration": {
+      "en": "Here is how to secure your Vaultisse account. In this video: change your password. Turn on two-factor. Review your sessions.",
+      "es": "Así se protege tu cuenta de Vaultisse. En este vídeo: cambia tu contraseña. Activa el doble factor. Revisa tus sesiones.",
+      "ca": "Així es protegeix el compte de Vaultisse. En aquest vídeo: canvia la contrasenya. Activa el doble factor. Revisa les sessions.",
+      "de": "So schützt du dein Vaultisse-Konto. In diesem Video: das Passwort ändern. Zwei-Faktor einschalten. Die Sitzungen prüfen."
+    }
+  },
+  "steps": [
+    {
+      "id": "password",
+      "title": {
+        "en": "Password",
+        "es": "Contraseña",
+        "ca": "Contrasenya",
+        "de": "Passwort"
+      },
+      "narration": {
+        "en": "In Settings, find Account Security. Change password asks for your current one and a new one.",
+        "es": "En Configuración, busca Seguridad de la cuenta. Cambiar contraseña pide la actual y una nueva.",
+        "ca": "A Configuració, busca Seguretat del compte. Canviar la contrasenya demana l'actual i una de nova.",
+        "de": "In den Einstellungen findest du die Kontosicherheit. Zum Ändern brauchst du das alte und ein neues Passwort."
+      },
+      "actions": [
+        {
+          "pause": 0.8
+        },
+        {
+          "scroll": 640
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Change password"
+          }
+        },
+        {
+          "pause": 2
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "twofactor",
+      "title": {
+        "en": "Two-factor",
+        "es": "Doble factor",
+        "ca": "Doble factor",
+        "de": "Zwei-Faktor"
+      },
+      "narration": {
+        "en": "Enable two-factor authentication and scan the code with an authenticator app. After that, signing in also asks for a code from your phone.",
+        "es": "Activa la autenticación en dos pasos y escanea el código con una app de autenticación. Desde entonces, entrar pedirá además un código del móvil.",
+        "ca": "Activa l'autenticació en dos passos i escaneja el codi amb una app d'autenticació. A partir d'aleshores, entrar demanarà també un codi del mòbil.",
+        "de": "Aktiviere die Zwei-Faktor-Anmeldung und scanne den Code mit einer Authenticator-App. Danach braucht die Anmeldung auch einen Code vom Handy."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Enable"
+          }
+        },
+        {
+          "pause": 4
+        },
+        {
+          "press": "Escape"
+        },
+        {
+          "pause": 1
+        }
+      ]
+    },
+    {
+      "id": "sessions",
+      "title": {
+        "en": "Sessions",
+        "es": "Sesiones",
+        "ca": "Sessions",
+        "de": "Sitzungen"
+      },
+      "narration": {
+        "en": "Active sessions shows the devices signed in. Log out any you do not recognise. Recent logins lists your latest sign-ins.",
+        "es": "Sesiones activas muestra los dispositivos conectados. Cierra cualquiera que no reconozcas. Accesos recientes lista tus últimas entradas.",
+        "ca": "Sessions actives mostra els dispositius connectats. Tanca qualsevol que no reconeguis. Accessos recents llista les darreres entrades.",
+        "de": "Aktive Sitzungen zeigt angemeldete Geräte. Melde unbekannte ab. Die letzten Anmeldungen stehen daneben."
+      },
+      "actions": [
+        {
+          "scroll": 700
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "highlight": {
+            "text": "Active sessions",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "text": "Recent logins",
+            "nth": 0,
+            "seconds": 2
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Invite people to your library",
+    "narration": {
+      "en": "Your account is better protected. Next time: inviting people to your library. Thanks for watching, and see you soon!",
+      "es": "Tu cuenta está mejor protegida. En el próximo vídeo: invitar a otras personas. ¡Gracias por vernos y hasta pronto!",
+      "ca": "El teu compte està més protegit. Al pròxim vídeo: convidar altres persones. Gràcies per mirar-ho i fins aviat!",
+      "de": "Dein Konto ist nun besser geschützt. Im nächsten Video: andere einladen. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "slug": "admin-audit-log",
+  "topic": "Security",
+  "title": "The audit trail",
+  "search": "How to read the Vaultisse admin audit log",
+  "coverWords": "The audit trail",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#security-logs-and-audit",
+  "start": "/announcements",
+  "tags": [
+    "audit log",
+    "admin actions history",
+    "server log",
+    "emails sent log",
+    "vaultisse audit",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Security",
+      "title": "How to read the Vaultisse admin audit log",
+      "description": "Learn how to read the Vaultisse admin audit log and the other logs."
+    },
+    "es": {
+      "topic": "Seguridad",
+      "title": "Cómo leer el registro de auditoría de Vaultisse",
+      "description": "Aprende a leer el registro de auditoría de Vaultisse y los demás registros."
+    },
+    "ca": {
+      "topic": "Seguretat",
+      "title": "Com llegir el registre d'auditoria de Vaultisse",
+      "description": "Aprèn a llegir el registre d'auditoria de Vaultisse i els altres registres."
+    },
+    "de": {
+      "topic": "Sicherheit",
+      "title": "Das Audit-Protokoll von Vaultisse lesen",
+      "description": "Lies das Audit-Protokoll von Vaultisse und die übrigen Logs."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Every admin action",
+      "Filter it",
+      "Other logs"
+    ],
+    "narration": {
+      "en": "Here is how to read the audit trail. In this video: every admin action. Filter it. Other logs.",
+      "es": "Así se lee el registro de auditoría. En este vídeo: cada acción. Fíltralo. Otros registros.",
+      "ca": "Així es llegeix el registre d'auditoria. En aquest vídeo: cada acció. Filtra'l. Altres registres.",
+      "de": "So liest du das Audit-Protokoll. In diesem Video: jede Admin-Aktion. Es filtern. Weitere Logs."
+    }
+  },
+  "steps": [
+    {
+      "id": "act",
+      "title": {
+        "en": "An action",
+        "es": "Una acción",
+        "ca": "Una acció",
+        "de": "Eine Aktion"
+      },
+      "narration": {
+        "en": "Whatever an admin changes is recorded. Here, an announcement is switched off.",
+        "es": "Todo cambio de un administrador queda registrado. Aquí se apaga un aviso.",
+        "ca": "Tot canvi d'un administrador queda registrat. Aquí s'apaga un avís.",
+        "de": "Jede Änderung wird protokolliert. Hier wird ein Banner abgeschaltet."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Switch off"
+          }
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "trail",
+      "title": {
+        "en": "Audit trail",
+        "es": "Auditoría",
+        "ca": "Auditoria",
+        "de": "Audit-Protokoll"
+      },
+      "narration": {
+        "en": "Audit trail shows who did what, when and from where. The database refuses to edit these entries.",
+        "es": "Audit trail muestra quién hizo qué, cuándo y desde dónde. La base de datos impide editar estas entradas.",
+        "ca": "Audit trail mostra qui ha fet què, quan i des d'on. La base de dades impedeix editar aquestes entrades.",
+        "de": "Audit trail zeigt, wer was wann und von wo getan hat. Die Datenbank verweigert Änderungen daran."
+      },
+      "actions": [
+        {
+          "goto": "/audit"
+        },
+        {
+          "highlight": {
+            "selector": "tbody tr",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "selector": "input",
+              "nth": 0
+            },
+            "text": "announcement"
+          }
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "logs",
+      "title": {
+        "en": "Other logs",
+        "es": "Otros registros",
+        "ca": "Altres registres",
+        "de": "Weitere Logs"
+      },
+      "narration": {
+        "en": "Logs holds the sign-ins of users, the emails sent and the server log.",
+        "es": "Logs guarda los accesos de usuarios, los correos enviados y el registro del servidor.",
+        "ca": "Logs desa els accessos d'usuaris, els correus enviats i el registre del servidor.",
+        "de": "Logs enthält Nutzeranmeldungen, versendete E-Mails und das Serverlog."
+      },
+      "actions": [
+        {
+          "goto": "/logs"
+        },
+        {
+          "click": {
+            "role": "tab",
+            "name": "Emails sent"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "tab",
+            "name": "Server log"
+          }
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Answer a GDPR request",
+    "narration": {
+      "en": "Every action leaves a trace. Next time: answering a GDPR request. Thanks for watching, and see you soon!",
+      "es": "Cada acción deja rastro. En el próximo vídeo: responder una solicitud RGPD. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Cada acció deixa rastre. Al pròxim vídeo: respondre una sol·licitud RGPD. Gràcies per mirar-ho i fins aviat!",
+      "de": "Jede Aktion hinterlässt Spuren. Im nächsten Video: DSGVO-Anfragen beantworten. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

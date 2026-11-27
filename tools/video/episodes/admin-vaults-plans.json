@@ -1,0 +1,163 @@
+{
+  "slug": "admin-vaults-plans",
+  "topic": "Admin panel",
+  "title": "Libraries and plans",
+  "search": "How to manage libraries, plans and limits in Vaultisse",
+  "coverWords": "Plans and limits",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#plans-and-quotas",
+  "start": "/vaults",
+  "tags": [
+    "library quotas",
+    "vaultisse plans",
+    "limit books",
+    "suspend library",
+    "storage limit",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to manage libraries, plans and limits in Vaultisse",
+      "description": "Learn how to manage libraries, plans and limits in Vaultisse."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo gestionar bibliotecas, planes y límites en Vaultisse",
+      "description": "Aprende a gestionar bibliotecas, planes y límites en Vaultisse."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com gestionar biblioteques, plans i límits a Vaultisse",
+      "description": "Aprèn a gestionar biblioteques, plans i límits a Vaultisse."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Bibliotheken, Tarife und Limits in Vaultisse",
+      "description": "Verwalte Bibliotheken, Tarife und Limits in Vaultisse."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Look at a library",
+      "Create a plan",
+      "How limits work"
+    ],
+    "narration": {
+      "en": "Here is how to manage libraries and plans. In this video: look at a library. Create a plan. How limits work.",
+      "es": "Así se gestionan bibliotecas y planes. En este vídeo: mira una biblioteca. Crea un plan. Cómo funcionan los límites.",
+      "ca": "Així es gestionen biblioteques i plans. En aquest vídeo: mira una biblioteca. Crea un pla. Com funcionen els límits.",
+      "de": "So verwaltest du Bibliotheken und Tarife. In diesem Video: eine Bibliothek ansehen. Einen Tarif anlegen. Wie Limits wirken."
+    }
+  },
+  "steps": [
+    {
+      "id": "vault",
+      "title": {
+        "en": "A library",
+        "es": "Una biblioteca",
+        "ca": "Una biblioteca",
+        "de": "Eine Bibliothek"
+      },
+      "narration": {
+        "en": "Vaults shows names, sizes and members, never the books inside. Open one to see its usage, change its plan or suspend it.",
+        "es": "Vaults muestra nombres, tamaños y miembros, nunca los libros. Abre una para ver su uso, cambiar de plan o suspenderla.",
+        "ca": "Vaults mostra noms, mides i membres, mai els llibres. Obre'n una per veure'n l'ús, canviar de pla o suspendre-la.",
+        "de": "Vaults zeigt Namen, Größen und Mitglieder, nie die Bücher. Öffne eine, um Nutzung zu sehen, den Tarif zu ändern oder sie zu sperren."
+      },
+      "actions": [
+        {
+          "click": {
+            "text": "Hillside Book Club"
+          }
+        },
+        {
+          "highlight": {
+            "text": "Usage",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Suspend",
+            "exact": false,
+            "seconds": 1.6
+          }
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "title": {
+        "en": "A plan",
+        "es": "Un plan",
+        "ca": "Un pla",
+        "de": "Ein Tarif"
+      },
+      "narration": {
+        "en": "Under Plans and quotas, a plan limits books, members and storage. Leave a limit empty for no limit.",
+        "es": "En Plans and quotas, un plan limita libros, miembros y almacenamiento. Deja un límite vacío si no quieres tope.",
+        "ca": "A Plans and quotas, un pla limita llibres, membres i emmagatzematge. Deixa un límit buit si no vols topall.",
+        "de": "Unter Plans and quotas begrenzt ein Tarif Bücher, Mitglieder und Speicher. Leer heißt unbegrenzt."
+      },
+      "actions": [
+        {
+          "goto": "/plans"
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "New plan",
+            "exact": false
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "limits",
+      "title": {
+        "en": "How limits work",
+        "es": "Cómo funcionan",
+        "ca": "Com funcionen",
+        "de": "Wirkung"
+      },
+      "narration": {
+        "en": "Limits only stop a library from adding more. One already above a lower limit keeps what it has.",
+        "es": "Los límites solo impiden añadir más. Una biblioteca que ya los supera conserva lo que tiene.",
+        "ca": "Els límits només impedeixen afegir-ne més. Una biblioteca que ja els supera conserva el que té.",
+        "de": "Limits verhindern nur Neues. Wer schon darüber liegt, behält alles."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "School",
+            "nth": 0,
+            "seconds": 2
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Announcements and maintenance",
+    "narration": {
+      "en": "Every library has its limits. Next time: announcements and maintenance. Thanks for watching, and see you soon!",
+      "es": "Cada biblioteca tiene sus límites. En el próximo vídeo: avisos y mantenimiento. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Cada biblioteca té els seus límits. Al pròxim vídeo: avisos i manteniment. Gràcies per mirar-ho i fins aviat!",
+      "de": "Jede Bibliothek hat ihren Rahmen. Im nächsten Video: Ankündigungen und Wartung. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

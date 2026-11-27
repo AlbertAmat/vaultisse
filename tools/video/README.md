@@ -297,6 +297,9 @@ Use the **YouTube Data API v3** with OAuth 2.0 (a "Desktop app" OAuth client the
 The first run opens a browser for the owner to approve and stores the token at `YOUTUBE_TOKEN`; later runs reuse it. Scopes:
 `https://www.googleapis.com/auth/youtube.upload` and `https://www.googleapis.com/auth/youtube.force-ssl` (captions, localizations, playlists).
 
+[`upload.js`](upload.js) does all of this: `node tools/video/upload.js --dry-run`, then `node tools/video/upload.js [slug ...] [--limit n]`.
+Without slugs it takes the videos ticked as finished in the output directory's `README.md`.
+
 For each video, in this order:
 
 1. `videos.insert` (resumable upload) with `snippet.title`, `snippet.description`, `snippet.tags`, `snippet.categoryId` (28), `snippet.defaultLanguage` and
@@ -311,9 +314,8 @@ For each video, in this order:
 Rules:
 
 - **Default visibility is `private`** (`VIDEO_PRIVACY=private`) until the owner has watched the result and sets `VIDEO_PRIVACY=public` (or `unlisted`) in `config.env`. Never make a video public on your own.
-- Quota: the default allowance is **10,000 units a day**; an upload costs about 1,600, each caption about 400, so one video with four captions is about 3,300: at most about three videos a day. If the quota is exhausted, keep the folder complete, write what is left to do in `upload.json`, and tell the owner.
-- **Important:** videos uploaded through the API by a Google Cloud project that has **not passed YouTube's API compliance audit** are **locked as private**, whatever was requested. If the video stays private, say so
-  and point the owner to YouTube's audit form. Until then they can make it public in YouTube Studio with one click.
+- Quota: uploads have their own allowance (100 `videos.insert` calls a day). Everything else shares **10,000 units a day**: each caption costs 400, the cover, localizations and playlist entry 50 each, so about five videos a day. If the quota is exhausted, run the same command the next day.
+- Since November 2026, uploads from unaudited API projects are no longer locked to private, and a video uploaded **without** `privacyStatus` is public. Always send it.
 - If an upload fails halfway, do not upload a second copy: read `upload.json`, resume (set the missing thumbnail, captions, localizations) on the same video id.
 - Never delete or edit a video that is already on the channel unless the owner asks for exactly that.
 - Never print the token or the client secret, not even partly, not even in an error.

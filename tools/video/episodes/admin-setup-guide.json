@@ -1,0 +1,170 @@
+{
+  "slug": "admin-setup-guide",
+  "topic": "Admin panel",
+  "title": "The setup guide",
+  "search": "How to use the Vaultisse admin setup guide",
+  "coverWords": "The setup guide",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#the-setup-guide",
+  "start": "/",
+  "tags": [
+    "vaultisse setup guide",
+    "admin settings",
+    "email setup admin",
+    "registration settings",
+    "vaultisse settings",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to use the Vaultisse admin setup guide",
+      "description": "Learn how to use the Vaultisse admin setup guide and change settings without editing files."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo usar la guía de configuración del panel de Vaultisse",
+      "description": "Aprende a usar la guía de configuración de Vaultisse y a cambiar ajustes sin editar archivos."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com fer servir la guia de configuració del panell de Vaultisse",
+      "description": "Aprèn a fer servir la guia de Vaultisse i a canviar opcions sense editar fitxers."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Der Einrichtungsassistent im Vaultisse Admin-Panel",
+      "description": "Nutze den Einrichtungsassistenten und ändere Einstellungen ohne Dateien zu bearbeiten."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Follow the guide",
+      "Change settings later",
+      "Run it again"
+    ],
+    "narration": {
+      "en": "Here is how to use the admin setup guide. In this video: follow the guide. Change settings later. Run it again.",
+      "es": "Así se usa la guía de configuración. En este vídeo: sigue la guía. Cambia ajustes después. Vuelve a abrirla.",
+      "ca": "Així es fa servir la guia de configuració. En aquest vídeo: segueix la guia. Canvia opcions després. Torna-la a obrir.",
+      "de": "So nutzt du den Einrichtungsassistenten. In diesem Video: dem Assistenten folgen. Später Werte ändern. Ihn erneut öffnen."
+    }
+  },
+  "steps": [
+    {
+      "id": "guide",
+      "title": {
+        "en": "The guide",
+        "es": "La guía",
+        "ca": "La guia",
+        "de": "Der Assistent"
+      },
+      "narration": {
+        "en": "The first time, a short guide opens. It covers email, who can sign up, API keys and alerts. Every step can be skipped.",
+        "es": "La primera vez se abre una guía corta. Cubre correo, quién puede registrarse, claves de API y avisos. Cada paso se puede saltar.",
+        "ca": "El primer cop s'obre una guia curta. Cobreix correu, qui es pot registrar, claus d'API i avisos. Cada pas es pot saltar.",
+        "de": "Beim ersten Mal öffnet sich ein kurzer Assistent. Er behandelt E-Mail, Registrierung, API-Schlüssel und Hinweise. Jeder Schritt ist überspringbar."
+      },
+      "actions": [
+        {
+          "hold": 2
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Let's start",
+            "exact": false
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Skip the guide",
+            "exact": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "title": {
+        "en": "Settings",
+        "es": "Configuración",
+        "ca": "Configuració",
+        "de": "Einstellungen"
+      },
+      "narration": {
+        "en": "Everything is also under Settings. Changes apply at once, with no restart.",
+        "es": "Todo está también en Configuración. Los cambios se aplican al momento, sin reiniciar.",
+        "ca": "Tot és també a Configuració. Els canvis s'apliquen a l'instant, sense reiniciar.",
+        "de": "Alles steht auch unter Einstellungen. Änderungen gelten sofort, ohne Neustart."
+      },
+      "actions": [
+        {
+          "goto": "/settings"
+        },
+        {
+          "click": {
+            "role": "tab",
+            "name": "Registration"
+          }
+        },
+        {
+          "highlight": {
+            "text": "Require admin approval",
+            "nth": 0,
+            "seconds": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "again",
+      "title": {
+        "en": "Open it again",
+        "es": "Volver a abrirla",
+        "ca": "Tornar-la a obrir",
+        "de": "Erneut öffnen"
+      },
+      "narration": {
+        "en": "Under the Admin portal tab, you can run the guide again.",
+        "es": "En la pestaña del panel de administración puedes volver a ejecutar la guía.",
+        "ca": "A la pestanya del panell pots tornar a executar la guia.",
+        "de": "Im Reiter zum Admin-Portal startest du den Assistenten erneut."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "tab",
+            "name": "Admin portal"
+          }
+        },
+        {
+          "scroll": 500
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Run the setup guide",
+            "exact": false,
+            "seconds": 1.6
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Admins and their access",
+    "narration": {
+      "en": "Your console is set up. Next time: admins and their access. Thanks for watching, and see you soon!",
+      "es": "Tu consola está configurada. En el próximo vídeo: los administradores. ¡Gracias por vernos y hasta pronto!",
+      "ca": "La consola està configurada. Al pròxim vídeo: els administradors. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Konsole ist eingerichtet. Im nächsten Video: Admins und ihre Rechte. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "guide"
+}

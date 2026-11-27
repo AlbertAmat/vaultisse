@@ -1,5 +1,5 @@
 <template>
-	<v-menu>
+	<v-menu @update:model-value="(open: boolean) => open && loadVaults()">
 		<template v-slot:activator="{ props }">
 			<v-btn
 				v-bind="props"
@@ -71,13 +71,19 @@ const switchingId: Ref<number | null> = ref(null);
 const activeVaultId = computed(() => applicationService.getUser().getActiveVaultId());
 const activeVaultName = computed(() => vaults.value.find((v) => v.id === activeVaultId.value)?.name ?? "");
 
-onMounted(async () => {
+onMounted(loadVaults);
+
+/**
+ * Fetches the caller's vaults. Called again each time the menu opens, so vaults
+ * created, renamed or left since the app loaded show without a page reload.
+ */
+async function loadVaults() {
 	try {
 		vaults.value = await api.vaults.list();
 	} catch (e) {
 		console.error("Error while fetching vaults", e);
 	}
-});
+}
 
 /**
  *

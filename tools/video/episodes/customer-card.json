@@ -1,0 +1,150 @@
+{
+  "slug": "customer-card",
+  "topic": "Loans",
+  "title": "Print a library card",
+  "search": "How to print a library card in Vaultisse",
+  "coverWords": "Print a library card",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/customers-and-groups#library-cards",
+  "start": "/app/customers",
+  "tags": [
+    "print library card",
+    "student library card pdf",
+    "vaultisse customer card",
+    "library membership card",
+    "barcode card",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Loans",
+      "title": "How to print a library card in Vaultisse",
+      "description": "Learn how to print a library card in Vaultisse for any customer, as a PDF."
+    },
+    "es": {
+      "topic": "Préstamos",
+      "title": "Cómo imprimir un carné de biblioteca en Vaultisse",
+      "description": "Aprende a imprimir un carné de biblioteca en Vaultisse para cualquier cliente, en PDF."
+    },
+    "ca": {
+      "topic": "Préstecs",
+      "title": "Com imprimir un carnet de biblioteca a Vaultisse",
+      "description": "Aprèn a imprimir un carnet de biblioteca a Vaultisse per a qualsevol client, en PDF."
+    },
+    "de": {
+      "topic": "Ausleihen",
+      "title": "Bibliotheksausweis in Vaultisse drucken",
+      "description": "So druckst du in Vaultisse für jeden Kunden einen Bibliotheksausweis als PDF."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Open a customer's card",
+      "Check the photo and date",
+      "Download the PDF"
+    ],
+    "narration": {
+      "en": "Here is how to print a library card in Vaultisse. In this video: open a customer's card. Check the photo and date. Download the PDF.",
+      "es": "Así se imprime un carné de biblioteca en Vaultisse. En este vídeo: abre el carné de un cliente. Revisa foto y fecha. Descarga el PDF.",
+      "ca": "Així s'imprimeix un carnet de biblioteca a Vaultisse. En aquest vídeo: obre el carnet d'un client. Revisa foto i data. Descarrega el PDF.",
+      "de": "So druckst du einen Bibliotheksausweis in Vaultisse. In diesem Video: den Ausweis eines Kunden öffnen. Foto und Datum prüfen. Das PDF herunterladen."
+    }
+  },
+  "steps": [
+    {
+      "id": "open",
+      "title": {
+        "en": "Open the card",
+        "es": "Abre el carné",
+        "ca": "Obre el carnet",
+        "de": "Ausweis öffnen"
+      },
+      "narration": {
+        "en": "In Customers, click the card icon on the line of the person.",
+        "es": "En Clientes, pulsa el icono del carné en la línea de la persona.",
+        "ca": "A Clients, prem la icona del carnet a la línia de la persona.",
+        "de": "Klicke unter Kunden in der Zeile der Person auf das Ausweissymbol."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": ".entity-card",
+            "hasText": "Priya Nandakumar",
+            "selector": ".mdi-card-account-details-outline"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "details",
+      "title": {
+        "en": "Photo and date",
+        "es": "Foto y fecha",
+        "ca": "Foto i data",
+        "de": "Foto und Datum"
+      },
+      "narration": {
+        "en": "The card shows the name, group, member date and a barcode. You can change the photo and the date here. Public institutions cannot add photos.",
+        "es": "El carné muestra nombre, grupo, fecha de alta y código de barras. Aquí puedes cambiar la foto y la fecha. Las instituciones públicas no pueden añadir fotos.",
+        "ca": "El carnet mostra nom, grup, data d'alta i codi de barres. Aquí pots canviar la foto i la data. Les institucions públiques no poden afegir fotos.",
+        "de": "Der Ausweis zeigt Name, Gruppe, Beitrittsdatum und Barcode. Foto und Datum änderst du hier. Öffentliche Einrichtungen können keine Fotos hinzufügen."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "selector": "[role=dialog] canvas",
+            "seconds": 2.5
+          }
+        },
+        {
+          "highlight": {
+            "selector": "[role=dialog] input[type=date]",
+            "seconds": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "download",
+      "title": {
+        "en": "Download",
+        "es": "Descargar",
+        "ca": "Descarregar",
+        "de": "Herunterladen"
+      },
+      "narration": {
+        "en": "Click Download card to get the PDF. Print it, cut it out, and it is ready to use.",
+        "es": "Pulsa Descargar carné para obtener el PDF. Imprímelo, recórtalo y listo.",
+        "ca": "Prem Descarrega el carnet per obtenir el PDF. Imprimeix-lo, retalla'l i llest.",
+        "de": "Mit Ausweis herunterladen erhältst du das PDF. Drucken, ausschneiden, fertig."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Download card (PDF)"
+          }
+        },
+        {
+          "pause": 3
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Lend by scanning a card",
+    "narration": {
+      "en": "That card is ready. Next time: lending by scanning a card. Thanks for watching, and see you soon!",
+      "es": "Ese carné está listo. En el próximo vídeo: prestar escaneando el carné. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Aquest carnet està a punt. Al pròxim vídeo: prestar escanejant el carnet. Gràcies per mirar-ho i fins aviat!",
+      "de": "Der Ausweis ist fertig. Im nächsten Video: Verleihen per Ausweis-Scan. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

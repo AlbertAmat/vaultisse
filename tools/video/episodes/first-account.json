@@ -1,0 +1,203 @@
+{
+  "slug": "first-account",
+  "topic": "Setup",
+  "title": "The first account",
+  "search": "How to create the first Vaultisse account and control sign-ups",
+  "coverWords": "Your first account",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/installation",
+  "start": "term",
+  "tags": [
+    "vaultisse register",
+    "disable registration",
+    "registration approval",
+    "vaultisse first user",
+    "close sign ups",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to create the first Vaultisse account and control sign-ups",
+      "description": "Learn how to create the first Vaultisse account and decide who else can register."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo crear la primera cuenta de Vaultisse y controlar registros",
+      "description": "Aprende a crear la primera cuenta de Vaultisse y a decidir quién más puede registrarse."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com crear el primer compte de Vaultisse i controlar registres",
+      "description": "Aprèn a crear el primer compte de Vaultisse i a decidir qui més es pot registrar."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Erstes Vaultisse-Konto anlegen und Registrierung steuern",
+      "description": "Lege das erste Vaultisse-Konto an und bestimme, wer sich sonst registrieren darf."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Register",
+      "Close registration",
+      "Or approve each account"
+    ],
+    "narration": {
+      "en": "Here is how to create the first Vaultisse account. In this video: register. Close registration. Or approve each account.",
+      "es": "Así se crea la primera cuenta de Vaultisse. En este vídeo: regístrate. Cierra el registro. O aprueba cada cuenta.",
+      "ca": "Així es crea el primer compte de Vaultisse. En aquest vídeo: registra't. Tanca el registre. O aprova cada compte.",
+      "de": "So legst du das erste Vaultisse-Konto an. In diesem Video: registrieren. Die Registrierung schließen. Oder jedes Konto freigeben."
+    }
+  },
+  "steps": [
+    {
+      "id": "register",
+      "title": {
+        "en": "Register",
+        "es": "Registro",
+        "ca": "Registre",
+        "de": "Registrieren"
+      },
+      "narration": {
+        "en": "Open slash register. Fill in your name, email, a user code and a password with a capital, a digit and a symbol.",
+        "es": "Abre barra register. Escribe nombre, correo, un código de usuario y una contraseña con mayúscula, número y símbolo.",
+        "ca": "Obre barra register. Escriu nom, correu, un codi d'usuari i una contrasenya amb majúscula, número i símbol.",
+        "de": "Öffne Schrägstrich register. Gib Name, E-Mail, Benutzerkürzel und ein Passwort mit Großbuchstabe, Ziffer und Zeichen ein."
+      },
+      "actions": [
+        {
+          "logout": true
+        },
+        {
+          "goto": "/register"
+        },
+        {
+          "hold": 0.5
+        },
+        {
+          "type": {
+            "into": {
+              "selector": "#name"
+            },
+            "text": "Robin Castell"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "selector": "#email"
+            },
+            "text": "robin@example.com"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "selector": "#userName"
+            },
+            "text": "robin"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "selector": "#password"
+            },
+            "text": "Demo-Library-1!"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "selector": "#confirmPassword"
+            },
+            "text": "Demo-Library-1!"
+          }
+        },
+        {
+          "click": {
+            "selector": "button[type=submit]"
+          }
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "own",
+      "title": {
+        "en": "An ordinary account",
+        "es": "Una cuenta normal",
+        "ca": "Un compte normal",
+        "de": "Ein normales Konto"
+      },
+      "narration": {
+        "en": "There is no default password. The first person gets an ordinary account, with a library of their own.",
+        "es": "No hay contraseña por defecto. La primera persona obtiene una cuenta normal, con su propia biblioteca.",
+        "ca": "No hi ha contrasenya per defecte. La primera persona obté un compte normal, amb la seva biblioteca.",
+        "de": "Es gibt kein Standardpasswort. Die erste Person bekommt ein normales Konto mit eigener Bibliothek."
+      },
+      "actions": [
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "close",
+      "title": {
+        "en": "Control registration",
+        "es": "Controlar el registro",
+        "ca": "Controlar el registre",
+        "de": "Registrierung steuern"
+      },
+      "narration": {
+        "en": "When everyone has an account, set registration enabled to false. Or require approval, so new accounts wait until you let them in.",
+        "es": "Cuando todos tengan cuenta, pon registration enabled en false. O exige aprobación, y las cuentas nuevas esperarán tu permiso.",
+        "ca": "Quan tothom tingui compte, posa registration enabled en false. O demana aprovació, i els comptes nous esperaran el teu permís.",
+        "de": "Wenn alle ein Konto haben, setze registration enabled auf false. Oder verlange eine Freigabe, dann warten neue Konten auf dich."
+      },
+      "actions": [
+        {
+          "goto": "term"
+        },
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "REGISTRATION_ENABLED=true",
+              "REGISTRATION_REQUIRES_APPROVAL=false"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "REGISTRATION_ENABLED",
+            "value": "REGISTRATION_ENABLED=false"
+          }
+        },
+        {
+          "hold": 2
+        },
+        {
+          "point": {
+            "line": "REGISTRATION_REQUIRES_APPROVAL",
+            "value": "REGISTRATION_REQUIRES_APPROVAL=true"
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "HTTPS with a reverse proxy",
+    "narration": {
+      "en": "You decide who gets in. Next time: putting it behind HTTPS. Thanks for watching, and see you soon!",
+      "es": "Tú decides quién entra. En el próximo vídeo: ponerlo detrás de HTTPS. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Tu decideixes qui entra. Al pròxim vídeo: posar-ho darrere d'HTTPS. Gràcies per mirar-ho i fins aviat!",
+      "de": "Du bestimmst, wer hineinkommt. Im nächsten Video: HTTPS einrichten. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

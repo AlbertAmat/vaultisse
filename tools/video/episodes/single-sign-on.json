@@ -1,0 +1,184 @@
+{
+  "slug": "single-sign-on",
+  "topic": "Setup",
+  "title": "Single sign-on",
+  "search": "How to set up single sign-on (OIDC) in Vaultisse",
+  "coverWords": "Single sign-on",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/single-sign-on",
+  "start": "term",
+  "tags": [
+    "vaultisse oidc",
+    "vaultisse sso",
+    "authentik vaultisse",
+    "keycloak login",
+    "openid connect",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to set up single sign-on (OIDC) in Vaultisse",
+      "description": "Learn how to set up single sign-on (OIDC) in Vaultisse with your identity provider."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo configurar el inicio de sesión único en Vaultisse",
+      "description": "Aprende a configurar el inicio de sesión único (OIDC) en Vaultisse con tu proveedor."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com configurar l'inici de sessió únic a Vaultisse",
+      "description": "Aprèn a configurar l'inici de sessió únic (OIDC) a Vaultisse amb el teu proveïdor."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Single Sign-On (OIDC) in Vaultisse einrichten",
+      "description": "Richte Single Sign-On (OIDC) in Vaultisse mit deinem Anbieter ein."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Register the app",
+      "Add four settings",
+      "Optional extras"
+    ],
+    "narration": {
+      "en": "Here is how to set up single sign-on in Vaultisse. In this video: register the app. Add four settings. Optional extras.",
+      "es": "Así se configura el inicio de sesión único en Vaultisse. En este vídeo: registra la aplicación. Añade cuatro ajustes. Extras opcionales.",
+      "ca": "Així es configura l'inici de sessió únic a Vaultisse. En aquest vídeo: registra l'aplicació. Afegeix quatre opcions. Extres opcionals.",
+      "de": "So richtest du Single Sign-On in Vaultisse ein. In diesem Video: die App registrieren. Vier Werte eintragen. Optionale Extras."
+    }
+  },
+  "steps": [
+    {
+      "id": "provider",
+      "title": {
+        "en": "At the provider",
+        "es": "En el proveedor",
+        "ca": "Al proveïdor",
+        "de": "Beim Anbieter"
+      },
+      "narration": {
+        "en": "In Authentik, Keycloak or another provider, create a confidential application. Use your address, followed by auth, oidc and callback, as the redirect.",
+        "es": "En Authentik, Keycloak u otro proveedor, crea una aplicación confidencial. Usa tu dirección seguida de auth, oidc y callback como redirección.",
+        "ca": "A Authentik, Keycloak o un altre proveïdor, crea una aplicació confidencial. Fes servir l'adreça seguida d'auth, oidc i callback com a redirecció.",
+        "de": "Lege in Authentik, Keycloak oder anderswo eine vertrauliche Anwendung an. Als Weiterleitung dient deine Adresse mit auth, oidc und callback."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": "At the provider",
+            "lines": [
+              "Client type:   Confidential",
+              "Redirect URI:  https://books.example.com/auth/oidc/callback",
+              "Scopes:        openid, profile, email"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "Redirect URI"
+          }
+        }
+      ]
+    },
+    {
+      "id": "env",
+      "title": {
+        "en": "The settings",
+        "es": "Los ajustes",
+        "ca": "Les opcions",
+        "de": "Die Werte"
+      },
+      "narration": {
+        "en": "Add the issuer, client ID, client secret and redirect address. The redirect must match exactly. Then run docker compose up.",
+        "es": "Añade el emisor, el ID de cliente, el secreto y la redirección. Debe coincidir exactamente. Después ejecuta docker compose up.",
+        "ca": "Afegeix l'emissor, l'ID de client, el secret i la redirecció. Ha de coincidir exactament. Després executa docker compose up.",
+        "de": "Trage Issuer, Client-ID, Secret und Weiterleitung ein. Sie muss genau stimmen. Dann starte docker compose up."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "OIDC_ISSUER=https://auth.example.com/application/o/vaultisse/",
+              "OIDC_CLIENT_ID=<client id>",
+              "OIDC_CLIENT_SECRET=<client secret>",
+              "OIDC_REDIRECT_URI=https://books.example.com/auth/oidc/callback"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "OIDC_ISSUER"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "point": {
+            "line": "OIDC_REDIRECT_URI"
+          }
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "run": "docker compose up -d"
+        }
+      ]
+    },
+    {
+      "id": "extras",
+      "title": {
+        "en": "Optional",
+        "es": "Opcional",
+        "ca": "Opcional",
+        "de": "Optional"
+      },
+      "narration": {
+        "en": "The sign-in page now has a new button. Whoever your provider lets in gets in, so control access there. SSO only turns passwords off completely.",
+        "es": "La página de acceso tiene ahora un botón nuevo. Entra quien tu proveedor permita, así que controla el acceso allí. SSO only desactiva las contraseñas.",
+        "ca": "La pàgina d'accés té ara un botó nou. Entra qui el proveïdor permeti, així que controla l'accés allà. SSO only desactiva les contrasenyes.",
+        "de": "Die Anmeldeseite hat nun einen neuen Knopf. Wen dein Anbieter zulässt, der kommt hinein, steuere den Zugang also dort. SSO only schaltet Passwörter ab."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "OIDC_BUTTON_LABEL=Sign in with SSO",
+              "OIDC_PERSONAL_VAULT=true",
+              "SSO_ONLY=false"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "OIDC_BUTTON_LABEL"
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "point": {
+            "line": "SSO_ONLY"
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Delete inactive accounts",
+    "narration": {
+      "en": "Your people can sign in with their own account. Next time: deleting inactive accounts. Thanks for watching, and see you soon!",
+      "es": "Tu gente ya entra con su propia cuenta. En el próximo vídeo: borrar cuentas inactivas. ¡Gracias por vernos y hasta pronto!",
+      "ca": "La teva gent ja entra amb el seu compte. Al pròxim vídeo: esborrar comptes inactius. Gràcies per mirar-ho i fins aviat!",
+      "de": "Alle melden sich mit ihrem eigenen Konto an. Im nächsten Video: inaktive Konten löschen. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

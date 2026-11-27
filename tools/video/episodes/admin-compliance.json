@@ -1,0 +1,165 @@
+{
+  "slug": "admin-compliance",
+  "topic": "Compliance",
+  "title": "Controls and incidents",
+  "search": "How to track compliance and security incidents in Vaultisse",
+  "coverWords": "Compliance evidence",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#compliance",
+  "start": "/compliance",
+  "tags": [
+    "iso 27001 checklist",
+    "gdpr compliance tool",
+    "security incident register",
+    "vaultisse compliance",
+    "risk register",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Compliance",
+      "title": "How to track compliance and security incidents in Vaultisse",
+      "description": "Learn how to track compliance and security incidents in Vaultisse. It helps prepare evidence, and certifies nothing."
+    },
+    "es": {
+      "topic": "Cumplimiento",
+      "title": "Cómo seguir el cumplimiento y los incidentes en Vaultisse",
+      "description": "Aprende a seguir el cumplimiento y los incidentes en Vaultisse. Ayuda a preparar pruebas y no certifica nada."
+    },
+    "ca": {
+      "topic": "Compliment",
+      "title": "Com seguir el compliment i els incidents a Vaultisse",
+      "description": "Aprèn a seguir el compliment i els incidents a Vaultisse. Ajuda a preparar proves i no certifica res."
+    },
+    "de": {
+      "topic": "Compliance",
+      "title": "Compliance und Sicherheitsvorfälle in Vaultisse",
+      "description": "Verfolge Compliance und Vorfälle in Vaultisse. Es hilft beim Nachweis, zertifiziert aber nichts."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Controls",
+      "Registers",
+      "Incidents"
+    ],
+    "narration": {
+      "en": "Here is how to track compliance in Vaultisse. In this video: controls. Registers. Incidents.",
+      "es": "Así se sigue el cumplimiento en Vaultisse. En este vídeo: controles. Registros. Incidentes.",
+      "ca": "Així se segueix el compliment a Vaultisse. En aquest vídeo: controls. Registres. Incidents.",
+      "de": "So verfolgst du Compliance in Vaultisse. In diesem Video: Kontrollen. Register. Vorfälle."
+    }
+  },
+  "steps": [
+    {
+      "id": "controls",
+      "title": {
+        "en": "Controls",
+        "es": "Controles",
+        "ca": "Controls",
+        "de": "Kontrollen"
+      },
+      "narration": {
+        "en": "Controls lists ISO 27001 items. Some are measured from your live setup, others you declare. It is a working aid, not a certificate.",
+        "es": "Controls lista puntos de ISO 27001. Unos se miden de tu instalación y otros los declaras. Es una ayuda, no un certificado.",
+        "ca": "Controls llista punts d'ISO 27001. Uns es mesuren de la instal·lació i altres els declares. És una ajuda, no un certificat.",
+        "de": "Controls listet Punkte aus ISO 27001. Manche werden gemessen, andere erklärst du. Es ist eine Hilfe, kein Zertifikat."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "Readiness",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "text": "Needs attention",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "text": "Statement of applicability",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "registers",
+      "title": {
+        "en": "Registers",
+        "es": "Registros",
+        "ca": "Registres",
+        "de": "Register"
+      },
+      "narration": {
+        "en": "Registers keeps your policies, suppliers, risks and assets.",
+        "es": "Registers guarda políticas, proveedores, riesgos y activos.",
+        "ca": "Registers desa polítiques, proveïdors, riscos i actius.",
+        "de": "Registers verwaltet Richtlinien, Lieferanten, Risiken und Werte."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "tab",
+            "name": "Registers"
+          }
+        },
+        {
+          "highlight": {
+            "selector": "tbody tr",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "incidents",
+      "title": {
+        "en": "Incidents",
+        "es": "Incidentes",
+        "ca": "Incidents",
+        "de": "Vorfälle"
+      },
+      "narration": {
+        "en": "Record security incidents, with what you did. A breach of personal data must be reported within seventy two hours.",
+        "es": "Registra los incidentes y lo que hiciste. Una brecha de datos personales debe notificarse en setenta y dos horas.",
+        "ca": "Registra els incidents i què vas fer. Una bretxa de dades personals s'ha de notificar en setanta-dues hores.",
+        "de": "Erfasse Vorfälle samt Maßnahmen. Eine Verletzung personenbezogener Daten ist binnen 72 Stunden zu melden."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "tab",
+            "name": "Incidents"
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Record an incident",
+            "exact": false,
+            "seconds": 3
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Keep the panel safe",
+    "narration": {
+      "en": "Your evidence is in one place. Next time: securing the panel. Thanks for watching, and see you soon!",
+      "es": "Tus pruebas están en un solo sitio. En el próximo vídeo: proteger el panel. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Les proves són en un sol lloc. Al pròxim vídeo: protegir el panell. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Nachweise liegen an einem Ort. Im nächsten Video: das Absichern des Panels. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

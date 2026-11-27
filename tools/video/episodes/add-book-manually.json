@@ -1,0 +1,231 @@
+{
+  "slug": "add-book-manually",
+  "topic": "Library",
+  "title": "Add a book by hand",
+  "search": "How to add a book manually in Vaultisse",
+  "coverWords": "Add a book by hand",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/adding-books",
+  "start": "/app/library/search",
+  "tags": [
+    "add book manually",
+    "vaultisse add book",
+    "catalogue book without isbn",
+    "book cover upload",
+    "home library catalog",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to add a book manually in Vaultisse",
+      "description": "Learn how to add a book manually in Vaultisse, with your own cover, even without an ISBN."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo añadir un libro a mano en Vaultisse",
+      "description": "Aprende a añadir un libro a mano en Vaultisse, con tu portada, aunque no tenga ISBN."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com afegir un llibre a mà a Vaultisse",
+      "description": "Aprèn a afegir un llibre a mà a Vaultisse, amb la teva coberta, encara que no tingui ISBN."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Ein Buch in Vaultisse von Hand hinzufügen",
+      "description": "So fügst du in Vaultisse ein Buch von Hand hinzu, mit eigenem Cover und auch ohne ISBN."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Open the manual form",
+      "Fill in the details",
+      "Complete the book page"
+    ],
+    "narration": {
+      "en": "Here is how to add a book manually in Vaultisse. In this video: open the manual form. Fill in the details. Complete the book page.",
+      "es": "Así se añade un libro a mano en Vaultisse. En este vídeo: abre el formulario manual. Rellena los datos. Completa la ficha.",
+      "ca": "Així s'afegeix un llibre a mà a Vaultisse. En aquest vídeo: obre el formulari manual. Omple les dades. Completa la fitxa.",
+      "de": "So fügst du in Vaultisse ein Buch von Hand hinzu. In diesem Video: das Formular öffnen. Die Angaben eintragen. Die Buchseite vervollständigen."
+    }
+  },
+  "steps": [
+    {
+      "id": "open",
+      "title": {
+        "en": "Open the form",
+        "es": "Abre el formulario",
+        "ca": "Obre el formulari",
+        "de": "Das Formular öffnen"
+      },
+      "narration": {
+        "en": "In the Library, click the little arrow on Add book. Then choose Add book manually.",
+        "es": "En la Biblioteca, pulsa la flecha pequeña de Añadir libro. Elige añadir el libro a mano.",
+        "ca": "A la Biblioteca, prem la fletxa petita d'Afegir llibre. Tria afegir el llibre a mà.",
+        "de": "Klicke in der Bibliothek auf den kleinen Pfeil bei Buch hinzufügen. Wähle dann das manuelle Hinzufügen."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "selector": "button:has-text('Add book') button"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Add book manually",
+            "text": "Add book manually"
+          }
+        },
+        {
+          "pause": 1
+        }
+      ]
+    },
+    {
+      "id": "fill",
+      "title": {
+        "en": "Fill in the details",
+        "es": "Rellena los datos",
+        "ca": "Omple les dades",
+        "de": "Angaben eintragen"
+      },
+      "narration": {
+        "en": "Write the name and a short description. You can drop a picture of the cover at the top. The ISBN is optional. Choose where the book lives, and click Add.",
+        "es": "Escribe el nombre y una breve descripción. Arriba puedes soltar una foto de la portada. El ISBN es opcional. Elige dónde se guarda y pulsa Agregar.",
+        "ca": "Escriu el nom i una breu descripció. A dalt pots deixar-hi una foto de la coberta. L'ISBN és opcional. Tria on es guarda i prem Afegir.",
+        "de": "Gib den Namen und eine kurze Beschreibung ein. Oben kannst du ein Bild des Covers ablegen. Die ISBN ist freiwillig. Wähle den Standort und klicke auf Hinzufügen."
+      },
+      "actions": [
+        {
+          "type": {
+            "text": "Our Class Storybook"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Description"
+            },
+            "text": "Stories written and drawn by Class 4B."
+          }
+        },
+        {
+          "upload": {
+            "selector": "[role=dialog] input[type=file]",
+            "file": "/home/albert/Desktop/vaultisse-videos/dataset/storybook-cover.png"
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "label": "ISBN",
+            "seconds": 1.5
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "find",
+      "title": {
+        "en": "The new book page",
+        "es": "La ficha del libro nuevo",
+        "ca": "La fitxa del llibre nou",
+        "de": "Die neue Buchseite"
+      },
+      "narration": {
+        "en": "The app opens the new book page, with its first copy already there.",
+        "es": "La aplicación abre la ficha del libro nuevo, con su primer ejemplar.",
+        "ca": "L'aplicació obre la fitxa del llibre nou, amb el primer exemplar.",
+        "de": "Die App öffnet die neue Buchseite, mit dem ersten Exemplar."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "text": "Available",
+            "exact": false,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "edit",
+      "title": {
+        "en": "Complete the page",
+        "es": "Completa la ficha",
+        "ca": "Completa la fitxa",
+        "de": "Buchseite vervollständigen"
+      },
+      "narration": {
+        "en": "Click Edit to add the author, category, language and more. Save when you are done.",
+        "es": "Pulsa Editar para añadir autor, categoría, idioma y más. Guarda al terminar.",
+        "ca": "Prem Edita per afegir autor, categoria, idioma i més. Desa en acabar.",
+        "de": "Mit Bearbeiten ergänzt du Autor, Kategorie, Sprache und mehr. Speichere zum Schluss."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Edit"
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "highlight": {
+            "label": "Category",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        },
+        {
+          "highlight": {
+            "label": "Authors",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Cancel"
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Add copies of a book",
+    "narration": {
+      "en": "That is a book added by hand. Next time: adding copies of a book. Thanks for watching, and see you soon!",
+      "es": "Así se añade un libro a mano. En el próximo vídeo: añadir ejemplares de un libro. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Així s'afegeix un llibre a mà. Al pròxim vídeo: afegir exemplars d'un llibre. Gràcies per mirar-ho i fins aviat!",
+      "de": "So kommt ein Buch von Hand in die Bibliothek. Im nächsten Video: Exemplare eines Buches hinzufügen. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

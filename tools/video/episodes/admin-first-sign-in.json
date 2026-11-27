@@ -1,0 +1,173 @@
+{
+  "slug": "admin-first-sign-in",
+  "topic": "Admin panel",
+  "title": "First sign-in",
+  "search": "How to sign in to the Vaultisse admin panel the first time",
+  "coverWords": "First sign-in",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#turning-it-on",
+  "start": "/login",
+  "tags": [
+    "vaultisse admin login",
+    "admin two factor",
+    "backup codes",
+    "totp setup",
+    "admin first sign in",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to sign in to the Vaultisse admin panel the first time",
+      "description": "Learn how to sign in to the Vaultisse admin panel the first time and set up two-factor."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo entrar por primera vez al panel de Vaultisse",
+      "description": "Aprende a entrar por primera vez al panel de Vaultisse y a configurar el doble factor."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com entrar per primer cop al panell de Vaultisse",
+      "description": "Aprèn a entrar per primer cop al panell de Vaultisse i a configurar el doble factor."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Erste Anmeldung im Vaultisse Admin-Panel",
+      "description": "Melde dich erstmals im Vaultisse Admin-Panel an und richte Zwei-Faktor ein."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Sign in",
+      "Set up two-factor",
+      "Save the backup codes"
+    ],
+    "narration": {
+      "en": "Here is how to sign in to the admin panel the first time. In this video: sign in. Set up two-factor. Save the backup codes.",
+      "es": "Así se entra por primera vez al panel de administración. En este vídeo: entra. Configura el doble factor. Guarda los códigos.",
+      "ca": "Així s'entra per primer cop al panell d'administració. En aquest vídeo: entra. Configura el doble factor. Desa els codis.",
+      "de": "So meldest du dich erstmals im Admin-Panel an. In diesem Video: anmelden. Zwei-Faktor einrichten. Die Backup-Codes sichern."
+    }
+  },
+  "steps": [
+    {
+      "id": "login",
+      "title": {
+        "en": "Sign in",
+        "es": "Entrar",
+        "ca": "Entrar",
+        "de": "Anmelden"
+      },
+      "narration": {
+        "en": "Open the panel's address and type the email and password.",
+        "es": "Abre la dirección del panel y escribe el correo y la contraseña.",
+        "ca": "Obre l'adreça del panell i escriu el correu i la contrasenya.",
+        "de": "Öffne die Adresse des Panels und gib E-Mail und Passwort ein."
+      },
+      "actions": [
+        {
+          "type": {
+            "into": {
+              "selector": "input",
+              "nth": 0
+            },
+            "text": "admin@vaultisse.local"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "selector": "input[type=password]"
+            },
+            "text": "Demo-Admin-Passw0rd!"
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "hold": 1
+        }
+      ]
+    },
+    {
+      "id": "totp",
+      "title": {
+        "en": "Two-factor",
+        "es": "Doble factor",
+        "ca": "Doble factor",
+        "de": "Zwei-Faktor"
+      },
+      "narration": {
+        "en": "Two-factor is mandatory. Scan the code with an authenticator app, then type the six digits it shows.",
+        "es": "El doble factor es obligatorio. Escanea el código con una app de autenticación y escribe los seis dígitos.",
+        "ca": "El doble factor és obligatori. Escaneja el codi amb una app d'autenticació i escriu els sis dígits.",
+        "de": "Zwei-Faktor ist Pflicht. Scanne den Code mit einer Authenticator-App und tippe die sechs Ziffern ein."
+      },
+      "actions": [
+        {
+          "hold": 1.5
+        },
+        {
+          "totp": {
+            "selector": "input",
+            "nth": -1
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "hold": 1
+        }
+      ]
+    },
+    {
+      "id": "codes",
+      "title": {
+        "en": "Backup codes",
+        "es": "Códigos de respaldo",
+        "ca": "Codis de reserva",
+        "de": "Backup-Codes"
+      },
+      "narration": {
+        "en": "Save the backup codes somewhere safe, because they are shown once. A generated first admin must then choose a new password.",
+        "es": "Guarda los códigos de respaldo en un lugar seguro, porque solo salen una vez. El primer administrador generado debe elegir contraseña nueva.",
+        "ca": "Desa els codis de reserva en un lloc segur, perquè només surten un cop. El primer administrador generat ha de triar contrasenya nova.",
+        "de": "Bewahre die Backup-Codes sicher auf, sie erscheinen nur einmal. Ein erzeugter erster Admin wählt danach ein neues Passwort."
+      },
+      "actions": [
+        {
+          "hold": 2
+        },
+        {
+          "click": {
+            "selector": "input[type=checkbox]"
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Continue to the console",
+            "exact": false
+          }
+        },
+        {
+          "hold": 2
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "The setup guide",
+    "narration": {
+      "en": "You are in. Next time: the setup guide. Thanks for watching, and see you soon!",
+      "es": "Ya estás dentro. En el próximo vídeo: la guía de configuración. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Ja hi ets. Al pròxim vídeo: la guia de configuració. Gràcies per mirar-ho i fins aviat!",
+      "de": "Du bist drin. Im nächsten Video: den Einrichtungsassistenten. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "signin"
+}

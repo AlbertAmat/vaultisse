@@ -1,0 +1,168 @@
+{
+  "slug": "admin-securing",
+  "topic": "Security",
+  "title": "Secure the panel",
+  "search": "How to secure the Vaultisse admin panel",
+  "coverWords": "Keep it private",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#securing-it",
+  "start": "term",
+  "tags": [
+    "secure admin panel",
+    "ip allowlist",
+    "admin allowed ips",
+    "ssh tunnel",
+    "vaultisse hardening",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Security",
+      "title": "How to secure the Vaultisse admin panel",
+      "description": "Learn how to secure the Vaultisse admin panel and keep it off the open internet."
+    },
+    "es": {
+      "topic": "Seguridad",
+      "title": "Cómo proteger el panel de administración de Vaultisse",
+      "description": "Aprende a proteger el panel de Vaultisse y a mantenerlo fuera de internet."
+    },
+    "ca": {
+      "topic": "Seguretat",
+      "title": "Com protegir el panell d'administració de Vaultisse",
+      "description": "Aprèn a protegir el panell de Vaultisse i a mantenir-lo fora d'internet."
+    },
+    "de": {
+      "topic": "Sicherheit",
+      "title": "Das Vaultisse Admin-Panel absichern",
+      "description": "Sichere das Vaultisse Admin-Panel und halte es vom offenen Internet fern."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Keep the port private",
+      "Allow only your addresses",
+      "Limit full admins"
+    ],
+    "narration": {
+      "en": "Here is how to keep the admin panel safe. In this video: keep the port private. Allow only your addresses. Limit full admins.",
+      "es": "Así se mantiene seguro el panel. En este vídeo: mantén privado el puerto. Permite solo tus direcciones. Limita los administradores.",
+      "ca": "Així es manté segur el panell. En aquest vídeo: mantén privat el port. Permet només les teves adreces. Limita els administradors.",
+      "de": "So hältst du das Admin-Panel sicher. In diesem Video: den Port privat halten. Nur eigene Adressen zulassen. Volle Admins begrenzen."
+    }
+  },
+  "steps": [
+    {
+      "id": "port",
+      "title": {
+        "en": "Private port",
+        "es": "Puerto privado",
+        "ca": "Port privat",
+        "de": "Privater Port"
+      },
+      "narration": {
+        "en": "We recommend not exposing the panel to the internet. The compose file publishes its port on the local machine only. Reach it through a tunnel or a V P N.",
+        "es": "Recomendamos no exponer el panel a internet. El archivo compose publica su puerto solo en la máquina local. Accede por un túnel o una V P N.",
+        "ca": "Recomanem no exposar el panell a internet. El fitxer compose publica el port només a la màquina local. Accedeix-hi per un túnel o una V P N.",
+        "de": "Wir raten, das Panel nicht ins Internet zu stellen. Die Compose-Datei gibt den Port nur lokal frei. Nutze einen Tunnel oder ein V P N."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": "docker-compose.yml",
+            "lines": [
+              "    ports:",
+              "      - \"127.0.0.1:${ADMIN_PORT:-3001}:${ADMIN_PORT:-3001}\""
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "127.0.0.1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "allow",
+      "title": {
+        "en": "Allowlist",
+        "es": "Lista permitida",
+        "ca": "Llista permesa",
+        "de": "Erlaubnisliste"
+      },
+      "narration": {
+        "en": "Restrict it to your own addresses, and set a dedicated encryption key that you keep.",
+        "es": "Restríngelo a tus direcciones y pon una clave de cifrado propia que debes conservar.",
+        "ca": "Restringeix-lo a les teves adreces i posa una clau de xifratge pròpia que has de conservar.",
+        "de": "Beschränke es auf deine Adressen und setze einen eigenen Schlüssel, den du aufbewahrst."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "ADMIN_URL=https://adm.example.com",
+              "ADMIN_ALLOWED_IPS=203.0.113.10",
+              "SETTINGS_ENCRYPTION_KEY=<openssl rand -hex 32>"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "ADMIN_ALLOWED_IPS"
+          }
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "point": {
+            "line": "SETTINGS_ENCRYPTION_KEY"
+          }
+        }
+      ]
+    },
+    {
+      "id": "people",
+      "title": {
+        "en": "People",
+        "es": "Personas",
+        "ca": "Persones",
+        "de": "Personen"
+      },
+      "narration": {
+        "en": "Keep few full admins, and give everyone else read only.",
+        "es": "Ten pocos administradores completos y da solo lectura al resto.",
+        "ca": "Tingues pocs administradors complets i dona només lectura a la resta.",
+        "de": "Halte wenige volle Admins und gib allen anderen nur Lesezugriff."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": "Admin roles",
+            "lines": [
+              "superadmin   can change things",
+              "readonly     can only look",
+              "two-factor   mandatory for both"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "readonly"
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "What is new in this version",
+    "narration": {
+      "en": "The panel stays yours. Next time: what is new in this version. Thanks for watching, and see you soon!",
+      "es": "El panel sigue siendo solo tuyo. En el próximo vídeo: las novedades. ¡Gracias por vernos y hasta pronto!",
+      "ca": "El panell continua sent només teu. Al pròxim vídeo: les novetats. Gràcies per mirar-ho i fins aviat!",
+      "de": "Das Panel bleibt deins. Im nächsten Video: die Neuerungen. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

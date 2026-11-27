@@ -1,0 +1,191 @@
+{
+  "slug": "member-borrowing",
+  "topic": "Loans",
+  "title": "Lend to a member",
+  "search": "How to lend a book to a library member in Vaultisse",
+  "coverWords": "Lend to a member",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/sharing-and-roles",
+  "start": "/app/book/1",
+  "tags": [
+    "lend to member",
+    "borrower account",
+    "my loans",
+    "vaultisse borrower",
+    "family book lending",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Loans",
+      "title": "How to lend a book to a library member in Vaultisse",
+      "description": "Learn how to lend a book to a library member in Vaultisse and see what the borrower sees."
+    },
+    "es": {
+      "topic": "Préstamos",
+      "title": "Cómo prestar a un miembro de la biblioteca en Vaultisse",
+      "description": "Aprende a prestar un libro a un miembro en Vaultisse y mira lo que ve quien lo recibe."
+    },
+    "ca": {
+      "topic": "Préstecs",
+      "title": "Com prestar a un membre de la biblioteca a Vaultisse",
+      "description": "Aprèn a prestar un llibre a un membre a Vaultisse i mira què veu qui el rep."
+    },
+    "de": {
+      "topic": "Ausleihen",
+      "title": "Bücher an Mitglieder in Vaultisse verleihen",
+      "description": "Verleihe in Vaultisse ein Buch an ein Mitglied und sieh, was diese Person sieht."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Lend to the member",
+      "Sign in as the borrower",
+      "Check My loans"
+    ],
+    "narration": {
+      "en": "Here is how to lend a book to a library member in Vaultisse. In this video: lend to the member. Sign in as the borrower. Check My loans.",
+      "es": "Así se presta un libro a un miembro de la biblioteca en Vaultisse. En este vídeo: presta al miembro. Entra como prestatario. Mira Mis préstamos.",
+      "ca": "Així es presta un llibre a un membre de la biblioteca a Vaultisse. En aquest vídeo: presta al membre. Entra com a prestatari. Mira Els meus préstecs.",
+      "de": "So verleihst du in Vaultisse ein Buch an ein Mitglied. In diesem Video: an das Mitglied verleihen. Als Ausleiher anmelden. Meine Ausleihen ansehen."
+    }
+  },
+  "steps": [
+    {
+      "id": "lend",
+      "title": {
+        "en": "Lend the book",
+        "es": "Presta el libro",
+        "ca": "Presta el llibre",
+        "de": "Buch verleihen"
+      },
+      "narration": {
+        "en": "Members with an account can borrow too. Click Lend on a copy, choose the member, and confirm.",
+        "es": "Los miembros con cuenta también pueden tomar prestado. Pulsa Prestar, elige el miembro y confirma.",
+        "ca": "Els membres amb compte també poden agafar en préstec. Prem Presta, tria el membre i confirma.",
+        "de": "Auch Mitglieder mit Konto können ausleihen. Klicke auf Verleihen, wähle das Mitglied und bestätige."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "scroll": 300
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Lend"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "selector": "input"
+            },
+            "text": "Jordan"
+          }
+        },
+        {
+          "pause": 0.6
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "Jordan Lee",
+            "text": "Jordan Lee"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Lend",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "signin",
+      "title": {
+        "en": "The borrower's view",
+        "es": "La vista del prestatario",
+        "ca": "La vista del prestatari",
+        "de": "Die Sicht des Ausleihers"
+      },
+      "narration": {
+        "en": "Now this is Jordan signing in. A borrower sees the library, without the tools to change it.",
+        "es": "Ahora entra Jordan. Un prestatario ve la biblioteca, sin las herramientas para cambiarla.",
+        "ca": "Ara entra Jordan. Un prestatari veu la biblioteca, sense les eines per canviar-la.",
+        "de": "Jetzt meldet sich Jordan an. Ausleiher sehen die Bibliothek, können sie aber nicht ändern."
+      },
+      "actions": [
+        {
+          "login": "jordan"
+        },
+        {
+          "pause": 2.5
+        }
+      ]
+    },
+    {
+      "id": "myloans",
+      "title": {
+        "en": "My loans",
+        "es": "Mis préstamos",
+        "ca": "Els meus préstecs",
+        "de": "Meine Ausleihen"
+      },
+      "narration": {
+        "en": "My loans lists the books they have now, and the history keeps the ones returned.",
+        "es": "Mis préstamos muestra los libros que tiene, y el historial guarda los devueltos.",
+        "ca": "Els meus préstecs mostra els llibres que té, i l'historial guarda els retornats.",
+        "de": "Meine Ausleihen zeigt die aktuellen Bücher, der Verlauf die zurückgegebenen."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "My loans",
+            "exact": true
+          }
+        },
+        {
+          "pause": 2
+        },
+        {
+          "highlight": {
+            "role": "tab",
+            "name": "Loan history",
+            "seconds": 2
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Use more than one library",
+    "narration": {
+      "en": "That is lending between members. Next time: using more than one library. Thanks for watching, and see you soon!",
+      "es": "Así son los préstamos entre miembros. En el próximo vídeo: usar varias bibliotecas. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Així són els préstecs entre membres. Al pròxim vídeo: fer servir diverses biblioteques. Gràcies per mirar-ho i fins aviat!",
+      "de": "So funktioniert das Verleihen an Mitglieder. Im nächsten Video: mehrere Bibliotheken. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "setup": [
+    "INSERT INTO users(code,name,password,email,disabled,email_verified) SELECT 'jordan','Jordan Lee',password,'jordan@example.com',false,true FROM users WHERE code='librarian'",
+    "INSERT INTO vault_users(vault_id,user_id,role,status) SELECT v.id,u.id,2,1 FROM vault v, users u WHERE v.name='Riverside School Library' AND u.code='jordan'",
+    "UPDATE users SET last_used_vault_id=(SELECT id FROM vault WHERE name='Riverside School Library') WHERE code='jordan'"
+  ]
+}

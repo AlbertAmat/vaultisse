@@ -1,0 +1,176 @@
+{
+  "slug": "whats-new-admin",
+  "topic": "What's new",
+  "title": "The admin panel",
+  "search": "What is new in Vaultisse 1.3.9: the admin panel",
+  "coverWords": "The new admin panel",
+  "playlist": "Releases",
+  "docs": "https://docs.vaultisse.com/releases",
+  "start": "/",
+  "tags": [
+    "vaultisse 1.3.9",
+    "vaultisse admin panel",
+    "self-hosted admin console",
+    "vaultisse release",
+    "user management",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "What's new",
+      "title": "What is new in Vaultisse 1.3.9: the admin panel",
+      "description": "See the new Vaultisse admin panel in 1.3.9: accounts, security and compliance in one console."
+    },
+    "es": {
+      "topic": "Novedades",
+      "title": "Novedad en Vaultisse 1.3.9: panel de administración",
+      "description": "Descubre el nuevo panel de administración de Vaultisse 1.3.9: cuentas, seguridad y cumplimiento."
+    },
+    "ca": {
+      "topic": "Novetats",
+      "title": "Novetat a Vaultisse 1.3.9: panell d'administració",
+      "description": "Descobreix el nou panell d'administració de Vaultisse 1.3.9: comptes, seguretat i compliment."
+    },
+    "de": {
+      "topic": "Neu",
+      "title": "Neu in Vaultisse 1.3.9: das Admin-Panel",
+      "description": "Sieh das neue Admin-Panel in Vaultisse 1.3.9: Konten, Sicherheit und Compliance."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Accounts and libraries",
+      "Security",
+      "Settings and compliance"
+    ],
+    "narration": {
+      "en": "Vaultisse 1.3.9 adds an admin panel. In this video: accounts and libraries. Security. Settings and compliance.",
+      "es": "Vaultisse 1.3.9 añade un panel de administración. En este vídeo: cuentas y bibliotecas. Seguridad. Ajustes y cumplimiento.",
+      "ca": "Vaultisse 1.3.9 afegeix un panell d'administració. En aquest vídeo: comptes i biblioteques. Seguretat. Opcions i compliment.",
+      "de": "Vaultisse 1.3.9 bringt ein Admin-Panel. In diesem Video: Konten und Bibliotheken. Sicherheit. Einstellungen und Compliance."
+    }
+  },
+  "steps": [
+    {
+      "id": "accounts",
+      "title": {
+        "en": "Accounts",
+        "es": "Cuentas",
+        "ca": "Comptes",
+        "de": "Konten"
+      },
+      "narration": {
+        "en": "Approve, disable and help accounts, and set plans for libraries. The panel never shows what is inside them.",
+        "es": "Aprueba, desactiva y ayuda a las cuentas, y pon planes a las bibliotecas. El panel nunca muestra su contenido.",
+        "ca": "Aprova, desactiva i ajuda els comptes, i posa plans a les biblioteques. El panell mai en mostra el contingut.",
+        "de": "Gib Konten frei, sperre und unterstütze sie und vergib Tarife. Inhalte zeigt das Panel nie."
+      },
+      "actions": [
+        {
+          "goto": "/users"
+        },
+        {
+          "hold": 2
+        },
+        {
+          "goto": "/vaults"
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": {
+        "en": "Security",
+        "es": "Seguridad",
+        "ca": "Seguretat",
+        "de": "Sicherheit"
+      },
+      "narration": {
+        "en": "See failed sign-ins and block addresses. Admins sign in with mandatory two-factor.",
+        "es": "Mira los accesos fallidos y bloquea direcciones. Los administradores entran con doble factor obligatorio.",
+        "ca": "Mira els accessos fallits i bloqueja adreces. Els administradors entren amb doble factor obligatori.",
+        "de": "Sieh Fehlanmeldungen und sperre Adressen. Admins melden sich mit Pflicht-Zwei-Faktor an."
+      },
+      "actions": [
+        {
+          "goto": "/admin-signins"
+        },
+        {
+          "hold": 2.5
+        }
+      ]
+    },
+    {
+      "id": "compliance",
+      "title": {
+        "en": "Settings and compliance",
+        "es": "Ajustes y cumplimiento",
+        "ca": "Opcions i compliment",
+        "de": "Einstellungen und Compliance"
+      },
+      "narration": {
+        "en": "Change settings without editing files, answer data requests, and keep compliance evidence.",
+        "es": "Cambia ajustes sin editar archivos, responde solicitudes de datos y guarda pruebas de cumplimiento.",
+        "ca": "Canvia opcions sense editar fitxers, respon sol·licituds de dades i desa proves de compliment.",
+        "de": "Ändere Einstellungen ohne Dateien, beantworte Datenanfragen und sammle Nachweise."
+      },
+      "actions": [
+        {
+          "goto": "/settings"
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "goto": "/data-requests"
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "goto": "/compliance"
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "on",
+      "title": {
+        "en": "Turning it on",
+        "es": "Activarlo",
+        "ca": "Activar-lo",
+        "de": "Einschalten"
+      },
+      "narration": {
+        "en": "It is off by default, and we recommend not exposing it to the internet.",
+        "es": "Viene desactivado, y recomendamos no exponerlo a internet.",
+        "ca": "Ve desactivat, i recomanem no exposar-lo a internet.",
+        "de": "Es ist zunächst aus, und wir raten, es nicht ins Internet zu stellen."
+      },
+      "actions": [
+        {
+          "goto": "/"
+        },
+        {
+          "hold": 2
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Turn on the admin panel",
+    "narration": {
+      "en": "To upgrade, back up, then run docker compose pull and docker compose up. Next time: turning on the admin panel. Thanks for watching, and see you soon!",
+      "es": "Para actualizar, haz copia y ejecuta docker compose pull y docker compose up. En el próximo vídeo: activar el panel. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Per actualitzar, fes còpia i executa docker compose pull i docker compose up. Al pròxim vídeo: activar el panell. Gràcies per mirar-ho i fins aviat!",
+      "de": "Zum Aktualisieren sicherst du und führst docker compose pull und up aus. Im nächsten Video: das Panel einschalten. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

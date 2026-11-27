@@ -1,0 +1,632 @@
+{
+  "slug": "why-vaultisse",
+  "topic": "Why Vaultisse",
+  "title": "A spreadsheet or a library app?",
+  "search": "Vaultisse or Excel: which one for your library?",
+  "coverWords": "Beyond the spreadsheet",
+  "playlist": "Why Vaultisse",
+  "docs": "https://docs.vaultisse.com/getting-started",
+  "start": "sheet",
+  "tags": [
+    "library spreadsheet alternative",
+    "excel library catalog",
+    "book lending spreadsheet",
+    "vaultisse vs excel",
+    "library software for schools",
+    "home library catalogue",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Why Vaultisse",
+      "title": "Vaultisse or Excel: which one for your library?",
+      "description": "Compare Vaultisse with an Excel sheet for cataloguing and lending books, job by job."
+    },
+    "es": {
+      "topic": "Por qué Vaultisse",
+      "title": "Vaultisse o Excel: ¿cuál para tu biblioteca?",
+      "description": "Compara Vaultisse con una hoja de Excel para catalogar y prestar libros, tarea por tarea."
+    },
+    "ca": {
+      "topic": "Per què Vaultisse",
+      "title": "Vaultisse o Excel: quin per a la teva biblioteca?",
+      "description": "Compara Vaultisse amb un full d'Excel per catalogar i prestar llibres, tasca per tasca."
+    },
+    "de": {
+      "topic": "Warum Vaultisse",
+      "title": "Vaultisse oder Excel: was passt zu deiner Bibliothek?",
+      "description": "Vergleiche Vaultisse mit einer Excel-Tabelle beim Katalogisieren und Verleihen, Aufgabe für Aufgabe."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Where the sheet starts to hurt",
+      "The same jobs in Vaultisse",
+      "How to move across"
+    ],
+    "narration": {
+      "en": "Do you keep your library in an Excel sheet? In this video: where the sheet starts to hurt. The same jobs in Vaultisse. How to move across.",
+      "es": "¿Llevas tu biblioteca en una hoja de Excel? En este vídeo: dónde empieza a fallar la hoja. Las mismas tareas en Vaultisse. Cómo hacer el cambio.",
+      "ca": "Portes la biblioteca en un full d'Excel? En aquest vídeo: on comença a fallar el full. Les mateixes tasques a Vaultisse. Com fer el canvi.",
+      "de": "Führst du deine Bibliothek in einer Excel-Tabelle? In diesem Video: wo die Tabelle an Grenzen stößt. Dieselben Aufgaben in Vaultisse. Wie du umziehst."
+    }
+  },
+  "steps": [
+    {
+      "id": "sheet",
+      "title": {
+        "en": "The spreadsheet",
+        "es": "La hoja de cálculo",
+        "ca": "El full de càlcul",
+        "de": "Die Tabelle"
+      },
+      "narration": {
+        "en": "It always starts well. One row for each book, a few columns, and you are done. Then people begin to borrow. Soon nobody is sure what is really on the shelf.",
+        "es": "Siempre empieza bien. Una fila por libro, unas columnas y listo. Entonces la gente empieza a pedir prestado. Pronto nadie sabe bien qué hay en el estante.",
+        "ca": "Sempre comença bé. Una fila per llibre, unes columnes i llest. Llavors la gent comença a demanar en préstec. Aviat ningú sap del cert què hi ha al prestatge.",
+        "de": "Am Anfang läuft alles gut. Eine Zeile je Buch, ein paar Spalten, fertig. Dann fängt das Ausleihen an. Bald weiß niemand mehr sicher, was im Regal steht."
+      },
+      "actions": [
+        {
+          "hold": 2
+        },
+        {
+          "sheet": {
+            "hot": [
+              "A1",
+              "B1",
+              "C1",
+              "D1"
+            ]
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "sheet": {
+            "hot": [
+              "E2",
+              "E4",
+              "E5",
+              "E7"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "typing",
+      "title": {
+        "en": "Typing everything",
+        "es": "Teclear todo",
+        "ca": "Teclejar-ho tot",
+        "de": "Alles abtippen"
+      },
+      "narration": {
+        "en": "In a sheet, you type every title and author yourself. The same book soon appears twice, written two different ways.",
+        "es": "En una hoja, tecleas cada título y autor. Pronto el mismo libro aparece dos veces, escrito de dos formas.",
+        "ca": "En un full, tecleges cada títol i autor. Aviat el mateix llibre surt dues vegades, escrit de dues maneres.",
+        "de": "In der Tabelle tippst du jeden Titel und Autor selbst. Bald steht dasselbe Buch zweimal da, unterschiedlich geschrieben."
+      },
+      "actions": [
+        {
+          "sheet": {
+            "set": [
+              "B14",
+              "Lena Marsh"
+            ]
+          }
+        },
+        {
+          "hold": 2
+        },
+        {
+          "sheet": {
+            "hot": [
+              "A6",
+              "A7",
+              "B6",
+              "B7"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "isbn",
+      "title": {
+        "en": "Add by ISBN",
+        "es": "Añadir por ISBN",
+        "ca": "Afegir per ISBN",
+        "de": "Per ISBN erfassen"
+      },
+      "narration": {
+        "en": "In Vaultisse, you type or scan the ISBN. Title, author, cover and description are looked up for you. Books without one can be added by hand. A phone camera or a barcode reader makes this quick.",
+        "es": "En Vaultisse, escribes o escaneas el ISBN. Título, autor, portada y descripción se buscan por ti. Los libros sin ISBN se añaden a mano. Con la cámara del móvil o un lector va muy rápido.",
+        "ca": "A Vaultisse, escrius o escaneges l'ISBN. Títol, autor, coberta i descripció es busquen per tu. Els llibres sense ISBN s'afegeixen a mà. Amb la càmera del mòbil o un lector va molt ràpid.",
+        "de": "In Vaultisse tippst oder scannst du die ISBN. Titel, Autor, Cover und Beschreibung werden gesucht. Bücher ohne ISBN erfasst du von Hand. Mit Handykamera oder Barcodeleser geht das schnell."
+      },
+      "actions": [
+        {
+          "goto": "/app/library/search"
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "selector": "button:has-text('Add book')",
+            "nth": 0
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "find",
+      "title": {
+        "en": "Finding a book",
+        "es": "Encontrar un libro",
+        "ca": "Trobar un llibre",
+        "de": "Ein Buch finden"
+      },
+      "narration": {
+        "en": "Looking for a book means scrolling and searching cells. Here you search from any page, see the covers, and filter by category or loan.",
+        "es": "Buscar un libro es desplazarse y rastrear celdas. Aquí buscas desde cualquier página, ves las portadas y filtras por categoría o préstamo.",
+        "ca": "Buscar un llibre és desplaçar-se i rastrejar cel·les. Aquí cerques des de qualsevol pàgina, veus les cobertes i filtres per categoria o préstec.",
+        "de": "Ein Buch zu suchen heißt scrollen und Zellen durchforsten. Hier suchst du von jeder Seite, siehst Cover und filterst nach Kategorie oder Ausleihe."
+      },
+      "actions": [
+        {
+          "goto": "/app/dashboard"
+        },
+        {
+          "type": {
+            "into": {
+              "placeholder": "Search books"
+            },
+            "text": "moon"
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "hold": 3
+        },
+        {
+          "click": {
+            "selector": ".v-app-bar .mdi-filter-variant"
+          }
+        },
+        {
+          "hold": 2.5
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "copies",
+      "title": {
+        "en": "Copies and places",
+        "es": "Ejemplares y sitios",
+        "ca": "Exemplars i llocs",
+        "de": "Exemplare und Orte"
+      },
+      "narration": {
+        "en": "Two copies become two rows, and nobody knows which is which. In Vaultisse, one book holds all its copies. Each has its own code, shelf and status.",
+        "es": "Dos ejemplares son dos filas, y nadie sabe cuál es cuál. En Vaultisse, un libro reúne todos sus ejemplares. Cada uno tiene código, estante y estado.",
+        "ca": "Dos exemplars són dues files, i ningú sap quin és quin. A Vaultisse, un llibre reuneix tots els exemplars. Cadascun té codi, prestatge i estat.",
+        "de": "Zwei Exemplare werden zwei Zeilen, und niemand weiß, welches welches ist. In Vaultisse bündelt ein Buch alle Exemplare. Jedes hat Code, Standort und Status."
+      },
+      "actions": [
+        {
+          "goto": "sheet"
+        },
+        {
+          "sheet": {
+            "hot": [
+              "A2",
+              "A3"
+            ]
+          }
+        },
+        {
+          "hold": 3.5
+        },
+        {
+          "goto": "/app/book/1"
+        },
+        {
+          "scroll": 300
+        },
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "text": "Available",
+            "exact": false,
+            "seconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "lending",
+      "title": {
+        "en": "Lending",
+        "es": "Prestar",
+        "ca": "Prestar",
+        "de": "Verleihen"
+      },
+      "narration": {
+        "en": "Lending is where a sheet hurts most. A name overwrites the last one, and dates are written any old way. Here, pick the person and add their books. One click records the loans, with the date.",
+        "es": "Prestar es donde más duele la hoja. Un nombre borra el anterior y las fechas se escriben de cualquier forma. Aquí eliges a la persona y añades sus libros. Un clic registra los préstamos, con fecha.",
+        "ca": "Prestar és on més fa mal el full. Un nom esborra l'anterior i les dates s'escriuen de qualsevol manera. Aquí tries la persona i afegeixes els seus llibres. Un clic registra els préstecs, amb data.",
+        "de": "Beim Verleihen schmerzt die Tabelle am meisten. Ein Name überschreibt den vorigen, und Daten stehen irgendwie da. Hier wählst du die Person und fügst ihre Bücher hinzu. Ein Klick erfasst die Ausleihen mit Datum."
+      },
+      "actions": [
+        {
+          "goto": "sheet"
+        },
+        {
+          "sheet": {
+            "set": [
+              "E2",
+              "Jonas"
+            ]
+          }
+        },
+        {
+          "sheet": {
+            "hot": [
+              "F4",
+              "F5",
+              "F8",
+              "F10"
+            ]
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "goto": "/app/loans"
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Loan a book"
+          }
+        },
+        {
+          "hold": 0.5
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Select a customer or scan their card"
+            },
+            "text": "Amara"
+          }
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list",
+            "text": "Amara Okafor"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Paper"
+          }
+        },
+        {
+          "hold": 0.6
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Paper Astronomer",
+            "text": "The Paper Astronomer"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Glass"
+          }
+        },
+        {
+          "hold": 0.6
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Glass Heron",
+            "text": "The Glass Heron"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "role": "button",
+            "name": "Lend (2)"
+          }
+        },
+        {
+          "hold": 1
+        }
+      ]
+    },
+    {
+      "id": "who",
+      "title": {
+        "en": "Who has what",
+        "es": "Quién tiene qué",
+        "ca": "Qui té què",
+        "de": "Wer was hat"
+      },
+      "narration": {
+        "en": "Who still has a book? The Loans page answers at once. Returning takes one click, or a scan. Every past loan stays in the history, and you can export a report. You can also open one person and see what they hold.",
+        "es": "¿Quién tiene aún un libro? La página de Préstamos responde al momento. Devolver es un clic, o un escaneo. Cada préstamo queda en el historial, y puedes exportar un informe. También puedes abrir a una persona y ver qué tiene.",
+        "ca": "Qui encara té un llibre? La pàgina de Préstecs respon a l'instant. Retornar és un clic, o un escaneig. Cada préstec queda a l'historial, i pots exportar un informe. També pots obrir una persona i veure què té.",
+        "de": "Wer hat noch ein Buch? Die Seite Ausleihen zeigt es sofort. Zurücknehmen ist ein Klick oder ein Scan. Jede Ausleihe bleibt im Verlauf, und du kannst einen Bericht exportieren. Du kannst auch eine Person öffnen und sehen, was sie hat."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "selector": "tbody tr",
+            "nth": 0,
+            "seconds": 1.2
+          }
+        },
+        {
+          "click": {
+            "within": "tbody tr",
+            "hasText": "Amara Okafor",
+            "role": "button",
+            "name": "Return",
+            "exact": true
+          }
+        },
+        {
+          "hold": 0.5
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Generate report",
+            "seconds": 1.2
+          }
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Customers",
+            "exact": true
+          }
+        },
+        {
+          "click": {
+            "text": "Alex Morgan",
+            "nth": 0
+          }
+        },
+        {
+          "hold": 3.5
+        }
+      ]
+    },
+    {
+      "id": "labels",
+      "title": {
+        "en": "Labels and cards",
+        "es": "Etiquetas y carnés",
+        "ca": "Etiquetes i carnets",
+        "de": "Etiketten und Ausweise"
+      },
+      "narration": {
+        "en": "A sheet cannot label your shelves. Vaultisse prints barcode labels for your copies. It also makes library cards, so lending takes just a scan.",
+        "es": "Una hoja no puede etiquetar tus estantes. Vaultisse imprime etiquetas con código de barras. También crea carnés, y así prestar es solo escanear.",
+        "ca": "Un full no pot etiquetar els prestatges. Vaultisse imprimeix etiquetes amb codi de barres. També crea carnets, i així prestar és només escanejar.",
+        "de": "Eine Tabelle kann keine Regale beschriften. Vaultisse druckt Barcode-Etiketten für deine Exemplare. Es erstellt auch Ausweise, dann genügt beim Verleihen ein Scan."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Printer queue",
+            "exact": true
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add unprinted labels"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Customers",
+            "exact": true
+          }
+        },
+        {
+          "click": {
+            "within": ".entity-card",
+            "hasText": "Alex Morgan",
+            "selector": ".mdi-card-account-details-outline"
+          }
+        },
+        {
+          "hold": 3.5
+        }
+      ]
+    },
+    {
+      "id": "sharing",
+      "title": {
+        "en": "Sharing",
+        "es": "Compartir",
+        "ca": "Compartir",
+        "de": "Teilen"
+      },
+      "narration": {
+        "en": "Shared files end up as copies, with names like final, version three. Here everyone works on one library, each with their own role. Borrowers can look, but not change your catalogue.",
+        "es": "Los archivos compartidos acaban en copias, con nombres como final, versión tres. Aquí todos trabajan en una biblioteca, cada cual con su rol. Los prestatarios miran, pero no cambian el catálogo.",
+        "ca": "Els fitxers compartits acaben en còpies, amb noms com final, versió tres. Aquí tothom treballa en una biblioteca, cadascú amb el seu rol. Els prestataris miren, però no canvien el catàleg.",
+        "de": "Geteilte Dateien enden als Kopien namens final, Version drei. Hier arbeiten alle an einer Bibliothek, jeder mit eigener Rolle. Ausleiher dürfen schauen, aber nichts ändern."
+      },
+      "actions": [
+        {
+          "goto": "sheet"
+        },
+        {
+          "hold": 3
+        },
+        {
+          "goto": "/app/settings"
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Manage"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "text": "Invite link",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "text": "Jordan Lee",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "move",
+      "title": {
+        "en": "Moving across",
+        "es": "El cambio",
+        "ca": "El canvi",
+        "de": "Der Umzug"
+      },
+      "narration": {
+        "en": "Moving is not starting again. Download the template, copy your rows into it, and import the file. Do tidy duplicates first, since this is a good moment.",
+        "es": "Cambiar no es empezar de cero. Descarga la plantilla, copia tus filas e importa el archivo. Limpia antes los duplicados, que es buen momento.",
+        "ca": "Canviar no és començar de zero. Baixa la plantilla, copia-hi les files i importa el fitxer. Neteja abans els duplicats, que és bon moment.",
+        "de": "Umziehen heißt nicht neu anfangen. Lade die Vorlage, kopiere deine Zeilen hinein und importiere die Datei. Räume vorher Dubletten auf, der Moment ist günstig."
+      },
+      "actions": [
+        {
+          "goto": "/app/library/search"
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Import"
+          }
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-card",
+            "text": "Vaultisse",
+            "exact": true
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "highlight": {
+            "text": "Download template",
+            "seconds": 4
+          }
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "fair",
+      "title": {
+        "en": "Which one?",
+        "es": "¿Cuál elegir?",
+        "ca": "Quin triar?",
+        "de": "Was passt?"
+      },
+      "narration": {
+        "en": "A sheet is fine for a short list that only you use. Once you lend, share or label books, a library app saves real work. Vaultisse is open source, and you can host it yourself. Your data stays on your own server, ready to back up.",
+        "es": "Una hoja basta para una lista corta que solo usas tú. En cuanto prestas, compartes o etiquetas, una aplicación ahorra trabajo de verdad. Vaultisse es de código abierto y puedes alojarlo tú. Tus datos quedan en tu servidor, listos para copiar.",
+        "ca": "Un full va bé per a una llista curta que només fas servir tu. Quan prestes, comparteixes o etiquetes, una aplicació estalvia feina de debò. Vaultisse és de codi obert i el pots allotjar tu. Les dades queden al teu servidor, a punt per copiar.",
+        "de": "Für eine kurze Liste, die nur du nutzt, reicht eine Tabelle. Sobald du verleihst, teilst oder beschriftest, spart eine App echte Arbeit. Vaultisse ist Open Source, und du kannst es selbst betreiben. Deine Daten bleiben auf deinem Server und lassen sich sichern."
+      },
+      "actions": [
+        {
+          "goto": "/app/dashboard"
+        },
+        {
+          "hold": 4
+        },
+        {
+          "scroll": 500
+        },
+        {
+          "hold": 3
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Install Vaultisse with Docker",
+    "narration": {
+      "en": "That is why Vaultisse. Next time: installing Vaultisse with Docker. Thanks for watching, and see you soon!",
+      "es": "Por eso Vaultisse. En el próximo vídeo: instalar Vaultisse con Docker. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Per això Vaultisse. Al pròxim vídeo: instal·lar Vaultisse amb Docker. Gràcies per mirar-ho i fins aviat!",
+      "de": "Darum Vaultisse. Im nächsten Video: Vaultisse mit Docker installieren. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "setup": [
+    "INSERT INTO users(code,name,password,email,disabled,email_verified) SELECT 'jordan','Jordan Lee',password,'jordan@example.com',false,true FROM users WHERE code='librarian'",
+    "INSERT INTO vault_users(vault_id,user_id,role,status) SELECT v.id,u.id,2,1 FROM vault v, users u WHERE v.name='Riverside School Library' AND u.code='jordan'"
+  ]
+}

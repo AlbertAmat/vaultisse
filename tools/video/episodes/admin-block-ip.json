@@ -1,0 +1,168 @@
+{
+  "slug": "admin-block-ip",
+  "topic": "Security",
+  "title": "Block an address",
+  "search": "How to block an IP address in the Vaultisse admin panel",
+  "coverWords": "Block an address",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#automatic-ip-blocking",
+  "start": "/security",
+  "tags": [
+    "block ip address",
+    "brute force protection",
+    "failed logins",
+    "automatic ip blocking",
+    "vaultisse security",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Security",
+      "title": "How to block an IP address in the Vaultisse admin panel",
+      "description": "Learn how to block an IP address in Vaultisse, by hand or automatically."
+    },
+    "es": {
+      "topic": "Seguridad",
+      "title": "Cómo bloquear una dirección IP en Vaultisse",
+      "description": "Aprende a bloquear una dirección IP en Vaultisse, a mano o automáticamente."
+    },
+    "ca": {
+      "topic": "Seguretat",
+      "title": "Com bloquejar una adreça IP a Vaultisse",
+      "description": "Aprèn a bloquejar una adreça IP a Vaultisse, a mà o automàticament."
+    },
+    "de": {
+      "topic": "Sicherheit",
+      "title": "IP-Adresse im Vaultisse Admin-Panel sperren",
+      "description": "Sperre IP-Adressen in Vaultisse, manuell oder automatisch."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Check the events",
+      "Block by hand",
+      "Block automatically"
+    ],
+    "narration": {
+      "en": "Here is how to block an address. In this video: check the events. Block by hand. Block automatically.",
+      "es": "Así se bloquea una dirección. En este vídeo: revisa los eventos. Bloquea a mano. Bloquea automáticamente.",
+      "ca": "Així es bloqueja una adreça. En aquest vídeo: revisa els esdeveniments. Bloqueja a mà. Bloqueja automàticament.",
+      "de": "So sperrst du eine Adresse. In diesem Video: Ereignisse prüfen. Manuell sperren. Automatisch sperren."
+    }
+  },
+  "steps": [
+    {
+      "id": "events",
+      "title": {
+        "en": "Events",
+        "es": "Eventos",
+        "ca": "Esdeveniments",
+        "de": "Ereignisse"
+      },
+      "narration": {
+        "en": "Security, Events groups failed sign-ins and rate limits by address.",
+        "es": "Security, Events agrupa accesos fallidos y límites por dirección.",
+        "ca": "Security, Events agrupa accessos fallits i límits per adreça.",
+        "de": "Security, Events fasst Fehlanmeldungen und Limits je Adresse zusammen."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "tab",
+            "name": "Events"
+          }
+        },
+        {
+          "highlight": {
+            "text": "203.0.113.24",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "manual",
+      "title": {
+        "en": "By hand",
+        "es": "A mano",
+        "ca": "A mà",
+        "de": "Manuell"
+      },
+      "narration": {
+        "en": "Under Blocked addresses, type the address and a reason, then block it. It is refused by the app and the panel.",
+        "es": "En Blocked addresses, escribe la dirección y un motivo y bloquéala. La rechazan la aplicación y el panel.",
+        "ca": "A Blocked addresses, escriu l'adreça i un motiu i bloqueja-la. La rebutgen l'aplicació i el panell.",
+        "de": "Unter Blocked addresses gibst du Adresse und Grund ein und sperrst. App und Panel weisen sie ab."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "tab",
+            "name": "Blocked addresses"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "label": "IP address"
+            },
+            "text": "203.0.113.24"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "label": "Reason"
+            },
+            "text": "Password guessing"
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Block"
+          }
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "auto",
+      "title": {
+        "en": "Automatic",
+        "es": "Automático",
+        "ca": "Automàtic",
+        "de": "Automatisch"
+      },
+      "narration": {
+        "en": "Automatic blocking is off by default. It blocks an address that keeps failing, and never private addresses or one that just signed in successfully.",
+        "es": "El bloqueo automático viene desactivado. Bloquea direcciones que fallan sin parar, nunca privadas ni la de un acceso correcto reciente.",
+        "ca": "El bloqueig automàtic ve desactivat. Bloqueja adreces que fallen sense parar, mai privades ni la d'un accés correcte recent.",
+        "de": "Die automatische Sperre ist zunächst aus. Sie trifft Dauerfehler, nie private Adressen oder solche mit kürzlich erfolgreicher Anmeldung."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "Automatic blocking",
+            "nth": 0,
+            "seconds": 3
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Who is trying to sign in",
+    "narration": {
+      "en": "That address is shut out. Next time: who is trying to sign in. Thanks for watching, and see you soon!",
+      "es": "Esa dirección queda fuera. En el próximo vídeo: quién intenta entrar. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Aquesta adreça queda fora. Al pròxim vídeo: qui intenta entrar. Gràcies per mirar-ho i fins aviat!",
+      "de": "Diese Adresse bleibt draußen. Im nächsten Video: wer sich anmelden will. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

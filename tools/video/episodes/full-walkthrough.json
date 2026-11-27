@@ -1,0 +1,666 @@
+{
+  "slug": "full-walkthrough",
+  "topic": "Tutorial",
+  "title": "From a new book to a loan",
+  "search": "Vaultisse full walkthrough: from a new book to a loan",
+  "coverWords": "From book to loan",
+  "playlist": "Tutorials",
+  "docs": "https://docs.vaultisse.com/getting-started",
+  "start": "/app/library/search",
+  "tags": [
+    "vaultisse tutorial",
+    "vaultisse walkthrough",
+    "add book and lend",
+    "print book labels",
+    "school library software tutorial",
+    "library app guide",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Tutorial",
+      "title": "Vaultisse full walkthrough: from a new book to a loan",
+      "description": "A full Vaultisse walkthrough: add a book, create a copy, print its label, add a borrower and lend two books."
+    },
+    "es": {
+      "topic": "Tutorial",
+      "title": "Vaultisse paso a paso: de un libro nuevo a un préstamo",
+      "description": "Recorrido completo por Vaultisse: añade un libro, crea un ejemplar, imprime la etiqueta, da de alta a un lector y préstale dos libros."
+    },
+    "ca": {
+      "topic": "Tutorial",
+      "title": "Vaultisse pas a pas: d'un llibre nou a un préstec",
+      "description": "Recorregut complet per Vaultisse: afegeix un llibre, crea un exemplar, imprimeix l'etiqueta, dona d'alta un lector i presta-li dos llibres."
+    },
+    "de": {
+      "topic": "Tutorial",
+      "title": "Vaultisse Schritt für Schritt: vom neuen Buch zur Ausleihe",
+      "description": "Der ganze Weg in Vaultisse: Buch erfassen, Exemplar anlegen, Etikett drucken, Ausleiher anlegen und zwei Bücher verleihen."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Add a book with its cover",
+      "Create copies and print labels",
+      "Add a group and a customer",
+      "Lend two books at once"
+    ],
+    "narration": {
+      "en": "In this walkthrough, we take a new book all the way to a loan in Vaultisse. In this video: add a book with its cover. Create copies and print labels. Add a group and a customer. Lend two books at once.",
+      "es": "En este recorrido llevamos un libro nuevo hasta su préstamo en Vaultisse. En este vídeo: añade un libro con su portada. Crea ejemplares e imprime etiquetas. Crea un grupo y un cliente. Presta dos libros a la vez.",
+      "ca": "En aquest recorregut portem un llibre nou fins al préstec a Vaultisse. En aquest vídeo: afegeix un llibre amb la coberta. Crea exemplars i imprimeix etiquetes. Crea un grup i un client. Presta dos llibres alhora.",
+      "de": "In diesem Rundgang bringen wir in Vaultisse ein neues Buch bis zur Ausleihe. In diesem Video: ein Buch mit Cover erfassen. Exemplare anlegen und Etiketten drucken. Gruppe und Kunden anlegen. Zwei Bücher auf einmal verleihen."
+    }
+  },
+  "steps": [
+    {
+      "id": "library",
+      "title": {
+        "en": "The library",
+        "es": "La biblioteca",
+        "ca": "La biblioteca",
+        "de": "Die Bibliothek"
+      },
+      "narration": {
+        "en": "We start in the Library, which shows every book with its cover. The search bar on top lets you check first that the book is not there already. The number beside Library in the menu counts your books. Our class has just written a storybook, so let us add it. It has no ISBN, which means we enter it by hand.",
+        "es": "Empezamos en la Biblioteca, que muestra cada libro con su portada. El buscador de arriba permite comprobar antes que el libro no esté ya. El número junto a Biblioteca cuenta tus libros. La clase acaba de escribir un libro de cuentos, así que vamos a añadirlo. No tiene ISBN, así que lo introducimos a mano.",
+        "ca": "Comencem a la Biblioteca, que mostra cada llibre amb la coberta. El cercador de dalt permet comprovar abans que el llibre no hi sigui ja. El número al costat de Biblioteca compta els llibres. La classe acaba d'escriure un llibre de contes, així que l'afegirem. No té ISBN, així que l'introduïm a mà.",
+        "de": "Wir beginnen in der Bibliothek, die jedes Buch mit Cover zeigt. Über die Suche oben prüfst du vorher, ob das Buch schon da ist. Die Zahl neben Bibliothek zählt deine Bücher. Die Klasse hat gerade ein Geschichtenbuch geschrieben, das nehmen wir auf. Es hat keine ISBN, also erfassen wir es von Hand."
+      },
+      "actions": [
+        {
+          "hold": 1
+        },
+        {
+          "scroll": 400
+        },
+        {
+          "hold": 1
+        },
+        {
+          "scroll": -400
+        }
+      ]
+    },
+    {
+      "id": "form",
+      "title": {
+        "en": "Open the form",
+        "es": "Abre el formulario",
+        "ca": "Obre el formulari",
+        "de": "Das Formular öffnen"
+      },
+      "narration": {
+        "en": "Click the small arrow next to Add book. The form is short, and you can complete the details later. It has room for a cover, a name, a description and a location. Then choose Add book manually. Books with an ISBN can use the main button instead, and their details are looked up.",
+        "es": "Pulsa la flecha pequeña junto a Añadir libro. El formulario es corto, y puedes completar los datos después. Tiene sitio para portada, título, descripción y ubicación. Elige añadirlo a mano. Los libros con ISBN usan el botón principal, y sus datos se buscan solos.",
+        "ca": "Prem la fletxa petita al costat d'Afegir llibre. El formulari és curt, i pots completar les dades després. Té lloc per a coberta, títol, descripció i ubicació. Tria afegir-lo a mà. Els llibres amb ISBN fan servir el botó principal, i les dades es busquen soles.",
+        "de": "Klicke auf den kleinen Pfeil neben Buch hinzufügen. Das Formular ist kurz, Details ergänzt du später. Es bietet Platz für Cover, Titel, Beschreibung und Standort. Wähle dann das manuelle Hinzufügen. Bücher mit ISBN nutzen den Hauptknopf, ihre Daten werden automatisch gesucht."
+      },
+      "actions": [
+        {
+          "click": {
+            "selector": "button:has-text('Add book') button"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Add book manually",
+            "text": "Add book manually"
+          }
+        }
+      ]
+    },
+    {
+      "id": "upload",
+      "title": {
+        "en": "Upload the book",
+        "es": "Sube el libro",
+        "ca": "Puja el llibre",
+        "de": "Das Buch hochladen"
+      },
+      "narration": {
+        "en": "First, write the name of the book. A cover makes a book much easier to recognise. Our storybook has no ISBN, so that field stays empty. Add a short description, so others know what it is about. Now upload the cover picture. You can drag it onto the box, or click to choose a file. Check where the book will be kept. Then click Add.",
+        "es": "Primero escribe el título. Una portada hace que el libro se reconozca mucho mejor. Nuestro libro de cuentos no tiene ISBN, así que ese campo queda vacío. Añade una breve descripción para que se sepa de qué va. Ahora sube la foto de la portada. Puedes arrastrarla al recuadro o pulsar para elegir el archivo. Comprueba dónde se guardará. Después pulsa Agregar.",
+        "ca": "Primer escriu el títol. Una coberta fa que el llibre es reconegui molt millor. El nostre llibre de contes no té ISBN, així que aquest camp queda buit. Afegeix una breu descripció perquè se sàpiga de què va. Ara puja la imatge de la coberta. La pots arrossegar al requadre o prémer per triar el fitxer. Comprova on es desarà. Després prem Afegir.",
+        "de": "Gib zuerst den Titel ein. Mit Cover erkennt man ein Buch viel leichter. Unser Buch hat keine ISBN, das Feld bleibt leer. Ergänze eine kurze Beschreibung, damit man weiß, worum es geht. Lade nun das Coverbild hoch. Zieh es in das Feld oder wähle eine Datei per Klick. Prüfe den Standort. Dann klicke auf Hinzufügen."
+      },
+      "actions": [
+        {
+          "type": {
+            "text": "Our Class Storybook"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Description"
+            },
+            "text": "Stories written and drawn by Class 2C."
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "upload": {
+            "selector": "[role=dialog] input[type=file]",
+            "file": "/home/albert/Desktop/vaultisse-videos/dataset/storybook-cover-2c.png"
+          }
+        },
+        {
+          "hold": 5
+        },
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "text": "Reading room",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "hold": 1
+        }
+      ]
+    },
+    {
+      "id": "page",
+      "title": {
+        "en": "The book page",
+        "es": "La ficha",
+        "ca": "La fitxa",
+        "de": "Die Buchseite"
+      },
+      "narration": {
+        "en": "Vaultisse opens the page of the new book. The page also shows who added the book. At the top you can mark your own reading status. Here you see its cover and details. With Edit, you can add the author, the category, the language and more. We will keep it simple for now.",
+        "es": "Vaultisse abre la ficha del libro nuevo. La ficha muestra también quién añadió el libro. Arriba puedes marcar tu propio estado de lectura. Aquí ves la portada y los datos. Con Editar puedes añadir autor, categoría, idioma y más. Por ahora lo dejamos sencillo.",
+        "ca": "Vaultisse obre la fitxa del llibre nou. La fitxa mostra també qui ha afegit el llibre. A dalt pots marcar el teu estat de lectura. Aquí veus la coberta i les dades. Amb Edita pots afegir autor, categoria, idioma i més. De moment ho deixem senzill.",
+        "de": "Vaultisse öffnet die Seite des neuen Buches. Die Seite zeigt auch, wer das Buch erfasst hat. Oben setzt du deinen eigenen Lesestatus. Hier siehst du Cover und Angaben. Über Bearbeiten ergänzt du Autor, Kategorie, Sprache und mehr. Vorerst bleibt es einfach."
+      },
+      "actions": [
+        {
+          "hold": 3
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Edit"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "highlight": {
+            "label": "Category",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "label": "Authors",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Cancel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stock",
+      "title": {
+        "en": "Create a stock",
+        "es": "Crea un ejemplar",
+        "ca": "Crea un exemplar",
+        "de": "Ein Exemplar anlegen"
+      },
+      "narration": {
+        "en": "A stock is one physical copy of a book. Copies matter, because each one is lent and returned on its own. The location tells everyone where to find it. The first one was created for us. We printed two, so we need another. Under Stocks, click Add. Choose the status and the location, then confirm. Each copy gets its own barcode.",
+        "es": "Un stock es un ejemplar físico del libro. Los ejemplares importan, porque cada uno se presta y se devuelve por separado. La ubicación dice a todos dónde encontrarlo. El primero se creó solo. Imprimimos dos, así que falta otro. En Stocks, pulsa Agregar. Elige estado y ubicación y confirma. Cada ejemplar tiene su propio código.",
+        "ca": "Un estoc és un exemplar físic del llibre. Els exemplars importen, perquè cadascun es presta i es retorna per separat. La ubicació diu a tothom on trobar-lo. El primer s'ha creat sol. En vam imprimir dos, així que en falta un. A Estocs, prem Afegir. Tria l'estat i la ubicació i confirma. Cada exemplar té el seu codi.",
+        "de": "Ein Bestand ist ein einzelnes Exemplar. Exemplare sind wichtig, denn jedes wird einzeln verliehen und zurückgegeben. Der Standort zeigt allen, wo es steht. Das erste wurde automatisch angelegt. Wir haben zwei gedruckt, also fehlt eins. Klicke unter Bestände auf Hinzufügen. Wähle Status und Standort und bestätige. Jedes Exemplar bekommt einen eigenen Barcode."
+      },
+      "actions": [
+        {
+          "scroll": 300
+        },
+        {
+          "hold": 1
+        },
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "text": "Available",
+            "exact": false,
+            "seconds": 2
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add"
+          }
+        },
+        {
+          "hold": 4
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "labels",
+      "title": {
+        "en": "Print the labels",
+        "es": "Imprime las etiquetas",
+        "ca": "Imprimeix les etiquetes",
+        "de": "Etiketten drucken"
+      },
+      "narration": {
+        "en": "Next, the labels. The label lets you find a copy again just by scanning it. With many new books, you can queue every unprinted label at once. Click the printer icon next to each copy to put it in the queue. Then open Printer queue, in the menu. You see the labels that are waiting. Click Print to create a PDF with the barcodes. Print it on label paper, and stick one on each copy.",
+        "es": "Ahora las etiquetas. La etiqueta permite identificar un ejemplar solo con escanearla. Con muchos libros nuevos, puedes añadir de golpe todas las etiquetas sin imprimir. Pulsa el icono de la impresora de cada ejemplar para ponerlo en la cola. Abre después Cola de impresión, en el menú. Verás las etiquetas pendientes. Pulsa Imprimir para crear un PDF con los códigos. Imprímelo en papel de etiquetas y pega una en cada ejemplar.",
+        "ca": "Ara les etiquetes. L'etiqueta permet identificar un exemplar només escanejant-la. Amb molts llibres nous, pots afegir de cop totes les etiquetes no impreses. Prem la icona de la impressora de cada exemplar per posar-lo a la cua. Obre després Cua d'impressió, al menú. Veuràs les etiquetes pendents. Prem Imprimir per crear un PDF amb els codis. Imprimeix-lo en paper d'etiquetes i enganxa'n una a cada exemplar.",
+        "de": "Nun zu den Etiketten. Mit dem Etikett erkennst du ein Exemplar per Scan. Bei vielen neuen Büchern reihst du alle ungedruckten Etiketten auf einmal ein. Klicke bei jedem Exemplar auf das Druckersymbol, um es einzureihen. Öffne dann die Druckwarteschlange im Menü. Du siehst die wartenden Etiketten. Klicke auf Drucken für ein PDF mit den Barcodes. Drucke es auf Etikettenpapier und klebe eines auf jedes Exemplar."
+      },
+      "actions": [
+        {
+          "click": {
+            "selector": "tbody tr:nth-child(1) [class*=mdi-printer]"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "selector": "tbody tr:nth-child(2) [class*=mdi-printer]"
+          }
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Printer queue",
+            "exact": true
+          }
+        },
+        {
+          "hold": 5
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Print"
+          }
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "group",
+      "title": {
+        "en": "Create a customer group",
+        "es": "Crea un grupo de clientes",
+        "ca": "Crea un grup de clients",
+        "de": "Eine Kundengruppe anlegen"
+      },
+      "narration": {
+        "en": "Now the people who borrow. Groups help later, when you filter loans or print a report for one class. You can drag customers between groups at any time. Open Customers in the menu. Customers can be sorted into groups, such as classes. Select the Groups tab and click Add. Give the group a name and a short description. Then confirm.",
+        "es": "Ahora los lectores. Los grupos ayudan después, al filtrar préstamos o sacar el informe de una clase. Puedes arrastrar clientes entre grupos cuando quieras. Abre Clientes en el menú. Los clientes se pueden ordenar en grupos, como las clases. Elige la pestaña Grupos y pulsa Agregar. Pon nombre al grupo y una breve descripción. Después confirma.",
+        "ca": "Ara els lectors. Els grups ajuden després, en filtrar préstecs o treure l'informe d'una classe. Pots arrossegar clients entre grups quan vulguis. Obre Clients al menú. Els clients es poden ordenar en grups, com les classes. Tria la pestanya Grups i prem Afegir. Posa nom al grup i una breu descripció. Després confirma.",
+        "de": "Jetzt zu den Ausleihern. Gruppen helfen später beim Filtern und beim Bericht für eine Klasse. Kunden lassen sich jederzeit zwischen Gruppen ziehen. Öffne Kunden im Menü. Kunden lassen sich in Gruppen ordnen, etwa Klassen. Wähle den Reiter Gruppen und klicke auf Hinzufügen. Gib der Gruppe Namen und Beschreibung. Dann bestätige."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Customers",
+            "exact": true
+          }
+        },
+        {
+          "hold": 2
+        },
+        {
+          "click": {
+            "role": "tab",
+            "name": "Groups"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Name"
+            },
+            "text": "Class 2C"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Description"
+            },
+            "text": "Second year, room 2C"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "customer",
+      "title": {
+        "en": "Add a customer",
+        "es": "Añade un cliente",
+        "ca": "Afegeix un client",
+        "de": "Einen Kunden anlegen"
+      },
+      "narration": {
+        "en": "Next, add a pupil to the new group. Customers are not user accounts, so they never sign in. Each of them also has a library card with a barcode. Go back to the Customers tab and click Add. Type the full name. Choose Class 2C from the list of groups. Confirm, and the customer is ready to borrow.",
+        "es": "Ahora añade un alumno al grupo nuevo. Los clientes no son cuentas de usuario, así que no inician sesión. Cada uno tiene además un carné con código de barras. Vuelve a la pestaña Clientes y pulsa Agregar. Escribe el nombre completo. Elige Class 2C en la lista de grupos. Confirma, y ya puede llevarse libros.",
+        "ca": "Ara afegeix un alumne al grup nou. Els clients no són comptes d'usuari, així que no inicien sessió. Cadascun té també un carnet amb codi de barres. Torna a la pestanya Clients i prem Afegir. Escriu el nom complet. Tria Class 2C a la llista de grups. Confirma, i ja es pot emportar llibres.",
+        "de": "Füge nun einen Schüler in die neue Gruppe ein. Kunden sind keine Benutzerkonten und melden sich nie an. Jeder hat außerdem einen Ausweis mit Barcode. Gehe zum Reiter Kunden und klicke auf Hinzufügen. Gib den vollen Namen ein. Wähle Class 2C aus der Gruppenliste. Bestätige, und die Person kann ausleihen."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "tab",
+            "name": "Customers"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add"
+          }
+        },
+        {
+          "type": {
+            "text": "Robin Castell"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "selector": ".v-select"
+          }
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Class 2C",
+            "text": "Class 2C"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "loan",
+      "title": {
+        "en": "Lend two books",
+        "es": "Presta dos libros",
+        "ca": "Presta dos llibres",
+        "de": "Zwei Bücher verleihen"
+      },
+      "narration": {
+        "en": "Finally, the loan. Only available copies are offered, so one copy cannot be lent twice. You can also remove a book from the list before confirming. Open Loans and click Loan a book. Choose the customer by name, or scan their library card. Search for the first book and select it. It joins the list below. Now search for a second book and select it too. The button shows that two books will be lent. Click it to confirm.",
+        "es": "Por último, el préstamo. Solo se ofrecen ejemplares disponibles, así que ninguno se presta dos veces. También puedes quitar un libro de la lista antes de confirmar. Abre Préstamos y pulsa Prestar un libro. Elige al cliente por su nombre o escanea su carné. Busca el primer libro y selecciónalo. Se añade a la lista de abajo. Busca ahora un segundo libro y selecciónalo también. El botón indica que se prestarán dos libros. Púlsalo para confirmar.",
+        "ca": "Finalment, el préstec. Només s'ofereixen exemplars disponibles, així que cap es presta dues vegades. També pots treure un llibre de la llista abans de confirmar. Obre Préstecs i prem Presta un llibre. Tria el client pel nom o escaneja el carnet. Cerca el primer llibre i selecciona'l. S'afegeix a la llista de sota. Cerca ara un segon llibre i selecciona'l també. El botó indica que es prestaran dos llibres. Prem-lo per confirmar.",
+        "de": "Zum Schluss die Ausleihe. Angeboten werden nur verfügbare Exemplare, doppelt verleihen geht nicht. Vor dem Bestätigen kannst du ein Buch auch wieder entfernen. Öffne Ausleihen und klicke auf Buch verleihen. Wähle den Kunden nach Namen oder scanne den Ausweis. Suche das erste Buch und wähle es aus. Es erscheint in der Liste darunter. Suche nun ein zweites Buch und wähle es ebenfalls. Der Knopf zeigt, dass zwei Bücher verliehen werden. Klicke zur Bestätigung."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Loans",
+            "exact": true
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Loan a book"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Select a customer or scan their card"
+            },
+            "text": "Robin"
+          }
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list",
+            "text": "Robin Castell"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Storybook"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "Our Class Storybook",
+            "text": "Our Class Storybook"
+          }
+        },
+        {
+          "hold": 2
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Paper"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Paper Astronomer",
+            "text": "The Paper Astronomer"
+          }
+        },
+        {
+          "hold": 2
+        },
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "role": "button",
+            "name": "Lend (2)",
+            "seconds": 2
+          }
+        },
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "role": "button",
+            "name": "Lend (2)"
+          }
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "check",
+      "title": {
+        "en": "Check the loans",
+        "es": "Comprueba los préstamos",
+        "ca": "Comprova els préstecs",
+        "de": "Die Ausleihen prüfen"
+      },
+      "narration": {
+        "en": "Both books now appear in the list of loans, with the date. You can filter this list by group or by date. A report can be exported whenever you need one. You can also open the customer to see everything they have. When the books come back, click Return next to each one. Or use Return books and scan the labels you just printed.",
+        "es": "Los dos libros aparecen en la lista de préstamos, con la fecha. Puedes filtrar la lista por grupo o por fecha. Y exportar un informe cuando lo necesites. También puedes abrir al cliente para ver todo lo que tiene. Cuando vuelvan, pulsa Devolver en cada uno. O usa Devolver libros y escanea las etiquetas que acabas de imprimir.",
+        "ca": "Els dos llibres surten a la llista de préstecs, amb la data. Pots filtrar la llista per grup o per data. I exportar un informe quan el necessitis. També pots obrir el client per veure tot el que té. Quan tornin, prem Retornar a cadascun. O fes servir Retornar llibres i escaneja les etiquetes que acabes d'imprimir.",
+        "de": "Beide Bücher stehen nun mit Datum in der Ausleihliste. Die Liste filterst du nach Gruppe oder Datum. Einen Bericht exportierst du, wann immer du ihn brauchst. Du kannst auch den Kunden öffnen und alles sehen, was er hat. Kommen die Bücher zurück, klicke jeweils auf Zurückgeben. Oder nutze Bücher zurückgeben und scanne die gedruckten Etiketten."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "hasText": "Robin Castell",
+            "text": "Robin Castell",
+            "seconds": 3
+          }
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Customers",
+            "exact": true
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "text": "Robin Castell",
+            "nth": 0
+          }
+        },
+        {
+          "hold": 4
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Loans",
+            "exact": true
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Return books",
+            "seconds": 2
+          }
+        },
+        {
+          "hold": 1
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Design your library card",
+    "narration": {
+      "en": "That is the whole journey, from a new book to a loan. Next time: designing your library card. Thanks for watching, and see you soon!",
+      "es": "Ese es el camino completo, de un libro nuevo a un préstamo. En el próximo vídeo: diseñar tu carné. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Aquest és el camí complet, d'un llibre nou a un préstec. Al pròxim vídeo: dissenyar el carnet. Gràcies per mirar-ho i fins aviat!",
+      "de": "Das war der ganze Weg vom neuen Buch bis zur Ausleihe. Im nächsten Video: den Bibliotheksausweis gestalten. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "maxSeconds": 300
+}

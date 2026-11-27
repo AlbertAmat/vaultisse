@@ -1,0 +1,190 @@
+{
+  "slug": "env-file",
+  "topic": "Setup",
+  "title": "The settings file",
+  "search": "How to fill in the Vaultisse .env file",
+  "coverWords": "The .env file",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/configuration",
+  "start": "term",
+  "tags": [
+    "vaultisse env file",
+    "vaultisse configuration",
+    "jwt secret",
+    "front end url",
+    "docker environment variables",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to fill in the Vaultisse .env file",
+      "description": "Learn how to fill in the Vaultisse .env file and what the main settings do."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo rellenar el archivo .env de Vaultisse",
+      "description": "Aprende a rellenar el archivo .env de Vaultisse y qué hace cada ajuste principal."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com omplir el fitxer .env de Vaultisse",
+      "description": "Aprèn a omplir el fitxer .env de Vaultisse i què fa cada opció principal."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Die .env-Datei von Vaultisse ausfüllen",
+      "description": "Fülle die .env-Datei von Vaultisse aus und lerne die wichtigsten Einstellungen kennen."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "The required secrets",
+      "The address",
+      "Apply the changes"
+    ],
+    "narration": {
+      "en": "Here is how to fill in the Vaultisse settings file. In this video: the required secrets. The address. Apply the changes.",
+      "es": "Así se rellena el archivo de configuración de Vaultisse. En este vídeo: los secretos obligatorios. La dirección. Aplica los cambios.",
+      "ca": "Així s'omple el fitxer de configuració de Vaultisse. En aquest vídeo: els secrets obligatoris. L'adreça. Aplica els canvis.",
+      "de": "So füllst du die Einstellungsdatei von Vaultisse aus. In diesem Video: die Pflichtangaben. Die Adresse. Die Änderungen übernehmen."
+    }
+  },
+  "steps": [
+    {
+      "id": "secrets",
+      "title": {
+        "en": "Secrets",
+        "es": "Secretos",
+        "ca": "Secrets",
+        "de": "Geheimnisse"
+      },
+      "narration": {
+        "en": "Two values are required. JWT secret signs the logins, so generate a long random one. DB password protects the database.",
+        "es": "Hay dos valores obligatorios. JWT secret firma los inicios de sesión, así que genera uno largo y aleatorio. DB password protege la base de datos.",
+        "ca": "Hi ha dos valors obligatoris. JWT secret signa els inicis de sessió, així que genera'n un de llarg i aleatori. DB password protegeix la base de dades.",
+        "de": "Zwei Werte sind Pflicht. JWT secret signiert die Anmeldungen, erzeuge also einen langen Zufallswert. DB password schützt die Datenbank."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "# The essentials",
+              "APP_TAG=1.3.9",
+              "FRONT_END_URL=http://localhost:3000",
+              "JWT_SECRET=",
+              "DB_PASSWORD=",
+              "ALLOW_DEV_AUTH=false",
+              "ALLOW_HTTP=false"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "JWT_SECRET",
+            "value": "JWT_SECRET=<output of: openssl rand -hex 32>"
+          }
+        },
+        {
+          "point": {
+            "line": "DB_PASSWORD",
+            "value": "DB_PASSWORD=<a long random password>"
+          }
+        }
+      ]
+    },
+    {
+      "id": "url",
+      "title": {
+        "en": "The address",
+        "es": "La dirección",
+        "ca": "L'adreça",
+        "de": "Die Adresse"
+      },
+      "narration": {
+        "en": "Front end URL is the address people type, with no slash at the end. For other devices at home, use the machine's network address and allow HTTP.",
+        "es": "Front end URL es la dirección que se escribe, sin barra al final. Para otros equipos de casa, usa la dirección de red de la máquina y permite HTTP.",
+        "ca": "Front end URL és l'adreça que s'escriu, sense barra al final. Per a altres equips de casa, fes servir l'adreça de xarxa i permet HTTP.",
+        "de": "Front end URL ist die eingegebene Adresse, ohne Schrägstrich am Ende. Für andere Geräte nutzt du die Netzwerkadresse und erlaubst HTTP."
+      },
+      "actions": [
+        {
+          "point": {
+            "line": "FRONT_END_URL",
+            "value": "FRONT_END_URL=http://192.168.1.50:3000"
+          }
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "point": {
+            "line": "ALLOW_HTTP",
+            "value": "ALLOW_HTTP=true"
+          }
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "title": {
+        "en": "Version and dev login",
+        "es": "Versión y acceso de pruebas",
+        "ca": "Versió i accés de proves",
+        "de": "Version und Testzugang"
+      },
+      "narration": {
+        "en": "App tag chooses the version, so updates happen when you decide. Keep allow dev auth set to false, because it skips the login.",
+        "es": "App tag elige la versión, y así actualizas cuando quieras. Deja allow dev auth en false, porque se salta el inicio de sesión.",
+        "ca": "App tag tria la versió, i així actualitzes quan vulguis. Deixa allow dev auth en false, perquè se salta l'inici de sessió.",
+        "de": "App tag wählt die Version, du aktualisierst also selbst. Lass allow dev auth auf false, denn sonst entfällt die Anmeldung."
+      },
+      "actions": [
+        {
+          "point": {
+            "line": "APP_TAG"
+          }
+        },
+        {
+          "hold": 2.5
+        },
+        {
+          "point": {
+            "line": "ALLOW_DEV_AUTH"
+          }
+        }
+      ]
+    },
+    {
+      "id": "apply",
+      "title": {
+        "en": "Apply",
+        "es": "Aplicar",
+        "ca": "Aplicar",
+        "de": "Übernehmen"
+      },
+      "narration": {
+        "en": "After any change, run docker compose up again.",
+        "es": "Después de cualquier cambio, vuelve a ejecutar docker compose up.",
+        "ca": "Després de qualsevol canvi, torna a executar docker compose up.",
+        "de": "Nach jeder Änderung führst du erneut docker compose up aus."
+      },
+      "actions": [
+        {
+          "run": "docker compose up -d"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Your first account",
+    "narration": {
+      "en": "Your settings are ready. Next time: your first account. Thanks for watching, and see you soon!",
+      "es": "Tu configuración está lista. En el próximo vídeo: la primera cuenta. ¡Gracias por vernos y hasta pronto!",
+      "ca": "La configuració està a punt. Al pròxim vídeo: el primer compte. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Einstellungen stehen. Im nächsten Video: das erste Konto. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

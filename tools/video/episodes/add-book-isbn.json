@@ -1,0 +1,169 @@
+{
+  "slug": "add-book-isbn",
+  "topic": "Library",
+  "title": "Add a book by ISBN",
+  "search": "How to add a book by ISBN in Vaultisse",
+  "coverWords": "Add a book by ISBN",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/adding-books",
+  "start": "/app/library/search",
+  "tags": [
+    "add book by isbn",
+    "scan isbn barcode",
+    "vaultisse isbn",
+    "automatic book details",
+    "catalogue books fast",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to add a book by ISBN in Vaultisse",
+      "description": "Learn how to add a book by ISBN in Vaultisse and let it fill in the details for you."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo añadir un libro por ISBN en Vaultisse",
+      "description": "Aprende a añadir un libro por ISBN en Vaultisse y deja que complete los datos."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com afegir un llibre per ISBN a Vaultisse",
+      "description": "Aprèn a afegir un llibre per ISBN a Vaultisse i deixa que ompli les dades."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Ein Buch per ISBN in Vaultisse hinzufügen",
+      "description": "Füge in Vaultisse ein Buch per ISBN hinzu und lass die Angaben automatisch ausfüllen."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Type or scan the number",
+      "Choose a location",
+      "Check the result"
+    ],
+    "narration": {
+      "en": "Here is how to add a book by ISBN in Vaultisse. In this video: type or scan the number. Choose a location. Check the result.",
+      "es": "Así se añade un libro por ISBN en Vaultisse. En este vídeo: escribe o escanea el número. Elige la ubicación. Revisa el resultado.",
+      "ca": "Així s'afegeix un llibre per ISBN a Vaultisse. En aquest vídeo: escriu o escaneja el número. Tria la ubicació. Revisa el resultat.",
+      "de": "So fügst du in Vaultisse ein Buch per ISBN hinzu. In diesem Video: die Nummer tippen oder scannen. Einen Standort wählen. Das Ergebnis prüfen."
+    }
+  },
+  "steps": [
+    {
+      "id": "open",
+      "title": {
+        "en": "Open Add book",
+        "es": "Abre Añadir libro",
+        "ca": "Obre Afegir llibre",
+        "de": "Buch hinzufügen öffnen"
+      },
+      "narration": {
+        "en": "In the Library, click Add book.",
+        "es": "En la Biblioteca, pulsa Añadir libro.",
+        "ca": "A la Biblioteca, prem Afegir llibre.",
+        "de": "Klicke in der Bibliothek auf Buch hinzufügen."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "selector": "button:has-text('Add book')",
+            "nth": 0
+          }
+        },
+        {
+          "pause": 1
+        }
+      ]
+    },
+    {
+      "id": "isbn",
+      "title": {
+        "en": "Enter the ISBN",
+        "es": "Escribe el ISBN",
+        "ca": "Escriu l'ISBN",
+        "de": "ISBN eingeben"
+      },
+      "narration": {
+        "en": "Type the ISBN from the back of the book, or scan it with the camera or a barcode reader. Pick the location and click Add.",
+        "es": "Escribe el ISBN de la contraportada, o escanéalo con la cámara o un lector. Elige la ubicación y pulsa Agregar.",
+        "ca": "Escriu l'ISBN de la contracoberta, o escaneja'l amb la càmera o un lector. Tria la ubicació i prem Afegir.",
+        "de": "Tippe die ISBN von der Rückseite ein oder scanne sie mit Kamera oder Barcodeleser. Wähle den Standort und klicke auf Hinzufügen."
+      },
+      "actions": [
+        {
+          "type": {
+            "text": "9780261102217"
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "pause": 2
+        },
+        {
+          "click": {
+            "selector": "[role=dialog] button:has-text('Add (')"
+          }
+        },
+        {
+          "hold": 9
+        }
+      ]
+    },
+    {
+      "id": "result",
+      "title": {
+        "en": "Check the result",
+        "es": "Revisa el resultado",
+        "ca": "Revisa el resultat",
+        "de": "Ergebnis prüfen"
+      },
+      "narration": {
+        "en": "Vaultisse looks the number up online and fills in title, author, cover and more. Its page opens, with a first copy ready.",
+        "es": "Vaultisse busca el número en internet y rellena título, autor, portada y más. Se abre su ficha, con un primer ejemplar.",
+        "ca": "Vaultisse busca el número a internet i omple títol, autor, coberta i més. S'obre la fitxa, amb un primer exemplar.",
+        "de": "Vaultisse sucht die Nummer online und füllt Titel, Autor, Cover und mehr aus. Die Buchseite öffnet sich, mit einem ersten Exemplar."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "J.R.R. Tolkien",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "text": "HarperCollins",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "text": "Available",
+            "exact": false,
+            "seconds": 2
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Add a book by hand",
+    "narration": {
+      "en": "That is a book added in seconds. Next time: adding a book by hand. Thanks for watching, and see you soon!",
+      "es": "Un libro añadido en segundos. En el próximo vídeo: añadir un libro a mano. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Un llibre afegit en segons. Al pròxim vídeo: afegir un llibre a mà. Gràcies per mirar-ho i fins aviat!",
+      "de": "So ist ein Buch in Sekunden erfasst. Im nächsten Video: Bücher von Hand hinzufügen. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

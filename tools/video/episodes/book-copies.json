@@ -1,0 +1,198 @@
+{
+  "slug": "book-copies",
+  "topic": "Library",
+  "title": "Manage copies of a book",
+  "search": "How to manage copies of a book in Vaultisse",
+  "coverWords": "One book, many copies",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/book-details",
+  "start": "/app/book/3",
+  "tags": [
+    "manage book copies",
+    "book stock",
+    "vaultisse copies",
+    "library inventory",
+    "barcode per copy",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to manage copies of a book in Vaultisse",
+      "description": "Learn how to manage copies of a book in Vaultisse: add them, move them and change their status."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo gestionar ejemplares en Vaultisse",
+      "description": "Aprende a gestionar ejemplares en Vaultisse: añadirlos, moverlos y cambiar su estado."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com gestionar exemplars a Vaultisse",
+      "description": "Aprèn a gestionar exemplars a Vaultisse: afegir-los, moure'ls i canviar-ne l'estat."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Exemplare in Vaultisse verwalten",
+      "description": "So verwaltest du Exemplare in Vaultisse: hinzufügen, verschieben und den Status ändern."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Add a copy",
+      "Change location or status",
+      "Print its label"
+    ],
+    "narration": {
+      "en": "Here is how to manage copies of a book in Vaultisse. In this video: add a copy. Change location or status. Print its label.",
+      "es": "Así se gestionan los ejemplares en Vaultisse. En este vídeo: añade un ejemplar. Cambia ubicación o estado. Imprime su etiqueta.",
+      "ca": "Així es gestionen els exemplars a Vaultisse. En aquest vídeo: afegeix un exemplar. Canvia la ubicació o l'estat. Imprimeix l'etiqueta.",
+      "de": "So verwaltest du die Exemplare eines Buches in Vaultisse. In diesem Video: ein Exemplar hinzufügen. Standort oder Status ändern. Das Etikett drucken."
+    }
+  },
+  "steps": [
+    {
+      "id": "stocks",
+      "title": {
+        "en": "The stock list",
+        "es": "La lista de ejemplares",
+        "ca": "La llista d'exemplars",
+        "de": "Die Bestandsliste"
+      },
+      "narration": {
+        "en": "Under Stocks, each copy has its own code, location and status.",
+        "es": "En Stocks, cada ejemplar tiene su código, su ubicación y su estado.",
+        "ca": "A Estocs, cada exemplar té el seu codi, ubicació i estat.",
+        "de": "Unter Bestände hat jedes Exemplar Code, Standort und Status."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "scroll": 300
+        },
+        {
+          "highlight": {
+            "within": "tbody tr",
+            "text": "Available",
+            "exact": false,
+            "seconds": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "add",
+      "title": {
+        "en": "Add a copy",
+        "es": "Añadir un ejemplar",
+        "ca": "Afegir un exemplar",
+        "de": "Exemplar hinzufügen"
+      },
+      "narration": {
+        "en": "Click Add. Choose the status and the location, then confirm.",
+        "es": "Pulsa Agregar. Elige el estado y la ubicación y confirma.",
+        "ca": "Prem Afegir. Tria l'estat i la ubicació i confirma.",
+        "de": "Klicke auf Hinzufügen. Wähle Status und Standort und bestätige."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Add"
+          }
+        },
+        {
+          "pause": 2
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "edit",
+      "title": {
+        "en": "Edit a copy",
+        "es": "Editar un ejemplar",
+        "ca": "Editar un exemplar",
+        "de": "Exemplar bearbeiten"
+      },
+      "narration": {
+        "en": "The pencil changes a copy. Use it to move it to another shelf, or to mark it as damaged.",
+        "es": "El lápiz modifica un ejemplar. Úsalo para cambiarlo de estante o marcarlo como dañado.",
+        "ca": "El llapis modifica un exemplar. Fes-lo servir per canviar-lo de prestatge o marcar-lo com a malmès.",
+        "de": "Mit dem Stift änderst du ein Exemplar. So verschiebst du es oder markierst es als beschädigt."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "tbody tr",
+            "hasText": "Reading room",
+            "selector": ".mdi-pencil"
+          }
+        },
+        {
+          "pause": 3
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Close",
+            "within": "[role=dialog]"
+          }
+        }
+      ]
+    },
+    {
+      "id": "label",
+      "title": {
+        "en": "Label and delete",
+        "es": "Etiqueta y borrar",
+        "ca": "Etiqueta i esborrar",
+        "de": "Etikett und Löschen"
+      },
+      "narration": {
+        "en": "The printer icon sends its label to the print queue. The red bin removes the copy.",
+        "es": "El icono de la impresora envía su etiqueta a la cola. La papelera roja elimina el ejemplar.",
+        "ca": "La icona de la impressora envia l'etiqueta a la cua. La paperera vermella elimina l'exemplar.",
+        "de": "Das Druckersymbol legt das Etikett in die Warteschlange. Der rote Papierkorb entfernt das Exemplar."
+      },
+      "actions": [
+        {
+          "click": {
+            "selector": "tbody tr:first-child .mdi-printer-plus-outline, tbody tr:first-child .mdi-printer-plus, tbody tr:first-child [class*=mdi-printer]"
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "highlight": {
+            "selector": "tbody tr .mdi-delete",
+            "nth": 0,
+            "seconds": 2
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Track what you have read",
+    "narration": {
+      "en": "Every copy is under control. Next time: tracking what you have read. Thanks for watching, and see you soon!",
+      "es": "Cada ejemplar está controlado. En el próximo vídeo: controlar lo que has leído. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Cada exemplar està controlat. Al pròxim vídeo: controlar el que has llegit. Gràcies per mirar-ho i fins aviat!",
+      "de": "So behältst du jedes Exemplar im Blick. Im nächsten Video: Gelesenes festhalten. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

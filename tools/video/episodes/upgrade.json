@@ -1,0 +1,162 @@
+{
+  "slug": "upgrade",
+  "topic": "Setup",
+  "title": "Upgrade Vaultisse",
+  "search": "How to upgrade Vaultisse to a new version",
+  "coverWords": "Upgrade Vaultisse",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/updating-and-backups",
+  "start": "term",
+  "tags": [
+    "vaultisse update",
+    "vaultisse upgrade",
+    "docker compose pull",
+    "new version",
+    "database migration",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to upgrade Vaultisse to a new version",
+      "description": "Learn how to upgrade Vaultisse to a new version safely."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo actualizar Vaultisse a una versión nueva",
+      "description": "Aprende a actualizar Vaultisse a una versión nueva con seguridad."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com actualitzar Vaultisse a una versió nova",
+      "description": "Aprèn a actualitzar Vaultisse a una versió nova amb seguretat."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Vaultisse auf eine neue Version aktualisieren",
+      "description": "Aktualisiere Vaultisse sicher auf eine neue Version."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Back up",
+      "Choose the version",
+      "Pull and restart"
+    ],
+    "narration": {
+      "en": "Here is how to upgrade Vaultisse to a new version. In this video: back up. Choose the version. Pull and restart.",
+      "es": "Así se actualiza Vaultisse a una versión nueva. En este vídeo: haz copia. Elige la versión. Descarga y reinicia.",
+      "ca": "Així s'actualitza Vaultisse a una versió nova. En aquest vídeo: fes còpia. Tria la versió. Baixa i reinicia.",
+      "de": "So aktualisierst du Vaultisse auf eine neue Version. In diesem Video: sichern. Die Version wählen. Laden und neu starten."
+    }
+  },
+  "steps": [
+    {
+      "id": "backup",
+      "title": {
+        "en": "Back up",
+        "es": "Copia",
+        "ca": "Còpia",
+        "de": "Sichern"
+      },
+      "narration": {
+        "en": "Always back up first.",
+        "es": "Haz siempre una copia antes.",
+        "ca": "Fes sempre una còpia abans.",
+        "de": "Sichere immer zuerst."
+      },
+      "actions": [
+        {
+          "run": "docker compose exec -T db pg_dump -U postgres vaultisse > vaultisse-$(date +%F).sql"
+        },
+        {
+          "hold": 1
+        }
+      ]
+    },
+    {
+      "id": "version",
+      "title": {
+        "en": "Choose the version",
+        "es": "Elige la versión",
+        "ca": "Tria la versió",
+        "de": "Version wählen"
+      },
+      "narration": {
+        "en": "In the settings file, set app tag to the version you want.",
+        "es": "En el archivo de configuración, pon en app tag la versión que quieras.",
+        "ca": "Al fitxer de configuració, posa a app tag la versió que vulguis.",
+        "de": "Setze in der Einstellungsdatei app tag auf die gewünschte Version."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "APP_TAG=1.3.8"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "APP_TAG",
+            "value": "APP_TAG=1.3.9"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pull",
+      "title": {
+        "en": "Pull and restart",
+        "es": "Descargar y reiniciar",
+        "ca": "Baixar i reiniciar",
+        "de": "Laden und starten"
+      },
+      "narration": {
+        "en": "Pull the new image and restart. The database is upgraded by itself when the server starts.",
+        "es": "Descarga la imagen nueva y reinicia. La base de datos se actualiza sola al arrancar el servidor.",
+        "ca": "Baixa la imatge nova i reinicia. La base de dades s'actualitza sola en engegar el servidor.",
+        "de": "Lade das neue Image und starte neu. Die Datenbank aktualisiert sich beim Serverstart selbst."
+      },
+      "actions": [
+        {
+          "run": "docker compose pull"
+        },
+        {
+          "run": "docker compose up -d"
+        }
+      ]
+    },
+    {
+      "id": "check",
+      "title": {
+        "en": "Check",
+        "es": "Comprobar",
+        "ca": "Comprovar",
+        "de": "Prüfen"
+      },
+      "narration": {
+        "en": "Ask the app which version it is running.",
+        "es": "Pregunta a la aplicación qué versión está ejecutando.",
+        "ca": "Pregunta a l'aplicació quina versió executa.",
+        "de": "Frage die App, welche Version läuft."
+      },
+      "actions": [
+        {
+          "run": "curl http://localhost:3000/api/rest/app/version"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Fix common problems",
+    "narration": {
+      "en": "You are up to date. Next time: fixing common problems. Thanks for watching, and see you soon!",
+      "es": "Ya estás al día. En el próximo vídeo: resolver problemas habituales. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Ja estàs al dia. Al pròxim vídeo: resoldre problemes habituals. Gràcies per mirar-ho i fins aviat!",
+      "de": "Du bist auf dem neuesten Stand. Im nächsten Video: häufige Probleme. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

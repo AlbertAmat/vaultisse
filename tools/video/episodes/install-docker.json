@@ -1,0 +1,204 @@
+{
+  "slug": "install-docker",
+  "topic": "Setup",
+  "title": "Install with Docker",
+  "search": "How to install Vaultisse with Docker",
+  "coverWords": "Install with Docker",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/installation",
+  "start": "term",
+  "tags": [
+    "install vaultisse",
+    "vaultisse docker compose",
+    "self-hosted library docker",
+    "vaultisse setup",
+    "docker library app",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to install Vaultisse with Docker",
+      "description": "Learn how to install Vaultisse with Docker Compose on one machine."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo instalar Vaultisse con Docker",
+      "description": "Aprende a instalar Vaultisse con Docker Compose en un equipo."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com instal·lar Vaultisse amb Docker",
+      "description": "Aprèn a instal·lar Vaultisse amb Docker Compose en un equip."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Vaultisse mit Docker installieren",
+      "description": "Installiere Vaultisse mit Docker Compose auf einem Rechner."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Download three files",
+      "Create your settings",
+      "Start the app"
+    ],
+    "narration": {
+      "en": "Here is how to install Vaultisse with Docker. In this video: download three files. Create your settings. Start the app.",
+      "es": "Así se instala Vaultisse con Docker. En este vídeo: descarga tres archivos. Crea tu configuración. Arranca la aplicación.",
+      "ca": "Així s'instal·la Vaultisse amb Docker. En aquest vídeo: baixa tres fitxers. Crea la configuració. Engega l'aplicació.",
+      "de": "So installierst du Vaultisse mit Docker. In diesem Video: drei Dateien laden. Die Einstellungen anlegen. Die App starten."
+    }
+  },
+  "steps": [
+    {
+      "id": "files",
+      "title": {
+        "en": "Get the files",
+        "es": "Descarga los archivos",
+        "ca": "Baixa els fitxers",
+        "de": "Dateien holen"
+      },
+      "narration": {
+        "en": "You need Docker with Compose. Make a folder, then download the compose file, the example settings and the database schema.",
+        "es": "Necesitas Docker con Compose. Crea una carpeta y descarga el archivo compose, el ejemplo de configuración y el esquema de la base de datos.",
+        "ca": "Necessites Docker amb Compose. Crea una carpeta i baixa el fitxer compose, l'exemple de configuració i l'esquema de la base de dades.",
+        "de": "Du brauchst Docker mit Compose. Lege einen Ordner an und lade Compose-Datei, Beispieleinstellungen und Datenbankschema."
+      },
+      "actions": [
+        {
+          "run": "mkdir vaultisse && cd vaultisse"
+        },
+        {
+          "run": "mkdir -p assets/db"
+        },
+        {
+          "run": "curl -O https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/docker-compose.yml"
+        },
+        {
+          "run": "curl -O https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/.env.example"
+        },
+        {
+          "run": "curl -o assets/db/databaseSchema.sql https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/assets/db/databaseSchema.sql"
+        }
+      ]
+    },
+    {
+      "id": "env",
+      "title": {
+        "en": "Create your settings",
+        "es": "Crea tu configuración",
+        "ca": "Crea la configuració",
+        "de": "Einstellungen anlegen"
+      },
+      "narration": {
+        "en": "Copy the example to a file called dot env. Set a long secret, a database password and the address people will type.",
+        "es": "Copia el ejemplo a un archivo llamado punto env. Pon un secreto largo, una contraseña de base de datos y la dirección que se usará.",
+        "ca": "Copia l'exemple a un fitxer anomenat punt env. Posa-hi un secret llarg, una contrasenya de base de dades i l'adreça que es farà servir.",
+        "de": "Kopiere das Beispiel in eine Datei namens Punkt env. Setze ein langes Geheimnis, ein Datenbankpasswort und die Adresse der App."
+      },
+      "actions": [
+        {
+          "run": "cp .env.example .env"
+        },
+        {
+          "run": "openssl rand -hex 32"
+        },
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "FRONT_END_URL=http://localhost:3000",
+              "JWT_SECRET=<output of: openssl rand -hex 32>",
+              "DB_PASSWORD=<a password of your choice>",
+              "ALLOW_DEV_AUTH=false"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "JWT_SECRET"
+          }
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "point": {
+            "line": "DB_PASSWORD"
+          }
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "point": {
+            "line": "FRONT_END_URL"
+          }
+        }
+      ]
+    },
+    {
+      "id": "start",
+      "title": {
+        "en": "Start it",
+        "es": "Arráncalo",
+        "ca": "Engega-ho",
+        "de": "Starten"
+      },
+      "narration": {
+        "en": "Start everything with docker compose up. Then check that the database is healthy and the app is running.",
+        "es": "Arranca todo con docker compose up. Comprueba que la base de datos está sana y la aplicación en marcha.",
+        "ca": "Engega-ho tot amb docker compose up. Comprova que la base de dades està sana i l'aplicació en marxa.",
+        "de": "Starte alles mit docker compose up. Prüfe dann, ob die Datenbank gesund ist und die App läuft."
+      },
+      "actions": [
+        {
+          "run": "docker compose up -d"
+        },
+        {
+          "hold": 1.5
+        },
+        {
+          "run": "docker compose ps"
+        }
+      ]
+    },
+    {
+      "id": "open",
+      "title": {
+        "en": "Open it",
+        "es": "Ábrelo",
+        "ca": "Obre-ho",
+        "de": "Öffnen"
+      },
+      "narration": {
+        "en": "Open your address, followed by slash register, to create the first account.",
+        "es": "Abre tu dirección seguida de barra register para crear la primera cuenta.",
+        "ca": "Obre la teva adreça seguida de barra register per crear el primer compte.",
+        "de": "Öffne deine Adresse mit Schrägstrich register und lege das erste Konto an."
+      },
+      "actions": [
+        {
+          "logout": true
+        },
+        {
+          "goto": "/register"
+        },
+        {
+          "hold": 2
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Fill in the settings file",
+    "narration": {
+      "en": "Vaultisse is installed. Next time: filling in the settings file. Thanks for watching, and see you soon!",
+      "es": "Vaultisse ya está instalado. En el próximo vídeo: rellenar el archivo de configuración. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Vaultisse ja està instal·lat. Al pròxim vídeo: omplir el fitxer de configuració. Gràcies per mirar-ho i fins aviat!",
+      "de": "Vaultisse ist installiert. Im nächsten Video: die Einstellungsdatei. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

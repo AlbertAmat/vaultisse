@@ -1,0 +1,153 @@
+{
+  "slug": "admin-turn-on",
+  "topic": "Admin panel",
+  "title": "Turn it on",
+  "search": "How to turn on the Vaultisse admin panel",
+  "coverWords": "Turn on the admin panel",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#turning-it-on",
+  "start": "term",
+  "tags": [
+    "vaultisse admin panel",
+    "enable admin portal",
+    "admin_enabled",
+    "self-hosted admin console",
+    "vaultisse administration",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to turn on the Vaultisse admin panel",
+      "description": "Learn how to turn on the Vaultisse admin panel and find the first administrator's password."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo activar el panel de administración de Vaultisse",
+      "description": "Aprende a activar el panel de administración de Vaultisse y a encontrar la primera contraseña."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com activar el panell d'administració de Vaultisse",
+      "description": "Aprèn a activar el panell d'administració de Vaultisse i a trobar la primera contrasenya."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Das Vaultisse Admin-Panel einschalten",
+      "description": "Schalte das Vaultisse Admin-Panel ein und finde das erste Administratorpasswort."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Three settings",
+      "Restart",
+      "Read the first password"
+    ],
+    "narration": {
+      "en": "Here is how to turn on the Vaultisse admin panel. In this video: three settings. Restart. Read the first password.",
+      "es": "Así se activa el panel de administración de Vaultisse. En este vídeo: tres ajustes. Reinicia. Lee la primera contraseña.",
+      "ca": "Així s'activa el panell d'administració de Vaultisse. En aquest vídeo: tres opcions. Reinicia. Llegeix la primera contrasenya.",
+      "de": "So schaltest du das Vaultisse Admin-Panel ein. In diesem Video: drei Einstellungen. Neu starten. Das erste Passwort lesen."
+    }
+  },
+  "steps": [
+    {
+      "id": "settings",
+      "title": {
+        "en": "Settings",
+        "es": "Ajustes",
+        "ca": "Opcions",
+        "de": "Einstellungen"
+      },
+      "narration": {
+        "en": "The panel is off by default. Set admin enabled to true, the address you will open it at, and a long encryption key.",
+        "es": "El panel viene desactivado. Pon admin enabled en true, la dirección donde lo abrirás y una clave de cifrado larga.",
+        "ca": "El panell ve desactivat. Posa admin enabled a true, l'adreça on l'obriràs i una clau de xifratge llarga.",
+        "de": "Das Panel ist zunächst aus. Setze admin enabled auf true, dazu seine Adresse und einen langen Schlüssel."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "ADMIN_ENABLED=false",
+              "ADMIN_URL=",
+              "SETTINGS_ENCRYPTION_KEY="
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "ADMIN_ENABLED",
+            "value": "ADMIN_ENABLED=true"
+          }
+        },
+        {
+          "point": {
+            "line": "ADMIN_URL",
+            "value": "ADMIN_URL=https://adm.example.com"
+          }
+        },
+        {
+          "point": {
+            "line": "SETTINGS_ENCRYPTION_KEY",
+            "value": "SETTINGS_ENCRYPTION_KEY=<openssl rand -hex 32>"
+          }
+        }
+      ]
+    },
+    {
+      "id": "restart",
+      "title": {
+        "en": "Restart",
+        "es": "Reiniciar",
+        "ca": "Reiniciar",
+        "de": "Neu starten"
+      },
+      "narration": {
+        "en": "Apply it with docker compose up. The panel listens on its own port, three thousand and one.",
+        "es": "Aplícalo con docker compose up. El panel escucha en su propio puerto, el tres mil uno.",
+        "ca": "Aplica-ho amb docker compose up. El panell escolta al seu propi port, el tres mil u.",
+        "de": "Übernimm es mit docker compose up. Das Panel lauscht auf einem eigenen Port, 3001."
+      },
+      "actions": [
+        {
+          "run": "docker compose up -d"
+        }
+      ]
+    },
+    {
+      "id": "password",
+      "title": {
+        "en": "The first password",
+        "es": "La primera contraseña",
+        "ca": "La primera contrasenya",
+        "de": "Das erste Passwort"
+      },
+      "narration": {
+        "en": "On the first start, the app creates an administrator and prints its password in the container log. It is shown only once, so note it down.",
+        "es": "En el primer arranque, la aplicación crea un administrador y muestra su contraseña en el registro del contenedor. Solo sale una vez, así que apúntala.",
+        "ca": "A la primera arrencada, l'aplicació crea un administrador i mostra la contrasenya al registre del contenidor. Només surt un cop, apunta-la.",
+        "de": "Beim ersten Start legt die App einen Administrator an und zeigt sein Passwort im Containerprotokoll. Nur einmal, also notiere es."
+      },
+      "actions": [
+        {
+          "run": "docker compose logs app"
+        },
+        {
+          "comment": "look for the block: ADMIN PORTAL - first start"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "First sign-in and two-factor",
+    "narration": {
+      "en": "The admin panel is on. Next time: the first sign-in. Thanks for watching, and see you soon!",
+      "es": "El panel está activo. En el próximo vídeo: el primer acceso. ¡Gracias por vernos y hasta pronto!",
+      "ca": "El panell està actiu. Al pròxim vídeo: el primer accés. Gràcies per mirar-ho i fins aviat!",
+      "de": "Das Admin-Panel läuft. Im nächsten Video: die erste Anmeldung. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "slug": "admin-gdpr",
+  "topic": "Compliance",
+  "title": "A GDPR request",
+  "search": "How to answer a GDPR data request in Vaultisse",
+  "coverWords": "Answer a data request",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#data-requests-gdpr",
+  "start": "/data-requests",
+  "tags": [
+    "gdpr data request",
+    "subject access request",
+    "right to erasure",
+    "export user data",
+    "vaultisse gdpr",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Compliance",
+      "title": "How to answer a GDPR data request in Vaultisse",
+      "description": "Learn how to answer a GDPR data request in Vaultisse within the deadline."
+    },
+    "es": {
+      "topic": "Cumplimiento",
+      "title": "Cómo responder una solicitud de datos RGPD en Vaultisse",
+      "description": "Aprende a responder una solicitud de datos RGPD en Vaultisse dentro del plazo."
+    },
+    "ca": {
+      "topic": "Compliment",
+      "title": "Com respondre una sol·licitud de dades RGPD a Vaultisse",
+      "description": "Aprèn a respondre una sol·licitud de dades RGPD a Vaultisse dins del termini."
+    },
+    "de": {
+      "topic": "Compliance",
+      "title": "DSGVO-Auskunft in Vaultisse beantworten",
+      "description": "Beantworte DSGVO-Anfragen in Vaultisse fristgerecht."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "The deadline",
+      "The guided steps",
+      "Erasure requests"
+    ],
+    "narration": {
+      "en": "Here is how to answer a data request. In this video: the deadline. The guided steps. Erasure requests.",
+      "es": "Así se responde una solicitud de datos. En este vídeo: el plazo. Los pasos guiados. Solicitudes de borrado.",
+      "ca": "Així es respon una sol·licitud de dades. En aquest vídeo: el termini. Els passos guiats. Sol·licituds d'esborrat.",
+      "de": "So beantwortest du eine Datenanfrage. In diesem Video: die Frist. Die geführten Schritte. Löschanfragen."
+    }
+  },
+  "steps": [
+    {
+      "id": "list",
+      "title": {
+        "en": "Deadlines",
+        "es": "Plazos",
+        "ca": "Terminis",
+        "de": "Fristen"
+      },
+      "narration": {
+        "en": "Data requests tracks access and erasure requests. Each has a deadline of one month.",
+        "es": "Data requests sigue las solicitudes de acceso y borrado. Cada una tiene un mes de plazo.",
+        "ca": "Data requests segueix les sol·licituds d'accés i esborrat. Cadascuna té un mes de termini.",
+        "de": "Data requests verfolgt Auskunfts- und Löschanfragen. Jede hat eine Monatsfrist."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "selector": "tbody tr",
+            "nth": 0,
+            "seconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "answer",
+      "title": {
+        "en": "Answer it",
+        "es": "Responder",
+        "ca": "Respondre",
+        "de": "Beantworten"
+      },
+      "narration": {
+        "en": "Open one and follow the steps. Check who is asking, download their data, send it safely, and mark it answered.",
+        "es": "Abre una y sigue los pasos. Comprueba quién pide, descarga sus datos, envíalos con seguridad y márcala como respondida.",
+        "ca": "Obre'n una i segueix els passos. Comprova qui demana, baixa les seves dades, envia-les amb seguretat i marca-la com a resposta.",
+        "de": "Öffne eine und folge den Schritten. Prüfe die Person, lade ihre Daten, sende sie sicher und markiere die Anfrage als erledigt."
+      },
+      "actions": [
+        {
+          "click": {
+            "text": "Greta Lind"
+          }
+        },
+        {
+          "highlight": {
+            "text": "Steps",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Download their data",
+            "exact": false,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Mark as answered",
+            "exact": false,
+            "seconds": 2
+          }
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "erase",
+      "title": {
+        "en": "Erasure",
+        "es": "Borrado",
+        "ca": "Esborrat",
+        "de": "Löschung"
+      },
+      "narration": {
+        "en": "The export leaves out what is inside libraries, so say that. An erasure request uses the normal deletion, with its grace period.",
+        "es": "La exportación no incluye el contenido de las bibliotecas, así que indícalo. Un borrado usa la eliminación normal, con su plazo.",
+        "ca": "L'exportació no inclou el contingut de les biblioteques, així que digues-ho. Un esborrat fa servir l'eliminació normal, amb termini.",
+        "de": "Der Export enthält keine Bibliotheksinhalte, sag das dazu. Eine Löschanfrage nutzt das normale Löschen mit Frist."
+      },
+      "actions": [
+        {
+          "click": {
+            "text": "Felix Brandt"
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Data retention",
+    "narration": {
+      "en": "The request is handled. Next time: data retention. Thanks for watching, and see you soon!",
+      "es": "Solicitud atendida. En el próximo vídeo: la conservación de datos. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Sol·licitud atesa. Al pròxim vídeo: la conservació de dades. Gràcies per mirar-ho i fins aviat!",
+      "de": "Die Anfrage ist erledigt. Im nächsten Video: die Datenaufbewahrung. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

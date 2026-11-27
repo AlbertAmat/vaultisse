@@ -1,0 +1,182 @@
+{
+  "slug": "email-setup",
+  "topic": "Setup",
+  "title": "Set up email",
+  "search": "How to set up email (SMTP) in Vaultisse",
+  "coverWords": "Set up email",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/configuration#email",
+  "start": "term",
+  "tags": [
+    "vaultisse smtp setup",
+    "vaultisse email",
+    "email verification",
+    "smtp docker",
+    "self-hosted notifications",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to set up email (SMTP) in Vaultisse",
+      "description": "Learn how to set up email (SMTP) in Vaultisse for verification and notifications."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo configurar el correo (SMTP) en Vaultisse",
+      "description": "Aprende a configurar el correo (SMTP) en Vaultisse para verificación y avisos."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com configurar el correu (SMTP) a Vaultisse",
+      "description": "Aprèn a configurar el correu (SMTP) a Vaultisse per a verificació i avisos."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "E-Mail (SMTP) in Vaultisse einrichten",
+      "description": "Richte E-Mail (SMTP) in Vaultisse ein, für Bestätigungen und Hinweise."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Add your mail server",
+      "Apply it",
+      "What changes"
+    ],
+    "narration": {
+      "en": "Here is how to set up email in Vaultisse. In this video: add your mail server. Apply it. What changes.",
+      "es": "Así se configura el correo en Vaultisse. En este vídeo: añade tu servidor de correo. Aplícalo. Qué cambia.",
+      "ca": "Així es configura el correu a Vaultisse. En aquest vídeo: afegeix el servidor de correu. Aplica-ho. Què canvia.",
+      "de": "So richtest du E-Mail in Vaultisse ein. In diesem Video: den Mailserver eintragen. Übernehmen. Was sich ändert."
+    }
+  },
+  "steps": [
+    {
+      "id": "smtp",
+      "title": {
+        "en": "Mail server",
+        "es": "Servidor de correo",
+        "ca": "Servidor de correu",
+        "de": "Mailserver"
+      },
+      "narration": {
+        "en": "Email is optional. Add your mail server, port, user and password, and the sender address.",
+        "es": "El correo es opcional. Añade tu servidor, puerto, usuario y contraseña, y la dirección del remitente.",
+        "ca": "El correu és opcional. Afegeix el servidor, port, usuari i contrasenya, i l'adreça del remitent.",
+        "de": "E-Mail ist freiwillig. Trage Server, Port, Benutzer, Passwort und die Absenderadresse ein."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "SMTP_HOST=",
+              "SMTP_PORT=587",
+              "SMTP_USER=",
+              "SMTP_PASSWORD=",
+              "SMTP_FROM="
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "SMTP_HOST",
+            "value": "SMTP_HOST=mail.example.com"
+          }
+        },
+        {
+          "point": {
+            "line": "SMTP_USER",
+            "value": "SMTP_USER=library@example.com"
+          }
+        },
+        {
+          "point": {
+            "line": "SMTP_PASSWORD",
+            "value": "SMTP_PASSWORD=<your mail password>"
+          }
+        },
+        {
+          "point": {
+            "line": "SMTP_FROM",
+            "value": "SMTP_FROM=Library <library@example.com>"
+          }
+        }
+      ]
+    },
+    {
+      "id": "apply",
+      "title": {
+        "en": "Apply",
+        "es": "Aplicar",
+        "ca": "Aplicar",
+        "de": "Übernehmen"
+      },
+      "narration": {
+        "en": "A half filled setup stops the server, so check it. Then run docker compose up.",
+        "es": "Una configuración a medias detiene el servidor, así que revísala. Después ejecuta docker compose up.",
+        "ca": "Una configuració a mitges atura el servidor, així que revisa-la. Després executa docker compose up.",
+        "de": "Eine halbe Konfiguration stoppt den Server, also prüfe sie. Dann starte docker compose up."
+      },
+      "actions": [
+        {
+          "run": "docker compose up -d"
+        },
+        {
+          "run": "docker compose logs --tail 100 app"
+        }
+      ]
+    },
+    {
+      "id": "effect",
+      "title": {
+        "en": "What changes",
+        "es": "Qué cambia",
+        "ca": "Què canvia",
+        "de": "Was sich ändert"
+      },
+      "narration": {
+        "en": "New accounts must now confirm their address before signing in. People also get notices, for example when their password changes.",
+        "es": "Las cuentas nuevas deben confirmar su correo antes de entrar. También llegan avisos, por ejemplo al cambiar la contraseña.",
+        "ca": "Els comptes nous han de confirmar el correu abans d'entrar. També arriben avisos, per exemple en canviar la contrasenya.",
+        "de": "Neue Konten müssen jetzt ihre Adresse bestätigen. Außerdem gibt es Hinweise, etwa bei einem Passwortwechsel."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": "What email adds",
+            "lines": [
+              "New accounts verify their address before signing in",
+              "The link lasts 24 hours and can be sent again",
+              "Changing your email needs confirmation",
+              "Notices: password changed, two-factor off, join requests"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "verify"
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "point": {
+            "line": "Notices"
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Single sign-on",
+    "narration": {
+      "en": "Email is working for you. Next time: single sign-on. Thanks for watching, and see you soon!",
+      "es": "El correo ya trabaja por ti. En el próximo vídeo: el inicio de sesión único. ¡Gracias por vernos y hasta pronto!",
+      "ca": "El correu ja treballa per tu. Al pròxim vídeo: l'inici de sessió únic. Gràcies per mirar-ho i fins aviat!",
+      "de": "E-Mail ist eingerichtet. Im nächsten Video: Single Sign-On. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

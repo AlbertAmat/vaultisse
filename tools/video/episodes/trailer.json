@@ -1,0 +1,287 @@
+{
+  "slug": "trailer",
+  "topic": "Tutorial",
+  "title": "Meet Vaultisse",
+  "search": "What is Vaultisse? A self-hosted library app",
+  "coverWords": "Meet Vaultisse",
+  "playlist": "Promo",
+  "docs": "https://docs.vaultisse.com/getting-started",
+  "start": "/app/dashboard",
+  "tags": [
+    "what is vaultisse",
+    "self-hosted library app",
+    "book collection manager",
+    "school library software",
+    "open source library",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Tutorial",
+      "title": "What is Vaultisse? A self-hosted library app",
+      "description": "What is Vaultisse? A short look at the open-source app that tracks, lends and shares your books."
+    },
+    "es": {
+      "topic": "Tutorial",
+      "title": "¿Qué es Vaultisse? Tu biblioteca en tu servidor",
+      "description": "¿Qué es Vaultisse? Un vistazo a la aplicación de código abierto para controlar, prestar y compartir libros."
+    },
+    "ca": {
+      "topic": "Tutorial",
+      "title": "Què és Vaultisse? La teva biblioteca al teu servidor",
+      "description": "Què és Vaultisse? Una ullada a l'aplicació de codi obert per controlar, prestar i compartir llibres."
+    },
+    "de": {
+      "topic": "Tutorial",
+      "title": "Was ist Vaultisse? Die Bibliothek auf deinem Server",
+      "description": "Was ist Vaultisse? Ein kurzer Blick auf die Open-Source-App zum Verwalten, Verleihen und Teilen von Büchern."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Know what you own",
+      "Know who has it",
+      "Keep it on your server"
+    ],
+    "narration": {
+      "en": "This is Vaultisse, a home for your books. In this video: know what you own. Know who has it. Keep it on your server.",
+      "es": "Esto es Vaultisse, un hogar para tus libros. En este vídeo: sabe lo que tienes. Sabe quién lo tiene. Guárdalo en tu servidor.",
+      "ca": "Això és Vaultisse, una llar per als teus llibres. En aquest vídeo: sap què tens. Sap qui ho té. Desa-ho al teu servidor.",
+      "de": "Das ist Vaultisse, ein Zuhause für deine Bücher. In diesem Video: wissen, was du hast. Wissen, wer es hat. Auf deinem Server behalten."
+    }
+  },
+  "steps": [
+    {
+      "id": "shelf",
+      "title": {
+        "en": "Your shelf",
+        "es": "Tu estantería",
+        "ca": "La teva prestatgeria",
+        "de": "Dein Regal"
+      },
+      "narration": {
+        "en": "Every book, with its cover and its place.",
+        "es": "Cada libro, con su portada y su sitio.",
+        "ca": "Cada llibre, amb la coberta i el seu lloc.",
+        "de": "Jedes Buch mit Cover und Platz."
+      },
+      "actions": [
+        {
+          "scroll": 450
+        }
+      ]
+    },
+    {
+      "id": "find",
+      "title": {
+        "en": "Find it",
+        "es": "Encuéntralo",
+        "ca": "Troba'l",
+        "de": "Finden"
+      },
+      "narration": {
+        "en": "Find anything in seconds.",
+        "es": "Encuentra lo que sea en segundos.",
+        "ca": "Troba el que sigui en segons.",
+        "de": "Finde alles in Sekunden."
+      },
+      "actions": [
+        {
+          "goto": "/app/library/search"
+        },
+        {
+          "type": {
+            "into": {
+              "placeholder": "Search books"
+            },
+            "text": "lantern"
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "hold": 1
+        }
+      ]
+    },
+    {
+      "id": "lend",
+      "title": {
+        "en": "Lend it",
+        "es": "Préstalo",
+        "ca": "Presta'l",
+        "de": "Verleihen"
+      },
+      "narration": {
+        "en": "Lend several books at once, and see who has them.",
+        "es": "Presta varios libros a la vez y ve quién los tiene.",
+        "ca": "Presta diversos llibres alhora i mira qui els té.",
+        "de": "Verleihe mehrere Bücher auf einmal und sieh, wer sie hat."
+      },
+      "actions": [
+        {
+          "goto": "/app/loans"
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Loan a book"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Select a customer or scan their card"
+            },
+            "text": "Amara"
+          }
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list",
+            "text": "Amara Okafor"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Paper"
+          }
+        },
+        {
+          "hold": 0.4
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Paper Astronomer",
+            "text": "The Paper Astronomer"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Glass"
+          }
+        },
+        {
+          "hold": 0.4
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Glass Heron",
+            "text": "The Glass Heron"
+          }
+        },
+        {
+          "click": {
+            "within": "[role=dialog]",
+            "role": "button",
+            "name": "Lend (2)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": {
+        "en": "Cards and labels",
+        "es": "Carnés y etiquetas",
+        "ca": "Carnets i etiquetes",
+        "de": "Ausweise und Etiketten"
+      },
+      "narration": {
+        "en": "Print library cards and barcode labels.",
+        "es": "Imprime carnés y etiquetas con código de barras.",
+        "ca": "Imprimeix carnets i etiquetes amb codi de barres.",
+        "de": "Drucke Ausweise und Barcode-Etiketten."
+      },
+      "actions": [
+        {
+          "goto": "/app/customers"
+        },
+        {
+          "click": {
+            "within": ".entity-card",
+            "hasText": "Alex Morgan",
+            "selector": ".mdi-card-account-details-outline"
+          }
+        },
+        {
+          "hold": 2.5
+        }
+      ]
+    },
+    {
+      "id": "share",
+      "title": {
+        "en": "Share it",
+        "es": "Compártelo",
+        "ca": "Comparteix-ho",
+        "de": "Teilen"
+      },
+      "narration": {
+        "en": "Share your library, and decide what each person can do.",
+        "es": "Comparte tu biblioteca y decide qué puede hacer cada uno.",
+        "ca": "Comparteix la biblioteca i decideix què pot fer cadascú.",
+        "de": "Teile deine Bibliothek und bestimme, was jeder darf."
+      },
+      "actions": [
+        {
+          "goto": "/app/settings"
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Manage"
+          }
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "yours",
+      "title": {
+        "en": "Yours",
+        "es": "Tuyo",
+        "ca": "Teu",
+        "de": "Deins"
+      },
+      "narration": {
+        "en": "It is open source, and it runs on your own server.",
+        "es": "Es de código abierto y funciona en tu propio servidor.",
+        "ca": "És de codi obert i funciona al teu servidor.",
+        "de": "Es ist Open Source und läuft auf deinem eigenen Server."
+      },
+      "actions": [
+        {
+          "goto": "/app/dashboard"
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Install Vaultisse with Docker",
+    "narration": {
+      "en": "Try Vaultisse today. Next time: installing Vaultisse with Docker. Thanks for watching, and see you soon!",
+      "es": "Prueba Vaultisse hoy. En el próximo vídeo: instalar Vaultisse con Docker. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Prova Vaultisse avui. Al pròxim vídeo: instal·lar Vaultisse amb Docker. Gràcies per mirar-ho i fins aviat!",
+      "de": "Probiere Vaultisse aus. Im nächsten Video: Vaultisse mit Docker installieren. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

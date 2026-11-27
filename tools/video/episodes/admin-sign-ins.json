@@ -1,0 +1,147 @@
+{
+  "slug": "admin-sign-ins",
+  "topic": "Security",
+  "title": "Who is signing in",
+  "search": "How to see who is trying to sign in to your Vaultisse panel",
+  "coverWords": "Who is knocking?",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#admin-sign-ins",
+  "start": "/admin-signins",
+  "tags": [
+    "admin sign in history",
+    "failed login attempts",
+    "login map",
+    "attack detection",
+    "vaultisse sign ins",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Security",
+      "title": "How to see who is trying to sign in to your Vaultisse panel",
+      "description": "Learn how to see who is trying to sign in to your Vaultisse admin panel, and from where."
+    },
+    "es": {
+      "topic": "Seguridad",
+      "title": "Cómo ver quién intenta entrar en tu panel de Vaultisse",
+      "description": "Aprende a ver quién intenta entrar en tu panel de Vaultisse y desde dónde."
+    },
+    "ca": {
+      "topic": "Seguretat",
+      "title": "Com veure qui intenta entrar al teu panell de Vaultisse",
+      "description": "Aprèn a veure qui intenta entrar al panell de Vaultisse i des d'on."
+    },
+    "de": {
+      "topic": "Sicherheit",
+      "title": "Wer versucht, sich im Vaultisse Panel anzumelden?",
+      "description": "Sieh, wer sich im Vaultisse Admin-Panel anmelden will und von wo."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Attempts over time",
+      "Suspicious addresses",
+      "The login map"
+    ],
+    "narration": {
+      "en": "Here is how to see who is trying to get in. In this video: attempts over time. Suspicious addresses. The login map.",
+      "es": "Así se ve quién intenta entrar. En este vídeo: intentos en el tiempo. Direcciones sospechosas. El mapa de accesos.",
+      "ca": "Així es veu qui intenta entrar. En aquest vídeo: intents en el temps. Adreces sospitoses. El mapa d'accessos.",
+      "de": "So siehst du, wer hineinwill. In diesem Video: Versuche im Zeitverlauf. Verdächtige Adressen. Die Anmeldekarte."
+    }
+  },
+  "steps": [
+    {
+      "id": "numbers",
+      "title": {
+        "en": "Numbers",
+        "es": "Cifras",
+        "ca": "Xifres",
+        "de": "Zahlen"
+      },
+      "narration": {
+        "en": "Admin sign-ins counts successful and failed attempts on the console.",
+        "es": "Admin sign-ins cuenta los accesos correctos y fallidos a la consola.",
+        "ca": "Admin sign-ins compta els accessos correctes i fallits a la consola.",
+        "de": "Admin sign-ins zählt erfolgreiche und fehlgeschlagene Anmeldungen."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "Failed attempts",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "text": "Attempts over time",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "addresses",
+      "title": {
+        "en": "Addresses",
+        "es": "Direcciones",
+        "ca": "Adreces",
+        "de": "Adressen"
+      },
+      "narration": {
+        "en": "Each address has one row, with how many emails it tried. Many different emails is a sign of an attack. You can block it in one click.",
+        "es": "Cada dirección tiene una fila, con cuántos correos probó. Muchos correos distintos indican un ataque. Puedes bloquearla con un clic.",
+        "ca": "Cada adreça té una fila, amb quants correus ha provat. Molts correus diferents indiquen un atac. La pots bloquejar amb un clic.",
+        "de": "Jede Adresse hat eine Zeile mit der Zahl probierter E-Mails. Viele verschiedene deuten auf Angriff. Sperren geht mit einem Klick."
+      },
+      "actions": [
+        {
+          "scroll": 350
+        },
+        {
+          "highlight": {
+            "text": "198.51.100.7",
+            "nth": 0,
+            "seconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "map",
+      "title": {
+        "en": "The map",
+        "es": "El mapa",
+        "ca": "El mapa",
+        "de": "Die Karte"
+      },
+      "narration": {
+        "en": "Login map places sign-ins using a database on your own server, so no address is sent anywhere.",
+        "es": "Login map sitúa los accesos con una base de datos en tu servidor, así ninguna dirección sale fuera.",
+        "ca": "Login map situa els accessos amb una base de dades al teu servidor, així cap adreça surt fora.",
+        "de": "Login map verortet Anmeldungen mit einer Datenbank auf deinem Server, nichts geht nach außen."
+      },
+      "actions": [
+        {
+          "goto": "/map"
+        },
+        {
+          "hold": 3
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "The audit trail",
+    "narration": {
+      "en": "Nothing knocks unnoticed. Next time: the audit trail. Thanks for watching, and see you soon!",
+      "es": "Nadie llama sin que lo veas. En el próximo vídeo: el registro de auditoría. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Ningú truca sense que ho vegis. Al pròxim vídeo: el registre d'auditoria. Gràcies per mirar-ho i fins aviat!",
+      "de": "Nichts bleibt unbemerkt. Im nächsten Video: das Audit-Protokoll. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

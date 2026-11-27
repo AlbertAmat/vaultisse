@@ -1,0 +1,186 @@
+{
+  "slug": "sharing-roles",
+  "topic": "Accounts",
+  "title": "Invite people",
+  "search": "How to invite people to your library in Vaultisse",
+  "coverWords": "Share your library",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/sharing-and-roles",
+  "start": "/app/settings",
+  "tags": [
+    "share library",
+    "invite members",
+    "vaultisse roles",
+    "family library sharing",
+    "collaborative book catalog",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Accounts",
+      "title": "How to invite people to your library in Vaultisse",
+      "description": "Learn how to invite people to your library in Vaultisse and choose what each one can do."
+    },
+    "es": {
+      "topic": "Cuentas",
+      "title": "Cómo invitar personas a tu biblioteca en Vaultisse",
+      "description": "Aprende a invitar personas a tu biblioteca en Vaultisse y decide qué puede hacer cada una."
+    },
+    "ca": {
+      "topic": "Comptes",
+      "title": "Com convidar persones a la biblioteca a Vaultisse",
+      "description": "Aprèn a convidar persones a la biblioteca a Vaultisse i decideix què pot fer cadascuna."
+    },
+    "de": {
+      "topic": "Konten",
+      "title": "Personen in deine Vaultisse-Bibliothek einladen",
+      "description": "Lade Personen in deine Vaultisse-Bibliothek ein und lege fest, was sie dürfen."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Send the invite link",
+      "Approve the request",
+      "Choose a role"
+    ],
+    "narration": {
+      "en": "Here is how to invite people to your library in Vaultisse. In this video: send the invite link. Approve the request. Choose a role.",
+      "es": "Así se invita a otras personas a tu biblioteca en Vaultisse. En este vídeo: envía el enlace de invitación. Aprueba la solicitud. Elige un rol.",
+      "ca": "Així es convida altres persones a la biblioteca a Vaultisse. En aquest vídeo: envia l'enllaç d'invitació. Aprova la sol·licitud. Tria un rol.",
+      "de": "So lädst du andere in deine Vaultisse-Bibliothek ein. In diesem Video: den Einladungslink senden. Die Anfrage bestätigen. Eine Rolle wählen."
+    }
+  },
+  "steps": [
+    {
+      "id": "manage",
+      "title": {
+        "en": "Manage the library",
+        "es": "Gestionar la biblioteca",
+        "ca": "Gestionar la biblioteca",
+        "de": "Bibliothek verwalten"
+      },
+      "narration": {
+        "en": "In Settings, find your library under Vaults and click Manage.",
+        "es": "En Configuración, busca tu biblioteca en Vaults y pulsa Gestionar.",
+        "ca": "A Configuració, busca la biblioteca a Vaults i prem Gestiona.",
+        "de": "Suche in den Einstellungen deine Bibliothek unter Vaults und klicke auf Verwalten."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Manage"
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "link",
+      "title": {
+        "en": "The invite link",
+        "es": "El enlace de invitación",
+        "ca": "L'enllaç d'invitació",
+        "de": "Der Einladungslink"
+      },
+      "narration": {
+        "en": "Copy the invite link and send it. Whoever opens it can ask to join, but sees nothing until you approve.",
+        "es": "Copia el enlace y envíalo. Quien lo abra puede pedir unirse, pero no ve nada hasta que lo apruebes.",
+        "ca": "Copia l'enllaç i envia'l. Qui l'obri pot demanar unir-s'hi, però no veu res fins que ho aprovis.",
+        "de": "Kopiere den Link und verschicke ihn. Wer ihn öffnet, kann beitreten wollen, sieht aber nichts, bis du zustimmst."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "text": "Invite link",
+            "nth": 0,
+            "seconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "approve",
+      "title": {
+        "en": "Approve",
+        "es": "Aprobar",
+        "ca": "Aprovar",
+        "de": "Bestätigen"
+      },
+      "narration": {
+        "en": "New requests appear as pending. Accept with the tick, or reject with the cross.",
+        "es": "Las solicitudes aparecen como pendientes. Acepta con la marca o rechaza con la cruz.",
+        "ca": "Les sol·licituds surten com a pendents. Accepta amb la marca o rebutja amb la creu.",
+        "de": "Neue Anfragen stehen als ausstehend da. Bestätige mit dem Haken oder lehne mit dem Kreuz ab."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "within": "[role=dialog]",
+            "text": "Jordan Lee",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        },
+        {
+          "click": {
+            "selector": "[role=dialog] button:has(.mdi-check)"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "role",
+      "title": {
+        "en": "Roles",
+        "es": "Roles",
+        "ca": "Rols",
+        "de": "Rollen"
+      },
+      "narration": {
+        "en": "Then choose the role. Admins manage everything, normal members edit books, borrowers borrow, and read only members just look.",
+        "es": "Después elige el rol. Los administradores lo gestionan todo, los miembros editan libros, los prestatarios toman prestado y solo lectura únicamente mira.",
+        "ca": "Després tria el rol. Els administradors ho gestionen tot, els membres editen llibres, els prestataris agafen en préstec i només lectura mira.",
+        "de": "Dann wähle die Rolle. Admins verwalten alles, normale Mitglieder bearbeiten Bücher, Ausleiher leihen und Leser schauen nur."
+      },
+      "actions": [
+        {
+          "click": {
+            "selector": "[role=dialog] .v-select",
+            "nth": -1
+          }
+        },
+        {
+          "pause": 3
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "What a borrower sees",
+    "narration": {
+      "en": "Your library is now shared. Next time: what a borrower sees. Thanks for watching, and see you soon!",
+      "es": "Tu biblioteca ya está compartida. En el próximo vídeo: lo que ve un prestatario. ¡Gracias por vernos y hasta pronto!",
+      "ca": "La biblioteca ja està compartida. Al pròxim vídeo: el que veu un prestatari. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Bibliothek ist jetzt geteilt. Im nächsten Video: die Sicht eines Ausleihers. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "setup": [
+    "INSERT INTO users(code,name,password,email,disabled,email_verified) SELECT 'jordan','Jordan Lee',password,'jordan@example.com',false,true FROM users WHERE code='librarian'",
+    "INSERT INTO vault_users(vault_id,user_id,role,status) SELECT v.id,u.id,2,0 FROM vault v, users u WHERE v.name='Riverside School Library' AND u.code='jordan'",
+    "UPDATE users SET last_used_vault_id=(SELECT id FROM vault WHERE name='Riverside School Library') WHERE code='jordan'"
+  ]
+}

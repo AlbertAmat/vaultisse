@@ -1,0 +1,164 @@
+{
+  "slug": "admin-retention",
+  "topic": "Compliance",
+  "title": "Data retention",
+  "search": "How to set data retention in Vaultisse",
+  "coverWords": "How long to keep data",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#data-retention",
+  "start": "/retention",
+  "tags": [
+    "data retention",
+    "purge old logs",
+    "gdpr storage limitation",
+    "vaultisse retention",
+    "delete old records",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Compliance",
+      "title": "How to set data retention in Vaultisse",
+      "description": "Learn how to set data retention in Vaultisse for logs and records."
+    },
+    "es": {
+      "topic": "Cumplimiento",
+      "title": "Cómo configurar la conservación de datos en Vaultisse",
+      "description": "Aprende a configurar cuánto se conservan los registros en Vaultisse."
+    },
+    "ca": {
+      "topic": "Compliment",
+      "title": "Com configurar la conservació de dades a Vaultisse",
+      "description": "Aprèn a configurar quant es conserven els registres a Vaultisse."
+    },
+    "de": {
+      "topic": "Compliance",
+      "title": "Datenaufbewahrung in Vaultisse festlegen",
+      "description": "Lege in Vaultisse fest, wie lange Protokolle bleiben."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "What is kept",
+      "Set the days",
+      "What gets deleted"
+    ],
+    "narration": {
+      "en": "Here is how to set how long data is kept. In this video: what is kept. Set the days. What gets deleted.",
+      "es": "Así se decide cuánto se guardan los datos. En este vídeo: qué se guarda. Pon los días. Qué se borra.",
+      "ca": "Així es decideix quant es guarden les dades. En aquest vídeo: què es guarda. Posa els dies. Què s'esborra.",
+      "de": "So bestimmst du, wie lange Daten bleiben. In diesem Video: was gespeichert wird. Die Tage festlegen. Was gelöscht wird."
+    }
+  },
+  "steps": [
+    {
+      "id": "table",
+      "title": {
+        "en": "The records",
+        "es": "Los registros",
+        "ca": "Els registres",
+        "de": "Die Einträge"
+      },
+      "narration": {
+        "en": "Data retention lists each kind of record, whether it is personal data, and how many there are.",
+        "es": "Data retention muestra cada tipo de registro, si es dato personal y cuántos hay.",
+        "ca": "Data retention mostra cada tipus de registre, si és dada personal i quants n'hi ha.",
+        "de": "Data retention listet jede Datenart, ob sie personenbezogen ist und wie viele es gibt."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "Sign-in and activity log",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "text": "Security events",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "days",
+      "title": {
+        "en": "The days",
+        "es": "Los días",
+        "ca": "Els dies",
+        "de": "Die Tage"
+      },
+      "narration": {
+        "en": "Set a number of days for each. Zero keeps them forever. The audit trail is kept at least ninety days.",
+        "es": "Pon un número de días a cada uno. Cero los guarda siempre. La auditoría se conserva al menos noventa días.",
+        "ca": "Posa un nombre de dies a cadascun. Zero els guarda sempre. L'auditoria es conserva almenys noranta dies.",
+        "de": "Gib je Art eine Anzahl Tage an. Null heißt für immer. Das Audit-Protokoll bleibt mindestens neunzig Tage."
+      },
+      "actions": [
+        {
+          "click": {
+            "selector": "tbody input",
+            "nth": 0
+          }
+        },
+        {
+          "press": "Control+A"
+        },
+        {
+          "type": {
+            "text": "365"
+          }
+        },
+        {
+          "hold": 1
+        }
+      ]
+    },
+    {
+      "id": "purge",
+      "title": {
+        "en": "Deleting",
+        "es": "Borrado",
+        "ca": "Esborrat",
+        "de": "Löschen"
+      },
+      "narration": {
+        "en": "Save, and an hourly job deletes what is older. Deleted records cannot be brought back.",
+        "es": "Guarda, y una tarea cada hora borra lo más antiguo. Lo borrado no se recupera.",
+        "ca": "Desa, i una tasca cada hora esborra el més antic. El que s'esborra no es recupera.",
+        "de": "Speichere, dann löscht ein stündlicher Job das Ältere. Gelöschtes ist nicht zurückzuholen."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Save",
+            "exact": false,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Purge now",
+            "exact": false,
+            "seconds": 2
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Compliance and incidents",
+    "narration": {
+      "en": "Old data now has an end date. Next time: compliance and incidents. Thanks for watching, and see you soon!",
+      "es": "Los datos antiguos ya tienen fecha de fin. En el próximo vídeo: cumplimiento e incidentes. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Les dades antigues ja tenen data de final. Al pròxim vídeo: compliment i incidents. Gràcies per mirar-ho i fins aviat!",
+      "de": "Alte Daten haben jetzt ein Ablaufdatum. Im nächsten Video: Compliance und Vorfälle. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

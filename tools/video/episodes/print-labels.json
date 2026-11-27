@@ -1,0 +1,157 @@
+{
+  "slug": "print-labels",
+  "topic": "Library",
+  "title": "Print barcode labels",
+  "search": "How to print book barcode labels in Vaultisse",
+  "coverWords": "Print barcode labels",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/printing-labels",
+  "start": "/app/book/1",
+  "tags": [
+    "print book labels",
+    "library barcode labels",
+    "vaultisse barcode",
+    "book spine labels",
+    "label pdf",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to print book barcode labels in Vaultisse",
+      "description": "Learn how to print book barcode labels in Vaultisse for the copies you choose."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo imprimir etiquetas de libros en Vaultisse",
+      "description": "Aprende a imprimir etiquetas de libros en Vaultisse para los ejemplares que elijas."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com imprimir etiquetes de llibres a Vaultisse",
+      "description": "Aprèn a imprimir etiquetes de llibres a Vaultisse per als exemplars que triïs."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Buchetiketten in Vaultisse drucken",
+      "description": "So druckst du in Vaultisse Barcode-Etiketten für die Exemplare deiner Wahl."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Queue the copies",
+      "Review the queue",
+      "Print the PDF"
+    ],
+    "narration": {
+      "en": "Here is how to print book barcode labels in Vaultisse. In this video: queue the copies. Review the queue. Print the PDF.",
+      "es": "Así se imprimen etiquetas de libros en Vaultisse. En este vídeo: pon ejemplares en la cola. Revisa la cola. Imprime el PDF.",
+      "ca": "Així s'imprimeixen etiquetes de llibres a Vaultisse. En aquest vídeo: posa exemplars a la cua. Revisa la cua. Imprimeix el PDF.",
+      "de": "So druckst du Buchetiketten in Vaultisse. In diesem Video: Exemplare einreihen. Die Warteschlange prüfen. Das PDF drucken."
+    }
+  },
+  "steps": [
+    {
+      "id": "queue",
+      "title": {
+        "en": "Add to the queue",
+        "es": "Añadir a la cola",
+        "ca": "Afegir a la cua",
+        "de": "Zur Warteschlange"
+      },
+      "narration": {
+        "en": "Open a book page. Click the printer icon next to each copy that needs a label.",
+        "es": "Abre la ficha de un libro. Pulsa la impresora de cada ejemplar que necesite etiqueta.",
+        "ca": "Obre la fitxa d'un llibre. Prem la impressora de cada exemplar que necessiti etiqueta.",
+        "de": "Öffne eine Buchseite. Klicke bei jedem Exemplar, das ein Etikett braucht, auf den Drucker."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "scroll": 300
+        },
+        {
+          "click": {
+            "selector": "tbody tr:nth-child(1) [class*=mdi-printer]"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "selector": "tbody tr:nth-child(2) [class*=mdi-printer]"
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "title": {
+        "en": "Review the queue",
+        "es": "Revisa la cola",
+        "ca": "Revisa la cua",
+        "de": "Warteschlange prüfen"
+      },
+      "narration": {
+        "en": "Open Printer queue in the menu. You can remove any label before printing.",
+        "es": "Abre Cola de impresión en el menú. Puedes quitar cualquier etiqueta antes de imprimir.",
+        "ca": "Obre Cua d'impressió al menú. Pots treure qualsevol etiqueta abans d'imprimir.",
+        "de": "Öffne im Menü die Druckwarteschlange. Vor dem Druck kannst du Etiketten entfernen."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Printer queue",
+            "exact": true
+          }
+        },
+        {
+          "pause": 3
+        }
+      ]
+    },
+    {
+      "id": "print",
+      "title": {
+        "en": "Print",
+        "es": "Imprimir",
+        "ca": "Imprimir",
+        "de": "Drucken"
+      },
+      "narration": {
+        "en": "Click Print to get a PDF with the barcodes. Print it on label paper and stick them on the books.",
+        "es": "Pulsa Imprimir para obtener un PDF con los códigos. Imprímelo en papel de etiquetas y pégalas.",
+        "ca": "Prem Imprimir per obtenir un PDF amb els codis. Imprimeix-lo en paper d'etiquetes i enganxa-les.",
+        "de": "Klicke auf Drucken für ein PDF mit den Barcodes. Drucke es auf Etikettenpapier und klebe die Etiketten auf."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Print"
+          }
+        },
+        {
+          "pause": 3
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Print only new labels",
+    "narration": {
+      "en": "Your labels are ready. Next time: printing only new labels. Thanks for watching, and see you soon!",
+      "es": "Tus etiquetas están listas. En el próximo vídeo: imprimir solo las pendientes. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Les etiquetes estan a punt. Al pròxim vídeo: imprimir només les pendents. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Etiketten sind fertig. Im nächsten Video: nur neue Etiketten drucken. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

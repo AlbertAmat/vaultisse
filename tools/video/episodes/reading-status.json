@@ -1,0 +1,198 @@
+{
+  "slug": "reading-status",
+  "topic": "Library",
+  "title": "Track what you read",
+  "search": "How to track your reading in Vaultisse",
+  "coverWords": "Track what you read",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/book-details",
+  "start": "/app/book/2",
+  "tags": [
+    "reading tracker",
+    "want to read list",
+    "vaultisse reading status",
+    "currently reading",
+    "books read",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to track your reading in Vaultisse",
+      "description": "Learn how to track your reading in Vaultisse: want to read, currently reading and read."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo registrar tus lecturas en Vaultisse",
+      "description": "Aprende a registrar tus lecturas en Vaultisse: quiero leer, leyendo y leído."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com registrar les teves lectures a Vaultisse",
+      "description": "Aprèn a registrar les teves lectures a Vaultisse: vull llegir, llegint i llegit."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Gelesene Bücher in Vaultisse festhalten",
+      "description": "So hältst du in Vaultisse fest, was du lesen willst, gerade liest und gelesen hast."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Set a status",
+      "Find those books again",
+      "See them on the dashboard"
+    ],
+    "narration": {
+      "en": "Here is how to track your reading in Vaultisse. In this video: set a status. Find those books again. See them on the dashboard.",
+      "es": "Así se registran las lecturas en Vaultisse. En este vídeo: marca un estado. Vuelve a encontrarlos. Míralos en el panel.",
+      "ca": "Així es registren les lectures a Vaultisse. En aquest vídeo: marca un estat. Torna'ls a trobar. Mira'ls al panell.",
+      "de": "So hältst du deine Lektüre in Vaultisse fest. In diesem Video: einen Status setzen. Die Bücher wiederfinden. Sie in der Übersicht sehen."
+    }
+  },
+  "steps": [
+    {
+      "id": "set",
+      "title": {
+        "en": "Set a status",
+        "es": "Marca el estado",
+        "ca": "Marca l'estat",
+        "de": "Status setzen"
+      },
+      "narration": {
+        "en": "On a book page, open the reading status button at the top. Pick want to read, currently reading, or read.",
+        "es": "En la ficha del libro, abre el botón de estado de lectura. Elige quiero leer, leyendo o leído.",
+        "ca": "A la fitxa del llibre, obre el botó d'estat de lectura. Tria vull llegir, llegint o llegit.",
+        "de": "Öffne auf der Buchseite oben den Knopf für den Lesestatus. Wähle Leseliste, lese ich oder gelesen."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "selector": "button:has(.mdi-bookmark-outline), button:has(.mdi-bookmark), button:has(.mdi-book-open-variant), button:has(.mdi-check), button:has-text('Reading status'), button:has-text('Want to read'), button:has-text('Currently reading'), button:has-text('Read')",
+            "nth": 0
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Currently reading",
+            "text": "Currently reading"
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    },
+    {
+      "id": "personal",
+      "title": {
+        "en": "It is personal",
+        "es": "Es personal",
+        "ca": "És personal",
+        "de": "Ganz persönlich"
+      },
+      "narration": {
+        "en": "The status is yours alone. Other members keep their own.",
+        "es": "El estado es solo tuyo. Los demás miembros tienen el suyo.",
+        "ca": "L'estat és només teu. Els altres membres tenen el seu.",
+        "de": "Der Status gilt nur für dich. Andere Mitglieder haben ihren eigenen."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "selector": "button:has-text('Currently reading')",
+            "nth": 0,
+            "seconds": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "find",
+      "title": {
+        "en": "Find them again",
+        "es": "Volver a encontrarlos",
+        "ca": "Tornar-los a trobar",
+        "de": "Wiederfinden"
+      },
+      "narration": {
+        "en": "In the Library menu, Currently reading and Want to read list those books.",
+        "es": "En el menú Biblioteca, las listas de lectura actual y pendientes reúnen esos libros.",
+        "ca": "Al menú Biblioteca, les llistes de lectura actual i pendents recullen aquests llibres.",
+        "de": "Im Menü Bibliothek findest du deine aktuelle Lektüre und deine Leseliste."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Library",
+            "exact": true
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Currently reading",
+            "exact": true
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "dashboard",
+      "title": {
+        "en": "On the dashboard",
+        "es": "En el panel",
+        "ca": "Al panell",
+        "de": "In der Übersicht"
+      },
+      "narration": {
+        "en": "The dashboard shows them too, further down the page.",
+        "es": "El panel también los muestra, más abajo en la página.",
+        "ca": "El panell també els mostra, més avall a la pàgina.",
+        "de": "Auch die Übersicht zeigt sie weiter unten an."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Dashboard",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "scroll": 1300
+        },
+        {
+          "pause": 2
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Import your books",
+    "narration": {
+      "en": "Your reading list is up to date. Next time: importing your books. Thanks for watching, and see you soon!",
+      "es": "Tu lista de lectura está al día. En el próximo vídeo: importar tus libros. ¡Gracias por vernos y hasta pronto!",
+      "ca": "La teva llista de lectura està al dia. Al pròxim vídeo: importar els llibres. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Leseliste ist aktuell. Im nächsten Video: Bücher importieren. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

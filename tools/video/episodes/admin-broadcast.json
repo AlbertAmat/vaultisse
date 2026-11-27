@@ -1,0 +1,151 @@
+{
+  "slug": "admin-broadcast",
+  "topic": "Admin panel",
+  "title": "Email your users",
+  "search": "How to email all users from the Vaultisse admin panel",
+  "coverWords": "Email your users",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#emailing-the-users",
+  "start": "/broadcast",
+  "tags": [
+    "email all users",
+    "broadcast email",
+    "service message",
+    "vaultisse email users",
+    "bulk email admin",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to email all users from the Vaultisse admin panel",
+      "description": "Learn how to email all users from the Vaultisse admin panel, with a preview first."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo enviar un correo a todos los usuarios desde Vaultisse",
+      "description": "Aprende a enviar un correo a los usuarios desde Vaultisse, con vista previa antes."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com enviar un correu a tots els usuaris des de Vaultisse",
+      "description": "Aprèn a enviar un correu als usuaris des de Vaultisse, amb vista prèvia abans."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Alle Nutzer aus dem Vaultisse Admin-Panel anschreiben",
+      "description": "Schreibe Nutzer aus dem Admin-Panel an, mit Vorschau vorab."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Choose who",
+      "Write and preview",
+      "Send safely"
+    ],
+    "narration": {
+      "en": "Here is how to email your users from the panel. In this video: choose who. Write and preview. Send safely.",
+      "es": "Así se escribe a los usuarios desde el panel. En este vídeo: elige a quién. Escribe y previsualiza. Envía con seguridad.",
+      "ca": "Així s'escriu als usuaris des del panell. En aquest vídeo: tria a qui. Escriu i previsualitza. Envia amb seguretat.",
+      "de": "So schreibst du deine Nutzer aus dem Panel an. In diesem Video: Empfänger wählen. Schreiben und prüfen. Sicher senden."
+    }
+  },
+  "steps": [
+    {
+      "id": "write",
+      "title": {
+        "en": "Write",
+        "es": "Escribir",
+        "ca": "Escriure",
+        "de": "Schreiben"
+      },
+      "narration": {
+        "en": "Email users sends a plain message. Choose the audience, then write a subject and the text. The name in braces becomes each person's name.",
+        "es": "Email users envía un mensaje de texto. Elige los destinatarios y escribe asunto y texto. El nombre entre llaves se sustituye por el de cada persona.",
+        "ca": "Email users envia un missatge de text. Tria els destinataris i escriu assumpte i text. El nom entre claus se substitueix pel de cadascú.",
+        "de": "Email users verschickt eine Textnachricht. Wähle die Empfänger und schreibe Betreff und Text. Der Name in Klammern wird je Person ersetzt."
+      },
+      "actions": [
+        {
+          "type": {
+            "into": {
+              "label": "Subject"
+            },
+            "text": "Library closed on Friday"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "selector": "textarea",
+              "nth": 0
+            },
+            "text": "Hello {name}, the library is closed this Friday."
+          }
+        }
+      ]
+    },
+    {
+      "id": "preview",
+      "title": {
+        "en": "Preview",
+        "es": "Vista previa",
+        "ca": "Vista prèvia",
+        "de": "Vorschau"
+      },
+      "narration": {
+        "en": "Preview shows how many people will receive it, and how it will read.",
+        "es": "La vista previa muestra cuántos lo recibirán y cómo se verá.",
+        "ca": "La vista prèvia mostra quants el rebran i com es veurà.",
+        "de": "Die Vorschau zeigt, wie viele es erhalten und wie es aussieht."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Preview"
+          }
+        },
+        {
+          "hold": 3
+        }
+      ]
+    },
+    {
+      "id": "send",
+      "title": {
+        "en": "Send",
+        "es": "Enviar",
+        "ca": "Enviar",
+        "de": "Senden"
+      },
+      "narration": {
+        "en": "Send yourself a test first. Sending to everyone asks you to verify again, and it can be stopped.",
+        "es": "Envíate antes una prueba. El envío a todos pide verificarte de nuevo y se puede detener.",
+        "ca": "Envia't abans una prova. L'enviament a tothom demana tornar-te a verificar i es pot aturar.",
+        "de": "Schick dir zuerst einen Test. Der Versand an alle verlangt eine erneute Bestätigung und lässt sich stoppen."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Send a test",
+            "exact": false,
+            "seconds": 2.5
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Support actions on an account",
+    "narration": {
+      "en": "Your message is ready. Next time: support actions. Thanks for watching, and see you soon!",
+      "es": "Tu mensaje está listo. En el próximo vídeo: las tareas de soporte. ¡Gracias por vernos y hasta pronto!",
+      "ca": "El missatge està a punt. Al pròxim vídeo: les tasques de suport. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Nachricht ist bereit. Im nächsten Video: Support-Aktionen. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

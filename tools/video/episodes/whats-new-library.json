@@ -1,0 +1,246 @@
+{
+  "slug": "whats-new-library",
+  "topic": "What's new",
+  "title": "The library in 1.3.9",
+  "search": "What is new in Vaultisse 1.3.9 for your library",
+  "coverWords": "New in 1.3.9",
+  "playlist": "Releases",
+  "docs": "https://docs.vaultisse.com/releases",
+  "start": "/app/loans",
+  "tags": [
+    "vaultisse 1.3.9",
+    "vaultisse new features",
+    "vaultisse release",
+    "library cards",
+    "lend multiple books",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "What's new",
+      "title": "What is new in Vaultisse 1.3.9 for your library",
+      "description": "See what is new in Vaultisse 1.3.9 for your library: lending, library cards, labels and email."
+    },
+    "es": {
+      "topic": "Novedades",
+      "title": "Novedades de Vaultisse 1.3.9 para tu biblioteca",
+      "description": "Descubre las novedades de Vaultisse 1.3.9 para tu biblioteca: préstamos, carnés, etiquetas y correo."
+    },
+    "ca": {
+      "topic": "Novetats",
+      "title": "Novetats de Vaultisse 1.3.9 per a la biblioteca",
+      "description": "Descobreix les novetats de Vaultisse 1.3.9 per a la biblioteca: préstecs, carnets, etiquetes i correu."
+    },
+    "de": {
+      "topic": "Neu",
+      "title": "Neu in Vaultisse 1.3.9 für deine Bibliothek",
+      "description": "Sieh, was Vaultisse 1.3.9 deiner Bibliothek bringt: Verleih, Ausweise, Etiketten und E-Mail."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Easier lending",
+      "Library cards",
+      "Smarter labels and email"
+    ],
+    "narration": {
+      "en": "Here is what is new in Vaultisse 1.3.9 for your library. In this video: easier lending. Library cards. Smarter labels and email.",
+      "es": "Estas son las novedades de Vaultisse 1.3.9 para tu biblioteca. En este vídeo: préstamos más fáciles. Carnés de biblioteca. Etiquetas y correo.",
+      "ca": "Aquestes són les novetats de Vaultisse 1.3.9 per a la biblioteca. En aquest vídeo: préstecs més fàcils. Carnets de biblioteca. Etiquetes i correu.",
+      "de": "Das ist neu in Vaultisse 1.3.9 für deine Bibliothek. In diesem Video: einfacheres Verleihen. Bibliotheksausweise. Etiketten und E-Mail."
+    }
+  },
+  "steps": [
+    {
+      "id": "lend",
+      "title": {
+        "en": "Lending",
+        "es": "Préstamos",
+        "ca": "Préstecs",
+        "de": "Verleih"
+      },
+      "narration": {
+        "en": "Each copy now has Lend and Return buttons. And the Loans page can lend several books to one person at once.",
+        "es": "Cada ejemplar tiene ahora botones de prestar y devolver. Y la página de Préstamos presta varios libros a una persona a la vez.",
+        "ca": "Cada exemplar té ara botons per prestar i retornar. I la pàgina de Préstecs presta diversos llibres a una persona alhora.",
+        "de": "Jedes Exemplar hat jetzt Knöpfe zum Verleihen und Zurücknehmen. Und die Seite Ausleihen verleiht mehrere Bücher auf einmal."
+      },
+      "actions": [
+        {
+          "click": {
+            "role": "button",
+            "name": "Loan a book"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Select a customer or scan their card"
+            },
+            "text": "Amara"
+          }
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list",
+            "text": "Amara Okafor"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Paper"
+          }
+        },
+        {
+          "hold": 0.4
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Paper Astronomer",
+            "text": "The Paper Astronomer"
+          }
+        },
+        {
+          "type": {
+            "into": {
+              "within": "[role=dialog]",
+              "label": "Search a book or scan its label"
+            },
+            "text": "Glass"
+          }
+        },
+        {
+          "hold": 0.4
+        },
+        {
+          "click": {
+            "within": ".v-autocomplete__content .v-list-item",
+            "hasText": "The Glass Heron",
+            "text": "The Glass Heron"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": {
+        "en": "Library cards",
+        "es": "Carnés",
+        "ca": "Carnets",
+        "de": "Ausweise"
+      },
+      "narration": {
+        "en": "Customers get a library card with a barcode. Scan it to see their loans, and to lend by scanning.",
+        "es": "Los clientes tienen un carné con código de barras. Escanéalo para ver sus préstamos y prestar escaneando.",
+        "ca": "Els clients tenen un carnet amb codi de barres. Escaneja'l per veure els préstecs i prestar escanejant.",
+        "de": "Kunden erhalten einen Ausweis mit Barcode. Ein Scan zeigt ihre Ausleihen und verleiht weitere."
+      },
+      "actions": [
+        {
+          "goto": "/app/customers"
+        },
+        {
+          "click": {
+            "within": ".entity-card",
+            "hasText": "Alex Morgan",
+            "selector": ".mdi-card-account-details-outline"
+          }
+        },
+        {
+          "hold": 3
+        },
+        {
+          "press": "Escape"
+        }
+      ]
+    },
+    {
+      "id": "labels",
+      "title": {
+        "en": "Labels",
+        "es": "Etiquetas",
+        "ca": "Etiquetes",
+        "de": "Etiketten"
+      },
+      "narration": {
+        "en": "Vaultisse now remembers which labels were printed, and can queue only the new ones.",
+        "es": "Vaultisse recuerda qué etiquetas se imprimieron y puede poner en cola solo las nuevas.",
+        "ca": "Vaultisse recorda quines etiquetes s'han imprès i pot posar a la cua només les noves.",
+        "de": "Vaultisse merkt sich gedruckte Etiketten und reiht nur neue ein."
+      },
+      "actions": [
+        {
+          "goto": "/app/dashboard"
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Printer queue",
+            "exact": true
+          }
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add unprinted labels"
+          }
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "email",
+      "title": {
+        "en": "Email",
+        "es": "Correo",
+        "ca": "Correu",
+        "de": "E-Mail"
+      },
+      "narration": {
+        "en": "With email set up, new accounts confirm their address, and people get security notices. Unused accounts can also be removed automatically.",
+        "es": "Con el correo configurado, las cuentas nuevas confirman su dirección y llegan avisos de seguridad. Las cuentas sin uso también pueden borrarse solas.",
+        "ca": "Amb el correu configurat, els comptes nous confirmen l'adreça i arriben avisos de seguretat. Els comptes sense ús també es poden esborrar sols.",
+        "de": "Mit E-Mail bestätigen neue Konten ihre Adresse und es gibt Sicherheitshinweise. Ungenutzte Konten lassen sich automatisch entfernen."
+      },
+      "actions": [
+        {
+          "goto": "/app/settings"
+        },
+        {
+          "scroll": 640
+        },
+        {
+          "highlight": {
+            "text": "Account Security",
+            "nth": 0,
+            "seconds": 3
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "The new admin panel",
+    "narration": {
+      "en": "To upgrade, back up, then run docker compose pull and docker compose up. Next time: the new admin panel. Thanks for watching, and see you soon!",
+      "es": "Para actualizar, haz copia y ejecuta docker compose pull y docker compose up. En el próximo vídeo: el nuevo panel de administración. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Per actualitzar, fes còpia i executa docker compose pull i docker compose up. Al pròxim vídeo: el nou panell d'administració. Gràcies per mirar-ho i fins aviat!",
+      "de": "Zum Aktualisieren sicherst du und führst docker compose pull und up aus. Im nächsten Video: das neue Admin-Panel. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

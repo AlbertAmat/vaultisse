@@ -1,0 +1,191 @@
+{
+  "slug": "multiple-libraries",
+  "topic": "Accounts",
+  "title": "Several libraries",
+  "search": "How to manage multiple libraries in Vaultisse",
+  "coverWords": "More than one library",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/settings",
+  "start": "/app/settings",
+  "tags": [
+    "multiple libraries",
+    "create new library",
+    "switch library",
+    "vaultisse vaults",
+    "separate book collections",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Accounts",
+      "title": "How to manage multiple libraries in Vaultisse",
+      "description": "Learn how to manage multiple libraries in Vaultisse with one account."
+    },
+    "es": {
+      "topic": "Cuentas",
+      "title": "Cómo gestionar varias bibliotecas en Vaultisse",
+      "description": "Aprende a gestionar varias bibliotecas en Vaultisse con una sola cuenta."
+    },
+    "ca": {
+      "topic": "Comptes",
+      "title": "Com gestionar diverses biblioteques a Vaultisse",
+      "description": "Aprèn a gestionar diverses biblioteques a Vaultisse amb un sol compte."
+    },
+    "de": {
+      "topic": "Konten",
+      "title": "Mehrere Bibliotheken in Vaultisse verwalten",
+      "description": "Verwalte mit einem Konto mehrere Bibliotheken in Vaultisse."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Create a library",
+      "Switch between them",
+      "Keep them separate"
+    ],
+    "narration": {
+      "en": "Here is how to manage multiple libraries in Vaultisse. In this video: create a library. Switch between them. Keep them separate.",
+      "es": "Así se gestionan varias bibliotecas en Vaultisse. En este vídeo: crea una biblioteca. Cambia entre ellas. Mantenlas separadas.",
+      "ca": "Així es gestionen diverses biblioteques a Vaultisse. En aquest vídeo: crea una biblioteca. Canvia entre elles. Mantén-les separades.",
+      "de": "So verwaltest du mehrere Bibliotheken in Vaultisse. In diesem Video: eine Bibliothek anlegen. Zwischen ihnen wechseln. Sie getrennt halten."
+    }
+  },
+  "steps": [
+    {
+      "id": "new",
+      "title": {
+        "en": "Create a library",
+        "es": "Crea una biblioteca",
+        "ca": "Crea una biblioteca",
+        "de": "Bibliothek anlegen"
+      },
+      "narration": {
+        "en": "A library is called a vault. In Settings, click New vault, give it a name and click Add.",
+        "es": "Cada biblioteca es un vault. En Configuración, pulsa Nuevo vault, ponle nombre y pulsa Agregar.",
+        "ca": "Cada biblioteca és un vault. A Configuració, prem Nou vault, posa-hi nom i prem Afegir.",
+        "de": "Eine Bibliothek heißt Vault. Klicke in den Einstellungen auf Neuer Vault, benenne ihn und klicke auf Hinzufügen."
+      },
+      "actions": [
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "New vault"
+          }
+        },
+        {
+          "type": {
+            "text": "Home books"
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add",
+            "within": "[role=dialog]"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "switch",
+      "title": {
+        "en": "Switch",
+        "es": "Cambiar",
+        "ca": "Canviar",
+        "de": "Wechseln"
+      },
+      "narration": {
+        "en": "Use the menu at the top left to switch between your libraries.",
+        "es": "Usa el menú de arriba a la izquierda para cambiar de biblioteca.",
+        "ca": "Fes servir el menú de dalt a l'esquerra per canviar de biblioteca.",
+        "de": "Mit dem Menü oben links wechselst du zwischen deinen Bibliotheken."
+      },
+      "actions": [
+        {
+          "click": {
+            "selector": ".v-app-bar button",
+            "nth": 0
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Home books",
+            "text": "Home books"
+          }
+        },
+        {
+          "hold": 3
+        }
+      ]
+    },
+    {
+      "id": "separate",
+      "title": {
+        "en": "Separate collections",
+        "es": "Colecciones separadas",
+        "ca": "Col·leccions separades",
+        "de": "Getrennte Sammlungen"
+      },
+      "narration": {
+        "en": "Each library has its own books, locations, customers and members. The menu at the top left switches back.",
+        "es": "Cada biblioteca tiene sus libros, ubicaciones, clientes y miembros. El menú de arriba a la izquierda te devuelve.",
+        "ca": "Cada biblioteca té els seus llibres, ubicacions, clients i membres. El menú de dalt a l'esquerra t'hi torna.",
+        "de": "Jede Bibliothek hat eigene Bücher, Standorte, Kunden und Mitglieder. Über das Menü oben links wechselst du zurück."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Dashboard",
+            "exact": true
+          }
+        },
+        {
+          "pause": 2
+        },
+        {
+          "click": {
+            "selector": ".v-app-bar button",
+            "nth": 0
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Riverside School Library",
+            "text": "Riverside School Library"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Profile and appearance",
+    "narration": {
+      "en": "Each collection has its own place. Next time: profile and appearance. Thanks for watching, and see you soon!",
+      "es": "Cada colección tiene su sitio. En el próximo vídeo: perfil y apariencia. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Cada col·lecció té el seu lloc. Al pròxim vídeo: perfil i aparença. Gràcies per mirar-ho i fins aviat!",
+      "de": "So hat jede Sammlung ihren Platz. Im nächsten Video: Profil und Darstellung. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

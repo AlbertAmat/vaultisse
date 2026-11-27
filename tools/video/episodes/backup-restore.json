@@ -1,0 +1,142 @@
+{
+  "slug": "backup-restore",
+  "topic": "Setup",
+  "title": "Back up and restore",
+  "search": "How to back up and restore Vaultisse",
+  "coverWords": "Back up Vaultisse",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/updating-and-backups#backing-up",
+  "start": "term",
+  "tags": [
+    "vaultisse backup",
+    "vaultisse restore",
+    "pg_dump docker",
+    "database backup",
+    "self-hosted backup",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to back up and restore Vaultisse",
+      "description": "Learn how to back up and restore Vaultisse with a database dump."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo hacer copia y restaurar Vaultisse",
+      "description": "Aprende a hacer copia y restaurar Vaultisse con un volcado de la base de datos."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com fer còpia i restaurar Vaultisse",
+      "description": "Aprèn a fer còpia i restaurar Vaultisse amb un bolcat de la base de dades."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Vaultisse sichern und wiederherstellen",
+      "description": "Sichere und stelle Vaultisse mit einem Datenbank-Dump wieder her."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Make a dump",
+      "Run it every night",
+      "Restore it"
+    ],
+    "narration": {
+      "en": "Here is how to back up and restore Vaultisse. In this video: make a dump. Run it every night. Restore it.",
+      "es": "Así se hace copia y se restaura Vaultisse. En este vídeo: haz un volcado. Prográmalo cada noche. Restáuralo.",
+      "ca": "Així es fa còpia i es restaura Vaultisse. En aquest vídeo: fes un bolcat. Programa'l cada nit. Restaura'l.",
+      "de": "So sicherst du Vaultisse und stellst es wieder her. In diesem Video: einen Dump erstellen. Ihn jede Nacht laufen lassen. Wiederherstellen."
+    }
+  },
+  "steps": [
+    {
+      "id": "dump",
+      "title": {
+        "en": "Make a dump",
+        "es": "Volcado",
+        "ca": "Bolcat",
+        "de": "Dump erstellen"
+      },
+      "narration": {
+        "en": "Everything that matters is in the database, ebooks included. This command writes it to a dated file.",
+        "es": "Todo lo importante está en la base de datos, ebooks incluidos. Esta orden lo guarda en un archivo con fecha.",
+        "ca": "Tot el que importa és a la base de dades, ebooks inclosos. Aquesta ordre ho desa en un fitxer amb data.",
+        "de": "Alles Wichtige liegt in der Datenbank, auch E-Books. Dieser Befehl schreibt es in eine Datei mit Datum."
+      },
+      "actions": [
+        {
+          "run": "docker compose exec -T db pg_dump -U postgres vaultisse > vaultisse-$(date +%F).sql"
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "cron",
+      "title": {
+        "en": "Every night",
+        "es": "Cada noche",
+        "ca": "Cada nit",
+        "de": "Jede Nacht"
+      },
+      "narration": {
+        "en": "Add it to cron to run every night. Copy the files to another machine, and keep a copy of your settings file too.",
+        "es": "Añádelo a cron para cada noche. Copia los archivos a otro equipo y guarda también el archivo de configuración.",
+        "ca": "Afegeix-ho a cron per a cada nit. Copia els fitxers a un altre equip i desa també el fitxer de configuració.",
+        "de": "Trage ihn für jede Nacht in cron ein. Kopiere die Dateien auf einen anderen Rechner und sichere auch die Einstellungsdatei."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": "crontab -e",
+            "lines": [
+              "0 3 * * * cd /path/to/vaultisse && docker compose exec -T db pg_dump -U postgres vaultisse > /backups/vaultisse-$(date +\\%F).sql"
+            ]
+          }
+        },
+        {
+          "hold": 3
+        }
+      ]
+    },
+    {
+      "id": "restore",
+      "title": {
+        "en": "Restore",
+        "es": "Restaurar",
+        "ca": "Restaurar",
+        "de": "Wiederherstellen"
+      },
+      "narration": {
+        "en": "To restore on a fresh install, start only the database. Load the dump, then start everything.",
+        "es": "Para restaurar en una instalación nueva, arranca solo la base de datos. Carga el volcado y arranca todo.",
+        "ca": "Per restaurar en una instal·lació nova, engega només la base de dades. Carrega el bolcat i engega-ho tot.",
+        "de": "Starte bei einer Neuinstallation zuerst nur die Datenbank. Spiele den Dump ein und starte dann alles."
+      },
+      "actions": [
+        {
+          "run": "docker compose up -d db"
+        },
+        {
+          "run": "docker compose exec -T db psql -U postgres -d vaultisse < vaultisse-2026-11-27.sql"
+        },
+        {
+          "run": "docker compose up -d"
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Upgrade to a new version",
+    "narration": {
+      "en": "Your library is safe. Next time: upgrading to a new version. Thanks for watching, and see you soon!",
+      "es": "Tu biblioteca está a salvo. En el próximo vídeo: actualizar a una versión nueva. ¡Gracias por vernos y hasta pronto!",
+      "ca": "La biblioteca està segura. Al pròxim vídeo: actualitzar a una versió nova. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Bibliothek ist gesichert. Im nächsten Video: das Aktualisieren. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

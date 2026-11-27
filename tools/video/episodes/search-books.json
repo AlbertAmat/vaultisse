@@ -1,0 +1,225 @@
+{
+  "slug": "search-books",
+  "topic": "Library",
+  "title": "Search, sort and filter",
+  "search": "How to search and filter books in Vaultisse",
+  "coverWords": "Find any book fast",
+  "playlist": "End user",
+  "docs": "https://docs.vaultisse.com/searching-the-library",
+  "start": "/app/library/search",
+  "tags": [
+    "search books",
+    "filter book collection",
+    "sort library",
+    "vaultisse search",
+    "find a book",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Library",
+      "title": "How to search and filter books in Vaultisse",
+      "description": "Learn how to search and filter books in Vaultisse and sort them the way you like."
+    },
+    "es": {
+      "topic": "Biblioteca",
+      "title": "Cómo buscar y filtrar libros en Vaultisse",
+      "description": "Aprende a buscar y filtrar libros en Vaultisse y a ordenarlos como quieras."
+    },
+    "ca": {
+      "topic": "Biblioteca",
+      "title": "Com cercar i filtrar llibres a Vaultisse",
+      "description": "Aprèn a cercar i filtrar llibres a Vaultisse i a ordenar-los com vulguis."
+    },
+    "de": {
+      "topic": "Bibliothek",
+      "title": "Bücher in Vaultisse suchen und filtern",
+      "description": "So suchst, filterst und sortierst du Bücher in Vaultisse."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Search by words",
+      "Sort the results",
+      "Filter the shelves"
+    ],
+    "narration": {
+      "en": "Here is how to search and filter books in Vaultisse. In this video: search by words. Sort the results. Filter the shelves.",
+      "es": "Así se buscan y filtran libros en Vaultisse. En este vídeo: busca por palabras. Ordena los resultados. Filtra los libros.",
+      "ca": "Així es cerquen i filtren llibres a Vaultisse. En aquest vídeo: cerca per paraules. Ordena els resultats. Filtra els llibres.",
+      "de": "So suchst und filterst du Bücher in Vaultisse. In diesem Video: nach Wörtern suchen. Die Ergebnisse sortieren. Die Bücher filtern."
+    }
+  },
+  "steps": [
+    {
+      "id": "search",
+      "title": {
+        "en": "Search",
+        "es": "Buscar",
+        "ca": "Cercar",
+        "de": "Suchen"
+      },
+      "narration": {
+        "en": "Type a word from the title in the search bar and press Enter. Only the matching books remain.",
+        "es": "Escribe una palabra del título en el buscador y pulsa Intro. Solo quedan los libros que coinciden.",
+        "ca": "Escriu una paraula del títol al cercador i prem Retorn. Només queden els llibres que coincideixen.",
+        "de": "Tippe ein Wort aus dem Titel in die Suchleiste und drücke Enter. Nur passende Bücher bleiben übrig."
+      },
+      "actions": [
+        {
+          "pause": 0.8
+        },
+        {
+          "type": {
+            "into": {
+              "placeholder": "Search books"
+            },
+            "text": "moon"
+          }
+        },
+        {
+          "press": "Enter"
+        },
+        {
+          "pause": 2.5
+        }
+      ]
+    },
+    {
+      "id": "sort",
+      "title": {
+        "en": "Sort",
+        "es": "Ordenar",
+        "ca": "Ordenar",
+        "de": "Sortieren"
+      },
+      "narration": {
+        "en": "Sort by name, or by the newest and oldest books.",
+        "es": "Ordena por nombre, o por los más nuevos y los más antiguos.",
+        "ca": "Ordena per nom, o pels més nous i els més antics.",
+        "de": "Sortiere nach Name oder nach den neuesten und ältesten Büchern."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "View all",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "text": "Name (A-Z)",
+            "nth": 0
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "within": ".v-overlay--active .v-list-item",
+            "hasText": "Newest first",
+            "text": "Newest first"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "filter",
+      "title": {
+        "en": "Filter",
+        "es": "Filtrar",
+        "ca": "Filtrar",
+        "de": "Filtern"
+      },
+      "narration": {
+        "en": "The filter button in the search bar narrows the list. Choose books on loan, with no copies, or one category. Then click Apply.",
+        "es": "El botón de filtro del buscador acota la lista. Elige prestados, sin ejemplares o una categoría. Después pulsa Aplicar.",
+        "ca": "El botó de filtre del cercador acota la llista. Tria en préstec, sense exemplars o una categoria. Després prem Aplica.",
+        "de": "Der Filterknopf in der Suchleiste grenzt die Liste ein. Wähle verliehene Bücher, ohne Exemplare oder eine Kategorie. Dann klicke auf Anwenden."
+      },
+      "actions": [
+        {
+          "click": {
+            "selector": ".v-app-bar .mdi-filter-variant"
+          }
+        },
+        {
+          "pause": 1
+        },
+        {
+          "click": {
+            "text": "On loan",
+            "nth": -1
+          }
+        },
+        {
+          "pause": 0.8
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Apply"
+          }
+        },
+        {
+          "pause": 2
+        }
+      ]
+    },
+    {
+      "id": "shortcuts",
+      "title": {
+        "en": "Shortcuts in the menu",
+        "es": "Atajos del menú",
+        "ca": "Dreceres del menú",
+        "de": "Abkürzungen im Menü"
+      },
+      "narration": {
+        "en": "The Library menu also has shortcuts, such as recent books or what you want to read.",
+        "es": "El menú Biblioteca también tiene atajos, como los recientes o los que quieres leer.",
+        "ca": "El menú Biblioteca també té dreceres, com els recents o els que vols llegir.",
+        "de": "Im Menü Bibliothek gibt es auch Abkürzungen, etwa für Neues oder deine Leseliste."
+      },
+      "actions": [
+        {
+          "click": {
+            "within": "nav",
+            "text": "Recent",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1.5
+        },
+        {
+          "click": {
+            "within": "nav",
+            "text": "Want to read",
+            "exact": true
+          }
+        },
+        {
+          "pause": 1.5
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Add copies of a book",
+    "narration": {
+      "en": "Any book is now a few seconds away. Next time: adding copies of a book. Thanks for watching, and see you soon!",
+      "es": "Cualquier libro está a unos segundos. En el próximo vídeo: añadir ejemplares de un libro. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Qualsevol llibre és a uns segons. Al pròxim vídeo: afegir exemplars d'un llibre. Gràcies per mirar-ho i fins aviat!",
+      "de": "So findest du jedes Buch in Sekunden. Im nächsten Video: Exemplare eines Buches hinzufügen. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}

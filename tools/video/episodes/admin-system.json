@@ -1,0 +1,156 @@
+{
+  "slug": "admin-system",
+  "topic": "Admin panel",
+  "title": "Jobs and system",
+  "search": "How to check Vaultisse jobs, system health and updates",
+  "coverWords": "Is it healthy?",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#system-page",
+  "start": "/",
+  "tags": [
+    "vaultisse health",
+    "background jobs",
+    "database size",
+    "check for updates",
+    "system status",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to check Vaultisse jobs, system health and updates",
+      "description": "Learn how to check Vaultisse jobs, system health and updates."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo revisar tareas, estado y actualizaciones de Vaultisse",
+      "description": "Aprende a revisar las tareas, el estado y las actualizaciones de Vaultisse."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com revisar tasques, estat i actualitzacions de Vaultisse",
+      "description": "Aprèn a revisar les tasques, l'estat i les actualitzacions de Vaultisse."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Vaultisse: Jobs, Systemzustand und Updates prüfen",
+      "description": "Prüfe Jobs, Systemzustand und Updates in Vaultisse."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "The overview",
+      "Background jobs",
+      "System and updates"
+    ],
+    "narration": {
+      "en": "Here is how to check that Vaultisse is healthy. In this video: the overview. Background jobs. System and updates.",
+      "es": "Así se comprueba que Vaultisse está sano. En este vídeo: el resumen. Las tareas. Sistema y versiones.",
+      "ca": "Així es comprova que Vaultisse està sa. En aquest vídeo: el resum. Les tasques. Sistema i versions.",
+      "de": "So prüfst du, ob Vaultisse gesund läuft. In diesem Video: die Übersicht. Die Jobs. System und Updates."
+    }
+  },
+  "steps": [
+    {
+      "id": "overview",
+      "title": {
+        "en": "Overview",
+        "es": "Resumen",
+        "ca": "Resum",
+        "de": "Übersicht"
+      },
+      "narration": {
+        "en": "The overview counts accounts, libraries and books, and flags what needs you.",
+        "es": "El resumen cuenta cuentas, bibliotecas y libros, y señala lo que te necesita.",
+        "ca": "El resum compta comptes, biblioteques i llibres, i assenyala el que et necessita.",
+        "de": "Die Übersicht zählt Konten, Bibliotheken und Bücher und markiert Offenes."
+      },
+      "actions": [
+        {
+          "hold": 2
+        },
+        {
+          "scroll": 400
+        }
+      ]
+    },
+    {
+      "id": "jobs",
+      "title": {
+        "en": "Jobs",
+        "es": "Tareas",
+        "ca": "Tasques",
+        "de": "Jobs"
+      },
+      "narration": {
+        "en": "Jobs lists what runs in the background, with the last result. Run now starts one by hand.",
+        "es": "Jobs muestra lo que corre en segundo plano y su último resultado. Run now lo lanza a mano.",
+        "ca": "Jobs mostra el que s'executa en segon pla i l'últim resultat. Run now ho llança a mà.",
+        "de": "Jobs zeigt die Hintergrundaufgaben samt Ergebnis. Run now startet eine von Hand."
+      },
+      "actions": [
+        {
+          "goto": "/jobs"
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Run now",
+            "nth": 0
+          }
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "system",
+      "title": {
+        "en": "System",
+        "es": "Sistema",
+        "ca": "Sistema",
+        "de": "System"
+      },
+      "narration": {
+        "en": "System shows the version, whether a newer release exists, and the health and size of the database.",
+        "es": "System muestra la versión, si hay otra más nueva y el estado y tamaño de la base de datos.",
+        "ca": "System mostra la versió, si n'hi ha una de més nova i l'estat i mida de la base de dades.",
+        "de": "System zeigt Version, neuere Releases sowie Zustand und Größe der Datenbank."
+      },
+      "actions": [
+        {
+          "goto": "/system"
+        },
+        {
+          "highlight": {
+            "text": "Version",
+            "nth": 0,
+            "seconds": 1.5
+          }
+        },
+        {
+          "highlight": {
+            "text": "Database",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "scroll": 400
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Notifications and webhooks",
+    "narration": {
+      "en": "Your installation is under watch. Next time: notifications and webhooks. Thanks for watching, and see you soon!",
+      "es": "Tu instalación está vigilada. En el próximo vídeo: avisos y webhooks. ¡Gracias por vernos y hasta pronto!",
+      "ca": "La instal·lació està vigilada. Al pròxim vídeo: avisos i webhooks. Gràcies per mirar-ho i fins aviat!",
+      "de": "Deine Installation ist im Blick. Im nächsten Video: Benachrichtigungen und Webhooks. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

@@ -1,0 +1,164 @@
+{
+  "slug": "admin-users",
+  "topic": "Admin panel",
+  "title": "Manage accounts",
+  "search": "How to approve, disable and delete accounts in Vaultisse",
+  "coverWords": "Approve accounts",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#accounts-vaults-and-deletions",
+  "start": "/users",
+  "tags": [
+    "approve new account",
+    "disable user",
+    "delete account",
+    "vaultisse users",
+    "registration approval",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to approve, disable and delete accounts in Vaultisse",
+      "description": "Learn how to approve, disable and delete accounts in Vaultisse from the admin panel."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo aprobar, desactivar y borrar cuentas en Vaultisse",
+      "description": "Aprende a aprobar, desactivar y borrar cuentas en Vaultisse desde el panel."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com aprovar, desactivar i esborrar comptes a Vaultisse",
+      "description": "Aprèn a aprovar, desactivar i esborrar comptes a Vaultisse des del panell."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Konten in Vaultisse freigeben, sperren und löschen",
+      "description": "Gib Konten im Vaultisse Admin-Panel frei, sperre und lösche sie."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Approve a new account",
+      "Disable one",
+      "How deletion works"
+    ],
+    "narration": {
+      "en": "Here is how to manage accounts in the admin panel. In this video: approve a new account. Disable one. How deletion works.",
+      "es": "Así se gestionan las cuentas en el panel. En este vídeo: aprueba una cuenta nueva. Desactiva otra. Cómo funciona el borrado.",
+      "ca": "Així es gestionen els comptes al panell. En aquest vídeo: aprova un compte nou. Desactiva'n un altre. Com funciona l'esborrat.",
+      "de": "So verwaltest du Konten im Admin-Panel. In diesem Video: ein neues Konto freigeben. Ein Konto sperren. Wie das Löschen läuft."
+    }
+  },
+  "steps": [
+    {
+      "id": "approve",
+      "title": {
+        "en": "Approve",
+        "es": "Aprobar",
+        "ca": "Aprovar",
+        "de": "Freigeben"
+      },
+      "narration": {
+        "en": "Accounts lists everyone. Open one that is waiting for approval, and click Approve.",
+        "es": "Accounts muestra a todos. Abre una pendiente de aprobación y pulsa Approve.",
+        "ca": "Accounts mostra tothom. Obre'n un pendent d'aprovació i prem Approve.",
+        "de": "Accounts listet alle auf. Öffne ein wartendes Konto und klicke auf Approve."
+      },
+      "actions": [
+        {
+          "click": {
+            "text": "Ada Novak"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Approve"
+          }
+        },
+        {
+          "hold": 1.5
+        }
+      ]
+    },
+    {
+      "id": "disable",
+      "title": {
+        "en": "Disable",
+        "es": "Desactivar",
+        "ca": "Desactivar",
+        "de": "Sperren"
+      },
+      "narration": {
+        "en": "On an active account you can disable it, or sign it out everywhere.",
+        "es": "En una cuenta activa puedes desactivarla o cerrar todas sus sesiones.",
+        "ca": "En un compte actiu pots desactivar-lo o tancar totes les sessions.",
+        "de": "Ein aktives Konto kannst du sperren oder überall abmelden."
+      },
+      "actions": [
+        {
+          "goto": "/users"
+        },
+        {
+          "click": {
+            "text": "Jordan Lee"
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Disable",
+            "exact": false,
+            "seconds": 1.6
+          }
+        },
+        {
+          "highlight": {
+            "role": "button",
+            "name": "Sign out everywhere",
+            "exact": false,
+            "seconds": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete",
+      "title": {
+        "en": "Deleting",
+        "es": "Borrar",
+        "ca": "Esborrar",
+        "de": "Löschen"
+      },
+      "narration": {
+        "en": "Deleting is done in two steps. The account is locked at once, and removed after a grace period. Until then, you can cancel it under Deletions.",
+        "es": "El borrado tiene dos pasos. La cuenta se bloquea al momento y se elimina tras un plazo. Hasta entonces puedes cancelarlo en Deletions.",
+        "ca": "L'esborrat té dos passos. El compte es bloqueja a l'instant i s'elimina després d'un termini. Fins llavors pots cancel·lar-ho a Deletions.",
+        "de": "Gelöscht wird in zwei Schritten. Das Konto wird sofort gesperrt und nach einer Frist entfernt. Bis dahin brichst du unter Deletions ab."
+      },
+      "actions": [
+        {
+          "goto": "/deletions"
+        },
+        {
+          "hold": 2
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Libraries, plans and limits",
+    "narration": {
+      "en": "Accounts are in your hands. Next time: libraries and plans. Thanks for watching, and see you soon!",
+      "es": "Las cuentas están en tus manos. En el próximo vídeo: bibliotecas y planes. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Els comptes són a les teves mans. Al pròxim vídeo: biblioteques i plans. Gràcies per mirar-ho i fins aviat!",
+      "de": "Die Konten hast du im Griff. Im nächsten Video: Bibliotheken und Tarife. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

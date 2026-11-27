@@ -1,0 +1,174 @@
+{
+  "slug": "admin-notifications",
+  "topic": "Admin panel",
+  "title": "Alerts and webhooks",
+  "search": "How to get Vaultisse alerts by email or webhook",
+  "coverWords": "Get alerts",
+  "playlist": "Admin",
+  "docs": "https://github.com/AlbertAmat/vaultisse/blob/main/docs/ADMIN.md#notifications-to-admins",
+  "start": "/notifications",
+  "tags": [
+    "admin alerts",
+    "slack webhook",
+    "discord webhook",
+    "telegram alerts",
+    "vaultisse notifications",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Admin panel",
+      "title": "How to get Vaultisse alerts by email or webhook",
+      "description": "Learn how to get Vaultisse alerts by email or webhook."
+    },
+    "es": {
+      "topic": "Panel de administración",
+      "title": "Cómo recibir alertas de Vaultisse por correo o webhook",
+      "description": "Aprende a recibir alertas de Vaultisse por correo o webhook."
+    },
+    "ca": {
+      "topic": "Panell d'administració",
+      "title": "Com rebre alertes de Vaultisse per correu o webhook",
+      "description": "Aprèn a rebre alertes de Vaultisse per correu o webhook."
+    },
+    "de": {
+      "topic": "Admin-Panel",
+      "title": "Vaultisse-Warnungen per E-Mail oder Webhook",
+      "description": "Erhalte Vaultisse-Warnungen per E-Mail oder Webhook."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Choose email alerts",
+      "Add a webhook",
+      "What gets sent"
+    ],
+    "narration": {
+      "en": "Here is how to get alerts from Vaultisse. In this video: choose email alerts. Add a webhook. What gets sent.",
+      "es": "Así se reciben alertas de Vaultisse. En este vídeo: elige alertas por correo. Añade un webhook. Qué se envía.",
+      "ca": "Així es reben alertes de Vaultisse. En aquest vídeo: tria alertes per correu. Afegeix un webhook. Què s'envia.",
+      "de": "So erhältst du Warnungen von Vaultisse. In diesem Video: E-Mail-Warnungen wählen. Einen Webhook anlegen. Was gesendet wird."
+    }
+  },
+  "steps": [
+    {
+      "id": "email",
+      "title": {
+        "en": "Email",
+        "es": "Correo",
+        "ca": "Correu",
+        "de": "E-Mail"
+      },
+      "narration": {
+        "en": "Notifications chooses what the panel emails to admins, such as accounts waiting, unusual sign-ins or database trouble.",
+        "es": "Notifications elige qué se envía a los administradores, como cuentas pendientes, accesos raros o problemas de base de datos.",
+        "ca": "Notifications tria què s'envia als administradors, com comptes pendents, accessos estranys o problemes de base de dades.",
+        "de": "Notifications legt fest, was Admins per E-Mail erhalten, etwa wartende Konten, auffällige Anmeldungen oder Datenbankprobleme."
+      },
+      "actions": [
+        {
+          "highlight": {
+            "text": "A new account is waiting for approval",
+            "nth": 0,
+            "seconds": 2
+          }
+        },
+        {
+          "highlight": {
+            "text": "Unusual security activity",
+            "nth": 0,
+            "seconds": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "webhook",
+      "title": {
+        "en": "Webhooks",
+        "es": "Webhooks",
+        "ca": "Webhooks",
+        "de": "Webhooks"
+      },
+      "narration": {
+        "en": "Webhooks send events to Slack, Discord, Telegram or any address. Paste the link, pick the events, and press Test.",
+        "es": "Los webhooks envían eventos a Slack, Discord, Telegram o cualquier dirección. Pega el enlace, elige eventos y pulsa Test.",
+        "ca": "Els webhooks envien esdeveniments a Slack, Discord, Telegram o qualsevol adreça. Enganxa l'enllaç, tria esdeveniments i prem Test.",
+        "de": "Webhooks senden Ereignisse an Slack, Discord, Telegram oder jede Adresse. Link einfügen, Ereignisse wählen, Test drücken."
+      },
+      "actions": [
+        {
+          "goto": "/webhooks"
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Add a webhook",
+            "exact": false
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "highlight": {
+            "text": "Discord",
+            "nth": 0,
+            "seconds": 1
+          }
+        },
+        {
+          "highlight": {
+            "text": "Telegram",
+            "nth": 0,
+            "seconds": 1
+          }
+        },
+        {
+          "highlight": {
+            "text": "Any URL",
+            "nth": 0,
+            "seconds": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "privacy",
+      "title": {
+        "en": "What is sent",
+        "es": "Qué se envía",
+        "ca": "Què s'envia",
+        "de": "Inhalt"
+      },
+      "narration": {
+        "en": "Messages are short facts. They never contain email addresses or what is inside a library.",
+        "es": "Los mensajes son datos breves. Nunca incluyen correos ni el contenido de una biblioteca.",
+        "ca": "Els missatges són dades breus. Mai inclouen correus ni el contingut d'una biblioteca.",
+        "de": "Die Nachrichten sind knappe Fakten. Nie enthalten sie E-Mail-Adressen oder Bibliotheksinhalte."
+      },
+      "actions": [
+        {
+          "hold": 2
+        },
+        {
+          "click": {
+            "role": "button",
+            "name": "Cancel"
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Block an address",
+    "narration": {
+      "en": "Problems now find you. Next time: blocking an address. Thanks for watching, and see you soon!",
+      "es": "Ahora los problemas te avisan. En el próximo vídeo: bloquear una dirección. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Ara els problemes t'avisen. Al pròxim vídeo: bloquejar una adreça. Gràcies per mirar-ho i fins aviat!",
+      "de": "Probleme melden sich jetzt selbst. Im nächsten Video: das Sperren von Adressen. Danke fürs Zuschauen und bis bald!"
+    }
+  },
+  "admin": "console"
+}

@@ -1,0 +1,178 @@
+{
+  "slug": "inactive-accounts",
+  "topic": "Setup",
+  "title": "Delete inactive accounts",
+  "search": "How to delete inactive accounts automatically in Vaultisse",
+  "coverWords": "Delete inactive accounts",
+  "playlist": "Setup",
+  "docs": "https://docs.vaultisse.com/self-hosting/configuration#inactive-accounts",
+  "start": "term",
+  "tags": [
+    "delete inactive accounts",
+    "account retention",
+    "vaultisse cleanup",
+    "inactivity deletion",
+    "gdpr retention",
+    "self-hosted library",
+    "vaultisse"
+  ],
+  "local": {
+    "en": {
+      "topic": "Setup",
+      "title": "How to delete inactive accounts automatically in Vaultisse",
+      "description": "Learn how to delete inactive accounts automatically in Vaultisse, with a warning first."
+    },
+    "es": {
+      "topic": "Instalación",
+      "title": "Cómo borrar cuentas inactivas automáticamente en Vaultisse",
+      "description": "Aprende a borrar cuentas inactivas automáticamente en Vaultisse, avisando antes."
+    },
+    "ca": {
+      "topic": "Instal·lació",
+      "title": "Com esborrar comptes inactius automàticament a Vaultisse",
+      "description": "Aprèn a esborrar comptes inactius automàticament a Vaultisse, avisant abans."
+    },
+    "de": {
+      "topic": "Einrichtung",
+      "title": "Inaktive Konten in Vaultisse automatisch löschen",
+      "description": "Lösche inaktive Konten in Vaultisse automatisch, mit Vorwarnung."
+    }
+  },
+  "intro": {
+    "bullets": [
+      "Back up first",
+      "Set the two values",
+      "Who is never deleted"
+    ],
+    "narration": {
+      "en": "Here is how to delete inactive accounts automatically in Vaultisse. In this video: back up first. Set the two values. Who is never deleted.",
+      "es": "Así se borran solas las cuentas inactivas en Vaultisse. En este vídeo: haz copia antes. Pon los dos valores. A quién no se borra.",
+      "ca": "Així s'esborren sols els comptes inactius a Vaultisse. En aquest vídeo: fes còpia abans. Posa els dos valors. A qui no s'esborra.",
+      "de": "So löschst du inaktive Konten in Vaultisse automatisch. In diesem Video: zuerst sichern. Die zwei Werte setzen. Wer nie gelöscht wird."
+    }
+  },
+  "steps": [
+    {
+      "id": "warning",
+      "title": {
+        "en": "Back up first",
+        "es": "Copia antes",
+        "ca": "Còpia abans",
+        "de": "Erst sichern"
+      },
+      "narration": {
+        "en": "This deletes accounts for good, including a library only that account belongs to. Back up before you turn it on.",
+        "es": "Esto borra cuentas para siempre, incluida una biblioteca que solo sea de esa cuenta. Haz copia antes de activarlo.",
+        "ca": "Això esborra comptes per sempre, inclosa una biblioteca que sigui només d'aquell compte. Fes còpia abans d'activar-ho.",
+        "de": "Das löscht Konten endgültig, samt Bibliotheken, die nur diesem Konto gehören. Sichere vorher alles."
+      },
+      "actions": [
+        {
+          "run": "docker compose exec -T db pg_dump -U postgres vaultisse > vaultisse-$(date +%F).sql"
+        },
+        {
+          "hold": 2
+        }
+      ]
+    },
+    {
+      "id": "values",
+      "title": {
+        "en": "Two values",
+        "es": "Dos valores",
+        "ca": "Dos valors",
+        "de": "Zwei Werte"
+      },
+      "narration": {
+        "en": "Set after how many days an unused account is deleted. Set how many days before that a warning is emailed. The warning needs email set up.",
+        "es": "Indica tras cuántos días se borra una cuenta sin uso. Indica cuántos días antes se envía el aviso. El aviso necesita el correo configurado.",
+        "ca": "Indica al cap de quants dies s'esborra un compte sense ús. Indica quants dies abans s'envia l'avís. L'avís necessita el correu configurat.",
+        "de": "Lege fest, nach wie vielen Tagen ein ungenutztes Konto gelöscht wird. Und wie viele Tage vorher gewarnt wird. Dafür muss E-Mail eingerichtet sein."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": ".env",
+            "lines": [
+              "ACCOUNT_INACTIVITY_DAYS=",
+              "ACCOUNT_DELETION_NOTICE_DAYS="
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "ACCOUNT_INACTIVITY_DAYS",
+            "value": "ACCOUNT_INACTIVITY_DAYS=365"
+          }
+        },
+        {
+          "hold": 1
+        },
+        {
+          "point": {
+            "line": "ACCOUNT_DELETION_NOTICE_DAYS",
+            "value": "ACCOUNT_DELETION_NOTICE_DAYS=30"
+          }
+        }
+      ]
+    },
+    {
+      "id": "never",
+      "title": {
+        "en": "Never deleted",
+        "es": "Nunca se borran",
+        "ca": "Mai s'esborren",
+        "de": "Nie gelöscht"
+      },
+      "narration": {
+        "en": "Disabled or unverified accounts are never deleted. Neither are people with books on loan, or the only admin of a shared library. Leave both values empty to turn it off.",
+        "es": "Las cuentas desactivadas o sin verificar no se borran. Tampoco quien tiene libros prestados ni el único administrador de una biblioteca compartida. Déjalo vacío para desactivarlo.",
+        "ca": "Els comptes desactivats o sense verificar no s'esborren. Tampoc qui té llibres en préstec ni l'únic administrador d'una biblioteca compartida. Deixa-ho buit per desactivar-ho.",
+        "de": "Deaktivierte oder unbestätigte Konten bleiben. Ebenso Personen mit Ausleihen und der einzige Admin einer geteilten Bibliothek. Leere Werte schalten alles ab."
+      },
+      "actions": [
+        {
+          "file": {
+            "name": "Never deleted",
+            "lines": [
+              "Disabled or unverified accounts",
+              "Members with books on loan",
+              "The only admin of a shared library",
+              "Nothing in demo mode"
+            ]
+          }
+        },
+        {
+          "point": {
+            "line": "Disabled"
+          }
+        },
+        {
+          "hold": 2
+        },
+        {
+          "point": {
+            "line": "books on loan"
+          }
+        },
+        {
+          "hold": 2
+        },
+        {
+          "point": {
+            "line": "only admin"
+          }
+        }
+      ]
+    }
+  ],
+  "outro": {
+    "next": "Back up and restore",
+    "narration": {
+      "en": "Old accounts now clean themselves up. Next time: backing up and restoring. Thanks for watching, and see you soon!",
+      "es": "Las cuentas antiguas se limpian solas. En el próximo vídeo: hacer copias y restaurar. ¡Gracias por vernos y hasta pronto!",
+      "ca": "Els comptes antics es netegen sols. Al pròxim vídeo: fer còpies i restaurar. Gràcies per mirar-ho i fins aviat!",
+      "de": "Alte Konten räumen sich selbst auf. Im nächsten Video: Sichern und Wiederherstellen. Danke fürs Zuschauen und bis bald!"
+    }
+  }
+}
