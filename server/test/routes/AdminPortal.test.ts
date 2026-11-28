@@ -2,6 +2,7 @@ import "../helpers/adminEnv";
 import request from "supertest";
 import {generate} from "otplib";
 import {appService} from "../../src/AppService";
+import {AdminAuthService} from "../../src/admin/services/AdminAuthService";
 import {ADMIN_PASSWORD, createLoggedInAdmin, setupAdminTestApp} from "../helpers/adminAuth";
 import {createAuthenticatedUser, nextFakeIp, TEST_PASSWORD} from "../helpers/auth";
 
@@ -40,6 +41,24 @@ describe("admin portal: authentication", () => {
         expect(wrong.status).toBe(401);
         expect(unknown.status).toBe(401);
         expect(wrong.body).toEqual(unknown.body);
+    });
+
+    it("accepts an authenticator code at the sign-in after enrolment", async () => {
+        const auth = new AdminAuthService(pool(), appService.getLogger(), appService.getJwtSecret());
+        const email = `totp_${Date.now()}@example.com`;
+        await auth.create({email, name: "Totp Admin", password: ADMIN_PASSWORD, role: "superadmin"});
+        const post = (agent: ReturnType<typeof request.agent>, path: string, body: object) => agent.post(path).set("X-Forwarded-For", nextFakeIp()).send(body);
+
+        const first = request.agent(apps.admin());
+        await post(first, "/api/admin/auth/login", {email, password: ADMIN_PASSWORD});
+        const {secret} = (await post(first, "/api/admin/auth/enroll/start", {})).body;
+        expect((await post(first, "/api/admin/auth/enroll/confirm", {code: await generate({secret})})).status).toBe(200);
+
+        // Enrolment used the current code, so this is the next one.
+        const second = request.agent(apps.admin());
+        await post(second, "/api/admin/auth/login", {email, password: ADMIN_PASSWORD});
+        const code = await generate({secret, epoch: Math.floor(Date.now() / 1000) + 30});
+        expect((await post(second, "/api/admin/auth/2fa", {code})).status).toBe(200);
     });
 
     it("forces two-factor enrolment before the first session and logs in with a backup code afterwards", async () => {

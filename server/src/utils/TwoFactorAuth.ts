@@ -77,14 +77,17 @@ export class TwoFactorAuth {
      * @returns Whether the code is valid, and if so, the absolute time-step it matched.
      */
     public static async verifyTotpCode(secret: string, code: string, afterTimeStep?: number | null): Promise<TotpVerifyResult> {
-        if (!/^\d{6}$/.test(code)) {
+        // Authenticator apps show "123 456", and copying or autofilling one often adds a space. Done here so
+        // every caller (app sign-in, admin console, enrolment, re-verification) accepts the same input.
+        const token = String(code).replace(/\s/g, "");
+        if (!/^\d{6}$/.test(token)) {
             return {valid: false};
         }
 
         try {
             const result = await verifyOtp({
                 secret,
-                token: code,
+                token,
                 // otplib v13's `epochTolerance` is in *seconds*, not time-steps
                 // like the old v12 `authenticator.check()`'s `window` option -
                 // passing 1 here (as a naive v12->v13 port would) means
@@ -92,7 +95,9 @@ export class TwoFactorAuth {
                 // reproduces v12's default ±1-step (±30s) tolerance for
                 // clock drift and submission latency.
                 epochTolerance: TOTP_PERIOD_SECONDS,
-                ...(afterTimeStep != null ? {afterTimeStep} : {}),
+                // Number(): the column is BIGINT, which node-postgres returns as text, and otplib
+                // throws on text - every code after the first sign-in then looked wrong.
+                ...(afterTimeStep != null ? {afterTimeStep: Number(afterTimeStep)} : {}),
             });
             if (!result.valid) {
                 return {valid: false};

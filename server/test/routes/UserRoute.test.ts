@@ -210,6 +210,14 @@ describe("Two-factor authentication", () => {
         expect(twoFaRes.status).toBe(200);
         expect(twoFaRes.body).toMatchObject({success: true, redirectUrl: "/app"});
 
+        // And the next sign-in too: from the second one on, the last used time step is read back from the database.
+        const laterAgent = request.agent(app);
+        const laterIp = nextFakeIp();
+        await laterAgent.post("/login").set("X-Forwarded-For", laterIp).send({username: user.userCode, password: TEST_PASSWORD});
+        const nextCode = await generate({secret, epoch: Math.floor(Date.now() / 1000) + 30});
+        const laterRes = await laterAgent.post("/login/2fa").set("X-Forwarded-For", laterIp).send({code: nextCode});
+        expect(laterRes.status).toBe(200);
+
         const disableRes = await user.agent
             .post("/api/rest/user/2fa/disable")
             .set("X-Forwarded-For", nextFakeIp())
