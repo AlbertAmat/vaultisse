@@ -61,10 +61,10 @@
         "de": "Verleih"
       },
       "narration": {
-        "en": "Each copy now has Lend and Return buttons. And the Loans page can lend several books to one person at once.",
-        "es": "Cada ejemplar tiene ahora botones de prestar y devolver. Y la página de Préstamos presta varios libros a una persona a la vez.",
-        "ca": "Cada exemplar té ara botons per prestar i retornar. I la pàgina de Préstecs presta diversos llibres a una persona alhora.",
-        "de": "Jedes Exemplar hat jetzt Knöpfe zum Verleihen und Zurücknehmen. Und die Seite Ausleihen verleiht mehrere Bücher auf einmal."
+        "en": "Each copy now has Lend and Return buttons. And the Loans page can lend several books to one person at once. Add each book to the list, then lend them all together.",
+        "es": "Cada ejemplar tiene ahora botones de prestar y devolver. Y la página de Préstamos presta varios libros a una persona a la vez. Añade cada libro a la lista y préstalos todos juntos.",
+        "ca": "Cada exemplar té ara botons per prestar i retornar. I la pàgina de Préstecs presta diversos llibres a una persona alhora. Afegeix cada llibre a la llista i presta'ls tots junts.",
+        "de": "Jedes Exemplar hat jetzt Knöpfe zum Verleihen und Zurücknehmen. Und die Seite Ausleihen verleiht mehrere Bücher auf einmal. Füge jedes Buch zur Liste hinzu und verleihe alle zusammen."
       },
       "actions": [
         {
@@ -127,10 +127,7 @@
           }
         },
         {
-          "hold": 1
-        },
-        {
-          "press": "Escape"
+          "hold": 3
         }
       ]
     },
