@@ -500,6 +500,10 @@ A few things worth knowing before pointing this at a real server:
   container itself.
 - **Logs** are written to `/app/logs` inside the container (`LOGGER_PATH`), persisted
   via the `app-logs` volume.
+- **If the app container stops**, the end of `bookStorage.log` says why: a crash
+  (`FATAL`, with its stack) or a stop signal (`Received SIGTERM`). A kill that can't
+  be caught (out of memory, power loss) is reported at the next start
+  (`ended without shutting down`).
 - To build and run the image locally instead of pulling it:
   `docker build -t vaultisse .`
 

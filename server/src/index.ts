@@ -9,6 +9,7 @@
  */
 import {appService} from "./AppService";
 import {ADMIN_COMMANDS, runAdminCli} from "./admin/AdminCli";
+import {ProcessMonitor} from "./utils/ProcessMonitor";
 
 const command = process.argv[2];
 
@@ -21,5 +22,14 @@ if (command && ADMIN_COMMANDS.includes(command)) {
             process.exit(1);
         });
 } else {
+    // Installed before init() so a failure during start-up is logged too.
+    new ProcessMonitor(appService.getLogger(), appService.getDatabasePool(), async () => {
+        await appService.stopAdmin();
+        const server = appService.getServer();
+        if (server) {
+            await new Promise<void>((resolve) => server.close(() => resolve()));
+        }
+        await appService.getDatabasePool().end();
+    }).install();
     appService.init();
 }

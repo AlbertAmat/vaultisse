@@ -446,8 +446,7 @@ export class AppService {
             await runMigrations(this.m_databasePool, this.m_logger);
         } catch (e) {
             const message = e instanceof Error ? e.message : String(e);
-            console.error(`Database migration failed, exiting: ${message}`);
-            this.m_logger.error(`Database migration failed, exiting: ${message}`);
+            this.m_logger.errorSync(`Database migration failed, exiting: ${message}`);
             process.exit(1);
         }
 

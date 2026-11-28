@@ -67,6 +67,20 @@ export class Logger {
     }
 
     /**
+     * Log an error and write it to the file before returning. For the last words of a dying process:
+     * the asynchronous write of `error()` is lost when `process.exit()` follows.
+     */
+    errorSync(message: string): void {
+        const logEntry = `[${new Date().toISOString()}] [ERROR]: ${message}\n`;
+        process.stderr.write(logEntry);
+        try {
+            fs.appendFileSync(this.logFilePath, logEntry);
+        } catch (err) {
+            process.stderr.write(`Failed to write log: ${err}\n`);
+        }
+    }
+
+    /**
      * Log a verbose diagnostic message - request traces, raw SQL text,
      * record names/ids - that may include personal data (borrower/author/
      * customer names, usernames) and should never ship to production logs
