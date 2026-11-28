@@ -54,7 +54,7 @@
 				<v-select v-model="outcome" :items="outcomes.map((o) => ({title: o.label, value: o.value}))" clearable placeholder="Any status" style="max-width: 220px"/>
 			</div>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Control</th><th>Status</th><th>What the portal found</th><th>Owner</th><th>Review</th></tr></thead>
 					<tbody>
 						<tr v-for="c in filtered" :key="c.id" class="row-click" @click="open(c)">

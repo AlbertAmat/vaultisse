@@ -14,7 +14,7 @@
 			<v-btn v-if="canWrite()" color="primary" variant="flat" prepend-icon="mdi-check-all" :loading="busy" @click="confirm()">Confirm everyone still needs access</v-btn>
 		</div>
 		<div class="table-wrap">
-			<v-table density="comfortable">
+			<v-table>
 				<thead><tr><th>Admin</th><th>Role</th><th>Last sign-in</th><th>Access last confirmed</th><th></th></tr></thead>
 				<tbody>
 					<tr v-for="a in items" :key="a.id">

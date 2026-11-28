@@ -29,10 +29,9 @@
 
 						<div v-for="item in group.items" :key="item.key" class="setting">
 							<div class="d-flex flex-wrap align-center ga-2 mb-1">
-								<span class="font-weight-medium">{{ item.label }}</span>
+								<span class="text-body-2 font-weight-medium">{{ item.label }} <span class="setting-key mono text-medium-emphasis">({{ item.key }})</span></span>
 								<v-chip size="x-small" :color="sourceColor(item.source)" variant="tonal">{{ sourceLabel(item.source) }}</v-chip>
 								<v-chip v-if="item.unreadable" size="x-small" color="error" variant="tonal">Can't be read: enter it again</v-chip>
-								<span class="text-caption text-medium-emphasis mono ml-auto d-none d-sm-inline">{{ item.key }}</span>
 							</div>
 
 							<div class="d-flex align-start ga-2">
@@ -98,7 +97,7 @@
 							<v-alert v-if="item.source === 'database' && item.envSet" type="warning" variant="tonal" density="compact" class="mt-2" icon="mdi-swap-horizontal">
 								The environment variable <span class="mono">{{ item.key }}</span><template v-if="item.envValue"> ({{ item.envValue }})</template> is ignored while this is set here. "Use env" switches back to it.
 							</v-alert>
-							<p v-if="item.description" class="text-caption text-medium-emphasis mt-1">{{ item.description }}</p>
+							<p v-if="item.description" class="setting-help text-medium-emphasis mt-1">{{ item.description }}</p>
 						</div>
 
 						<!-- Email: send a test message with what is in the form, saved or not -->
@@ -302,5 +301,17 @@ onMounted(async () => {
 .setting {
 	margin-bottom: 18px;
 	max-width: 760px;
+}
+
+/* The env var name and the help line are secondary to the label and the value, so both are set smaller. */
+.setting-key {
+	font-size: 0.8rem;
+	font-weight: 400;
+	overflow-wrap: anywhere;
+}
+
+.setting-help {
+	font-size: 0.8rem;
+	line-height: 1.4;
 }
 </style>

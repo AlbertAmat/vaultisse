@@ -45,7 +45,7 @@
 		</v-card>
 
 		<!-- Vault detail: usage against the plan's limits, members and the action buttons. -->
-		<v-dialog v-model="dialog" max-width="640" scrollable>
+		<v-dialog v-model="dialog" max-width="680" scrollable>
 			<v-card v-if="detail">
 				<v-card-title class="d-flex align-center">
 					{{ detail.vault.name }}
@@ -83,12 +83,13 @@
 
 					<template v-if="canWrite()">
 						<v-divider class="my-5"/>
-						<div class="d-flex flex-wrap ga-2">
-							<v-btn v-if="detail.vault.suspendedReason !== 'pending_deletion' && !detail.vault.suspendedAt" variant="tonal" prepend-icon="mdi-pause-circle-outline" @click="act(() => api.vaults.suspend(detail!.vault.id), 'Vault suspended.')">Suspend</v-btn>
-							<v-btn v-else-if="detail.vault.suspendedReason !== 'pending_deletion'" variant="tonal" prepend-icon="mdi-play-circle-outline" @click="act(() => api.vaults.unsuspend(detail!.vault.id), 'Vault restored.')">Restore</v-btn>
-							<v-btn v-if="detail.vault.suspendedReason !== 'pending_deletion'" variant="tonal" prepend-icon="mdi-account-switch-outline" @click="openTransfer">Transfer ownership…</v-btn>
-							<v-btn v-if="detail.vault.suspendedReason !== 'pending_deletion'" color="warning" variant="tonal" prepend-icon="mdi-broom" @click="openClear">Clear content…</v-btn>
-							<v-btn v-if="detail.vault.suspendedReason !== 'pending_deletion'" color="error" variant="tonal" prepend-icon="mdi-delete-outline" @click="removing = true">Delete vault…</v-btn>
+						<!-- One line; they only wrap on a phone, where four buttons cannot fit. -->
+						<div class="d-flex flex-wrap flex-sm-nowrap ga-2">
+							<v-btn v-if="detail.vault.suspendedReason !== 'pending_deletion' && !detail.vault.suspendedAt" size="small" variant="tonal" prepend-icon="mdi-pause-circle-outline" @click="act(() => api.vaults.suspend(detail!.vault.id), 'Vault suspended.')">Suspend</v-btn>
+							<v-btn v-else-if="detail.vault.suspendedReason !== 'pending_deletion'" size="small" variant="tonal" prepend-icon="mdi-play-circle-outline" @click="act(() => api.vaults.unsuspend(detail!.vault.id), 'Vault restored.')">Restore</v-btn>
+							<v-btn v-if="detail.vault.suspendedReason !== 'pending_deletion'" size="small" variant="tonal" prepend-icon="mdi-account-switch-outline" @click="openTransfer">Transfer ownership…</v-btn>
+							<v-btn v-if="detail.vault.suspendedReason !== 'pending_deletion'" color="warning" size="small" variant="tonal" prepend-icon="mdi-broom" @click="openClear">Clear content…</v-btn>
+							<v-btn v-if="detail.vault.suspendedReason !== 'pending_deletion'" color="error" size="small" variant="tonal" prepend-icon="mdi-delete-outline" @click="removing = true">Delete vault…</v-btn>
 						</div>
 					</template>
 				</v-card-text>

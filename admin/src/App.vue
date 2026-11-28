@@ -46,7 +46,7 @@ h1, h2, .text-h5, .text-h6 {
 }
 
 .page {
-	padding: 24px;
+	padding: 20px;
 	max-width: 1400px;
 	margin: 0 auto;
 }

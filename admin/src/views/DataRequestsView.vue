@@ -27,7 +27,7 @@
 		<!-- The list. Deadline chip: green-grey = time left, orange = 5 days or less, red = late. -->
 		<v-card>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Request</th><th>Person</th><th>Received</th><th>Deadline</th><th>Status</th></tr></thead>
 					<tbody>
 						<tr v-for="r in shown" :key="r.id" class="row-click" @click="open(r)">

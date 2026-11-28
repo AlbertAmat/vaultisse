@@ -152,7 +152,13 @@ async function load() {
 
 onMounted(async () => {
 	map = L.map(mapEl.value!, {worldCopyJump: true, minZoom: 2}).setView([25, 10], 2);
-	L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 18, attribution: "© OpenStreetMap contributors"}).addTo(map);
+	// OpenStreetMap answers 403 "Access blocked" to tile requests without a Referer, and the portal sends
+	// Referrer-Policy: no-referrer. Only the tiles override it, with the origin alone (never the page path).
+	L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+		maxZoom: 18,
+		attribution: "© OpenStreetMap contributors",
+		referrerPolicy: "strict-origin-when-cross-origin",
+	}).addTo(map);
 	layer = L.layerGroup().addTo(map);
 	await load();
 });

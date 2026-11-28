@@ -37,7 +37,7 @@
 				<v-text-field v-model="search" prepend-inner-icon="mdi-magnify" placeholder="Search by name, username or email" clearable style="max-width: 340px" @update:model-value="debounced"/>
 			</div>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Account</th><th>Status</th><th>Asked</th><th>Accepted</th></tr></thead>
 					<tbody>
 						<tr v-for="row in items" :key="row.id">

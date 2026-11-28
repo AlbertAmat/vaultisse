@@ -46,7 +46,7 @@
 				<span class="text-caption text-medium-emphasis">Click a row to see its attempts</span>
 			</div>
 			<div class="table-wrap">
-				<v-table density="comfortable" hover>
+				<v-table hover>
 					<thead><tr><th>Address</th><th>Place</th><th class="text-right">Failed</th><th class="text-right">Successful</th><th class="text-right">Refused</th><th class="text-right">Emails tried</th><th>Failed at</th><th>Last attempt</th><th>State</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="s in data?.sources ?? []" :key="s.ip" class="row-click" :class="{hot: s.failed >= 5 && !s.blocked, picked: ip === s.ip}" @click="pick(s.ip)">

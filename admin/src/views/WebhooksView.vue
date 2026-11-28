@@ -16,7 +16,7 @@
 		<!-- One fact per column: name, type, where it sends, how many events, last delivery, on/off. -->
 		<v-card>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Name</th><th>Type</th><th>Sends to</th><th>Events</th><th>Last delivery</th><th>On</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="hook in items" :key="hook.id">

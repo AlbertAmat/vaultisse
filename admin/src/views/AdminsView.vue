@@ -58,7 +58,7 @@
 				<v-btn icon="mdi-refresh" variant="text" aria-label="Refresh" @click="loadSessions"/>
 			</div>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Admin</th><th>Email</th><th>Device</th><th>Address</th><th>Place</th><th>Signed in</th><th>Last active</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="session in sessions" :key="session.id">

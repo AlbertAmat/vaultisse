@@ -84,6 +84,12 @@
 	--pb-nav-accent: #78dcf6;
 }
 
+/* The console is for scanning tables and settings, so it is set smaller than the app: Vuetify sizes its text
+   and much of its spacing in rem, which all follow this. */
+html {
+	font-size: 87.5%;
+}
+
 html,
 body {
 	background: var(--pb-bg);

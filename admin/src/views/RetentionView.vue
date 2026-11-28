@@ -21,7 +21,7 @@
 
 		<v-card>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Records</th><th>Personal data</th><th style="width: 190px">Kept for</th><th>Default</th><th class="text-right">Stored</th><th>Oldest</th><th class="text-right">Past the period</th></tr></thead>
 					<tbody>
 						<tr v-for="item in items" :key="item.id">

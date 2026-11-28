@@ -15,7 +15,7 @@
 				<v-btn v-if="canWrite()" color="primary" variant="flat" prepend-icon="mdi-plus" @click="edit(null)">Record an incident</v-btn>
 			</div>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Incident</th><th>Severity</th><th>Status</th><th>Detected</th><th>Personal data</th></tr></thead>
 					<tbody>
 						<tr v-for="item in items" :key="item.id" class="row-click" @click="edit(item)">

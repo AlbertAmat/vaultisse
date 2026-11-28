@@ -18,10 +18,9 @@
 				<v-list-item v-for="item in group.items" :key="item.to" :to="item.to" :prepend-icon="item.icon" :title="item.title" density="compact" class="app-menu-item" exact/>
 			</template>
 		</v-list>
-		<template #append>
+		<template v-if="!canWrite()" #append>
 			<div class="pa-4 text-caption app-menu-foot">
-				<span v-if="!canWrite()" class="d-block mb-1"><v-icon size="14">mdi-eye-outline</v-icon> Read-only account</span>
-				Instance admin portal
+				<v-icon size="14">mdi-eye-outline</v-icon> Read-only account
 			</div>
 		</template>
 	</v-navigation-drawer>
@@ -165,8 +164,14 @@ async function logout() {
 	font-size: 10px;
 }
 
-.app-menu-list {
-	flex: 1;
+/* The list scrolls between the title and the foot. Vuetify sets overflow: hidden on lists inside a drawer,
+   which cuts the menu off on a short screen. */
+.app-menu .app-menu-list {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: var(--pb-nav-text-muted) transparent;
 	padding-top: 4px;
 }
 

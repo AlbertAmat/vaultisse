@@ -45,7 +45,8 @@ export default createVuetify({
     icons: {defaultSet: "mdi", aliases, sets: {mdi}},
     defaults: {
         VCard: {rounded: "lg"},
-        VBtn: {rounded: "lg"},
+        VBtn: {rounded: "lg", density: "comfortable"},
+        VTable: {density: "compact"},
         // Outlined, compact inputs everywhere (about 40px tall).
         VTextField: {variant: "outlined", density: "compact", rounded: "lg", hideDetails: "auto"},
         VSelect: {variant: "outlined", density: "compact", rounded: "lg", hideDetails: "auto"},

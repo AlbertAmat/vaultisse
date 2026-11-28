@@ -18,33 +18,42 @@
 			<template #append><v-btn variant="text" to="/settings">Set up email</v-btn></template>
 		</v-alert>
 
-		<!-- Events -->
-		<v-card class="pa-5 mb-4">
-			<div class="text-subtitle-1 font-weight-medium mb-1">What to be told about</div>
-			<p class="text-body-2 text-medium-emphasis mb-4">The same alert isn't repeated for a while, so a problem that lasts doesn't fill your inbox. Problems are checked every five minutes.</p>
-			<div v-for="item in switches" :key="item.key" class="event">
-				<v-switch
-					:model-value="form[item.key] === 'true'"
-					color="primary"
-					hide-details
-					density="compact"
-					:disabled="!canWrite()"
-					@update:model-value="form[item.key] = $event ? 'true' : 'false'"
-				>
-					<template #label>
-						<div>
-							<div class="font-weight-medium">{{ item.label }}</div>
-							<div class="text-caption text-medium-emphasis">{{ item.description }}</div>
-						</div>
-					</template>
-				</v-switch>
-				<div v-for="extra in extras(item.key)" :key="extra.key" class="ml-14 mb-2">
-					<v-text-field v-model="form[extra.key]" type="number" min="1" :label="extra.label" :hint="extra.description" persistent-hint :placeholder="extra.defaultValue ?? 'Off'" :disabled="!canWrite() || form[item.key] !== 'true'" style="max-width: 360px"/>
-				</div>
+		<!-- Events: grouped by subject, one row per event with its switch on the right and its number, if any, under the text. -->
+		<v-card class="mb-4">
+			<div class="pa-4 pb-3">
+				<div class="text-subtitle-1 font-weight-medium">What to be told about</div>
+				<p class="text-body-2 text-medium-emphasis mt-1">The same alert isn't repeated for a while, so a problem that lasts doesn't fill your inbox. Problems are checked every five minutes.</p>
 			</div>
-			<div v-if="canWrite()" class="d-flex ga-2 mt-4">
-				<v-btn color="primary" variant="flat" :loading="saving" :disabled="!dirty" @click="save">Save</v-btn>
+			<section v-for="group in eventGroups" :key="group.title">
+				<h3 class="event-group">{{ group.title }}</h3>
+				<div v-for="item in group.items" :key="item.key" class="event">
+					<div class="event-main">
+						<label class="event-text" :for="item.key">
+							<span class="d-block text-body-2 font-weight-medium">{{ item.label }}</span>
+							<span class="d-block text-caption text-medium-emphasis">{{ item.description }}</span>
+						</label>
+						<v-switch
+							:id="item.key"
+							:model-value="form[item.key] === 'true'"
+							color="primary"
+							hide-details
+							class="flex-grow-0"
+							:disabled="!canWrite()"
+							@update:model-value="form[item.key] = $event ? 'true' : 'false'"
+						/>
+					</div>
+					<div v-for="extra in extras(item.key)" :key="extra.key" class="event-extra">
+						<label class="event-text" :for="extra.key">
+							<span class="d-block text-body-2">{{ extra.label }}</span>
+							<span class="d-block text-caption text-medium-emphasis">{{ extra.description }}</span>
+						</label>
+						<v-text-field :id="extra.key" v-model="form[extra.key]" type="number" min="1" hide-details :placeholder="extra.defaultValue ?? 'Off'" :disabled="!canWrite() || form[item.key] !== 'true'" class="event-number"/>
+					</div>
+				</div>
+			</section>
+			<div v-if="canWrite()" class="event-actions">
 				<v-btn variant="text" :disabled="!dirty" @click="reset">Discard changes</v-btn>
+				<v-btn color="primary" variant="flat" :loading="saving" :disabled="!dirty" @click="save">Save</v-btn>
 			</div>
 		</v-card>
 
@@ -52,7 +61,7 @@
 		<v-card class="pa-5 mb-4">
 			<div class="text-subtitle-1 font-weight-medium mb-1">Who receives them</div>
 			<p class="text-body-2 text-medium-emphasis mb-3">Sent to each admin's sign-in email address. Everyone chooses for themselves; a superadmin can also change it for others.</p>
-			<v-table v-if="overview" density="comfortable">
+			<v-table v-if="overview">
 				<thead><tr><th>Admin</th><th>Role</th><th class="text-right">Receives notifications</th></tr></thead>
 				<tbody>
 					<tr v-for="admin in overview.recipients" :key="admin.id">
@@ -132,6 +141,20 @@ const typeLabel: Record<string, string> = {
 };
 
 const switches = computed(() => settings.value.filter((item) => item.type === "boolean"));
+/** Which events are listed under which heading; an event missing here is listed under "Other". */
+const groupKeys: Record<string, string[]> = {
+	"Accounts and data": ["ADMIN_NOTIFY_USER_PENDING", "ADMIN_NOTIFY_DELETIONS", "ADMIN_NOTIFY_DATA_REQUESTS"],
+	"Security": ["ADMIN_NOTIFY_SECURITY", "ADMIN_NOTIFY_ANOMALY"],
+	"System": ["ADMIN_NOTIFY_DATABASE", "ADMIN_NOTIFY_MAIL_FAILURES", "ADMIN_NOTIFY_JOBS", "ADMIN_NOTIFY_UPDATES", "ADMIN_NOTIFY_STARTUP"],
+};
+/** The switches under their headings, empty headings left out. */
+const eventGroups = computed(() => {
+	const known = Object.values(groupKeys).flat();
+	return [
+		...Object.entries(groupKeys).map(([title, keys]) => ({title, items: switches.value.filter((item) => keys.includes(item.key))})),
+		{title: "Other", items: switches.value.filter((item) => !known.includes(item.key))},
+	].filter((group) => group.items.length);
+});
 /** The number fields that belong to a switch (the security threshold, the size limit). */
 const extras = (switchKey: string) => settings.value.filter((item) => item.type === "number" && item.key.startsWith(`${switchKey}_`) || (switchKey === "ADMIN_NOTIFY_DATABASE" && item.key === "ADMIN_NOTIFY_DB_SIZE_MB"));
 const dirty = computed(() => settings.value.some((item) => (form[item.key] ?? "") !== (item.value ?? "")));
@@ -196,7 +219,56 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.event-group {
+	padding: 8px 16px;
+	border-top: 1px solid var(--pb-border);
+	background: rgba(var(--v-theme-on-surface), 0.03);
+	font-family: var(--pb-font-mono);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--pb-text-muted);
+}
+
 .event {
-	margin-bottom: 8px;
+	padding: 10px 16px;
+	border-top: 1px solid var(--pb-border);
+}
+
+.event-main,
+.event-extra {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+}
+
+.event-extra {
+	margin-top: 10px;
+	padding-left: 14px;
+	border-left: 2px solid var(--pb-border-strong);
+}
+
+.event-text {
+	flex: 1;
+	min-width: 0;
+}
+
+.event-main .v-switch {
+	flex-shrink: 0;
+	padding-right: 2px;
+}
+
+.event-number {
+	flex: 0 0 110px;
+}
+
+.event-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 12px 16px;
+	border-top: 1px solid var(--pb-border);
 }
 </style>

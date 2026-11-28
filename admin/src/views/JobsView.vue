@@ -21,7 +21,7 @@
 		<!-- One row per job, most frequent first. The result is cut to one line; hover for all of it. "Next run" is an estimate. -->
 		<v-card>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Job</th><th>Runs</th><th>Last run</th><th>Status</th><th>Result</th><th>Next run</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="job in items" :key="job.id">

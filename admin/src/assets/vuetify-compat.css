@@ -60,3 +60,16 @@
 @media (min-width: 2560px) {
   .v-container { max-width: 2400px; }
 }
+
+/*
+ * Vuetify 4 also dropped the text classes the console uses (text-h5, text-subtitle-1, text-body-2, text-caption...),
+ * which left all that text at the full body size. Sizes only, so the font-weight utilities keep working.
+ * In rem: the root is 87.5% (theme.css), so 1rem is 14px.
+ */
+.text-h5 { font-size: 1.5rem; line-height: 1.3; }
+.text-h6 { font-size: 1.214rem; line-height: 1.4; }
+.text-subtitle-1 { font-size: 1.071rem; line-height: 1.5; }
+.text-subtitle-2 { font-size: 0.929rem; line-height: 1.45; }
+.text-body-1 { font-size: 1rem; line-height: 1.5; }
+.text-body-2 { font-size: 0.929rem; line-height: 1.45; }
+.text-caption { font-size: 0.857rem; line-height: 1.4; }

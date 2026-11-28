@@ -15,7 +15,7 @@
 			</div>
 			<p class="text-body-2 text-medium-emphasis px-4 pt-3">{{ current.hint }}</p>
 			<div class="table-wrap">
-				<v-table density="comfortable">
+				<v-table>
 					<thead><tr><th>Title</th><th>Owner</th><th v-if="current.rating">{{ current.rating }}</th><th>Status</th><th v-if="kind === 'policy'">Version</th><th>Next review</th><th></th></tr></thead>
 					<tbody>
 						<tr v-for="item in items" :key="item.id" class="row-click" @click="edit(item)">
